@@ -109,7 +109,8 @@ Librerias: Next.js (App Router), Tailwind CSS, React, TypeScript, SweetAlert2, F
    - [x] Edición de Movimientos: Funcionalidad completa para modificar registros pasados.
    - [x] Integración BCV: Caché de 15 min para reducir peticiones a la API externa.
    - [x] Búsqueda y Paginación Global: Implementación de filtros de búsqueda y paginación en todas las listas (Movimientos, Deudas, Ahorros, Gastos Fijos, Listas).
-   - [x] Registro Multi-Moneda en Deudas: Opción para registrar deudas y abonos en Bolívares con conversión automática.
+   - [x] Registro Multi-Moneda en Deudas: Soporte completo para VES/USD. Los abonos guardan la moneda original y tasa del día para evitar fluctuaciones históricas.
+   - [x] Lógica Financiera Corregida: Las deudas solo generan movimientos (Ingreso/Gasto) al registrarse un abono, no al crear la deuda.
    - [x] Vista de Calendario en Gastos Fijos: Visualización mensual de compromisos con estado de pago y toggle de vistas.
 
 5. Secciones y Funcionalidades Detalladas:
@@ -123,8 +124,8 @@ Librerias: Next.js (App Router), Tailwind CSS, React, TypeScript, SweetAlert2, F
 
    - Movimientos:
      * Registro con autocompletado de fecha y categoría.
-     * Edición y Borrado de transacciones.
-     * Detección automática de Tasa de Cambio al seleccionar VES.
+     * Edición y Borrado de transacciones (Redirección inteligente desde Dashboard).
+     * Visualización Inteligente: Muestra montos originales en Bs. si así se registraron, preservando el valor histórico.
      * Buscador integrado (Descripción, Categoría, Monto) y Paginación.
    
    - Ahorros y Metas (CORE):
@@ -140,7 +141,8 @@ Librerias: Next.js (App Router), Tailwind CSS, React, TypeScript, SweetAlert2, F
      * Gestión de múltiples listas con búsqueda, ordenamiento y paginación.
 
    - Deudas y Gastos Fijos:
-     * Control de deudas por cobrar/pagar con historial de abonos y soporte para registro en Bs.
+     * Lógica de Caja: Registro de deuda (puro) vs Abono (movimiento financiero).
+     * Soporte Multi-Moneda (VES/USD) en abonos con histórico inalterable por tasa.
      * Seguimiento de gastos fijos mensuales con barra de progreso.
      * Búsqueda y Paginación para manejar grandes volúmenes de datos.
      * Vista de Calendario interactiva para gestión visual de fechas de pago.
