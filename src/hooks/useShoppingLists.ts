@@ -143,6 +143,17 @@ export const useShoppingLists = () => {
         await updateDoc(listRef, { name: newName });
     };
 
+    const updateItem = async (listId: string, currentItems: ShoppingItem[], itemId: string, updates: Partial<ShoppingItem>) => {
+        const updatedItems = currentItems.map(item => {
+            if (item.id === itemId) {
+                return { ...item, ...updates };
+            }
+            return item;
+        });
+        const listRef = doc(db, "shopping_lists", listId);
+        await updateDoc(listRef, { items: updatedItems });
+    };
+
     const duplicateList = async (listId: string) => {
         if (!auth.currentUser) return;
         const sourceList = lists.find(l => l.id === listId);
@@ -163,5 +174,5 @@ export const useShoppingLists = () => {
         });
     };
 
-    return { lists, loading, createList, deleteList, addItem, toggleItem, updateItemProgress, deleteItem, updateListName, duplicateList };
+    return { lists, loading, createList, deleteList, addItem, toggleItem, updateItemProgress, deleteItem, updateListName, duplicateList, updateItem };
 };

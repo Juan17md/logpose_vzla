@@ -8,7 +8,7 @@ import Swal from "sweetalert2";
 import { getBCVRate } from "@/lib/currency";
 
 export default function ShoppingListsPage() {
-    const { lists, loading, createList, deleteList, addItem, toggleItem, deleteItem, updateItemProgress, updateListName, duplicateList } = useShoppingLists();
+    const { lists, loading, createList, deleteList, addItem, toggleItem, deleteItem, updateItemProgress, updateListName, duplicateList, updateItem } = useShoppingLists();
     const [selectedList, setSelectedList] = useState<ShoppingList | null>(null);
     const [bcvRate, setBcvRate] = useState(0);
     const [filterText, setFilterText] = useState("");
@@ -134,6 +134,63 @@ export default function ShoppingListsPage() {
             if (!name) return;
 
             await addItem(selectedList.id, {
+                name,
+                quantity: qty ? parseFloat(qty) : 1,
+                price: price ? parseFloat(price) : 0
+            });
+        }
+    };
+
+    const handleEditItem = async (item: ShoppingItem) => {
+        if (!selectedList) return;
+
+        const { value: formValues } = await Swal.fire({
+            title: 'Editar Producto',
+            html:
+                '<div class="flex flex-col gap-3">' +
+                `<input id="swal-edit-input1" class="swal2-input m-0 w-full" placeholder="Nombre" value="${item.name}">` +
+                `<input id="swal-edit-input2" class="swal2-input m-0 w-full" type="number" placeholder="Cantidad" value="${item.quantity}">` +
+                `<input id="swal-edit-input3" class="swal2-input m-0 w-full" type="number" step="0.01" placeholder="Precio Unitario ($)" value="${item.price > 0 ? item.price : ''}">` +
+                `<div id="bs-reference-edit" class="text-emerald-400 font-bold text-sm text-right">≈ Bs. 0.00</div>` +
+                '</div>',
+            focusConfirm: false,
+            background: "#1f2937",
+            color: "#fff",
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            confirmButtonColor: '#3b82f6',
+            didOpen: () => {
+                const priceInput = Swal.getPopup()?.querySelector('#swal-edit-input3') as HTMLInputElement;
+                const bsRef = Swal.getPopup()?.querySelector('#bs-reference-edit');
+
+                const updateBs = () => {
+                    const val = parseFloat(priceInput.value);
+                    if (!isNaN(val) && bsRef) {
+                        bsRef.textContent = `≈ Bs. ${(val * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 })}`;
+                    } else if (bsRef) {
+                        bsRef.textContent = `≈ Bs. 0.00`;
+                    }
+                };
+
+                if (priceInput) {
+                    updateBs(); // Initial update
+                    priceInput.addEventListener('input', updateBs);
+                }
+            },
+            preConfirm: () => {
+                return [
+                    (document.getElementById('swal-edit-input1') as HTMLInputElement).value,
+                    (document.getElementById('swal-edit-input2') as HTMLInputElement).value,
+                    (document.getElementById('swal-edit-input3') as HTMLInputElement).value
+                ]
+            }
+        });
+
+        if (formValues) {
+            const [name, qty, price] = formValues;
+            if (!name) return;
+
+            await updateItem(selectedList.id, selectedList.items, item.id, {
                 name,
                 quantity: qty ? parseFloat(qty) : 1,
                 price: price ? parseFloat(price) : 0
@@ -438,23 +495,23 @@ export default function ShoppingListsPage() {
                                                 return displayedItems.map((item) => (
                                                     <div
                                                         key={item.id}
-                                                        className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 group ${item.completed
+                                                        className={`flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-2xl border transition-all duration-300 group gap-4 md:gap-0 ${item.completed
                                                             ? "bg-slate-900/30 border-slate-800 opacity-50"
                                                             : "bg-slate-800/40 border-slate-700/30 hover:bg-slate-800/60 hover:border-emerald-500/30"
                                                             }`}
                                                     >
-                                                        <div className="flex items-center gap-4">
+                                                        <div className="flex items-start md:items-center gap-4 w-full md:w-auto">
                                                             <button
                                                                 onClick={() => toggleItem(currentList.id, currentList.items, item.id)}
-                                                                className={`text-2xl transition-transform active:scale-90 ${item.completed ? "text-emerald-500" : "text-slate-600 hover:text-emerald-400"}`}
+                                                                className={`text-2xl transition-transform active:scale-90 mt-1 md:mt-0 ${item.completed ? "text-emerald-500" : "text-slate-600 hover:text-emerald-400"}`}
                                                             >
                                                                 {item.completed ? <FiCheck /> : <FiSquare />}
                                                             </button>
-                                                            <div>
-                                                                <p className={`font-semibold text-lg ${item.completed ? "text-slate-500 line-through decoration-2 decoration-slate-600" : "text-white"}`}>
+                                                            <div className="flex-1">
+                                                                <p className={`font-semibold text-lg break-all ${item.completed ? "text-slate-500 line-through decoration-2 decoration-slate-600" : "text-white"}`}>
                                                                     {item.name}
                                                                 </p>
-                                                                <div className="flex items-center gap-3 text-xs text-slate-500 font-medium mt-1">
+                                                                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium mt-1">
                                                                     {item.quantity > 1 ? (
                                                                         <div className="flex items-center bg-slate-800 rounded-lg overflow-hidden border border-slate-700/50 shadow-sm" onClick={(e) => e.stopPropagation()}>
                                                                             <button
@@ -481,19 +538,19 @@ export default function ShoppingListsPage() {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-6">
+                                                        <div className="flex items-center justify-between w-full md:w-auto gap-4 md:gap-6 border-t md:border-t-0 border-slate-700/30 pt-3 md:pt-0 pl-10 md:pl-0">
                                                             {item.price > 0 && (
-                                                                <div className="text-right">
+                                                                <div className="text-left md:text-right">
                                                                     {item.quantity > 1 && (item.purchasedQuantity || 0) > 0 && !item.completed ? (
                                                                         <>
                                                                             <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider mb-0.5">Falta por pagar</p>
                                                                             <p className="font-bold text-amber-400 text-lg">
                                                                                 ${((item.quantity - (item.purchasedQuantity || 0)) * item.price).toFixed(2)}
                                                                             </p>
-                                                                            <p className="text-[10px] text-slate-500">
+                                                                            <p className="text-[10px] text-slate-500 hidden md:block">
                                                                                 Bs. {((item.quantity - (item.purchasedQuantity || 0)) * item.price * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 })}
                                                                             </p>
-                                                                            <p className="text-[10px] text-slate-600 mt-1 border-t border-slate-700/50 pt-1">
+                                                                            <p className="text-[10px] text-slate-600 mt-1 border-t border-slate-700/50 pt-1 hidden md:block">
                                                                                 Total: ${(item.quantity * item.price).toFixed(2)}
                                                                             </p>
                                                                         </>
@@ -502,19 +559,28 @@ export default function ShoppingListsPage() {
                                                                             <p className={`font-bold text-lg ${item.completed ? "text-slate-500 line-through" : "text-white"}`}>
                                                                                 ${(item.price * item.quantity).toFixed(2)}
                                                                             </p>
-                                                                            <p className="text-[10px] text-slate-500">
+                                                                            <p className="text-[10px] text-slate-500 hidden md:block">
                                                                                 Bs. {(item.price * item.quantity * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 })}
                                                                             </p>
                                                                         </>
                                                                     )}
                                                                 </div>
                                                             )}
-                                                            <button
-                                                                onClick={() => deleteItem(currentList.id, currentList.items, item.id)}
-                                                                className="p-2 text-slate-600 hover:text-white hover:bg-red-500 rounded-lg transition-all md:opacity-0 md:group-hover:opacity-100"
-                                                            >
-                                                                <FiTrash2 size={18} />
-                                                            </button>
+                                                            <div className="flex items-center gap-2 ml-auto md:ml-0">
+                                                                <button
+                                                                    onClick={() => deleteItem(currentList.id, currentList.items, item.id)}
+                                                                    className="p-2 text-slate-600 hover:text-white hover:bg-red-500 rounded-lg transition-all md:opacity-0 md:group-hover:opacity-100"
+                                                                >
+                                                                    <FiTrash2 size={18} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleEditItem(item)}
+                                                                    className="p-2 text-slate-600 hover:text-white hover:bg-blue-500 rounded-lg transition-all md:opacity-0 md:group-hover:opacity-100"
+                                                                    title="Editar item"
+                                                                >
+                                                                    <FiEdit2 size={18} />
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ));

@@ -32,7 +32,7 @@ export default function ExchangeRateWidget() {
                             <div className="h-6 w-20 bg-slate-700/50 animate-pulse rounded"></div>
                         ) : (
                             <>
-                                <span className="text-2xl font-bold text-white">{rate?.toFixed(2)}</span>
+                                <span className="text-2xl font-bold text-white">{rate?.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                                 <span className="text-sm text-slate-400">Bs/USD</span>
                             </>
                         )}

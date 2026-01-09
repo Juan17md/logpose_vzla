@@ -289,7 +289,7 @@ export default function SavingsPage() {
                                 <FiDollarSign size={20} />
                             </div>
                         </div>
-                        <p className="text-3xl font-bold text-white mb-1">$ {balancePhysical.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-bold text-white mb-1">$ {balancePhysical.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                         <p className="text-sm text-slate-500">Valor estable</p>
                     </div>
 
@@ -302,7 +302,7 @@ export default function SavingsPage() {
                                 <SiTether size={20} />
                             </div>
                         </div>
-                        <p className="text-3xl font-bold text-white mb-1">{balanceUSDT.toLocaleString("es-ES", { minimumFractionDigits: 2 })} USDT</p>
+                        <p className="text-3xl font-bold text-white mb-1">{balanceUSDT.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} USDT</p>
                         <p className="text-sm text-slate-500">Dólar Digital</p>
                     </div>
                 </div>
@@ -311,9 +311,9 @@ export default function SavingsPage() {
                 <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 backdrop-blur-md p-6 rounded-3xl border border-indigo-500/30 shadow-lg flex flex-col justify-center relative overflow-hidden">
                     <div className="relative z-10">
                         <h3 className="text-indigo-200 text-sm font-bold uppercase tracking-wider mb-2">Total Ahorrado</h3>
-                        <p className="text-4xl font-bold text-white mb-2">$ {totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+                        <p className="text-4xl font-bold text-white mb-2">$ {totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                         <div className="inline-block px-3 py-1 bg-white/10 rounded-full border border-white/10 text-xs text-indigo-100 mb-4">
-                            ≈ Bs. {(totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                            ≈ Bs. {(totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </div>
                     </div>
                 </div>
@@ -462,7 +462,7 @@ export default function SavingsPage() {
                                         <div className="flex items-center gap-4">
                                             <p className={`font-mono font-bold text-lg ${t.type === "deposit" ? "text-emerald-400" : "text-red-400"
                                                 }`}>
-                                                {t.type === "deposit" ? "+" : "-"}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                {t.type === "deposit" ? "+" : "-"}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                             </p>
                                             <button
                                                 onClick={() => handleDelete(t)}

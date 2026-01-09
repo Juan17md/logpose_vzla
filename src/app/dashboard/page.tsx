@@ -4,10 +4,11 @@ import { useEffect, useState, useMemo } from "react";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, addDoc, collection, Timestamp } from "firebase/firestore";
 import { useTransactions } from "@/hooks/useTransactions";
-import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar } from "react-icons/fi";
+import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2 } from "react-icons/fi";
 import Link from "next/link";
+import Swal from "sweetalert2";
 import RecentTransactions from "@/components/ui/RecentTransactions";
 import ExchangeRateWidget from "@/components/ui/ExchangeRateWidget";
 import SavingsGoalsWidget from "@/components/ui/SavingsGoalsWidget";
@@ -66,6 +67,73 @@ export default function DashboardPage() {
 
         return { totalBalance, monthlyIncome, monthlyExpense };
     }, [transactions]);
+
+    const handleUpdateBalance = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent navigation to reports
+
+        const { value: amountStr } = await Swal.fire({
+            title: 'Ajustar Saldo Actual',
+            text: 'Ingresa el monto real que tienes actualmente. Se creará un movimiento de ajuste automático.',
+            input: 'number',
+            inputValue: stats.totalBalance,
+            showCancelButton: true,
+            confirmButtonText: 'Ajustar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#10b981',
+            background: "#1f2937",
+            color: "#fff",
+            inputValidator: (value) => {
+                if (!value || isNaN(parseFloat(value))) {
+                    return 'Debes ingresar un monto válido';
+                }
+                return null;
+            }
+        });
+
+        if (amountStr !== undefined) {
+            const newBalance = parseFloat(amountStr);
+            const currentBalance = stats.totalBalance;
+            const diff = newBalance - currentBalance;
+
+            if (Math.abs(diff) < 0.01) return; // No change
+
+            const isIncome = diff > 0;
+            const adjustmentAmount = Math.abs(diff);
+
+            try {
+                await addDoc(collection(db, "transactions"), {
+                    userId: user.uid,
+                    amount: adjustmentAmount,
+                    type: isIncome ? 'ingreso' : 'gasto',
+                    category: 'Ajuste',
+                    description: 'Ajuste manual de saldo',
+                    date: Timestamp.now(),
+                    currency: 'USD',
+                    originalAmount: adjustmentAmount,
+                    exchangeRate: 1,
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saldo Ajustado',
+                    text: `Se ha generado un ${isIncome ? 'Ingreso' : 'Gasto'} de $${adjustmentAmount.toFixed(2)} para cuadrar el saldo.`,
+                    timer: 2000,
+                    showConfirmButton: false,
+                    background: "#1f2937",
+                    color: "#fff"
+                });
+            } catch (error) {
+                console.error("Error creating adjustment transaction:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo ajustar el saldo.',
+                    background: "#1f2937",
+                    color: "#fff"
+                });
+            }
+        }
+    };
 
     if (authLoading || transactionsLoading) {
         return (
@@ -173,12 +241,21 @@ export default function DashboardPage() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all"></div>
                     <div className="flex justify-between items-start mb-4 relative z-10">
                         <div>
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Saldo Total</p>
+                            <div className="flex items-center gap-2 mb-1">
+                                <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Saldo Total</p>
+                                <button
+                                    onClick={handleUpdateBalance}
+                                    className="p-1 text-slate-500 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors z-20"
+                                    title="Ajustar saldo manualmente"
+                                >
+                                    <FiEdit2 size={12} />
+                                </button>
+                            </div>
                             <h3 className={`text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400`}>
-                                $ {stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                $ {stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </h3>
                             <p className="text-sm text-slate-500 font-medium mt-1 pl-1 border-l-2 border-blue-500/30">
-                                ≈ Bs. {(stats.totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                                ≈ Bs. {(stats.totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </p>
                         </div>
                         <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
@@ -198,10 +275,10 @@ export default function DashboardPage() {
                         <div>
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Ingresos (Mes)</p>
                             <h3 className="text-3xl font-bold text-emerald-400">
-                                $ {stats.monthlyIncome.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                $ {stats.monthlyIncome.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </h3>
                             <p className="text-sm text-emerald-500/60 font-medium mt-1 pl-1 border-l-2 border-emerald-500/30">
-                                ≈ Bs. {(stats.monthlyIncome * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                                ≈ Bs. {(stats.monthlyIncome * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </p>
                         </div>
                         <div className="p-3 bg-emerald-500/20 rounded-2xl border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
@@ -224,10 +301,10 @@ export default function DashboardPage() {
                         <div>
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Gastos (Mes)</p>
                             <h3 className="text-3xl font-bold text-red-400">
-                                $ {stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                $ {stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </h3>
                             <p className="text-sm text-red-500/60 font-medium mt-1 pl-1 border-l-2 border-red-500/30">
-                                ≈ Bs. {(stats.monthlyExpense * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                                ≈ Bs. {(stats.monthlyExpense * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </p>
                         </div>
                         <div className="p-3 bg-red-500/20 rounded-2xl border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">

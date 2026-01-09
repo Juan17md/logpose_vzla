@@ -131,7 +131,7 @@ export default function ReportsPage() {
                         <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20"><FiTrendingUp size={20} /></div>
                         <span className="font-bold uppercase tracking-wider text-xs text-slate-400">Ingresos Totales</span>
                     </div>
-                    <p className="text-4xl font-bold text-white relative z-10">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+                    <p className="text-4xl font-bold text-white relative z-10">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                 </div>
 
                 <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 relative overflow-hidden group">
@@ -140,7 +140,7 @@ export default function ReportsPage() {
                         <div className="p-2.5 bg-red-500/10 rounded-xl border border-red-500/20"><FiTrendingDown size={20} /></div>
                         <span className="font-bold uppercase tracking-wider text-xs text-slate-400">Gastos Totales</span>
                     </div>
-                    <p className="text-4xl font-bold text-white relative z-10">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+                    <p className="text-4xl font-bold text-white relative z-10">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                 </div>
 
                 <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 relative overflow-hidden group">
@@ -150,7 +150,7 @@ export default function ReportsPage() {
                         <span className="font-bold uppercase tracking-wider text-xs text-slate-400">Balance Neto</span>
                     </div>
                     <p className={`text-4xl font-bold relative z-10 ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
-                        $ {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                        $ {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </p>
                 </div>
 
@@ -161,7 +161,7 @@ export default function ReportsPage() {
                         <span className="font-bold uppercase tracking-wider text-xs text-slate-400">Ahorro del Periodo</span>
                     </div>
                     <p className={`text-4xl font-bold relative z-10 ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
-                        $ {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                        $ {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </p>
                 </div>
             </div>

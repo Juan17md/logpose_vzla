@@ -219,6 +219,106 @@ export default function FixedExpensesPage() {
         }
     };
 
+    const handleEditExpense = async (expense: FixedExpense) => {
+        const { value: formValues } = await Swal.fire({
+            title: 'Editar Gasto Fijo',
+            html:
+                '<div class="flex flex-col gap-3 text-left">' +
+                '<label class="text-xs text-slate-400 font-bold uppercase">Nombre</label>' +
+                `<input id="swal-edit-name" class="swal2-input m-0 w-full" value="${expense.title}" placeholder="Ej: Internet" style="background-color: #1e293b; color: white; border: 1px solid #475569;">` +
+
+                '<label class="text-xs text-slate-400 font-bold uppercase">Monto ($)</label>' +
+                `<input id="swal-edit-amount" type="number" step="0.01" value="${expense.amount}" class="swal2-input m-0 w-full" placeholder="0.00" style="background-color: #1e293b; color: white; border: 1px solid #475569;">` +
+
+                '<label class="text-xs text-slate-400 font-bold uppercase">Día de pago (1-31)</label>' +
+                `<input id="swal-edit-day" type="number" min="1" max="31" value="${expense.dueDay}" class="swal2-input m-0 w-full" placeholder="15" style="background-color: #1e293b; color: white; border: 1px solid #475569;">` +
+
+                '<label class="text-xs text-slate-400 font-bold uppercase">Categoría</label>' +
+                `<select id="swal-edit-category" class="swal2-input m-0 w-full" style="background-color: #1e293b; color: white; border: 1px solid #475569;">` +
+                `<option value="Servicios" ${expense.category === 'Servicios' ? 'selected' : ''}>Servicios</option>` +
+                `<option value="Hogar" ${expense.category === 'Hogar' ? 'selected' : ''}>Hogar</option>` +
+                `<option value="Suscripciones" ${expense.category === 'Suscripciones' ? 'selected' : ''}>Suscripciones</option>` +
+                `<option value="Deudas" ${expense.category === 'Deudas' ? 'selected' : ''}>Deudas</option>` +
+                `<option value="Educación" ${expense.category === 'Educación' ? 'selected' : ''}>Educación</option>` +
+                `<option value="Otros" ${!['Servicios', 'Hogar', 'Suscripciones', 'Deudas', 'Educación'].includes(expense.category) ? 'selected' : ''}>Otros (Especificar)</option>` +
+                '</select>' +
+
+                `<input id="swal-edit-custom-category" class="swal2-input m-0 w-full mt-2 ${!['Servicios', 'Hogar', 'Suscripciones', 'Deudas', 'Educación'].includes(expense.category) ? '' : 'hidden'}" value="${!['Servicios', 'Hogar', 'Suscripciones', 'Deudas', 'Educación'].includes(expense.category) ? expense.category : ''}" placeholder="Escribe la categoría" style="background-color: #1e293b; color: white; border: 1px solid #475569;">` +
+
+                '<label class="text-xs text-slate-400 font-bold uppercase mt-2">Descripción (Opcional)</label>' +
+                `<input id="swal-edit-desc" class="swal2-input m-0 w-full" value="${expense.description || ''}" placeholder="Ej: Plan de 100MB" style="background-color: #1e293b; color: white; border: 1px solid #475569;">` +
+                '</div>',
+            focusConfirm: false,
+            background: "#1f2937",
+            color: "#fff",
+            showCancelButton: true,
+            confirmButtonText: 'Actualizar',
+            confirmButtonColor: '#3b82f6',
+            didOpen: () => {
+                const selectElement = document.getElementById('swal-edit-category') as HTMLSelectElement;
+                const customInput = document.getElementById('swal-edit-custom-category') as HTMLInputElement;
+
+                selectElement.addEventListener('change', () => {
+                    if (selectElement.value === 'Otros') {
+                        customInput.style.display = 'block';
+                        customInput.classList.remove('hidden');
+                        customInput.focus();
+                    } else {
+                        customInput.style.display = 'none';
+                        customInput.classList.add('hidden');
+                    }
+                });
+            },
+            preConfirm: () => {
+                const name = (document.getElementById('swal-edit-name') as HTMLInputElement).value;
+                const amount = (document.getElementById('swal-edit-amount') as HTMLInputElement).value;
+                const day = (document.getElementById('swal-edit-day') as HTMLInputElement).value;
+                const categorySelect = (document.getElementById('swal-edit-category') as HTMLSelectElement).value;
+                const customCategory = (document.getElementById('swal-edit-custom-category') as HTMLInputElement).value;
+                const description = (document.getElementById('swal-edit-desc') as HTMLInputElement).value;
+
+                return [
+                    name,
+                    amount,
+                    day,
+                    categorySelect === 'Otros' && customCategory ? customCategory : categorySelect,
+                    description
+                ];
+            }
+        });
+
+        if (formValues) {
+            const [title, amount, dueDay, category, description] = formValues;
+
+            if (!title || !amount || !dueDay) {
+                Swal.fire({ icon: 'error', title: 'Faltan campos', text: 'Por favor completa nombre, monto y día.' });
+                return;
+            }
+
+            try {
+                await updateFixedExpense(expense.id, {
+                    title,
+                    amount: parseFloat(amount),
+                    dueDay: parseInt(dueDay),
+                    category,
+                    description
+                });
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Gasto actualizado",
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: "#1f2937",
+                    color: "#fff",
+                });
+            } catch (error) {
+                console.error("Error updating expense:", error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo actualizar el gasto.' });
+            }
+        }
+    };
+
     const handleDelete = async (id: string) => {
         Swal.fire({
             title: '¿Estás seguro?',
@@ -297,7 +397,7 @@ export default function FixedExpensesPage() {
                             <div>
                                 <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">Progreso del Mes</p>
                                 <p className="text-2xl font-bold text-white mt-1">
-                                    ${totalPaid.toFixed(2)} <span className="text-slate-500 text-sm font-normal">/ ${totalMonthly.toFixed(2)}</span>
+                                    ${totalPaid.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} <span className="text-slate-500 text-sm font-normal">/ ${totalMonthly.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                                 </p>
                             </div>
                             <div className="text-right">
@@ -395,10 +495,18 @@ export default function FixedExpensesPage() {
                                         <div className="p-3 bg-slate-800 rounded-2xl">
                                             <FiActivity className="text-2xl text-slate-400" />
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={() => handleEditExpense(expense)}
+                                                className="p-2 text-slate-600 hover:text-blue-400 transition-colors"
+                                                title="Editar"
+                                            >
+                                                <FiEdit2 />
+                                            </button>
                                             <button
                                                 onClick={() => handleDelete(expense.id)}
                                                 className="p-2 text-slate-600 hover:text-red-400 transition-colors"
+                                                title="Eliminar"
                                             >
                                                 <FiTrash2 />
                                             </button>
@@ -410,9 +518,9 @@ export default function FixedExpensesPage() {
 
                                     <div className="flex items-end justify-between mt-auto">
                                         <div>
-                                            <p className="text-2xl font-bold text-white">${expense.amount.toFixed(2)}</p>
+                                            <p className="text-2xl font-bold text-white">${expense.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                                             <p className="text-xs text-slate-500">
-                                                ≈ Bs. {(expense.amount * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 })}
+                                                ≈ Bs. {(expense.amount * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                             </p>
                                         </div>
                                         <button

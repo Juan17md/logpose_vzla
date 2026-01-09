@@ -134,15 +134,15 @@ export default function RecentTransactions() {
                                         {t.currency === 'VES' && t.originalAmount ? (
                                             <div className="flex flex-col items-end">
                                                 <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                    {t.type === 'ingreso' ? '+' : '-'}Bs. {t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                                                    {t.type === 'ingreso' ? '+' : '-'}Bs. {t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </span>
                                                 <span className="text-xs text-slate-500">
-                                                    ≈ ${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                    ≈ ${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
                                         ) : (
                                             <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                             </span>
                                         )}
                                     </td>

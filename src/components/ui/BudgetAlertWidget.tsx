@@ -93,38 +93,81 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
 
     return (
         <div className={`group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden transition-all duration-300 ${borderColor} hover:bg-slate-900/70`}>
+            {/* Ambient Background Glow */}
             <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-16 -mt-16 transition-all opacity-0 group-hover:opacity-100 ${statusColor.replace('bg-', 'bg-').replace('500', '500/20')}`}></div>
 
-            <div className="flex justify-between items-start mb-6 relative z-10">
-                <div>
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <span className={`p-1.5 rounded-lg bg-opacity-20 ${statusColor.replace('bg-', 'bg-').replace('500', '500/20')} ${textColor}`}>
-                            <FiAlertTriangle />
-                        </span>
-                        Límite Mensual
-                    </h3>
-                    <p className="text-sm text-slate-400 mt-2 font-medium">
-                        $ <span className="text-white font-bold text-base">{currentExpense.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span> / {budgetLimit.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-                    </p>
-                </div>
-                <button onClick={handleSetLimit} className="text-xs font-semibold text-slate-500 hover:text-white uppercase tracking-wider transition-colors bg-slate-800/50 px-3 py-1 rounded-lg hover:bg-slate-700">
-                    Editar
-                </button>
+            {/* Header */}
+            <div className="flex justify-between items-start mb-2 relative z-10">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className={`p-1.5 rounded-lg bg-opacity-20 ${statusColor.replace('bg-', 'bg-').replace('500', '500/20')} ${textColor}`}>
+                        <FiAlertTriangle />
+                    </span>
+                    Límite Mensual
+                </h3>
             </div>
 
-            <div className="relative z-10">
-                <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
-                    <span className={textColor}>{percentage.toFixed(1)}% Usado</span>
-                    <span className="text-slate-500">
+            {/* Circular Chart Section */}
+            <div className="relative z-10 flex flex-col items-center justify-center py-2">
+                <div className="relative w-40 h-40">
+                    <svg
+                        height="100%"
+                        width="100%"
+                        viewBox="0 0 160 160"
+                        className="transform -rotate-90"
+                    >
+                        {/* Track Circle */}
+                        <circle
+                            stroke="#1e293b" // slate-800
+                            strokeWidth="12"
+                            fill="transparent"
+                            r="68"
+                            cx="80"
+                            cy="80"
+                        />
+                        {/* Progress Circle */}
+                        <circle
+                            className={`transition-all duration-1000 ease-out ${statusColor.replace("bg-", "text-")} drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]`}
+                            stroke="currentColor"
+                            strokeWidth="12"
+                            strokeDasharray={68 * 2 * Math.PI}
+                            strokeDashoffset={(68 * 2 * Math.PI) - (Math.min(percentage, 100) / 100) * (68 * 2 * Math.PI)}
+                            strokeLinecap="round"
+                            fill="transparent"
+                            r="68"
+                            cx="80"
+                            cy="80"
+                        />
+                    </svg>
+                    {/* Centered Text */}
+                    <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center text-center">
+                        <span className={`text-2xl font-bold ${textColor}`}>
+                            {percentage > 999 ? '>999' : percentage.toFixed(1)}%
+                        </span>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Usado</span>
+                    </div>
+                </div>
+
+                {/* Legend / Details */}
+                <div className="mt-2 text-center">
+                    <p className="text-sm text-slate-400 font-medium">
+                        $ <span className="text-white font-bold">{currentExpense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+                        <span className="text-slate-600 mx-1">/</span>
+                        {budgetLimit.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mt-1">
                         {percentage >= 100 ? "⚠️ Excedido" : "Disponible"}
-                    </span>
+                    </p>
                 </div>
-                <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700/50">
-                    <div
-                        className={`h-full rounded-full transition-all duration-1000 ease-out ${statusColor} shadow-[0_0_10px_rgba(0,0,0,0.3)]`}
-                        style={{ width: `${Math.min(percentage, 100)}%` }}
-                    ></div>
-                </div>
+            </div>
+
+            {/* Footer Button */}
+            <div className="mt-4 relative z-10">
+                <button
+                    onClick={handleSetLimit}
+                    className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all border border-slate-700/50 hover:border-slate-600 shadow-lg uppercase tracking-wider"
+                >
+                    Actualizar Límite
+                </button>
             </div>
         </div>
     );

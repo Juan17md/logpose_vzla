@@ -106,10 +106,10 @@ export default function DebtsPage() {
 
                     if (isUsd) {
                         const bsVal = val * bcvRate;
-                        conversionText.innerText = `≈ Bs. ${bsVal.toLocaleString("es-VE", { maximumFractionDigits: 2 })}`;
+                        conversionText.innerText = `≈ Bs. ${bsVal.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
                     } else {
                         const usdVal = val / bcvRate;
-                        conversionText.innerText = `≈ $${usdVal.toFixed(2)}`;
+                        conversionText.innerText = `≈ $${usdVal.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
                     }
                 };
 
@@ -200,13 +200,13 @@ export default function DebtsPage() {
                 <div class="text-left mb-4 text-sm text-slate-400 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
                     <div class="flex justify-between items-center mb-1">
                         <span>Total deuda:</span>
-                        <span class="text-white font-bold">$${debt.amount.toFixed(2)}</span>
+                        <span class="text-white font-bold">$${debt.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span>Restante:</span>
                         <div>
-                            <span class="text-emerald-400 font-bold text-lg">$${remaining.toFixed(2)}</span>
-                            <span class="text-xs text-slate-500 ml-1">(${remaining * bcvRate > 0 ? '≈ Bs. ' + (remaining * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 }) : ''})</span>
+                            <span class="text-emerald-400 font-bold text-lg">$${remaining.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+                            <span class="text-xs text-slate-500 ml-1">(${remaining * bcvRate > 0 ? '≈ Bs. ' + (remaining * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : ''})</span>
                         </div>
                     </div>
                 </div>
@@ -239,7 +239,7 @@ export default function DebtsPage() {
                                         <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                                         <span>${new Date(p.date).toLocaleDateString()}</span>
                                     </div>
-                                    <span class="font-bold text-white">$${p.amount.toFixed(2)}</span>
+                                    <span class="font-bold text-white">$${p.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                                  </div>`
                     ).join('')
                     : '<p class="text-xs text-slate-500 italic text-center py-2">No hay pagos registrados</p>'
@@ -277,10 +277,10 @@ export default function DebtsPage() {
 
                     if (isUsd) {
                         const bsVal = val * bcvRate;
-                        conversionText.innerText = `≈ Bs. ${bsVal.toLocaleString("es-VE", { maximumFractionDigits: 2 })}`;
+                        conversionText.innerText = `≈ Bs. ${bsVal.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
                     } else {
                         const usdVal = val / bcvRate;
-                        conversionText.innerText = `≈ $${usdVal.toFixed(2)}`;
+                        conversionText.innerText = `≈ $${usdVal.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
                     }
                 };
 
@@ -431,7 +431,7 @@ export default function DebtsPage() {
                     </div>
                     <div className="relative z-10">
                         <p className={`text-sm font-bold uppercase tracking-wider mb-1 ${activeTab === 'por_cobrar' ? 'text-emerald-400' : 'text-slate-400'}`}>Por Cobrar</p>
-                        <h2 className="text-3xl font-bold text-white">${totalReceivable.toFixed(2)}</h2>
+                        <h2 className="text-3xl font-bold text-white">${totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h2>
                         <p className="text-xs text-slate-500 mt-1">Gente que te debe dinero</p>
                     </div>
                 </div>
@@ -445,7 +445,7 @@ export default function DebtsPage() {
                     </div>
                     <div className="relative z-10">
                         <p className={`text-sm font-bold uppercase tracking-wider mb-1 ${activeTab === 'por_pagar' ? 'text-rose-400' : 'text-slate-400'}`}>Por Pagar</p>
-                        <h2 className="text-3xl font-bold text-white">${totalPayable.toFixed(2)}</h2>
+                        <h2 className="text-3xl font-bold text-white">${totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h2>
                         <p className="text-xs text-slate-500 mt-1">Dinero que debes</p>
                     </div>
                 </div>
@@ -518,17 +518,17 @@ export default function DebtsPage() {
                             <div className="mb-4 p-4 bg-slate-800/50 rounded-2xl border border-slate-700/30">
                                 <div className="flex justify-between items-end mb-1">
                                     <span className="text-xs text-slate-400 uppercase font-bold">Total</span>
-                                    <span className="text-xl font-bold text-white">${debt.amount.toFixed(2)}</span>
+                                    <span className="text-xl font-bold text-white">${debt.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex justify-between items-end">
                                     <span className="text-xs text-slate-400 uppercase font-bold">Restante</span>
                                     <span className={`text-lg font-bold ${remaining > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                                        ${remaining.toFixed(2)}
+                                        ${remaining.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                     </span>
                                 </div>
                                 <div className="mt-2 text-right">
                                     <span className="text-xs text-slate-500">
-                                        ≈ Bs. {(remaining * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 })}
+                                        ≈ Bs. {(remaining * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                     </span>
                                 </div>
                             </div>
@@ -558,13 +558,13 @@ export default function DebtsPage() {
                                                 <div className="text-right">
                                                     <div className="text-white font-bold">
                                                         {pay.currency === 'VES' && pay.originalAmount
-                                                            ? `Bs. ${pay.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 2 })}`
-                                                            : `$${pay.amount.toFixed(2)}`
+                                                            ? `Bs. ${pay.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+                                                            : `$${pay.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
                                                         }
                                                     </div>
                                                     {pay.currency === 'VES' && (
                                                         <div className="text-xs text-slate-500">
-                                                            ≈ ${pay.amount.toFixed(2)}
+                                                            ≈ ${pay.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                         </div>
                                                     )}
                                                 </div>

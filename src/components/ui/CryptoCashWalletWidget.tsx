@@ -102,7 +102,7 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
                         </div>
                         <div>
                             <p className="text-sm text-slate-400 font-medium">Efectivo Físico</p>
-                            <p className="text-lg font-bold text-white">$ {userData.savingsPhysical.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
+                            <p className="text-lg font-bold text-white">$ {userData.savingsPhysical.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                         </div>
                     </div>
                     <button
@@ -121,7 +121,7 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
                         </div>
                         <div>
                             <p className="text-sm text-slate-400 font-medium">USDT (Cripto)</p>
-                            <p className="text-lg font-bold text-white">{userData.savingsUSDT.toLocaleString("es-ES", { minimumFractionDigits: 2 })} USDT</p>
+                            <p className="text-lg font-bold text-white">{userData.savingsUSDT.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} USDT</p>
                         </div>
                     </div>
                     <button
@@ -138,13 +138,19 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
                     <div>
                         <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Ahorrado</p>
                         <p className="text-sm text-slate-400 mt-1">
-                            ≈ Bs. {(totalSaved * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                            ≈ Bs. {(totalSaved * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
                     <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
-                        $ {totalSaved.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                        $ {totalSaved.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </p>
                 </div>
+            </div>
+
+            <div className="mt-4 relative z-10">
+                <a href="/dashboard/ahorros" className="block w-full text-center py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold transition-all border border-slate-700/50 hover:border-slate-600 shadow-lg">
+                    Registrar Ahorro
+                </a>
             </div>
         </div>
     );
