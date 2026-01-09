@@ -8,6 +8,9 @@ export interface Payment {
     amount: number;
     date: Date;
     note?: string;
+    currency?: "USD" | "VES";
+    originalAmount?: number;
+    exchangeRate?: number;
 }
 
 export interface Debt {

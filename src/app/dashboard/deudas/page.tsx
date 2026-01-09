@@ -178,32 +178,12 @@ export default function DebtsPage() {
                 dueDate: date ? new Date(date) : undefined,
             });
 
-            // Create Transaction Record automatically
-            try {
-                if (auth.currentUser) {
-                    await addDoc(collection(db, "transactions"), {
-                        userId: auth.currentUser.uid,
-                        amount: debtAmount,
-                        // Cash Flow Logic:
-                        // Por Cobrar (I lend money) -> Money LEAVES -> expense (gasto)
-                        // Por Pagar (I borrow money) -> Money ENTERS -> income (ingreso)
-                        type: activeTab === 'por_cobrar' ? 'gasto' : 'ingreso',
-                        category: 'Deudas',
-                        description: `Registro Deuda: ${person} (${desc || 'Nueva deuda'})`,
-                        date: Timestamp.fromDate(date ? new Date(date) : new Date()),
-                        currency: "USD",
-                        originalAmount: debtAmount,
-                        exchangeRate: bcvRate,
-                    });
-                }
-            } catch (error) {
-                console.error("Error creating transaction for new debt:", error);
-            }
+
 
             Swal.fire({
                 icon: "success",
                 title: "Registrado",
-                text: "Se ha creado la deuda y el movimiento correspondiente.",
+                text: "Se ha registrado la deuda exitosamente.",
                 timer: 2000,
                 showConfirmButton: false,
                 background: "#1f2937",
@@ -347,13 +327,15 @@ export default function DebtsPage() {
                     finalAmount = amountVal / bcvRate;
                 }
 
-                return [finalAmount.toString(), date];
+                return [finalAmount.toString(), date, isUsd.toString(), amountVal.toString()];
             }
         });
 
         if (formValues) {
-            const [amountStr, dateStr] = formValues;
+            const [amountStr, dateStr, isUsdStr, rawAmountStr] = formValues;
             const amount = parseFloat(amountStr);
+            const isUsd = isUsdStr === 'true';
+            const rawAmount = parseFloat(rawAmountStr);
 
             if (!amount || amount <= 0) {
                 Swal.fire({ icon: 'error', title: 'Monto inválido', background: "#1f2937", color: "#fff" });
@@ -367,6 +349,9 @@ export default function DebtsPage() {
             await addPayment(debt.id, {
                 amount: amount,
                 date: new Date(dateStr),
+                currency: isUsd ? 'USD' : 'VES',
+                originalAmount: isUsd ? amount : rawAmount,
+                exchangeRate: isUsd ? 1 : bcvRate
             });
 
             // Create Transaction Record
@@ -379,9 +364,9 @@ export default function DebtsPage() {
                         category: 'Deudas',
                         description: `Abono: ${debt.personName} (${debt.description || 'Deuda'})`,
                         date: Timestamp.fromDate(new Date(dateStr)),
-                        currency: "USD",
-                        originalAmount: amount,
-                        exchangeRate: bcvRate,
+                        currency: isUsd ? "USD" : "VES",
+                        originalAmount: isUsd ? amount : rawAmount,
+                        exchangeRate: isUsd ? 1 : bcvRate,
                     });
                 }
             } catch (error) {
@@ -570,9 +555,21 @@ export default function DebtsPage() {
                                     <p className="font-bold text-slate-400 mb-1">Historial del Pagos ({debt.payments.length}):</p>
                                     <div className="space-y-1 max-h-20 overflow-y-auto custom-scrollbar">
                                         {debt.payments.slice().reverse().map((pay, i) => (
-                                            <div key={i} className="flex justify-between">
+                                            <div key={i} className="flex justify-between items-center">
                                                 <span>{new Date(pay.date).toLocaleDateString()}</span>
-                                                <span className="text-white">${pay.amount.toFixed(2)}</span>
+                                                <div className="text-right">
+                                                    <div className="text-white font-bold">
+                                                        {pay.currency === 'VES' && pay.originalAmount
+                                                            ? `Bs. ${pay.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 2 })}`
+                                                            : `$${pay.amount.toFixed(2)}`
+                                                        }
+                                                    </div>
+                                                    {pay.currency === 'VES' && (
+                                                        <div className="text-xs text-slate-500">
+                                                            ≈ ${pay.amount.toFixed(2)}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>

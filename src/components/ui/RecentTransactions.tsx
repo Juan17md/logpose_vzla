@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useTransactions } from "@/hooks/useTransactions";
 import { FiTrendingUp, FiTrendingDown, FiTrash2, FiClock, FiEdit2, FiSearch, FiCopy } from "react-icons/fi";
 import Swal from "sweetalert2";
@@ -8,6 +9,8 @@ import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import PaginationControls from "./PaginationControls";
 
 export default function RecentTransactions() {
+    const router = useRouter();
+    const pathname = usePathname();
     const { transactions, loading, deleteTransaction, duplicateTransaction } = useTransactions();
     const { startEditing } = useEditTransaction();
 
@@ -128,15 +131,32 @@ export default function RecentTransactions() {
                                         {t.date.toLocaleDateString("es-ES", { day: 'numeric', month: 'short' })}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'
-                                            }`}>
-                                            {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-                                        </span>
+                                        {t.currency === 'VES' && t.originalAmount ? (
+                                            <div className="flex flex-col items-end">
+                                                <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                    {t.type === 'ingreso' ? '+' : '-'}Bs. {t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                                                </span>
+                                                <span className="text-xs text-slate-500">
+                                                    ≈ ${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex items-center justify-end space-x-2">
                                             <button
-                                                onClick={() => startEditing(t)}
+                                                onClick={() => {
+                                                    startEditing(t);
+                                                    if (pathname !== "/dashboard/movimientos") {
+                                                        router.push("/dashboard/movimientos");
+                                                    } else {
+                                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                    }
+                                                }}
                                                 className="text-slate-500 hover:text-blue-400 transition-colors p-2 hover:bg-blue-500/10 rounded-lg"
                                                 title="Editar"
                                             >
