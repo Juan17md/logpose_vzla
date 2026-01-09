@@ -178,8 +178,6 @@ export default function DebtsPage() {
                 dueDate: date ? new Date(date) : undefined,
             });
 
-
-
             Swal.fire({
                 icon: "success",
                 title: "Registrado",
