@@ -243,13 +243,6 @@ export default function DashboardPage() {
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Saldo Total</p>
-                                <button
-                                    onClick={handleUpdateBalance}
-                                    className="p-1 text-slate-500 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors z-20"
-                                    title="Ajustar saldo manualmente"
-                                >
-                                    <FiEdit2 size={12} />
-                                </button>
                             </div>
                             <h3 className={`text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400`}>
                                 $ {stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
@@ -262,6 +255,12 @@ export default function DashboardPage() {
                             <FiCreditCard className="text-2xl text-blue-400" />
                         </div>
                     </div>
+                    <button
+                        onClick={handleUpdateBalance}
+                        className="inline-flex items-center gap-2 text-xs font-semibold text-blue-500 hover:text-blue-300 transition-colors uppercase tracking-wide bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 hover:border-blue-500/40 relative z-20"
+                    >
+                        Ajustar Saldo <FiEdit2 />
+                    </button>
                 </div>
 
                 {/* Ingresos del Mes */}
