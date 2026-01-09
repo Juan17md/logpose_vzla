@@ -40,10 +40,17 @@ Una aplicación web progresiva y moderna para la gestión integral de finanzas p
 - **Consolidado Financiero**: Visión clara de ingresos vs. gastos del mes.
 - **Estadísticas de Ahorro**: Gráficos que integran tus avances en metas y ahorros libres.
 
+### 💳 Deudas y Gastos Fijos (Upgrade)
+- **Lógica Financiera Precisa**: El registro de deudas *no* genera movimientos automáticos. Los egresos/ingresos se registran únicamente al momento de realizar un *abono* o pago real.
+- **Soporte Multi-Moneda Real**: Registra abonos tanto en Dólares (USD) como en Bolívares (VES).
+- **Historial Inmutable**: El sistema almacena la moneda original y la tasa de cambio exacta del momento del pago, asegurando que el historial refleje lo que realmente pagaste sin alterarse por la fluctuación diaria del dólar.
+- **Gestión Visual**: Tabla de pagos con indicadores claros de moneda original y referencia en dólares.
+
 ### 🔒 Core Técnico Optimizado
 - **Context API**: Gestión de estado global con `TransactionsContext` y `UserDataContext` para minimizar lecturas a Firebase (lectura única).
 - **Atomic Transactions**: Uso de `runTransaction` de Firestore para asegurar integridad en datos financieros críticos.
 - **Autenticación Robusta**: Protección de rutas y datos privados por usuario.
+- **Data Integrity**: Estructura de datos extendida en pagos (`originalAmount`, `exchangeRate`) para auditoría precisa.
 
 ## 🛠️ Tecnologías Utilizadas
 
