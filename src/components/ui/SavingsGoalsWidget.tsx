@@ -192,7 +192,7 @@ export default function SavingsGoalsWidget({ bcvRate }: { bcvRate: number }) {
                                 </div>
                                 <div className="flex justify-between text-xs text-slate-500 font-medium">
                                     <span className={progress >= 100 ? "text-emerald-400 font-bold" : "text-blue-400"}>{progress.toFixed(0)}% Completado</span>
-                                    <span>Meta: Bs. {(goal.targetAmount * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 0 })}</span>
+                                    <span>Meta: Bs. {(goal.targetAmount * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
                         );

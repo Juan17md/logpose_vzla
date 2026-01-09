@@ -91,7 +91,7 @@ export default function PendingDebtsWidget() {
                                     </div>
                                 </div>
                                 <span className={`text-sm font-bold ${debt.type === 'por_cobrar' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                    ${remaining.toLocaleString('es-ES', { minimumFractionDigits: 0 })}
+                                    ${remaining.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
                                 </span>
                             </div>
                         );

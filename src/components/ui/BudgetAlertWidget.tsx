@@ -104,7 +104,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
                         Límite Mensual
                     </h3>
                     <p className="text-sm text-slate-400 mt-2 font-medium">
-                        $ <span className="text-white font-bold text-base">{currentExpense.toLocaleString()}</span> / {budgetLimit.toLocaleString()}
+                        $ <span className="text-white font-bold text-base">{currentExpense.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span> / {budgetLimit.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                     </p>
                 </div>
                 <button onClick={handleSetLimit} className="text-xs font-semibold text-slate-500 hover:text-white uppercase tracking-wider transition-colors bg-slate-800/50 px-3 py-1 rounded-lg hover:bg-slate-700">

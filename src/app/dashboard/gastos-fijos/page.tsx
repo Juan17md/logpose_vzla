@@ -410,7 +410,7 @@ export default function FixedExpensesPage() {
 
                                     <div className="flex items-end justify-between mt-auto">
                                         <div>
-                                            <p className="text-2xl font-bold text-white">${expense.amount}</p>
+                                            <p className="text-2xl font-bold text-white">${expense.amount.toFixed(2)}</p>
                                             <p className="text-xs text-slate-500">
                                                 ≈ Bs. {(expense.amount * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 })}
                                             </p>

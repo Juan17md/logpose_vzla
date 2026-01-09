@@ -76,12 +76,12 @@ export default function SalaryPlanningWidget({ userId, bcvRate }: Props) {
             <div className="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50 mb-4 group hover:border-blue-500/30 transition-all">
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-slate-400 text-sm font-medium uppercase tracking-wider">Sueldo Mensual</span>
-                    <span className="font-bold text-white text-2xl">${salary.toLocaleString()}</span>
+                    <span className="font-bold text-white text-2xl">${salary.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between items-center border-t border-slate-700/50 pt-2 mt-2">
                     <span className="text-slate-500 text-xs">Equivalente Estimado</span>
                     <span className="font-semibold text-blue-400 text-sm">
-                        Bs. {(salary * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 })}
+                        Bs. {(salary * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
                     </span>
                 </div>
             </div>
@@ -90,15 +90,15 @@ export default function SalaryPlanningWidget({ userId, bcvRate }: Props) {
                 <div className="grid grid-cols-2 gap-3 text-center relative z-10">
                     <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/30">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Necesidades (50%)</p>
-                        <p className="font-bold text-white text-lg">${(salary * 0.5).toLocaleString()}</p>
+                        <p className="font-bold text-white text-lg">${(salary * 0.5).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
                     </div>
                     <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/30">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Deseos (30%)</p>
-                        <p className="font-bold text-white text-lg">${(salary * 0.3).toLocaleString()}</p>
+                        <p className="font-bold text-white text-lg">${(salary * 0.3).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
                     </div>
                     <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 col-span-2">
                         <p className="text-[10px] text-emerald-500/80 uppercase tracking-wider font-bold mb-1">Ahorros (20%)</p>
-                        <p className="font-bold text-emerald-400 text-lg">${(salary * 0.2).toLocaleString()}</p>
+                        <p className="font-bold text-emerald-400 text-lg">${(salary * 0.2).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
                     </div>
                 </div>
             )}
