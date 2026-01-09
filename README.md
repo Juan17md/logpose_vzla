@@ -91,20 +91,3 @@ npm run dev
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-## 📱 Estructura del Proyecto
-
-```
-/src
-  /app              # Rutas (Dashboard, Login, Ahorros, Reportes...)
-  /components       # UI Kit, Widgets, Gráficos
-  /hooks            # Lógica personalizada (useTransactions, useSavings...)
-  /lib              # Configuración de Firebase y Utils
-```
-
-## 🤝 Contribución
-
-Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir lo que te gustaría cambiar.
-
-## 📄 Licencia
-
-[MIT](https://choosealicense.com/licenses/mit/)
