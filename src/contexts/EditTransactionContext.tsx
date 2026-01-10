@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import { Transaction } from '@/hooks/useTransactions'; // Ensure Transaction type checks out
 
 interface EditTransactionContextType {
@@ -22,8 +22,10 @@ export function EditTransactionProvider({ children }: { children: ReactNode }) {
         setTransactionToEdit(null);
     };
 
+    const value = useMemo(() => ({ transactionToEdit, startEditing, clearEditing }), [transactionToEdit]);
+
     return (
-        <EditTransactionContext.Provider value={{ transactionToEdit, startEditing, clearEditing }}>
+        <EditTransactionContext.Provider value={value}>
             {children}
         </EditTransactionContext.Provider>
     );

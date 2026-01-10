@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTransactions } from "@/hooks/useTransactions";
 import { FiTrendingUp, FiTrendingDown, FiTrash2, FiClock, FiEdit2, FiSearch, FiCopy } from "react-icons/fi";
@@ -49,16 +49,20 @@ export default function RecentTransactions() {
     };
 
     // Filter transactions
-    const filteredTransactions = transactions.filter(t =>
-        t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.amount.toString().includes(searchTerm)
-    );
+    const filteredTransactions = useMemo(() => {
+        return transactions.filter(t =>
+            t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            t.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            t.amount.toString().includes(searchTerm)
+        );
+    }, [transactions, searchTerm]);
 
     // Calculate pagination
     const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
+    const paginatedTransactions = useMemo(() => {
+        return filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredTransactions, startIndex, itemsPerPage]);
 
     // Reset page on search
     if (currentPage > totalPages && totalPages > 0) {

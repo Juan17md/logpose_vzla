@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from "react";
 import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -108,8 +108,15 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const value = useMemo(() => ({
+        transactions,
+        loading,
+        deleteTransaction,
+        duplicateTransaction
+    }), [transactions, loading]);
+
     return (
-        <TransactionsContext.Provider value={{ transactions, loading, deleteTransaction, duplicateTransaction }}>
+        <TransactionsContext.Provider value={value}>
             {children}
         </TransactionsContext.Provider>
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { FixedExpense } from "@/hooks/useFixedExpenses";
 import { FiChevronLeft, FiChevronRight, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,8 +54,18 @@ export default function FixedExpensesCalendar({ expenses, onPayExpense }: FixedE
         return paidDate.getMonth() === month && paidDate.getFullYear() === year;
     };
 
+    // Memoize expenses indexed by day for O(1) lookup
+    const expensesByDay = useMemo(() => {
+        const map: Record<number, FixedExpense[]> = {};
+        expenses.forEach(e => {
+            if (!map[e.dueDay]) map[e.dueDay] = [];
+            map[e.dueDay].push(e);
+        });
+        return map;
+    }, [expenses]);
+
     const getExpensesForDay = (day: number) => {
-        return expenses.filter(e => e.dueDay === day);
+        return expensesByDay[day] || [];
     };
 
     const isToday = (day: number) => {

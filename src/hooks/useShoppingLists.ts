@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, arrayUnion, arrayRemove } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, arrayUnion, runTransaction } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 
 export interface ShoppingItem {
@@ -50,7 +50,6 @@ export const useShoppingLists = () => {
                     ...doc.data(),
                 })) as ShoppingList[];
 
-                // Ensure backward compatibility by adding purchasedQuantity if missing
                 const sanitizedData = data.map(list => ({
                     ...list,
                     items: list.items?.map(item => ({
@@ -99,43 +98,81 @@ export const useShoppingLists = () => {
         });
     };
 
-    const toggleItem = async (listId: string, currentItems: ShoppingItem[], itemId: string) => {
-        const updatedItems = currentItems.map(item => {
-            if (item.id === itemId) {
-                const newCompleted = !item.completed;
-                return {
-                    ...item,
-                    completed: newCompleted,
-                    purchasedQuantity: newCompleted ? item.quantity : 0
-                };
-            }
-            return item;
-        });
-        const listRef = doc(db, "shopping_lists", listId);
-        await updateDoc(listRef, { items: updatedItems });
+    const toggleItem = async (listId: string, _currentItems: ShoppingItem[], itemId: string) => {
+        try {
+            await runTransaction(db, async (transaction) => {
+                const listRef = doc(db, "shopping_lists", listId);
+                const listDoc = await transaction.get(listRef);
+                if (!listDoc.exists()) throw "List not found";
+
+                const currentList = listDoc.data() as ShoppingList;
+                const items = currentList.items || [];
+
+                const updatedItems = items.map(item => {
+                    if (item.id === itemId) {
+                        const newCompleted = !item.completed;
+                        return {
+                            ...item,
+                            completed: newCompleted,
+                            purchasedQuantity: newCompleted ? item.quantity : 0
+                        };
+                    }
+                    return item;
+                });
+
+                transaction.update(listRef, { items: updatedItems });
+            });
+        } catch (e) {
+            console.error("Error toggling item:", e);
+        }
     };
 
-    const updateItemProgress = async (listId: string, currentItems: ShoppingItem[], itemId: string, change: number) => {
-        const updatedItems = currentItems.map(item => {
-            if (item.id === itemId) {
-                const newPurchasedQuantity = Math.max(0, Math.min(item.quantity, (item.purchasedQuantity || 0) + change));
-                const completed = newPurchasedQuantity >= item.quantity;
-                return {
-                    ...item,
-                    purchasedQuantity: newPurchasedQuantity,
-                    completed
-                };
-            }
-            return item;
-        });
-        const listRef = doc(db, "shopping_lists", listId);
-        await updateDoc(listRef, { items: updatedItems });
+    const updateItemProgress = async (listId: string, _currentItems: ShoppingItem[], itemId: string, change: number) => {
+        try {
+            await runTransaction(db, async (transaction) => {
+                const listRef = doc(db, "shopping_lists", listId);
+                const listDoc = await transaction.get(listRef);
+                if (!listDoc.exists()) throw "List not found";
+
+                const currentList = listDoc.data() as ShoppingList;
+                const items = currentList.items || [];
+
+                const updatedItems = items.map(item => {
+                    if (item.id === itemId) {
+                        const newPurchasedQuantity = Math.max(0, Math.min(item.quantity, (item.purchasedQuantity || 0) + change));
+                        const completed = newPurchasedQuantity >= item.quantity;
+                        return {
+                            ...item,
+                            purchasedQuantity: newPurchasedQuantity,
+                            completed
+                        };
+                    }
+                    return item;
+                });
+
+                transaction.update(listRef, { items: updatedItems });
+            });
+        } catch (e) {
+            console.error("Error updating item progress:", e);
+        }
     };
 
-    const deleteItem = async (listId: string, currentItems: ShoppingItem[], itemId: string) => {
-        const updatedItems = currentItems.filter(item => item.id !== itemId);
-        const listRef = doc(db, "shopping_lists", listId);
-        await updateDoc(listRef, { items: updatedItems });
+    const deleteItem = async (listId: string, _currentItems: ShoppingItem[], itemId: string) => {
+        try {
+            await runTransaction(db, async (transaction) => {
+                const listRef = doc(db, "shopping_lists", listId);
+                const listDoc = await transaction.get(listRef);
+                if (!listDoc.exists()) throw "List not found";
+
+                const currentList = listDoc.data() as ShoppingList;
+                const items = currentList.items || [];
+                const updatedItems = items.filter(item => item.id !== itemId);
+
+                transaction.update(listRef, { items: updatedItems });
+            });
+        } catch (e) {
+            console.error("Error deleting item:", e);
+        }
     };
 
     const updateListName = async (listId: string, newName: string) => {
@@ -143,15 +180,28 @@ export const useShoppingLists = () => {
         await updateDoc(listRef, { name: newName });
     };
 
-    const updateItem = async (listId: string, currentItems: ShoppingItem[], itemId: string, updates: Partial<ShoppingItem>) => {
-        const updatedItems = currentItems.map(item => {
-            if (item.id === itemId) {
-                return { ...item, ...updates };
-            }
-            return item;
-        });
-        const listRef = doc(db, "shopping_lists", listId);
-        await updateDoc(listRef, { items: updatedItems });
+    const updateItem = async (listId: string, _currentItems: ShoppingItem[], itemId: string, updates: Partial<ShoppingItem>) => {
+        try {
+            await runTransaction(db, async (transaction) => {
+                const listRef = doc(db, "shopping_lists", listId);
+                const listDoc = await transaction.get(listRef);
+                if (!listDoc.exists()) throw "List not found";
+
+                const currentList = listDoc.data() as ShoppingList;
+                const items = currentList.items || [];
+
+                const updatedItems = items.map(item => {
+                    if (item.id === itemId) {
+                        return { ...item, ...updates };
+                    }
+                    return item;
+                });
+
+                transaction.update(listRef, { items: updatedItems });
+            });
+        } catch (e) {
+            console.error("Error updating item:", e);
+        }
     };
 
     const duplicateList = async (listId: string) => {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, runTransaction } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -129,33 +129,39 @@ export function useDebts() {
     const addPayment = async (debtId: string, payment: Omit<Payment, "id">) => {
         if (!auth.currentUser) return;
         try {
-            const debtRef = doc(db, "users", auth.currentUser.uid, "debts", debtId);
-            // We need to fetch the current debt to calculate if it's fully paid
-            // Ideally we do this in a transaction, but for simplicity here we'll assume the local state or separate check.
-            // Actually, `updateDoc` can act on fields. But to push to array and check total...
-            // Let's rely on the `debts` state passed in, or fetch it.
-            // Simpler: Just push the payment. The client can calculate isPaid, or we update isPaid here.
+            await runTransaction(db, async (transaction) => {
+                const debtRef = doc(db, "users", auth.currentUser!.uid, "debts", debtId);
+                const debtDoc = await transaction.get(debtRef);
 
-            const debt = debts.find(d => d.id === debtId);
-            if (!debt) throw new Error("Debt not found");
+                if (!debtDoc.exists()) {
+                    throw "Debt document does not exist";
+                }
 
-            const cleanPayment = Object.fromEntries(
-                Object.entries(payment).filter(([__, v]) => v !== undefined)
-            );
+                const currentData = debtDoc.data() as Debt;
 
-            const newPayment = { ...cleanPayment, id: crypto.randomUUID() } as Payment;
-            const updatedPayments = [...debt.payments, newPayment];
+                // Clean undefined
+                const cleanPayment = Object.fromEntries(
+                    Object.entries(payment).filter(([__, v]) => v !== undefined)
+                );
 
-            const totalPaid = updatedPayments.reduce((acc, curr) => acc + (curr.amount || 0), 0);
-            const isPaid = totalPaid >= debt.amount;
+                const newPayment = { ...cleanPayment, id: crypto.randomUUID() } as Payment;
 
-            await updateDoc(debtRef, {
-                payments: updatedPayments,
-                isPaid: isPaid
+                // Use current data from transaction read
+                const currentPayments = currentData.payments || [];
+                const updatedPayments = [...currentPayments, newPayment];
+
+                const totalPaid = updatedPayments.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+                const isPaid = totalPaid >= currentData.amount;
+
+                transaction.update(debtRef, {
+                    payments: updatedPayments,
+                    isPaid: isPaid
+                });
             });
+
             return true;
         } catch (error) {
-            console.error("Error adding payment:", error);
+            console.error("Error adding payment transaction:", error);
             return false;
         }
     };

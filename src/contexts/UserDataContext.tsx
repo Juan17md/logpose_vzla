@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -29,9 +29,17 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let unsubscribeDoc: (() => void) | null = null;
+
         const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+            // Limpiar listener anterior si existe (ej. cambio de usuario rápido)
+            if (unsubscribeDoc) {
+                unsubscribeDoc();
+                unsubscribeDoc = null;
+            }
+
             if (user) {
-                const unsubDoc = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                unsubscribeDoc = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         setUserData({
@@ -46,8 +54,6 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
                     console.error("Error fetching user data:", error);
                     setLoading(false);
                 });
-
-                return () => unsubDoc();
             } else {
                 setUserData({
                     monthlyBudget: 0,
@@ -59,11 +65,16 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
             }
         });
 
-        return () => unsubscribeAuth();
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeDoc) unsubscribeDoc();
+        };
     }, []);
 
+    const value = useMemo(() => ({ userData, loading }), [userData, loading]);
+
     return (
-        <UserDataContext.Provider value={{ userData, loading }}>
+        <UserDataContext.Provider value={value}>
             {children}
         </UserDataContext.Provider>
     );
