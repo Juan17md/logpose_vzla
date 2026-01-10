@@ -190,7 +190,11 @@ export default function ShoppingListsPage() {
             const [name, qty, price] = formValues;
             if (!name) return;
 
-            await updateItem(selectedList.id, selectedList.items, item.id, {
+            // Get the current list from the lists array to ensure we have the latest items
+            const currentList = lists.find(l => l.id === selectedList.id);
+            if (!currentList) return;
+
+            await updateItem(selectedList.id, currentList.items, item.id, {
                 name,
                 quantity: qty ? parseFloat(qty) : 1,
                 price: price ? parseFloat(price) : 0
