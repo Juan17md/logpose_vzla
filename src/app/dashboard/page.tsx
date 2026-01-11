@@ -71,29 +71,98 @@ export default function DashboardPage() {
     const handleUpdateBalance = async (e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent navigation to reports
 
-        const { value: amountStr } = await Swal.fire({
+        if (bcvRate === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Tasa no cargada',
+                text: 'Espera a que se cargue la tasa del BCV para usar esta función.',
+                background: "#1f2937",
+                color: "#fff"
+            });
+            return;
+        }
+
+        const { value: formValues } = await Swal.fire({
             title: 'Ajustar Saldo Actual',
-            text: 'Ingresa el monto real que tienes actualmente. Se creará un movimiento de ajuste automático.',
-            input: 'number',
-            inputValue: stats.totalBalance,
+            html: `
+                <div class="flex flex-col gap-4 text-left">
+                    <p class="text-sm text-gray-300">Ingresa el monto real que tienes actualmente.</p>
+                    
+                    <div class="flex flex-col gap-2">
+                         <label class="text-xs font-semibold text-gray-400 uppercase">Monto Real</label>
+                         <input id="swal-input-amount" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-emerald-500 outline-none" type="number" step="0.01" value="${stats.totalBalance}">
+                    </div>
+
+                    <div class="flex gap-4">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="currency" value="USD" class="peer sr-only" checked>
+                            <div class="rounded-lg border border-slate-600 bg-slate-800 p-3 text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-500/20 peer-checked:text-emerald-400 transition-all">
+                                <span class="font-bold">USD ($)</span>
+                            </div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="currency" value="BS" class="peer sr-only">
+                            <div class="rounded-lg border border-slate-600 bg-slate-800 p-3 text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-500/20 peer-checked:text-emerald-400 transition-all">
+                                <span class="font-bold">Bs. (VES)</span>
+                            </div>
+                        </label>
+                    </div>
+                    <p id="conversion-display" class="text-xs text-center text-gray-500 mt-2">
+                        Tasa BCV: ${bcvRate} Bs/$
+                    </p>
+                </div>
+            `,
             showCancelButton: true,
             confirmButtonText: 'Ajustar',
             cancelButtonText: 'Cancelar',
             confirmButtonColor: '#10b981',
             background: "#1f2937",
             color: "#fff",
-            inputValidator: (value) => {
-                if (!value || isNaN(parseFloat(value))) {
-                    return 'Debes ingresar un monto válido';
+            didOpen: () => {
+                const amountInput = document.getElementById('swal-input-amount') as HTMLInputElement;
+                const radios = document.getElementsByName('currency') as NodeListOf<HTMLInputElement>;
+                let currentCurrency = 'USD';
+
+                radios.forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        const target = e.target as HTMLInputElement;
+                        const newCurrency = target.value;
+                        const currentVal = parseFloat(amountInput.value);
+
+                        if (!isNaN(currentVal)) {
+                            if (newCurrency === 'BS' && currentCurrency === 'USD') {
+                                amountInput.value = (currentVal * bcvRate).toFixed(2);
+                            } else if (newCurrency === 'USD' && currentCurrency === 'BS') {
+                                amountInput.value = (currentVal / bcvRate).toFixed(2);
+                            }
+                        }
+                        currentCurrency = newCurrency;
+                    });
+                });
+            },
+            preConfirm: () => {
+                const amountInput = document.getElementById('swal-input-amount') as HTMLInputElement;
+                const currencyInput = document.querySelector('input[name="currency"]:checked') as HTMLInputElement;
+
+                const amount = parseFloat(amountInput.value);
+                const currency = currencyInput.value;
+
+                if (isNaN(amount)) {
+                    Swal.showValidationMessage('Debes ingresar un monto válido');
+                    return false;
                 }
-                return null;
+                return { amount, currency };
             }
         });
 
-        if (amountStr !== undefined) {
-            const newBalance = parseFloat(amountStr);
+        if (formValues) {
+            const { amount, currency } = formValues;
+
+            // Convert everything to USD for calculation
+            const newBalanceUSD = currency === 'BS' ? amount / bcvRate : amount;
+
             const currentBalance = stats.totalBalance;
-            const diff = newBalance - currentBalance;
+            const diff = newBalanceUSD - currentBalance;
 
             if (Math.abs(diff) < 0.01) return; // No change
 
@@ -106,7 +175,7 @@ export default function DashboardPage() {
                     amount: adjustmentAmount,
                     type: isIncome ? 'ingreso' : 'gasto',
                     category: 'Ajuste',
-                    description: 'Ajuste manual de saldo',
+                    description: `Ajuste manual de saldo (${currency === 'BS' ? `Original: ${amount} Bs` : 'USD'})`,
                     date: Timestamp.now(),
                     currency: 'USD',
                     originalAmount: adjustmentAmount,
