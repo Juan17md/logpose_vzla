@@ -90,7 +90,7 @@ export default function DashboardPage() {
                     
                     <div class="flex flex-col gap-2">
                          <label class="text-xs font-semibold text-gray-400 uppercase">Monto Real</label>
-                         <input id="swal-input-amount" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-emerald-500 outline-none" type="number" step="0.01" value="${stats.totalBalance}">
+                         <input id="swal-input-amount" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-emerald-500 outline-none" type="number" step="0.01" value="${stats.totalBalance.toFixed(2)}">
                     </div>
 
                     <div class="flex gap-4">
