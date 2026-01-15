@@ -53,7 +53,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 ${isOpen ? "translate-y-0" : "translate-y-full"}
                 
                 /* Desktop: Left Sidebar */
-                md:top-0 md:h-full md:w-72 md:rounded-none md:border-t-0 md:border-r md:border-slate-700/30 md:bg-slate-900/40 
+                md:top-0 md:bottom-auto md:h-screen md:max-h-none md:w-72 md:rounded-none md:border-t-0 md:border-r md:border-slate-700/30 md:bg-slate-900/40 
                 md:translate-y-0 md:translate-x-0 md:shadow-2xl
                 `}
             >

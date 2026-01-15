@@ -10,6 +10,7 @@ import { TransactionsProvider } from "@/contexts/TransactionsContext";
 import { UserDataProvider } from "@/contexts/UserDataContext";
 
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import Chatbot from "@/components/ui/Chatbot";
 
 export default function DashboardLayout({
     children,
@@ -51,6 +52,7 @@ export default function DashboardLayout({
                                 onNavigate={() => setIsSidebarOpen(false)}
                             />
                         </div>
+                        <Chatbot />
                     </div>
                 </UserDataProvider>
             </TransactionsProvider>

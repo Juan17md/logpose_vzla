@@ -23,6 +23,7 @@ interface TransactionsContextType {
     loading: boolean;
     deleteTransaction: (id: string) => Promise<boolean>;
     duplicateTransaction: (id: string) => Promise<boolean>;
+    addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<boolean>;
 }
 
 const TransactionsContext = createContext<TransactionsContextType | undefined>(undefined);
@@ -108,11 +109,28 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+        if (!auth.currentUser) return false;
+
+        try {
+            await addDoc(collection(db, "transactions"), {
+                ...transaction,
+                userId: auth.currentUser.uid,
+                createdAt: serverTimestamp()
+            });
+            return true;
+        } catch (error) {
+            console.error("Error adding transaction:", error);
+            return false;
+        }
+    };
+
     const value = useMemo(() => ({
         transactions,
         loading,
         deleteTransaction,
-        duplicateTransaction
+        duplicateTransaction,
+        addTransaction
     }), [transactions, loading]);
 
     return (
