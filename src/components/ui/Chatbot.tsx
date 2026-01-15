@@ -329,11 +329,10 @@ export default function Chatbot() {
         throw new Error("Max retries reached");
     };
 
-    const handleSend = async () => {
-        const userMsg = inputRef.current; // Usar ref para evitar stale closures en reconocimiento de voz
+    const handleSend = async (text?: string) => {
+        const userMsg = typeof text === 'string' ? text : inputRef.current; // Usar ref o texto directo
         if (!userMsg.trim()) return;
 
-        // const userMsg = input; // Ya obtenido del ref
         setInput("");
         setInterimTranscript("");
         const newMessages = [...messages, { role: "user" as const, content: userMsg }];
@@ -428,21 +427,29 @@ export default function Chatbot() {
             return;
         }
 
+        // Verificación de Contexto Seguro (HTTPS)
+        if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+            toast.error("El micrófono requiere una conexión segura (HTTPS). Si pruebas en móvil localmente, esto no funcionará.");
+            return;
+        }
+
         const win = window as unknown as WindowWithSpeech;
         const SpeechRecognitionConstructor = win.SpeechRecognition || win.webkitSpeechRecognition;
 
         if (!SpeechRecognitionConstructor) {
-            toast.error("Tu navegador no soporta reconocimiento de voz.");
+            toast.error("Tu navegador no soporta reconocimiento de voz nativo.");
             return;
         }
 
-        // Crear nueva instancia y guardar referencia
-        recognitionRef.current = new SpeechRecognitionConstructor();
-        const recognition = recognitionRef.current;
+        // Crear nueva instancia
+        const recognition = new SpeechRecognitionConstructor();
+        recognitionRef.current = recognition;
 
         recognition.lang = "es-ES";
-        recognition.continuous = true; // Modo continuo
-        recognition.interimResults = true; // Resultados en tiempo real
+        // En móviles, 'continuous' a veces causa problemas o cortes. 
+        // Lo mantenemos true pero manejamos mejor los errores.
+        recognition.continuous = true;
+        recognition.interimResults = true;
         recognition.maxAlternatives = 1;
 
         setIsListening(true);
@@ -451,7 +458,6 @@ export default function Chatbot() {
             let interim = '';
             let final = '';
 
-            // Procesar todos los resultados
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
@@ -461,41 +467,49 @@ export default function Chatbot() {
                 }
             }
 
-            // Actualizar input con texto final
             if (final) {
-                setInput(prev => prev ? prev + ' ' + final : final);
+                let currentTotal = '';
+                // Actualizar inputRef inmediatamente para prevenir stale closures
+                setInput(prev => {
+                    currentTotal = prev ? prev + ' ' + final : final;
+                    return currentTotal;
+                });
 
-                // Reiniciar timer de silencio
-                if (silenceTimeoutRef.current) {
-                    clearTimeout(silenceTimeoutRef.current);
-                }
+                // Reiniciar timeout de silencio
+                if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
 
-                // Auto-send después de 2 segundos de silencio
                 silenceTimeoutRef.current = setTimeout(() => {
-                    if (recognitionRef.current) {
-                        recognitionRef.current.stop();
-                    }
-                    // Pequeño delay para asegurar que el input se actualizó
-                    setTimeout(() => {
-                        handleSend();
-                    }, 100);
+                    if (recognitionRef.current) recognitionRef.current.stop();
+                    setTimeout(() => handleSend(), 100);
                 }, 2000);
             }
 
-            // Mostrar transcripción temporal
             setInterimTranscript(interim);
         };
 
         recognition.onerror = (event: SpeechRecognitionError) => {
-            console.error(event.error);
-            if (event.error !== 'aborted' && event.error !== 'no-speech') {
-                toast.error("Error al escuchar: " + event.error);
+            console.error("Speech Recognition Error:", event.error);
+
+            if (event.error === 'not-allowed') {
+                toast.error("Permiso de micrófono denegado. Revisa la configuración de tu navegador.");
+            } else if (event.error === 'network') {
+                toast.error("Error de red. Verifica tu conexión.");
+            } else if (event.error === 'no-speech') {
+                // Ignorar no-speech, es normal
+                return;
+            } else if (event.error === 'aborted') {
+                // Ignorar aborted puramente
+                return;
+            } else {
+                toast.error(`Error de voz: ${event.error}`);
             }
+
             setIsListening(false);
             setInterimTranscript("");
         };
 
         recognition.onend = () => {
+            // Solo desactivar si no se reinicia automáticamente (lógica de continuous loop si fuese necesario)
             setIsListening(false);
             setInterimTranscript("");
             if (silenceTimeoutRef.current) {
@@ -505,11 +519,11 @@ export default function Chatbot() {
 
         try {
             recognition.start();
-            toast.info("Escuchando... Habla ahora");
+            toast.info("Escuchando... 🎙️");
         } catch (error) {
             console.error("Error al iniciar reconocimiento:", error);
             setIsListening(false);
-            toast.error("No se pudo iniciar el reconocimiento de voz");
+            toast.error("No se pudo iniciar el micrófono.");
         }
     };
 
@@ -556,13 +570,29 @@ export default function Chatbot() {
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/50">
                             {messages.length === 0 && (
-                                <div className="text-center text-slate-500 mt-20 px-6">
+                                <div className="text-center text-slate-500 mt-10 px-6">
                                     <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-violet-500">
                                         <FiCpu size={32} />
                                     </div>
                                     <p className="text-white font-medium mb-2">¡Hola! Soy Nami.</p>
-                                    <p className="text-sm">Puedo ayudarte a registrar tus gastos. Prueba diciendo:</p>
-                                    <p className="text-xs mt-3 italic text-violet-400 bg-violet-500/10 p-2 rounded-lg">"Gasté 5 dólares en comida"</p>
+                                    <p className="text-sm mb-6">¿En qué puedo ayudarte hoy?</p>
+
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {[
+                                            "📊 ¿Cuánto he gastado este mes?",
+                                            "💰 Registrar gasto en comida",
+                                            "🎯 Ver estado de mis metas",
+                                            "💵 Agregar ingreso de salario"
+                                        ].map((suggestion, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => handleSend(suggestion)}
+                                                className="text-xs bg-slate-800 hover:bg-slate-700 text-violet-300 py-3 px-4 rounded-xl border border-slate-700/50 transition-all text-left flex items-center gap-2"
+                                            >
+                                                {suggestion}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                             {messages.map((msg, i) => (
@@ -610,7 +640,7 @@ export default function Chatbot() {
                                     <FiMic size={20} />
                                 </button>
                                 <button
-                                    onClick={handleSend}
+                                    onClick={() => handleSend()}
                                     disabled={isLoading || !input.trim()}
                                     className="p-3 bg-violet-600 text-white rounded-xl hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-violet-500/20"
                                 >
