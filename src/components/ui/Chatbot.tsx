@@ -416,7 +416,7 @@ export default function Chatbot() {
     };
 
     const toggleListening = () => {
-        // Si ya está escuchando, detener
+        // Si ya está escuchando, detener Y enviar
         if (isListening && recognitionRef.current) {
             recognitionRef.current.stop();
             setIsListening(false);
@@ -424,6 +424,8 @@ export default function Chatbot() {
             if (silenceTimeoutRef.current) {
                 clearTimeout(silenceTimeoutRef.current);
             }
+            // Enviar el mensaje acumulado
+            setTimeout(() => handleSend(), 100);
             return;
         }
 
@@ -483,22 +485,11 @@ export default function Chatbot() {
             }
 
             if (final) {
-                let currentTotal = '';
-                // Actualizar inputRef inmediatamente para prevenir stale closures
-                setInput(prev => {
-                    currentTotal = prev ? prev + ' ' + final : final;
-                    return currentTotal;
-                });
-
-                // Reiniciar timeout de silencio
-                if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
-
-                silenceTimeoutRef.current = setTimeout(() => {
-                    if (recognitionRef.current) recognitionRef.current.stop();
-                    setTimeout(() => handleSend(), 100);
-                }, 2000);
+                // Actualizar input con el texto reconocido
+                setInput(prev => prev ? prev + ' ' + final : final);
             }
 
+            // Mostrar transcripción temporal en tiempo real
             setInterimTranscript(interim);
         };
 
