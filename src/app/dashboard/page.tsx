@@ -216,25 +216,25 @@ export default function DashboardPage() {
     return (
         <div className="flex flex-col gap-8 pb-10">
             {/* Header */}
-            <div className="order-1 bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+            <div className="order-1 bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                    <FiActivity className="text-9xl text-emerald-400" />
+                    <FiActivity className="text-7xl md:text-9xl text-emerald-400" />
                 </div>
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
 
-                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6">
                     <div>
-                        <div className="flex items-center gap-4 mb-2">
-                            <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard</h1>
+                        <div className="flex items-center gap-3 md:gap-4 mb-1 md:mb-2">
+                            <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">Dashboard</h1>
                             <button
                                 onClick={() => setIsPrivacyMode(!isPrivacyMode)}
-                                className="p-2 rounded-full bg-slate-800/50 border border-slate-700 hover:bg-slate-700 hover:border-slate-600 text-slate-400 hover:text-white transition-all backdrop-blur-sm group"
+                                className="p-1.5 md:p-2 rounded-full bg-slate-800/50 border border-slate-700 hover:bg-slate-700 hover:border-slate-600 text-slate-400 hover:text-white transition-all backdrop-blur-sm group"
                                 title={isPrivacyMode ? "Mostrar montos" : "Ocultar montos"}
                             >
-                                {isPrivacyMode ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                                {isPrivacyMode ? <FiEyeOff size={16} className="md:w-5 md:h-5" /> : <FiEye size={16} className="md:w-5 md:h-5" />}
                             </button>
                         </div>
-                        <p className="text-slate-400 text-lg">
+                        <p className="text-slate-400 text-sm md:text-lg">
                             Bienvenido de nuevo, <span className="text-emerald-400 font-semibold">{user?.displayName || "Usuario"}</span>.
                         </p>
                     </div>

@@ -112,6 +112,9 @@ Librerias: Next.js (App Router), Tailwind CSS, React, TypeScript, SweetAlert2, F
    - [x] Registro Multi-Moneda en Deudas: Soporte completo para VES/USD. Los abonos guardan la moneda original y tasa del día para evitar fluctuaciones históricas.
    - [x] Lógica Financiera Corregida: Las deudas solo generan movimientos (Ingreso/Gasto) al registrarse un abono, no al crear la deuda.
    - [x] Vista de Calendario en Gastos Fijos: Visualización mensual de compromisos con estado de pago y toggle de vistas.
+   - [x] Modo Privacidad: Opción para ocultar montos sensibles en el Dashboard.
+   - [x] Navegación Móvil Mejorada: Nueva "Bottom NavBar" y menú lateral tipo "Bottom Sheet" para mejor accesibilidad.
+   - [x] Diseño Responsive Optimizado: Reordenamiento inteligente de tarjetas en móvil para priorizar saldos.
 
 5. Secciones y Funcionalidades Detalladas:
    
@@ -120,6 +123,7 @@ Librerias: Next.js (App Router), Tailwind CSS, React, TypeScript, SweetAlert2, F
      * Widgets Interactivos: Click para ver detalles de Ahorros, Presupuesto y Salario.
      * Alerta de Presupuesto: Feedback visual (Colores Semáforo) según % de gasto.
      * Planificación Salarial: Edición directa del sueldo mensual esperado.
+     * Botón para ocultar/mostrar montos (Privacidad).
      * Números grandes con conversión estimada a Bs. (Tasa BCV con Caché).
 
    - Movimientos:
@@ -157,4 +161,5 @@ Librerias: Next.js (App Router), Tailwind CSS, React, TypeScript, SweetAlert2, F
    - Sombras y Luces: Efectos de neón (box-shadow) en hover.
    - Interactividad: SweetAlert2 para formularios complejos (Aportes, Edición Salario).
    - Feedback: Spinners de carga y transiciones suaves (transition-all duration-300).
+   - Navegación Móvil Nativa: Menús inferiores para facilitar el uso con una mano.
    - Componentes Reutilizables: PaginationControls para consistencia visual.

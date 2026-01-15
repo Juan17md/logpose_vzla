@@ -420,7 +420,23 @@ export default function DebtsPage() {
 
     return (
         <div className="space-y-8 pb-10">
-            {/* Header Stats */}
+            {/* Header */}
+            <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+                <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
+                    <FiDollarSign className="text-7xl md:text-9xl text-emerald-400" />
+                </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
+
+                <div className="relative z-10">
+                    <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Deudas y Préstamos</h1>
+                    <p className="text-slate-400 text-sm md:text-lg">
+                        Controla lo que debes y lo que te deben.
+                    </p>
+                </div>
+            </div>
+
+            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div
                     className={`p-6 rounded-3xl border transition-all cursor-pointer relative overflow-hidden group ${activeTab === 'por_cobrar' ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10' : 'bg-slate-900/50 border-slate-700/50 hover:border-emerald-500/30'}`}

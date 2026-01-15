@@ -89,16 +89,17 @@ export default function ReportsPage() {
         <div className="space-y-8">
             {/* Header & Filter */}
             {/* Header & Filter */}
-            <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-6">
+            {/* Header & Filter */}
+            <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                    <FiPieChart className="text-9xl text-emerald-400" />
+                    <FiPieChart className="text-7xl md:text-9xl text-emerald-400" />
                 </div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
 
                 <div className="relative z-10">
-                    <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Reportes Financieros</h1>
-                    <p className="text-slate-400 text-lg">Analiza tus finanzas por periodos.</p>
+                    <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Reportes Financieros</h1>
+                    <p className="text-slate-400 text-sm md:text-lg">Analiza tus finanzas por periodos.</p>
                 </div>
 
                 <div className="relative z-10 flex space-x-2 bg-slate-800/50 p-1.5 rounded-2xl border border-slate-700/50 backdrop-blur-md">

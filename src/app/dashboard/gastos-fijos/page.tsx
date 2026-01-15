@@ -379,16 +379,16 @@ export default function FixedExpensesPage() {
     return (
         <div className="space-y-8 pb-10">
             {/* Header */}
-            <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+            <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                    <FiCalendar className="text-9xl text-emerald-400" />
+                    <FiCalendar className="text-7xl md:text-9xl text-emerald-400" />
                 </div>
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
 
-                <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 items-end">
                     <div>
-                        <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Gastos Fijos</h1>
-                        <p className="text-slate-400 text-lg">
+                        <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Gastos Fijos</h1>
+                        <p className="text-slate-400 text-sm md:text-lg">
                             Gestiona tus pagos recurrentes mensuales.
                         </p>
                     </div>
