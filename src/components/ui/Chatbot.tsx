@@ -65,6 +65,12 @@ export default function Chatbot() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const silenceTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    const inputRef = useRef("");
+
+    // Mantener inputRef sincronizado con input state para acceso en closures de reconocimiento voz
+    useEffect(() => {
+        inputRef.current = input;
+    }, [input]);
 
     // Hooks
     const { transactions, addTransaction, deleteTransaction } = useTransactions();
@@ -324,9 +330,10 @@ export default function Chatbot() {
     };
 
     const handleSend = async () => {
-        if (!input.trim()) return;
+        const userMsg = inputRef.current; // Usar ref para evitar stale closures en reconocimiento de voz
+        if (!userMsg.trim()) return;
 
-        const userMsg = input;
+        // const userMsg = input; // Ya obtenido del ref
         setInput("");
         setInterimTranscript("");
         const newMessages = [...messages, { role: "user" as const, content: userMsg }];
