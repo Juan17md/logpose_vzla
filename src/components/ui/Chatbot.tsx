@@ -415,7 +415,7 @@ export default function Chatbot() {
         }
     };
 
-    const toggleListening = () => {
+    const toggleListening = async () => {
         // Si ya está escuchando, detener
         if (isListening && recognitionRef.current) {
             recognitionRef.current.stop();
@@ -424,6 +424,17 @@ export default function Chatbot() {
             if (silenceTimeoutRef.current) {
                 clearTimeout(silenceTimeoutRef.current);
             }
+            return;
+        }
+
+        // Solicitar permisos explícitamente primero
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Si obtenemos acceso, liberamos el stream inmediatamente porque SpeechRecognition usa su propio mecanismo
+            stream.getTracks().forEach(track => track.stop());
+        } catch (err) {
+            console.error("Permiso de micrófono denegado:", err);
+            toast.error("Necesitas dar permiso al micrófono para usar esta función.");
             return;
         }
 
