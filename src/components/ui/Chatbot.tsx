@@ -415,7 +415,7 @@ export default function Chatbot() {
         }
     };
 
-    const toggleListening = async () => {
+    const toggleListening = () => {
         // Si ya está escuchando, detener
         if (isListening && recognitionRef.current) {
             recognitionRef.current.stop();
@@ -427,20 +427,9 @@ export default function Chatbot() {
             return;
         }
 
-        // Solicitar permisos explícitamente primero
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            // Si obtenemos acceso, liberamos el stream inmediatamente porque SpeechRecognition usa su propio mecanismo
-            stream.getTracks().forEach(track => track.stop());
-        } catch (err) {
-            console.error("Permiso de micrófono denegado:", err);
-            toast.error("Necesitas dar permiso al micrófono para usar esta función.");
-            return;
-        }
-
         // Verificación de Contexto Seguro (HTTPS)
         if (!window.isSecureContext && window.location.hostname !== 'localhost') {
-            toast.error("El micrófono requiere una conexión segura (HTTPS). Si pruebas en móvil localmente, esto no funcionará.");
+            toast.error("El micrófono requiere HTTPS.");
             return;
         }
 
@@ -448,7 +437,7 @@ export default function Chatbot() {
         const SpeechRecognitionConstructor = win.SpeechRecognition || win.webkitSpeechRecognition;
 
         if (!SpeechRecognitionConstructor) {
-            toast.error("Tu navegador no soporta reconocimiento de voz nativo.");
+            toast.error("Navegador no compatible.");
             return;
         }
 
@@ -456,7 +445,7 @@ export default function Chatbot() {
         const recognition = new SpeechRecognitionConstructor();
         recognitionRef.current = recognition;
 
-        // Detectar móvil de forma sencilla
+        // Configuración móvil
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         recognition.lang = "es-ES";
