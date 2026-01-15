@@ -445,10 +445,13 @@ export default function Chatbot() {
         const recognition = new SpeechRecognitionConstructor();
         recognitionRef.current = recognition;
 
+        // Detectar móvil de forma sencilla
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
         recognition.lang = "es-ES";
-        // En móviles, 'continuous' a veces causa problemas o cortes. 
-        // Lo mantenemos true pero manejamos mejor los errores.
-        recognition.continuous = true;
+        // IMPORTANTE: En móviles, 'continuous: true' causa 'service-not-allowed' o cortes.
+        // Lo desactivamos en móviles para máxima compatibilidad.
+        recognition.continuous = !isMobile;
         recognition.interimResults = true;
         recognition.maxAlternatives = 1;
 
@@ -492,6 +495,8 @@ export default function Chatbot() {
 
             if (event.error === 'not-allowed') {
                 toast.error("Permiso de micrófono denegado. Revisa la configuración de tu navegador.");
+            } else if (event.error === 'service-not-allowed') {
+                toast.error("Error de servicio: Intenta usar Chrome/Safari nativo o verifica la app de Google.");
             } else if (event.error === 'network') {
                 toast.error("Error de red. Verifica tu conexión.");
             } else if (event.error === 'no-speech') {
