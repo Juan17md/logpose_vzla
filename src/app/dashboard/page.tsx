@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot, addDoc, collection, Timestamp } from "firebase/firestore";
 import { useTransactions } from "@/hooks/useTransactions";
-import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2 } from "react-icons/fi";
+import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2, FiEye, FiEyeOff } from "react-icons/fi";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import RecentTransactions from "@/components/ui/RecentTransactions";
@@ -24,6 +24,7 @@ export default function DashboardPage() {
     const [authLoading, setAuthLoading] = useState(true);
     const { transactions, loading: transactionsLoading } = useTransactions();
     const [bcvRate, setBcvRate] = useState<number>(0);
+    const [isPrivacyMode, setIsPrivacyMode] = useState(false);
 
     useEffect(() => {
         getBCVRate().then(setBcvRate);
@@ -213,9 +214,9 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="space-y-8 pb-10">
+        <div className="flex flex-col gap-8 pb-10">
             {/* Header */}
-            <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+            <div className="order-1 bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiActivity className="text-9xl text-emerald-400" />
                 </div>
@@ -223,7 +224,16 @@ export default function DashboardPage() {
 
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                     <div>
-                        <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Dashboard</h1>
+                        <div className="flex items-center gap-4 mb-2">
+                            <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard</h1>
+                            <button
+                                onClick={() => setIsPrivacyMode(!isPrivacyMode)}
+                                className="p-2 rounded-full bg-slate-800/50 border border-slate-700 hover:bg-slate-700 hover:border-slate-600 text-slate-400 hover:text-white transition-all backdrop-blur-sm group"
+                                title={isPrivacyMode ? "Mostrar montos" : "Ocultar montos"}
+                            >
+                                {isPrivacyMode ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                            </button>
+                        </div>
                         <p className="text-slate-400 text-lg">
                             Bienvenido de nuevo, <span className="text-emerald-400 font-semibold">{user?.displayName || "Usuario"}</span>.
                         </p>
@@ -235,7 +245,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions Shortcuts */}
-            <div className="mb-2">
+            <div className="order-3 md:order-2 mb-2">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
                     Accesos Rápidos
@@ -299,7 +309,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Big Numbers Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="order-2 md:order-3 grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 {/* Saldo Total */}
                 {/* Saldo Total */}
@@ -314,10 +324,10 @@ export default function DashboardPage() {
                                 <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Saldo Total</p>
                             </div>
                             <h3 className={`text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400`}>
-                                $ {stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                {isPrivacyMode ? "****" : `$ ${stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
                             </h3>
                             <p className="text-sm text-slate-500 font-medium mt-1 pl-1 border-l-2 border-blue-500/30">
-                                ≈ Bs. {(stats.totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                ≈ Bs. {isPrivacyMode ? "****" : (stats.totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </p>
                         </div>
                         <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
@@ -343,10 +353,10 @@ export default function DashboardPage() {
                         <div>
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Ingresos (Mes)</p>
                             <h3 className="text-3xl font-bold text-emerald-400">
-                                $ {stats.monthlyIncome.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                {isPrivacyMode ? "****" : `$ ${stats.monthlyIncome.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
                             </h3>
                             <p className="text-sm text-emerald-500/60 font-medium mt-1 pl-1 border-l-2 border-emerald-500/30">
-                                ≈ Bs. {(stats.monthlyIncome * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                ≈ Bs. {isPrivacyMode ? "****" : (stats.monthlyIncome * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </p>
                         </div>
                         <div className="p-3 bg-emerald-500/20 rounded-2xl border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
@@ -369,10 +379,10 @@ export default function DashboardPage() {
                         <div>
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Gastos (Mes)</p>
                             <h3 className="text-3xl font-bold text-red-400">
-                                $ {stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                {isPrivacyMode ? "****" : `$ ${stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
                             </h3>
                             <p className="text-sm text-red-500/60 font-medium mt-1 pl-1 border-l-2 border-red-500/30">
-                                ≈ Bs. {(stats.monthlyExpense * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                ≈ Bs. {isPrivacyMode ? "****" : (stats.monthlyExpense * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </p>
                         </div>
                         <div className="p-3 bg-red-500/20 rounded-2xl border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
@@ -397,7 +407,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Widgets Section: Savings, Budget & Salary */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="order-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <SavingsGoalsWidget bcvRate={bcvRate} />
 
                 <CryptoCashWalletWidget userId={user?.uid} bcvRate={bcvRate} />
@@ -415,7 +425,7 @@ export default function DashboardPage() {
 
 
             {/* Quick Actions & Recent */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="order-5 grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-3">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold text-white flex items-center gap-2">

@@ -46,15 +46,27 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             {/* Sidebar Container */}
             <aside
-                className={`fixed top-0 left-0 h-full w-72 bg-slate-900/40 backdrop-blur-xl border-r border-slate-700/30 z-50 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
-                    } shadow-2xl`}
+                className={`fixed z-50 transition-transform duration-300 ease-in-out
+                /* Mobile: Bottom Sheet */
+                bottom-0 left-0 w-full max-h-[85vh] rounded-t-[2.5rem] border-t border-slate-700/50 
+                bg-slate-900/95 backdrop-blur-xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)]
+                ${isOpen ? "translate-y-0" : "translate-y-full"}
+                
+                /* Desktop: Left Sidebar */
+                md:top-0 md:h-full md:w-72 md:rounded-none md:border-t-0 md:border-r md:border-slate-700/30 md:bg-slate-900/40 
+                md:translate-y-0 md:translate-x-0 md:shadow-2xl
+                `}
             >
                 <div className="flex flex-col h-full relative overflow-hidden">
+                    {/* Mobile Handle */}
+                    <div className="md:hidden w-full flex justify-center pt-4 pb-1" onClick={onClose}>
+                        <div className="w-12 h-1.5 bg-slate-700 rounded-full"></div>
+                    </div>
                     {/* Decorative glow */}
                     <div className="absolute top-0 left-0 w-full h-32 bg-emerald-500/10 blur-3xl -translate-y-16 pointer-events-none"></div>
 
                     {/* Header */}
-                    <div className="p-8 flex items-center justify-between relative z-10">
+                    <div className="px-8 pb-4 pt-2 md:p-8 flex items-center justify-between relative z-10">
                         <div>
                             <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
                                 Control Gastos
@@ -63,8 +75,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 Finanzas Personales
                             </p>
                         </div>
-                        <button onClick={onClose} className="md:hidden text-slate-400 hover:text-white transition-colors">
-                            <FiX className="text-2xl" />
+                        <button onClick={onClose} className="md:hidden p-2 bg-slate-800/50 rounded-full text-slate-400 hover:text-white transition-colors">
+                            <FiX className="text-xl" />
                         </button>
                     </div>
 
