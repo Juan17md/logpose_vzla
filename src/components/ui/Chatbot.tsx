@@ -427,6 +427,18 @@ export default function Chatbot() {
             return;
         }
 
+        // Detectar iOS
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        // Chrome en iOS usa "CriOS", Firefox usa "FxiOS", Edge usa "EdgiOS"
+        const isThirdPartyBrowserIOS = isIOS && (/CriOS|FxiOS|EdgiOS/i.test(navigator.userAgent));
+
+        if (isThirdPartyBrowserIOS) {
+            toast.error("⚠️ En iPhone/iPad, el micrófono solo funciona en Safari. Abre esta página en Safari para usar el dictado.", {
+                duration: 6000
+            });
+            return;
+        }
+
         // Verificación de Contexto Seguro (HTTPS)
         if (!window.isSecureContext && window.location.hostname !== 'localhost') {
             toast.error("El micrófono requiere HTTPS.");
