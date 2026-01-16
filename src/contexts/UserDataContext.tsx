@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -15,6 +15,7 @@ export interface UserData {
 interface UserDataContextType {
     userData: UserData;
     loading: boolean;
+    updateUserData: (updates: Partial<UserData>) => Promise<void>;
 }
 
 const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
@@ -71,7 +72,16 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
-    const value = useMemo(() => ({ userData, loading }), [userData, loading]);
+    const updateUserData = async (updates: Partial<UserData>) => {
+        if (!auth.currentUser) return;
+        try {
+            await updateDoc(doc(db, "users", auth.currentUser.uid), updates);
+        } catch (error) {
+            console.error("Error updating user data:", error);
+        }
+    };
+
+    const value = useMemo(() => ({ userData, loading, updateUserData }), [userData, loading]);
 
     return (
         <UserDataContext.Provider value={value}>

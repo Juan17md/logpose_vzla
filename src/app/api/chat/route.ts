@@ -249,6 +249,43 @@ Usa esto cuando el usuario pida ver gráficos, "ver" gastos visualmente, "en qu�
   "period": "month"
 }
 
+1️⃣2️⃣ NUEVO GASTO FIJO (new_fixed_expense):
+{
+  "intent": "new_fixed_expense",
+  "name": string,
+  "amount": number,
+  "dueDay": number,
+  "description": string (opcional)
+  "description": string (opcional)
+}
+
+  "description": string (opcional)
+}
+
+1️⃣3️⃣ ELIMINAR ELEMENTO (delete_item):
+{
+  "intent": "delete_item",
+  "itemType": "transaction" | "debt" | "goal" | "fixed_expense" | "shopping_list",
+  "name": string (para debt, goal, fixed_expense, shopping_list),
+  "id": string (opcional, para transaction si se conoce)
+}
+
+1️⃣4️⃣ ACTUALIZAR ELEMENTO (update_item):
+{
+  "intent": "update_item",
+  "itemType": "debt" | "goal" | "fixed_expense" | "shopping_list",
+  "name": string,
+  "field": "amount" | "name" | "day" | "description",
+  "value": any
+}
+
+1️⃣5️⃣ ACTUALIZAR AHORROS (update_savings):
+{
+  "intent": "update_savings",
+  "type": "physical" | "digital" | "budget",
+  "amount": number
+}
+
 ═══════════════════════════════════════════════════════════════════
 💱 REGLAS DE CONVERSIÓN DE MONEDA
 ═══════════════════════════════════════════════════════════════════

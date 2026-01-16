@@ -88,12 +88,12 @@ export default function Chatbot() {
     }, [input]);
 
     // Hooks
-    const { transactions, addTransaction, deleteTransaction } = useTransactions();
-    const { debts, addDebt, addPayment } = useDebts();
-    const { goals, addGoal, addContribution } = useGoals();
-    const { lists, createList, addItem } = useShoppingLists();
-    const { fixedExpenses } = useFixedExpenses();
-    const { userData } = useUserData();
+    const { transactions, addTransaction, deleteTransaction, updateTransaction } = useTransactions();
+    const { debts, addDebt, addPayment, deleteDebt, updateDebt } = useDebts();
+    const { goals, addGoal, addContribution, updateGoal, deleteGoal } = useGoals();
+    const { lists, createList, addItem, deleteList, updateItem, deleteItem, updateListName } = useShoppingLists();
+    const { fixedExpenses, addFixedExpense, deleteFixedExpense, updateFixedExpense } = useFixedExpenses();
+    const { userData, updateUserData } = useUserData();
 
     // Calcular contexto financiero del usuario
     const userContext = useMemo(() => {
@@ -320,103 +320,189 @@ export default function Chatbot() {
                 break;
 
             case "new_debt":
+                let debtOriginalAmount = undefined;
+                let debtExchangeRate = 1;
+                let debtAmount = parseFloat(data.amount);
+
+                if (data.currency === "VES") {
+                    const rate = await getBCVRate();
+                    debtExchangeRate = rate;
+                    debtOriginalAmount = parseFloat(data.amount); // Monto en Bs
+                    debtAmount = parseFloat((debtOriginalAmount / rate).toFixed(2)); // Guardar en USD
+                }
+
                 success = (await addDebt({
                     personName: data.person,
-                    amount: parseFloat(data.amount),
+                    amount: debtAmount,
                     type: data.type,
                     description: data.description || "Deuda registrada por Nami",
+                    currency: data.currency || "USD",
+                    originalAmount: debtOriginalAmount,
+                    exchangeRate: debtExchangeRate
                 } as any)) || false;
-                aiResponse = `Creé la deuda de ${data.person} por ${data.amount}.`;
+
+                const debtDisplay = data.currency === "VES"
+                    ? `Bs. ${debtOriginalAmount?.toFixed(2)} ($${debtAmount})`
+                    : `$${debtAmount}`;
+
+                aiResponse = `Creé la deuda de ${data.person} por ${debtDisplay}.`;
                 break;
 
-            case "pay_debt":
-                const debtTarget = debts.find(d => d.personName.toLowerCase().includes(data.person.toLowerCase()));
-                if (debtTarget) {
-                    // ✅ Registrar el pago en la deuda
-                    const paymentSuccess = await addPayment(debtTarget.id, {
-                        amount: parseFloat(data.amount),
-                        date: new Date(),
-                        note: "Pago registrado por Nami"
-                    });
+            case "new_fixed_expense":
+                success = (await addFixedExpense({
+                    title: data.name,
+                    amount: parseFloat(data.amount),
+                    dueDay: parseInt(data.dueDay),
+                    category: "Servicios",
+                    description: data.description || "Gasto fijo registrado por Nami"
+                } as any)) || false;
 
-                    // ✅ TAMBIÉN crear una transacción de gasto para reflejar el movimiento de dinero
-                    if (paymentSuccess) {
-                        const transactionId = await addTransaction({
-                            amount: parseFloat(data.amount),
-                            type: "gasto",
-                            category: "Otra", // Categoría para pagos de deuda
-                            description: `Pago de deuda a ${debtTarget.personName}`,
-                            date: new Date(),
-                            currency: "USD"
-                        } as any);
-
-                        success = !!transactionId;
-                        if (success && transactionId) {
-                            setLastTransactionId(transactionId);
-                        }
-                    }
-
-                    success = !!paymentSuccess;
-                    aiResponse = `Registré el pago de $${parseFloat(data.amount)} a ${debtTarget.personName} 💰`;
-                } else {
-                    aiResponse = `No encontré ninguna deuda asociada a "${data.person}".`;
-                    success = false;
-                }
+                aiResponse = `He programado el gasto fijo "${data.name}" por $${data.amount} para el día ${data.dueDay} de cada mes.`;
                 break;
 
-            case "new_goal":
-                await addGoal(data.name, parseFloat(data.targetAmount), data.deadline);
-                success = true;
-                aiResponse = `Creada la meta "${data.name}" por ${data.targetAmount}.`;
-                break;
-
-            case "contribute_goal":
-                const goalTarget = goals.find(g => g.name.toLowerCase().includes(data.name.toLowerCase()));
-                if (goalTarget) {
-                    try {
-                        await addContribution(goalTarget.id, goalTarget.name, parseFloat(data.amount), "physical");
-                        success = true;
-                        aiResponse = `Añadí ${data.amount} a la meta "${goalTarget.name}".`;
-                    } catch (e) { success = false; console.error(e); }
-                } else {
-                    aiResponse = `No encontré la meta "${data.name}".`;
-                    success = false;
-                }
-                break;
-
-            case "shopping_item":
-                let listId = "";
-                const targetList = data.listName
-                    ? lists.find(l => l.name.toLowerCase().includes(data.listName.toLowerCase()))
-                    : lists[0];
-
-                if (targetList) {
-                    listId = targetList.id;
-                } else {
-                    await createList(data.listName || "Lista General");
-                    aiResponse = "Creé una nueva lista. Por favor repite el ítem.";
-                    success = false;
-                    return { success, response: aiResponse };
-                }
-
-                if (listId) {
-                    await addItem(listId, {
-                        name: data.item,
-                        quantity: data.quantity || 1,
-                        price: 0
-                    });
+            case "delete_item":
+                // 🗑️ Lógica genérica de eliminación
+                if (data.itemType === 'transaction' && lastTransactionId) {
+                    await deleteTransaction(lastTransactionId);
+                    setLastTransactionId(null);
+                    aiResponse = "Eliminé la última transacción.";
                     success = true;
-                    aiResponse = `Agregué ${data.quantity || 1} ${data.item} a la lista.`;
+                } else if (data.itemType === 'debt') {
+                    const target = debts.find(d => d.personName.toLowerCase().includes(data.name.toLowerCase()));
+                    if (target) {
+                        await deleteDebt(target.id);
+                        aiResponse = `Eliminé la deuda de ${target.personName}.`;
+                        success = true;
+                    } else aiResponse = `No encontré ninguna deuda con "${data.name}".`;
+                } else if (data.itemType === 'goal') {
+                    const target = goals.find(g => g.name.toLowerCase().includes(data.name.toLowerCase()));
+                    if (target) {
+                        await deleteGoal(target.id);
+                        aiResponse = `Eliminé la meta "${target.name}".`;
+                        success = true;
+                    } else aiResponse = `No encontré la meta "${data.name}".`;
+                } else if (data.itemType === 'fixed_expense') {
+                    const target = fixedExpenses.find(f => (f.title || f.description || "").toLowerCase().includes(data.name.toLowerCase()));
+                    if (target) {
+                        await deleteFixedExpense(target.id);
+                        aiResponse = `Eliminé el gasto fijo "${target.title || target.description}".`;
+                        success = true;
+                    } else aiResponse = `No encontré el gasto fijo "${data.name}".`;
+                } else if (data.itemType === 'shopping_list') {
+                    const target = lists.find(l => l.name.toLowerCase().includes(data.name.toLowerCase()));
+                    if (target) {
+                        await deleteList(target.id);
+                        aiResponse = `Eliminé la lista de compras "${target.name}".`;
+                        success = true;
+                    } else aiResponse = `No encontré la lista "${data.name}".`;
+                } else {
+                    aiResponse = "No pude encontrar lo que querías eliminar.";
+                    success = false;
                 }
                 break;
 
-            case "analysis_chart":
-                aiResponse = "Aquí tienes un análisis visual de tus gastos por categoría este mes:";
-                success = true;
-                return { success, response: aiResponse, chartType: data.chartType || 'pie' };
+            case "update_item":
+                // ✏️ Lógica genérica de actualización
+                if (data.itemType === 'debt') {
+                    const target = debts.find(d => d.personName.toLowerCase().includes(data.name.toLowerCase()));
+                    if (target) {
+                        // Construir updates
+                        const updates: any = {};
+                        if (data.field === 'amount') updates.amount = parseFloat(data.value);
+                        await updateDebt(target.id, updates);
+                        aiResponse = `Actualicé la deuda de ${target.personName}.`;
+                        success = true;
+                    } else aiResponse = `No encontré la deuda de "${data.name}".`;
+                } else if (data.itemType === 'goal') {
+                    const target = goals.find(g => g.name.toLowerCase().includes(data.name.toLowerCase()));
+                    if (target) {
+                        const updates: any = {};
+                        if (data.field === 'amount') updates.targetAmount = parseFloat(data.value);
+                        if (data.field === 'name') updates.name = data.value;
+                        await updateGoal(target.id, updates);
+                        aiResponse = `Actualicé la meta "${target.name}".`;
+                        success = true;
+                    } else aiResponse = `No encontré la meta "${data.name}".`;
+                } else if (data.itemType === 'fixed_expense') {
+                    const target = fixedExpenses.find(f => (f.title || f.description || "").toLowerCase().includes(data.name.toLowerCase()));
+                    if (target) {
+                        const updates: any = {};
+                        if (data.field === 'amount') updates.amount = parseFloat(data.value);
+                        if (data.field === 'day') updates.dueDay = parseInt(data.value);
+                        await updateFixedExpense(target.id, updates);
+                        aiResponse = `Actualicé el gasto fijo "${target.title}".`;
+                        success = true;
+                    } else aiResponse = `No encontré el gasto fijo "${data.name}".`;
+                } else if (data.itemType === 'shopping_list') {
+                    const target = lists.find(l => l.name.toLowerCase().includes(data.name.toLowerCase()));
+                    if (target) {
+                        if (data.field === 'name') {
+                            await updateListName(target.id, data.value);
+                            aiResponse = `Renombré la lista "${target.name}" a "${data.value}".`;
+                            success = true;
+                        } else {
+                            aiResponse = "Solo puedo cambiar el nombre de las listas por ahora.";
+                            success = false;
+                        }
+                    } else aiResponse = `No encontré la lista "${data.name}".`;
+                }
+                break;
+
+            case "update_savings":
+                const updates: any = {};
+                let confirmMsg = "";
+
+                if (data.type === 'physical') {
+                    updates.savingsPhysical = parseFloat(data.amount);
+                    confirmMsg = `Actualicé tus ahorros físicos a $${data.amount}.`;
+                } else if (data.type === 'digital') {
+                    updates.savingsUSDT = parseFloat(data.amount);
+                    confirmMsg = `Actualicé tus ahorros digitales a $${data.amount}.`;
+                } else if (data.type === 'budget') {
+                    updates.monthlyBudget = parseFloat(data.amount);
+                    confirmMsg = `Fijé tu presupuesto mensual en $${data.amount}.`;
+                }
+
+                if (confirmMsg) {
+                    await updateUserData(updates);
+                    aiResponse = confirmMsg;
+                    success = true;
+                } else {
+                    aiResponse = "No entendí qué tipo de ahorro o presupuesto quieres actualizar.";
+                    success = false;
+                }
+                break;
+
+            case "correct_transaction":
+                if (!lastTransactionId) {
+                    aiResponse = "No encuentro una transacción reciente para corregir.";
+                    success = false;
+                    break;
+                }
+
+                if (data.action === 'delete') {
+                    await deleteTransaction(lastTransactionId);
+                    setLastTransactionId(null);
+                    aiResponse = "Entendido, he eliminado la última transacción.";
+                    success = true;
+                } else if (data.newValue) {
+                    const updates: any = {};
+                    if (data.action === 'update_amount') updates.amount = parseFloat(data.newValue);
+                    if (data.action === 'update_category') updates.category = data.newValue;
+                    if (data.action === 'update_description') updates.description = data.newValue;
+
+                    const updateSuccess = await updateTransaction(lastTransactionId, updates);
+                    if (updateSuccess) {
+                        aiResponse = `Listo, he actualizado el ${data.action.replace('update_', '')} a "${data.newValue}".`;
+                        success = true;
+                    } else {
+                        aiResponse = "Hubo un error al intentar actualizar la transacción.";
+                        success = false;
+                    }
+                }
+                break;
 
             case "query":
-            case "correct_transaction":
             case "warning":
             case "suggestion":
                 aiResponse = data.response;

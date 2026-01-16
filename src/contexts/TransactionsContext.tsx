@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from "react";
-import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -23,7 +23,8 @@ interface TransactionsContextType {
     loading: boolean;
     deleteTransaction: (id: string) => Promise<boolean>;
     duplicateTransaction: (id: string) => Promise<boolean>;
-    addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<string | null>; // ✅ Now returns document ID
+    addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<string | null>;
+    updateTransaction: (id: string, updates: Partial<Transaction>) => Promise<boolean>;
 }
 
 const TransactionsContext = createContext<TransactionsContextType | undefined>(undefined);
@@ -126,12 +127,24 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
+        if (!auth.currentUser) return false;
+        try {
+            await updateDoc(doc(db, "transactions", id), updates);
+            return true;
+        } catch (error) {
+            console.error("Error updating transaction:", error);
+            return false;
+        }
+    };
+
     const value = useMemo(() => ({
         transactions,
         loading,
         deleteTransaction,
         duplicateTransaction,
-        addTransaction
+        addTransaction,
+        updateTransaction // ✅ Added update functionality
     }), [transactions, loading]);
 
     return (

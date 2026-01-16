@@ -122,5 +122,18 @@ export const useGoals = () => {
         }
     };
 
-    return { goals, loading, addGoal, deleteGoal, updateGoalProgress, addContribution };
+    const updateGoal = async (id: string, updates: Partial<Goal>) => {
+        if (!auth.currentUser) return;
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { id: _, createdAt, ...validUpdates } = updates;
+            await updateDoc(doc(db, "users", auth.currentUser.uid, "saving_goals", id), validUpdates);
+            return true;
+        } catch (error) {
+            console.error("Error updating goal:", error);
+            return false;
+        }
+    };
+
+    return { goals, loading, addGoal, deleteGoal, updateGoalProgress, addContribution, updateGoal };
 };
