@@ -21,15 +21,30 @@ import { motion, AnimatePresence } from "framer-motion";
 registerLocale('es', es);
 
 const CATEGORIES = [
-    { id: "Comida", name: "Comida", value: "Comida" },
-    { id: "Transporte", name: "Transporte", value: "Transporte" },
-    { id: "Salud", name: "Salud", value: "Salud" },
-    { id: "Salario", name: "Salario", value: "Salario" },
-    { id: "Entretenimiento", name: "Entretenimiento", value: "Entretenimiento" },
-    { id: "Servicios", name: "Servicios", value: "Servicios" },
-    { id: "Educación", name: "Educación", value: "Educación" },
-    { id: "Ropa", name: "Ropa", value: "Ropa" },
-    { id: "Otra", name: "Otra", value: "Otra" }
+    { id: "Comida", name: "🍕 Comida", value: "Comida" },
+    { id: "Transporte", name: "🚗 Transporte", value: "Transporte" },
+    { id: "Salud", name: "💊 Salud", value: "Salud" },
+    { id: "Salario", name: "💰 Salario", value: "Salario" },
+    { id: "Entretenimiento", name: "🎮 Entretenimiento", value: "Entretenimiento" },
+    { id: "Servicios", name: "🔧 Servicios", value: "Servicios" },
+    { id: "Educación", name: "📚 Educación", value: "Educación" },
+    { id: "Ropa", name: "👕 Ropa", value: "Ropa" },
+    { id: "Hogar", name: "🏠 Hogar", value: "Hogar" },
+    { id: "Mascotas", name: "🐾 Mascotas", value: "Mascotas" },
+    { id: "Tecnología", name: "💻 Tecnología", value: "Tecnología" },
+    { id: "Regalos", name: "🎁 Regalos", value: "Regalos" },
+    { id: "Viajes", name: "✈️ Viajes", value: "Viajes" },
+    { id: "Inversiones", name: "📈 Inversiones", value: "Inversiones" },
+    { id: "Seguros", name: "🛡️ Seguros", value: "Seguros" },
+    { id: "Belleza", name: "💄 Belleza", value: "Belleza" },
+    { id: "Gym", name: "🏋️ Gym", value: "Gym" },
+    { id: "Deudas", name: "💳 Deudas", value: "Deudas" },
+    { id: "Freelance", name: "💼 Freelance", value: "Freelance" },
+    { id: "Propinas", name: "🤝 Propinas", value: "Propinas" },
+    { id: "Transferencias", name: "💸 Transferencias", value: "Transferencias" },
+    { id: "Comisiones", name: "📊 Comisiones", value: "Comisiones" },
+    { id: "Impuestos", name: "🏛️ Impuestos", value: "Impuestos" },
+    { id: "Otra", name: "📌 Otra", value: "Otra" }
 ];
 
 const transactionSchema = z.object({
@@ -119,13 +134,29 @@ export default function TransactionForm() {
         const lowerDesc = description?.toLowerCase() || "";
 
         const KEYWORD_MAPPING: Record<string, string[]> = {
-            "Comida": ["mcdonalds", "pizza", "burger", "almuerzo", "cena", "desayuno", "mercado", "comida", "hamburguesa", "sushi", "pan"],
-            "Transporte": ["uber", "taxi", "gasolina", "pasaje", "bus", "metro", "ridery", "yummy rides"],
-            "Servicios": ["luz", "agua", "internet", "cantv", "saldo", "recarga", "netflix", "spotify", "corpoelec", "inter"],
-            "Salud": ["farmacia", "medico", "doctor", "medicina", "pastillas", "consulta"],
-            "Salario": ["nomina", "sueldo", "pago", "quincena"],
-            "Entretenimiento": ["cine", "pelicula", "entrada", "juego", "steam", "playstation"],
-            "Educación": ["curso", "clase", "universidad", "mensualidad", "libros"],
+            "Comida": ["mcdonalds", "pizza", "burger", "almuerzo", "cena", "desayuno", "mercado", "comida", "hamburguesa", "sushi", "pan", "restaurant", "cafe", "cocina"],
+            "Transporte": ["uber", "taxi", "gasolina", "pasaje", "bus", "metro", "ridery", "yummy rides", "auto", "moto", "transporte"],
+            "Servicios": ["luz", "agua", "internet", "cantv", "saldo", "recarga", "netflix", "spotify", "corpoelec", "inter", "digitel", "movistar"],
+            "Salud": ["farmacia", "medico", "doctor", "medicina", "pastillas", "consulta", "hospital", "clinica", "terapia"],
+            "Salario": ["nomina", "sueldo", "pago", "quincena", "salario", "ingreso"],
+            "Entretenimiento": ["cine", "pelicula", "entrada", "juego", "steam", "playstation", "xbox", "nintendo", "concierto", "teatro"],
+            "Educación": ["curso", "clase", "universidad", "mensualidad", "libros", "colegio", "escuela", "matricula"],
+            "Hogar": ["muebles", "electrodomestico", "lampara", "decoracion", "limpieza", "detergente", "cocina", "cama", "hogar"],
+            "Mascotas": ["veterinario", "perrarina", "gatarina", "mascota", "perro", "gato", "alimento", "vacuna"],
+            "Tecnología": ["celular", "telefono", "laptop", "computadora", "tablet", "auriculares", "cable", "cargador", "mouse", "teclado"],
+            "Regalos": ["regalo", "cumpleaños", "navidad", "aniversario", "detalle", "obsequio"],
+            "Viajes": ["hotel", "avion", "vuelo", "hospedaje", "vacaciones", "paseo", "excursion", "turismo"],
+            "Inversiones": ["accion", "cripto", "bitcoin", "ethereum", "forex", "bolsa", "inversion", "ahorro"],
+            "Seguros": ["seguro", "poliza", "prima", "cobertura"],
+            "Belleza": ["peluqueria", "salon", "maquillaje", "cosmetico", "perfume", "manicure", "pedicure", "spa"],
+            "Gym": ["gimnasio", "gym", "entrenamiento", "crossfit", "yoga", "piscina", "deporte"],
+            "Ropa": ["camisa", "pantalon", "zapatos", "ropa", "vestido", "tienda"],
+            "Deudas": ["prestamo", "cuota", "credito", "abono", "deuda", "financiamiento", "pago deuda"],
+            "Freelance": ["freelance", "proyecto", "cliente", "trabajo independiente", "comision", "extra", "bolo"],
+            "Propinas": ["propina", "tip", "gratificacion", "servicio"],
+            "Transferencias": ["transferencia", "envio", "zelle", "paypal", "pago movil", "remesa"],
+            "Comisiones": ["comision", "fee", "cargo", "tasa"],
+            "Impuestos": ["impuesto", "igtf", "iva", "islr", "tasa", "tributo"],
         };
 
         for (const [cat, keywords] of Object.entries(KEYWORD_MAPPING)) {
@@ -354,7 +385,7 @@ export default function TransactionForm() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-6">
                     {/* Category */}
                     <div>
                         <Controller

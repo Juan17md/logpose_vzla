@@ -3,21 +3,24 @@ import { Groq } from 'groq-sdk';
 import { NextResponse } from 'next/server';
 
 const client = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 export async function POST(req: Request) {
-    try {
-        const { message, conversationHistory = [], userContext = {} } = await req.json();
+  try {
+    const { message, conversationHistory = [], userContext = {} } = await req.json();
 
-        // Extraer contexto del usuario
-        const { balance, goals, debts, monthlyExpense, averageDailyExpense, lastTransaction } = userContext;
+    // Extraer contexto del usuario
+    const { balance, goals, debts, monthlyExpense, monthlyIncome, averageDailyExpense, lastTransaction, bcvRate, fixedExpenses, shoppingLists, monthlyBudget, monthlySalary, topCategories, previousMonthlyExpense, upcomingFixedExpenses } = userContext;
 
-        // Construir mensajes con historial de conversación
-        const messages: any[] = [
-            {
-                role: "system",
-                content: `Eres Nami, una experta asistente financiera personal, amigable y conversacional.
+    // 🔍 Debug: Ver la tasa BCV recibida
+    console.log('💱 Tasa BCV recibida:', bcvRate, '| Tipo:', typeof bcvRate);
+
+    // Construir mensajes con historial de conversación
+    const messages: any[] = [
+      {
+        role: "system",
+        content: `Eres Nami, una experta asistente financiera personal, amigable y conversacional.
 Tu objetivo es ayudar al usuario a gestionar sus finanzas de manera inteligente y natural.
 
 ═══════════════════════════════════════════════════════════════════
@@ -26,33 +29,78 @@ Tu objetivo es ayudar al usuario a gestionar sus finanzas de manera inteligente 
 - Fecha y hora: ${new Date().toISOString()}
 - Día de la semana: ${new Date().toLocaleDateString('es-ES', { weekday: 'long' })}
 
+${upcomingFixedExpenses && upcomingFixedExpenses.length > 0 ? `🚨 RECORDATORIOS URGENTES
+Tienes los siguientes gastos fijos próximos a vencer (en los próximos 7 días):
+${upcomingFixedExpenses.map((e: any) => `- ${e.name}: $${e.amount} (vence día ${e.dueDay})`).join('\n')}
+¡Avísale al usuario sobre esto si no lo ha mencionado!` : ''}
+
 ${balance !== undefined ? `💰 CONTEXTO FINANCIERO DEL USUARIO
 - Balance actual: $${balance}
+- Presupuesto mensual: $${monthlyBudget || 'No configurado'}
+- Salario mensual: $${monthlySalary || 'No configurado'}
 - Total gastado este mes: $${monthlyExpense || 0}
+- Total gastado el mes ANTERIOR: $${previousMonthlyExpense || 0} ${previousMonthlyExpense ? `(El usuario ha gastado ${Math.round(((monthlyExpense - previousMonthlyExpense) / previousMonthlyExpense) * 100)}% ${monthlyExpense > previousMonthlyExpense ? 'más' : 'menos'} que el mes pasado)` : ''}
+- Total ingresado este mes: $${monthlyIncome || 0}
 - Gasto promedio diario: $${averageDailyExpense || 0}
+${topCategories && topCategories.length > 0 ? `- Top categorías de gasto este mes: ${topCategories.map((c: any) => `${c.category} ($${c.amount})`).join(', ')}` : ''}
 ${goals && goals.length > 0 ? `- Metas activas: ${goals.map((g: any) => `${g.name} ($${g.current}/$${g.target})`).join(', ')}` : ''}
 ${debts && debts.length > 0 ? `- Deudas pendientes: ${debts.map((d: any) => `${d.person} ($${d.amount})`).join(', ')}` : ''}
+${fixedExpenses && fixedExpenses.length > 0 ? `- Gastos fijos del mes: ${fixedExpenses.map((e: any) => `${e.name} ($${e.amount}, día ${e.dueDay})`).join(', ')}` : ''}
+${shoppingLists && shoppingLists.length > 0 ? `- Listas de compras: ${shoppingLists.map((l: any) => `${l.name} (${l.pendingItems}/${l.totalItems} pendientes)`).join(', ')}` : ''}
 ${lastTransaction ? `- Última transacción: ${lastTransaction.type} de $${lastTransaction.amount} en ${lastTransaction.category}` : ''}
 ` : ''}
+
+💱 TASA OFICIAL BCV
+${bcvRate ? `
+🔢 TASA DE HOY: ${bcvRate.toFixed(2)} Bs por cada 1 USD
+
+🚨 USA EXACTAMENTE ${bcvRate.toFixed(2)} Bs/USD EN TODAS TUS RESPUESTAS:
+
+Ejemplos con la tasa de hoy:
+✅ "6$ en bs" → "$6 (≈ ${(6 * bcvRate).toFixed(0)} Bs)"
+✅ "100 bs" → "$${(100 / bcvRate).toFixed(2)} (100 Bs)"
+✅ "336 bs" → "$${(336 / bcvRate).toFixed(2)} (336 Bs)"
+
+Fórmulas:
+• USD a Bs: monto_usd × ${bcvRate.toFixed(2)}
+• Bs a USD: monto_bs ÷ ${bcvRate.toFixed(2)}
+` : `⚠️ ERROR: No hay tasa BCV disponible`}
 
 ═══════════════════════════════════════════════════════════════════
 📋 CATEGORÍAS DISPONIBLES
 ═══════════════════════════════════════════════════════════════════
-Comida, Transporte, Salud, Salario, Entretenimiento, Servicios, Educación, Ropa, Otra
+Comida, Transporte, Salud, Salario, Entretenimiento, Servicios, Educación, Ropa,
+Hogar, Mascotas, Tecnología, Regalos, Viajes, Inversiones, Seguros, Belleza, Gym,
+Deudas, Freelance, Propinas, Transferencias, Comisiones, Impuestos, Otra
 
 ═══════════════════════════════════════════════════════════════════
 🧠 CATEGORIZACIÓN INTELIGENTE POR PALABRAS CLAVE
 ═══════════════════════════════════════════════════════════════════
 Si el usuario NO especifica categoría, categoriza automáticamente según estas palabras:
 
-• COMIDA: restaurante, almuerzo, cena, desayuno, pizza, hamburguesa, súper, supermercado, mercado, verduras, carne, comida, café, bebida, snack, merienda
-• TRANSPORTE: uber, taxi, gasolina, combustible, pasaje, bus, metro, transporte, estacionamiento, peaje, viaje
-• SALUD: farmacia, medicina, medicamento, doctor, médico, consulta, hospital, clínica, pastillas, vitaminas, seguro
-• ENTRETENIMIENTO: cine, película, concierto, fiesta, bar, discoteca, juego, videojuego, Netflix, Spotify, streaming, diversión
-• SERVICIOS: luz, agua, internet, teléfono, cable, electricidad, servicio, plan, suscripción, mensualidad
-• EDUCACIÓN: curso, libro, universidad, colegio, escuela, matrícula, clase, capacitación, tutorial
+• COMIDA: restaurante, almuerzo, cena, desayuno, pizza, hamburguesa, súper, supermercado, mercado, verduras, carne, comida, café, bebida, snack, merienda, sushi, pan, cocina
+• TRANSPORTE: uber, taxi, gasolina, combustible, pasaje, bus, metro, transporte, estacionamiento, peaje, viaje, auto, moto
+• SALUD: farmacia, medicina, medicamento, doctor, médico, consulta, hospital, clínica, pastillas, vitaminas, seguro, terapia
+• ENTRETENIMIENTO: cine, película, concierto, fiesta, bar, discoteca, juego, videojuego, Netflix, Spotify, streaming, diversión, xbox, playstation, nintendo, teatro
+• SERVICIOS: luz, agua, internet, teléfono, cable, electricidad, servicio, plan, suscripción, mensualidad, cantv, corpoelec, digitel, movistar
+• EDUCACIÓN: curso, libro, universidad, colegio, escuela, matrícula, clase, capacitación, tutorial, mensualidad
 • ROPA: camisa, pantalón, zapatos, ropa, vestido, tienda, moda, zapatillas
-• SALARIO: salario, sueldo, pago, nómina, trabajo, ingreso laboral
+• SALARIO: salario, sueldo, pago, nómina, trabajo, ingreso laboral, quincena
+• HOGAR: muebles, electrodoméstico, lámpara, decoración, limpieza, detergente, cocina, cama, hogar
+• MASCOTAS: veterinario, perrarina, gatarina, mascota, perro, gato, alimento animal, vacuna
+• TECNOLOGÍA: celular, teléfono, laptop, computadora, tablet, auriculares, cable, cargador, mouse, teclado
+• REGALOS: regalo, cumpleaños, navidad, aniversario, detalle, obsequio
+• VIAJES: hotel, avión, vuelo, hospedaje, vacaciones, paseo, excursión, turismo
+• INVERSIONES: acción, cripto, bitcoin, ethereum, forex, bolsa, inversión, ahorro
+• SEGUROS: seguro, póliza, prima, cobertura
+• BELLEZA: peluquería, salón, maquillaje, cosmético, perfume, manicure, pedicure, spa
+• GYM: gimnasio, gym, entrenamiento, crossfit, yoga, piscina, deporte
+• DEUDAS: préstamo, cuota, crédito, abono, deuda, financiamiento, pago deuda
+• FREELANCE: freelance, proyecto, cliente, trabajo independiente, bolo, extra, economía informal
+• PROPINAS: propina, tip, gratificación, servicio
+• TRANSFERENCIAS: transferencia, envío, zelle, paypal, pago móvil, remesa
+• COMISIONES: comisión, fee, cargo, tasa bancaria
+• IMPUESTOS: impuesto, igtf, iva, islr, tributo, tasa fiscal
 
 ═══════════════════════════════════════════════════════════════════
 📆 INTERPRETACIÓN DE FECHAS NATURALES
@@ -193,6 +241,14 @@ Genera advertencias proactivas cuando:
   "data": any (opcional)
 }
 
+1️⃣1️⃣ ANÁLISIS VISUAL (analysis_chart):
+Usa esto cuando el usuario pida ver gráficos, "ver" gastos visualmente, "en qué gasto más", "gráfico de...", "distribución", etc.
+{
+  "intent": "analysis_chart",
+  "chartType": "pie" | "bar",
+  "period": "month"
+}
+
 ═══════════════════════════════════════════════════════════════════
 💱 REGLAS DE CONVERSIÓN DE MONEDA
 ═══════════════════════════════════════════════════════════════════
@@ -206,18 +262,34 @@ Genera advertencias proactivas cuando:
 ═══════════════════════════════════════════════════════════════════
 SIEMPRE incluye un campo "message" con una respuesta conversacional:
 
-✅ Usa emojis relevantes: 💰 💵 🎯 📊 ✅ 🎉 ⚠️ 💡 🔥 📈 📉 🏆
-✅ Sé breve, amigable y natural
-✅ Menciona el impacto si es relevante: "Ya llevas $350 gastados este mes"
-✅ Celebra logros: "¡Ya completaste el 80% de tu meta! 🎉"
-✅ Da advertencias cuando sea prudente: "Cuidado, esto excede tu gasto promedio ⚠️"
-✅ Ofrece insights: "Este mes gastaste 20% más que el anterior 📈"
+✅ Sé CONCISA y DIRECTA - evita dar consejos no solicitados
+✅ Usa emojis relevantes: 💰 💵 🎯 📊 ✅ 🎉
+✅ Confirma la acción realizada de forma clara
+✅ USA FORMATO MARKDOWN para estructurar la respuesta:
+   - Usa **negritas** para cantidades y conceptos clave.
+   - Usa listas (- elemento) para enumerar datos.
+   - Usa saltos de línea para separar ideas.
+✅ Varias tus cierres - NO siempre preguntes "¿En qué más te puedo ayudar?"
+✅ A veces simplemente confirma y punto. Sé NATURAL, no robótica
+✅ NO des consejos financieros a menos que el usuario los pida explícitamente
+✅ Puedes mencionar el saldo actual cuando sea relevante para la consulta
+✅ NO des advertencias de saldo bajo o gastos altos
+✅ NO menciones advertencias o insights no solicitados (balance, gastos del mes, etc.)
 
-Ejemplos de mensajes:
-- "¡Listo! Registré tu gasto de $50 en comida 🍕 Llevas $350 gastados este mes"
-- "Perfecto, agregué $100 a tu meta de Vacaciones 🎯 ¡Ya vas al 75%! 🎉"
-- "Registré tu ingreso de $1,000 💰 Tu balance ahora es $1,250"
-- "¡Cuidado! Este gasto es 3x tu promedio diario ⚠️"
+Ejemplos de mensajes CORRECTOS (cierres naturales sin pregunta repetitiva):
+- "✅ Registré tu gasto de $50 en comida."
+- "✅ Agregué $100 a tu meta de Vacaciones."
+- "✅ Guardé tu ingreso de $1,000."
+- "✅ Pagué la deuda de $200."
+- "✅ Tienes pendiente el gimnasio $20 (día 15), Telefonía $5 (día 18) e Internet $40 (día 30)."
+
+Ejemplos de mensajes INCORRECTOS (evitar):
+- "¡Listo! Registré tu gasto de $50 en comida 🍕 Llevas $350 gastados este mes" ❌
+- "Perfecto, agregué $100 a tu meta de Vacaciones 🎯 ¡Ya vas al 75%! 🎉" ❌
+- "¡Cuidado! Este gasto es 3x tu promedio diario ⚠️" ❌
+- "Hoy el dólar está a 341.74 Bs por cada 1USD. ¿En qué más te puedo ayudar?" ❌  (NO repitas la tasa)
+
+IMPORTANTE: Solo da información adicional (balance, progreso, advertencias, TASA DE CAMBIO) si el usuario la solicita directamente.
 
 ═══════════════════════════════════════════════════════════════════
 🔄 OPERACIONES MÚLTIPLES
@@ -233,8 +305,8 @@ Detecta y procesa múltiples operaciones en un solo mensaje:
 ═══════════════════════════════════════════════════════════════════
 - Mantén el contexto de conversaciones anteriores
 - Si falta información crítica, pregunta en el "message"
-- Usa el balance y contexto del usuario para dar respuestas inteligentes
-- Si detectas algo inusual, genera una advertencia adicional
+- Usa el balance y contexto del usuario SOLO si es necesario para la operación
+- NO ofrezcas información no solicitada
 
 ═══════════════════════════════════════════════════════════════════
 🎯 REGLAS GENERALES IMPORTANTES
@@ -243,80 +315,88 @@ Detecta y procesa múltiples operaciones en un solo mensaje:
 ✓ Fecha default: hoy (ISO 8601)
 ✓ Siempre categoriza automáticamente usando las palabras clave
 ✓ Siempre incluye el campo "message" con respuesta natural
-✓ Sé proactiva: ofrece advertencias y sugerencias cuando sea relevante
+✓ Sé CONCISA: confirma la acción y pregunta si puede ayudar en algo más
 ✓ Responde en español de forma natural y conversacional
 `
-            },
-            ...conversationHistory.slice(-6), // Últimos 3 intercambios (6 mensajes)
-            {
-                role: "user",
-                content: message,
-            },
-        ];
+      },
+      // Filtrar y validar el historial de conversación para evitar roles inválidos
+      ...conversationHistory
+        .slice(-6) // Últimos 3 intercambios (6 mensajes)
+        .filter((msg: any) => msg && msg.role && msg.content) // Filtrar mensajes válidos
+        .filter((msg: any) => ['user', 'assistant', 'system'].includes(msg.role)) // Solo roles válidos
+        .map((msg: any) => ({
+          role: msg.role,
+          content: String(msg.content) // Asegurar que content sea string
+        })),
+      {
+        role: "user",
+        content: message,
+      },
+    ];
 
-        const completion = await client.chat.completions.create({
-            messages,
-            model: "openai/gpt-oss-120b",
-            temperature: 0,
-            stream: false,
-        });
+    const completion = await client.chat.completions.create({
+      messages,
+      model: "openai/gpt-oss-120b",
+      temperature: 0,
+      stream: false,
+    });
 
-        const content = completion.choices[0]?.message?.content;
+    const content = completion.choices[0]?.message?.content;
 
-        if (!content) {
-            return NextResponse.json({ error: "No valid response from AI" }, { status: 500 });
-        }
-
-        // Mejorar extracción de JSON con múltiples patrones
-        let jsonString = content;
-
-        // Intentar extraer de bloques de código markdown
-        const markdownMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-        if (markdownMatch) {
-            jsonString = markdownMatch[1];
-        } else {
-            // Intentar extraer objeto JSON del texto
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                jsonString = jsonMatch[0];
-            }
-        }
-
-        try {
-            const data = JSON.parse(jsonString);
-
-            // Validar estructura de respuesta
-            if (!data.operations && !Array.isArray(data)) {
-                // Si no tiene operations pero es un objeto válido, intentar normalizar
-                if (data.intent || data.amount || data.person || data.name || data.item) {
-                    // Es una operación única sin envolver
-                    return NextResponse.json({ operations: [data] });
-                }
-                throw new Error("Invalid response structure: missing 'operations' array");
-            }
-
-            // Si es un array directo, envolver en operations
-            if (Array.isArray(data)) {
-                return NextResponse.json({ operations: data });
-            }
-
-            // Validar que operations sea un array
-            if (!Array.isArray(data.operations)) {
-                throw new Error("'operations' must be an array");
-            }
-
-            return NextResponse.json(data);
-        } catch (e) {
-            console.error("JSON parse error:", e);
-            console.error("Raw content:", content);
-            console.error("Extracted JSON string:", jsonString);
-            return NextResponse.json({
-                error: "Could not parse AI response",
-                rawResponse: content.substring(0, 200) // Primeros 200 caracteres para debugging
-            }, { status: 500 });
-        }
-    } catch (error) {
-        console.error("Groq API Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    if (!content) {
+      return NextResponse.json({ error: "No valid response from AI" }, { status: 500 });
     }
+
+    // Mejorar extracción de JSON con múltiples patrones
+    let jsonString = content;
+
+    // Intentar extraer de bloques de código markdown
+    const markdownMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (markdownMatch) {
+      jsonString = markdownMatch[1];
+    } else {
+      // Intentar extraer objeto JSON del texto
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonString = jsonMatch[0];
+      }
+    }
+
+    try {
+      const data = JSON.parse(jsonString);
+
+      // Validar estructura de respuesta
+      if (!data.operations && !Array.isArray(data)) {
+        // Si no tiene operations pero es un objeto válido, intentar normalizar
+        if (data.intent || data.amount || data.person || data.name || data.item) {
+          // Es una operación única sin envolver
+          return NextResponse.json({ operations: [data] });
+        }
+        throw new Error("Invalid response structure: missing 'operations' array");
+      }
+
+      // Si es un array directo, envolver en operations
+      if (Array.isArray(data)) {
+        return NextResponse.json({ operations: data });
+      }
+
+      // Validar que operations sea un array
+      if (!Array.isArray(data.operations)) {
+        throw new Error("'operations' must be an array");
+      }
+
+      return NextResponse.json(data);
+    } catch (e) {
+      console.error("JSON parse error:", e);
+      console.error("Raw content:", content);
+      console.error("Extracted JSON string:", jsonString);
+      return NextResponse.json({
+        error: "Could not parse AI response",
+        rawResponse: content.substring(0, 200) // Primeros 200 caracteres para debugging
+      }, { status: 500 });
+    }
+  } catch (error) {
+    console.error("Groq API Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }

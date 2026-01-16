@@ -6,10 +6,13 @@ import { useTransactions } from "@/contexts/TransactionsContext";
 import { useDebts } from "@/hooks/useDebts";
 import { useGoals } from "@/hooks/useGoals";
 import { useShoppingLists } from "@/hooks/useShoppingLists";
+import { useFixedExpenses } from "@/hooks/useFixedExpenses";
 import { useUserData } from "@/contexts/UserDataContext";
 import { getBCVRate } from "@/lib/currency";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import ReactMarkdown from "react-markdown";
+import ExpensePieChart from "./ExpensePieChart";
 
 // Types for Chat
 interface SpeechRecognitionResult {
@@ -52,6 +55,7 @@ type Message = {
     role: "user" | "ai";
     content: string;
     isTransaction?: boolean;
+    chartType?: "pie" | "bar";
 };
 
 export default function Chatbot() {
@@ -67,6 +71,17 @@ export default function Chatbot() {
     const silenceTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
     const inputRef = useRef("");
 
+    const pendingOperationsRef = useRef(false); // Track if operations are in progress
+    const isMountedRef = useRef(true);
+
+    // Lifecycle: Cleanup on unmount
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
+
     // Mantener inputRef sincronizado con input state para acceso en closures de reconocimiento voz
     useEffect(() => {
         inputRef.current = input;
@@ -77,6 +92,7 @@ export default function Chatbot() {
     const { debts, addDebt, addPayment } = useDebts();
     const { goals, addGoal, addContribution } = useGoals();
     const { lists, createList, addItem } = useShoppingLists();
+    const { fixedExpenses } = useFixedExpenses();
     const { userData } = useUserData();
 
     // Calcular contexto financiero del usuario
@@ -99,8 +115,17 @@ export default function Chatbot() {
             .filter(t => t.type === 'ingreso')
             .reduce((sum, t) => sum + t.amount, 0);
 
-        // Balance total
-        const balance = userData.savingsPhysical + userData.savingsUSDT;
+        // Balance total = (ahorros + todos los ingresos) - todos los gastos
+        const totalIncome = transactions
+            .filter(t => t.type === 'ingreso')
+            .reduce((sum, t) => sum + t.amount, 0);
+
+        const totalExpenses = transactions
+            .filter(t => t.type === 'gasto')
+            .reduce((sum, t) => sum + t.amount, 0);
+
+        const savingsBalance = userData.savingsPhysical + userData.savingsUSDT;
+        const balance = savingsBalance + totalIncome - totalExpenses;
 
         // Gasto promedio diario
         const daysInMonth = now.getDate();
@@ -128,9 +153,74 @@ export default function Chatbot() {
                 person: d.personName,
                 amount: d.amount
             })),
-            lastTransaction
+            fixedExpenses: fixedExpenses.map((e: any) => ({
+                name: e.title || e.description,
+                amount: e.amount,
+                dueDay: e.dueDay
+            })),
+            shoppingLists: lists.map((l: any) => ({
+                name: l.name,
+                totalItems: l.items.length,
+                pendingItems: l.items.filter((i: any) => !i.completed).length
+            })),
+            monthlyBudget: userData.monthlyBudget || 0,
+            monthlySalary: userData.monthlySalary || 0,
+            topCategories: Object.entries(
+                monthlyTransactions
+                    .filter(t => t.type === 'gasto')
+                    .reduce((acc: any, t) => {
+                        acc[t.category] = (acc[t.category] || 0) + t.amount;
+                        return acc;
+                    }, {})
+            )
+                .sort((a: any, b: any) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([category, amount]: any) => ({ category, amount: parseFloat(amount.toFixed(2)) })),
+
+            lastTransaction,
+            // 🆕 Análisis Avanzado: Mes Anterior
+            previousMonthlyExpense: transactions
+                .filter(t => {
+                    const tDate = new Date(t.date);
+                    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                    const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+                    return t.type === 'gasto' && tDate >= prevMonthStart && tDate <= prevMonthEnd;
+                })
+                .reduce((sum, t) => sum + t.amount, 0),
+            // 🆕 Capacidad Proactiva: Gastos Próximos (7 días) - Lógica Robusta para Cruce de Mes
+            upcomingFixedExpenses: fixedExpenses
+                .filter(e => {
+                    const today = now.getDate();
+                    const dueDay = e.dueDay;
+                    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+                    let daysUntilDue = dueDay - today;
+                    if (daysUntilDue < 0) {
+                        // Si el día de pago es menor a hoy (ej: hoy 28, pago el 2), asumimos mes siguiente
+                        daysUntilDue += daysInMonth;
+                    }
+
+                    return daysUntilDue >= 0 && daysUntilDue <= 7;
+                })
+                .map(e => ({
+                    name: e.title || e.description,
+                    amount: e.amount,
+                    dueDay: e.dueDay
+                }))
         };
-    }, [transactions, userData, goals, debts]);
+    }, [transactions, userData, goals, debts, fixedExpenses, lists]);
+
+    // 🔍 Debug: Log cuando el contexto cambia
+    useEffect(() => {
+        console.log('📊 UserContext actualizado:', {
+            balance: userContext.balance,
+            monthlyExpense: userContext.monthlyExpense,
+            lastTransaction: userContext.lastTransaction,
+            transactionsCount: transactions.length,
+            goalsCount: goals.length,
+            debtsCount: debts.length
+        });
+    }, [userContext, transactions.length, goals.length, debts.length]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -188,23 +278,34 @@ export default function Chatbot() {
                     amountUSD = parseFloat((amountUSD / rate).toFixed(2));
                 }
 
+
+                // ✅ Validar y procesar la fecha
+                let transactionDate = new Date(); // Default: fecha actual
+                if (data.date) {
+                    const parsedDate = new Date(data.date);
+                    // Validar que la fecha sea válida y no sea futura
+                    if (!isNaN(parsedDate.getTime()) && parsedDate <= new Date()) {
+                        transactionDate = parsedDate;
+                    } else {
+                        console.warn('⚠️ Fecha inválida o futura recibida de la IA, usando fecha actual:', data.date);
+                    }
+                }
+
                 const transactionId = await addTransaction({
                     amount: amountUSD,
                     type: (data.type as "ingreso" | "gasto") || "gasto",
                     category: data.category,
                     description: data.description || "Transacción rápida con IA",
-                    date: data.date ? new Date(data.date) : new Date(),
+                    date: transactionDate, // ✅ Usar fecha validada
                     currency: data.currency as "USD" | "VES" || "USD",
                     originalAmount: originalAmount,
                     exchangeRate: exchangeRate
                 } as any);
 
                 success = !!transactionId;
-                if (success) {
-                    // Guardar referencia de la última transacción para correcciones
-                    if (userContext.lastTransaction) {
-                        setLastTransactionId(userContext.lastTransaction.id);
-                    }
+                if (success && transactionId) {
+                    // ✅ FIX: Guardar el ID de la transacción que ACABAMOS de crear
+                    setLastTransactionId(transactionId);
                 }
 
                 const amountDisplay = data.currency === "VES" && originalAmount
@@ -226,12 +327,32 @@ export default function Chatbot() {
             case "pay_debt":
                 const debtTarget = debts.find(d => d.personName.toLowerCase().includes(data.person.toLowerCase()));
                 if (debtTarget) {
-                    success = (await addPayment(debtTarget.id, {
+                    // ✅ Registrar el pago en la deuda
+                    const paymentSuccess = await addPayment(debtTarget.id, {
                         amount: parseFloat(data.amount),
                         date: new Date(),
                         note: "Pago registrado por Nami"
-                    })) || false;
-                    aiResponse = `Registré el pago a ${debtTarget.personName}.`;
+                    });
+
+                    // ✅ TAMBIÉN crear una transacción de gasto para reflejar el movimiento de dinero
+                    if (paymentSuccess) {
+                        const transactionId = await addTransaction({
+                            amount: parseFloat(data.amount),
+                            type: "gasto",
+                            category: "Otra", // Categoría para pagos de deuda
+                            description: `Pago de deuda a ${debtTarget.personName}`,
+                            date: new Date(),
+                            currency: "USD"
+                        } as any);
+
+                        success = !!transactionId;
+                        if (success && transactionId) {
+                            setLastTransactionId(transactionId);
+                        }
+                    }
+
+                    success = !!paymentSuccess;
+                    aiResponse = `Registré el pago de $${parseFloat(data.amount)} a ${debtTarget.personName} 💰`;
                 } else {
                     aiResponse = `No encontré ninguna deuda asociada a "${data.person}".`;
                     success = false;
@@ -284,6 +405,11 @@ export default function Chatbot() {
                 }
                 break;
 
+            case "analysis_chart":
+                aiResponse = "Aquí tienes un análisis visual de tus gastos por categoría este mes:";
+                success = true;
+                return { success, response: aiResponse, chartType: data.chartType || 'pie' };
+
             case "query":
             case "correct_transaction":
             case "warning":
@@ -295,14 +421,15 @@ export default function Chatbot() {
             default:
                 // Fallback legacy support
                 if (data.amount && data.category) {
-                    success = (await addTransaction({
+                    const legacyTransactionId = await addTransaction({
                         amount: typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount,
                         type: (data.type as "ingreso" | "gasto") || "gasto",
                         category: data.category,
                         description: data.description || "Transacción rápida con IA",
                         date: new Date(),
                         currency: "USD"
-                    } as any)) || false;
+                    } as any);
+                    success = !!legacyTransactionId; // ✅ Check if ID was returned
                     aiResponse = "Transacción registrada.";
                 } else {
                     aiResponse = "No entendí muy bien esta operación.";
@@ -333,18 +460,39 @@ export default function Chatbot() {
         const userMsg = typeof text === 'string' ? text : inputRef.current; // Usar ref o texto directo
         if (!userMsg.trim()) return;
 
+        // Prevent sending while operations are pending
+        if (pendingOperationsRef.current) {
+            toast.warning("Espera a que termine la operación anterior");
+            return;
+        }
+
         setInput("");
         setInterimTranscript("");
         const newMessages = [...messages, { role: "user" as const, content: userMsg }];
         setMessages(newMessages);
         setIsLoading(true);
+        pendingOperationsRef.current = true;
 
         try {
-            // Preparar historial de conversación para contexto
-            const conversationHistory = newMessages.slice(-6).map(msg => ({
-                role: msg.role,
+            // Preparar historial de conversación para contexto (excluir mensaje actual)
+            const conversationHistory = messages.slice(-6).map(msg => ({
+                role: msg.role === 'ai' ? 'assistant' : msg.role,  // Mapear 'ai' a 'assistant' para Groq
                 content: msg.content
             }));
+
+            // ✅ Obtener tasa BCV actual para el contexto
+            let bcvRate = 56; // Valor por defecto
+            try {
+                bcvRate = await getBCVRate();
+            } catch (error) {
+                console.warn('No se pudo obtener tasa BCV, usando valor por defecto:', error);
+            }
+
+            // ✅ Añadir tasa BCV al contexto
+            const enrichedContext = {
+                ...userContext,
+                bcvRate: parseFloat(bcvRate.toFixed(2))
+            };
 
             const res = await fetchWithRetry("/api/chat", {
                 method: "POST",
@@ -352,15 +500,17 @@ export default function Chatbot() {
                 body: JSON.stringify({
                     message: userMsg,
                     conversationHistory,
-                    userContext  // ✨ Enviar contexto del usuario
+                    userContext: enrichedContext  // ✨ Enviar contexto enriquecido con tasa BCV
                 }),
             });
 
             const rawData = await res.json();
 
             if (rawData.error) {
-                setMessages(prev => [...prev, { role: "ai", content: `Algo no salió bien: ${rawData.error}` }]);
-                setIsLoading(false);
+                if (isMountedRef.current) {
+                    setMessages(prev => [...prev, { role: "ai", content: `Algo no salió bien: ${rawData.error}` }]);
+                    setIsLoading(false);
+                }
                 return;
             }
 
@@ -380,11 +530,14 @@ export default function Chatbot() {
                 const aiMessage = rawData.message || "No pude identificar ninguna operación.";
                 setMessages(prev => [...prev, { role: "ai", content: aiMessage }]);
             } else {
-                const results: { success: boolean; response: string }[] = [];
+                const results: { success: boolean; response: string; chartType?: "pie" | "bar" }[] = [];
                 for (const op of operations) {
                     const result = await processOperation(op);
-                    results.push(result);
+                    results.push(result as any);
                 }
+
+                // ✅ FIX: Esperar un tick para que React actualice el contexto
+                await new Promise(resolve => setTimeout(resolve, 100));
 
                 // Usar el mensaje natural de la IA si está disponible
                 const aiMessage = rawData.message ||
@@ -393,11 +546,14 @@ export default function Chatbot() {
                         : `Procesé ${results.length} operaciones:\n${results.map(r => `• ${r.response}`).join("\n")}`
                     );
 
-                setMessages(prev => [...prev, {
-                    role: "ai",
-                    content: aiMessage,
-                    isTransaction: results.some(r => r.success)
-                }]);
+                if (isMountedRef.current) {
+                    setMessages(prev => [...prev, {
+                        role: "ai",
+                        content: aiMessage,
+                        isTransaction: results.some(r => r.success),
+                        chartType: results.find(r => r.chartType)?.chartType
+                    }]);
+                }
 
                 // Toast de éxito
                 const successCount = results.filter(r => r.success).length;
@@ -408,10 +564,15 @@ export default function Chatbot() {
 
         } catch (error) {
             console.error(error)
-            setMessages(prev => [...prev, { role: "ai", content: "Lo siento, hubo un error técnico. Por favor intenta de nuevo." }]);
+            if (isMountedRef.current) {
+                setMessages(prev => [...prev, { role: "ai", content: "Lo siento, hubo un error técnico. Por favor intenta de nuevo." }]);
+            }
             toast.error("Error al procesar tu mensaje");
         } finally {
-            setIsLoading(false);
+            if (isMountedRef.current) {
+                setIsLoading(false);
+            }
+            pendingOperationsRef.current = false; // Reset pending flag
         }
     };
 
@@ -603,27 +764,79 @@ export default function Chatbot() {
                                     </div>
                                 </div>
                             )}
-                            {messages.map((msg, i) => (
-                                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm shadow-sm ${msg.role === 'user'
-                                        ? 'bg-gradient-to-tr from-violet-600 to-indigo-600 text-white rounded-tr-sm'
-                                        : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700/50'
-                                        }`}>
-                                        {msg.content}
-                                    </div>
-                                </div>
-                            ))}
+                            <AnimatePresence mode="popLayout">
+                                {messages.map((msg, i) => (
+                                    <motion.div
+                                        key={i}
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        transition={{ duration: 0.3, ease: "easeOut" }}
+                                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                    >
+                                        <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm shadow-sm ${msg.role === 'user'
+                                            ? 'bg-gradient-to-tr from-violet-600 to-indigo-600 text-white rounded-tr-sm'
+                                            : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700/50'
+                                            }`}>
+                                            <div className="text-sm prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-slate-800 prose-pre:rounded-lg prose-pre:p-2">
+                                                <ReactMarkdown
+                                                    components={{
+                                                        ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-2 space-y-1" {...props} />,
+                                                        ol: ({ node, ...props }) => <ol className="list-decimal pl-4 mb-2 space-y-1" {...props} />,
+                                                        li: ({ node, ...props }) => <li className="mb-0.5" {...props} />,
+                                                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                                        strong: ({ node, ...props }) => <strong className="font-bold text-violet-300" {...props} />,
+                                                    }}
+                                                >
+                                                    {msg.content}
+                                                </ReactMarkdown>
+
+                                                {/* Inline Chart */}
+                                                {msg.chartType === 'pie' && (
+                                                    <div className="mt-4 bg-slate-900/50 rounded-xl p-2 border border-slate-700/50">
+                                                        <ExpensePieChart transactions={transactions} />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
                             {isLoading && (
-                                <div className="flex justify-start">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="flex justify-start"
+                                >
                                     <div className="bg-slate-800 p-4 rounded-2xl rounded-tl-sm border border-slate-700/50 flex gap-1.5 items-center">
                                         <span className="text-xs text-slate-400 mr-2">Pensando...</span>
                                         <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                                         <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                                         <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                                     </div>
-                                </div>
+                                </motion.div>
                             )}
                             <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div className="px-4 py-2 bg-slate-800/50 border-t border-slate-700/30 flex gap-2 overflow-x-auto no-scrollbar mask-grad-right">
+                            {[
+                                { icon: "💰", text: "Balance", query: "¿Cuál es mi saldo actual?" },
+                                { icon: "📊", text: "Gastos", query: "¿Cuánto he gastado este mes y en qué?" },
+                                { icon: "📅", text: "Pagos", query: "¿Tengo pagos próximos?" },
+                                { icon: "💡", text: "Tips", query: "Dame un consejo financiero breve" },
+                                { icon: "📈", text: "Análisis", query: "Analiza mis finanzas este mes" }
+                            ].map((action, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => handleSend(action.query)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-full text-xs text-slate-300 hover:bg-violet-600/20 hover:text-violet-300 hover:border-violet-500/30 transition-all whitespace-nowrap"
+                                >
+                                    <span>{action.icon}</span>
+                                    <span>{action.text}</span>
+                                </button>
+                            ))}
                         </div>
 
                         {/* Input */}

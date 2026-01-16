@@ -17,6 +17,8 @@ import BudgetAlertWidget from "@/components/ui/BudgetAlertWidget";
 import CryptoCashWalletWidget from "@/components/ui/CryptoCashWalletWidget";
 import PendingDebtsWidget from "@/components/ui/PendingDebtsWidget";
 import { getBCVRate } from "@/lib/currency";
+import ExpensePieChart from "@/components/ui/ExpensePieChart";
+import CashFlowChart from "@/components/ui/CashFlowChart";
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -403,6 +405,25 @@ export default function DashboardPage() {
                             ? `${Math.round((stats.monthlyExpense / stats.monthlyIncome) * 100)}% de tus ingresos`
                             : "Sin ingresos registrados"}
                     </div>
+                </div>
+            </div>
+
+            {/* Visual Analytics Section */}
+            <div className="order-3 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden">
+                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                        <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                        Flujo de Caja (Mes Actual)
+                    </h3>
+                    <CashFlowChart transactions={transactions} />
+                </div>
+
+                <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden">
+                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                        <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
+                        Distribución de Gastos
+                    </h3>
+                    <ExpensePieChart transactions={transactions} />
                 </div>
             </div>
 

@@ -23,7 +23,7 @@ interface TransactionsContextType {
     loading: boolean;
     deleteTransaction: (id: string) => Promise<boolean>;
     duplicateTransaction: (id: string) => Promise<boolean>;
-    addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<boolean>;
+    addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<string | null>; // ✅ Now returns document ID
 }
 
 const TransactionsContext = createContext<TransactionsContextType | undefined>(undefined);
@@ -110,18 +110,19 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     };
 
     const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
-        if (!auth.currentUser) return false;
+        if (!auth.currentUser) return null;
 
         try {
-            await addDoc(collection(db, "transactions"), {
+            const docRef = await addDoc(collection(db, "transactions"), {
                 ...transaction,
                 userId: auth.currentUser.uid,
                 createdAt: serverTimestamp()
             });
-            return true;
+            // ✅ Return the document ID
+            return docRef.id;
         } catch (error) {
             console.error("Error adding transaction:", error);
-            return false;
+            return null;
         }
     };
 
