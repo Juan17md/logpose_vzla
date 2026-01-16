@@ -9,6 +9,7 @@ import { useShoppingLists } from "@/hooks/useShoppingLists";
 import { useFixedExpenses } from "@/hooks/useFixedExpenses";
 import { useUserData } from "@/contexts/UserDataContext";
 import { getBCVRate } from "@/lib/currency";
+import { createVenezuelaDate } from "@/lib/timezone";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -284,15 +285,15 @@ export default function Chatbot() {
                 }
 
 
-                // ✅ Validar y procesar la fecha
-                let transactionDate = new Date(); // Default: fecha actual
+                // ✅ Validar y procesar la fecha usando hora de Venezuela (UTC-4)
+                let transactionDate = createVenezuelaDate(); // Default: fecha actual en Venezuela
                 if (data.date) {
                     const parsedDate = new Date(data.date);
                     // Validar que la fecha sea válida y no sea futura
-                    if (!isNaN(parsedDate.getTime()) && parsedDate <= new Date()) {
+                    if (!isNaN(parsedDate.getTime()) && parsedDate <= createVenezuelaDate()) {
                         transactionDate = parsedDate;
                     } else {
-                        console.warn('⚠️ Fecha inválida o futura recibida de la IA, usando fecha actual:', data.date);
+                        console.warn('⚠️ Fecha inválida o futura recibida de la IA, usando fecha actual de Venezuela:', data.date);
                     }
                 }
 
@@ -517,7 +518,7 @@ export default function Chatbot() {
                         type: (data.type as "ingreso" | "gasto") || "gasto",
                         category: data.category,
                         description: data.description || "Transacción rápida con IA",
-                        date: new Date(),
+                        date: createVenezuelaDate(),
                         currency: "USD"
                     } as any);
                     success = !!legacyTransactionId; // ✅ Check if ID was returned

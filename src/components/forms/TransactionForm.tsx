@@ -12,6 +12,7 @@ import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from 'date-fns/locale/es';
 import { getBCVRate } from "@/lib/currency";
+import { createVenezuelaDate } from "@/lib/timezone";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import Input from "../ui/forms/Input";
 import CustomCurrencyInput from "../ui/forms/CurrencyInput";
@@ -81,7 +82,7 @@ export default function TransactionForm() {
             description: "",
             category: "Comida",
             customCategory: "",
-            date: new Date(),
+            date: createVenezuelaDate(),
             type: "gasto",
             currency: "USD",
             exchangeRate: "",
@@ -223,7 +224,7 @@ export default function TransactionForm() {
                 // Reset form but keep some defaults
                 reset({
                     amount: "", description: "", category: "Comida", customCategory: "",
-                    date: new Date(), type: "gasto", currency: "USD",
+                    date: createVenezuelaDate(), type: "gasto", currency: "USD",
                     exchangeRate: rate.toString(), vesAmount: ""
                 });
             }
@@ -255,7 +256,7 @@ export default function TransactionForm() {
                             clearEditing();
                             reset({
                                 amount: "", description: "", category: "Comida", customCategory: "",
-                                date: new Date(), type: "gasto", currency: "USD",
+                                date: createVenezuelaDate(), type: "gasto", currency: "USD",
                                 exchangeRate: rate.toString(), vesAmount: ""
                             });
                         }}

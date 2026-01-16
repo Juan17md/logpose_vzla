@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useMemo } fr
 import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { createVenezuelaDate } from "@/lib/timezone";
 
 export interface Transaction {
     id: string;
@@ -100,7 +101,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
             await addDoc(collection(db, "transactions"), {
                 ...rest,
                 userId: auth.currentUser.uid,
-                date: Timestamp.now(), // Set to NOW
+                date: createVenezuelaDate(), // Set to current Venezuela time
                 createdAt: serverTimestamp()
             });
             return true;
