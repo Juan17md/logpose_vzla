@@ -149,10 +149,15 @@ export default function Chatbot() {
                 current: g.currentAmount,
                 target: g.targetAmount
             })),
-            debts: debts.map(d => ({
-                person: d.personName,
-                amount: d.amount
-            })),
+            debts: debts
+                .filter(d => !d.isPaid)
+                .map(d => {
+                    const paid = d.payments?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+                    return {
+                        person: d.personName,
+                        amount: parseFloat((d.amount - paid).toFixed(2))
+                    };
+                }),
             fixedExpenses: fixedExpenses.map((e: any) => ({
                 name: e.title || e.description,
                 amount: e.amount,

@@ -1,11 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { auth, db } from "@/lib/firebase";
 import { updateProfile, sendPasswordResetEmail, User } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import Swal from "sweetalert2";
-import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock } from "react-icons/fi";
+import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut } from "react-icons/fi";
 
 export default function ProfilePage() {
     const [user, setUser] = useState<User | null>(null);
@@ -13,6 +14,16 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [newName, setNewName] = useState("");
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        try {
+            await auth.signOut();
+            router.push("/login"); // Asumiendo que /login es la ruta de inicio de sesión
+        } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+        }
+    };
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
@@ -209,10 +220,18 @@ export default function ProfilePage() {
                         </h3>
                         <button
                             onClick={handlePasswordReset}
-                            className="w-full flex items-center justify-between px-4 py-3.5 bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl transition-all group border border-slate-700/50 hover:border-red-500/30"
+                            className="w-full flex items-center justify-between px-4 py-3.5 bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl transition-all group border border-slate-700/50 hover:border-red-500/30 mb-3"
                         >
                             <span className="font-medium">Cambiar Contraseña</span>
                             <FiLock className="opacity-50 group-hover:opacity-100 group-hover:text-red-400 transition-colors" />
+                        </button>
+
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center justify-between px-4 py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-200 hover:text-red-100 rounded-xl transition-all group border border-red-500/20 hover:border-red-500/40"
+                        >
+                            <span className="font-medium">Cerrar Sesión</span>
+                            <FiLogOut className="opacity-70 group-hover:opacity-100 transition-colors" />
                         </button>
                     </div>
                 </div>
