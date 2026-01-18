@@ -38,7 +38,6 @@ export function ExpenseCategoryChart({ data }: { data: ChartData[] }) {
                         contentStyle={{ backgroundColor: "#1f2937", borderColor: "#374151", color: "#fff" }}
                         itemStyle={{ color: "#fff" }}
                     />
-                    <Legend />
                 </PieChart>
             </ResponsiveContainer>
         </div>
