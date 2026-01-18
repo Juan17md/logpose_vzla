@@ -319,9 +319,6 @@ export default function SavingsPage() {
                 </div>
             </div>
 
-            {/* Goals Section */}
-            {user && <GoalsSection userId={user.uid} />}
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Transaction Form */}
                 <div className="lg:col-span-1">
@@ -486,6 +483,9 @@ export default function SavingsPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Goals Section - Now appears after transaction form and history */}
+            {user && <GoalsSection userId={user.uid} />}
         </div >
     );
 }
