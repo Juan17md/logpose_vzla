@@ -354,7 +354,7 @@ export default function Chatbot() {
                     title: data.name,
                     amount: parseFloat(data.amount),
                     dueDay: parseInt(data.dueDay),
-                    category: "Servicios",
+                    category: data.category || "Servicios",
                     description: data.description || "Gasto fijo registrado por Nami"
                 } as any)) || false;
 
@@ -430,6 +430,9 @@ export default function Chatbot() {
                         const updates: any = {};
                         if (data.field === 'amount') updates.amount = parseFloat(data.value);
                         if (data.field === 'day') updates.dueDay = parseInt(data.value);
+                        if (data.field === 'name') updates.title = data.value;
+                        if (data.field === 'category') updates.category = data.value;
+                        if (data.field === 'description') updates.description = data.value;
                         await updateFixedExpense(target.id, updates);
                         aiResponse = `Actualicé el gasto fijo "${target.title}".`;
                         success = true;
@@ -472,6 +475,41 @@ export default function Chatbot() {
                     aiResponse = "No entendí qué tipo de ahorro o presupuesto quieres actualizar.";
                     success = false;
                 }
+                break;
+
+            case "pay_fixed_expense":
+                const fixedExpense = fixedExpenses.find(f => (f.title || f.description || "").toLowerCase().includes(data.name.toLowerCase()));
+
+                if (!fixedExpense) {
+                    aiResponse = `No encontré el gasto fijo "${data.name}".`;
+                    success = false;
+                    break;
+                }
+
+                // Actualizar lastPaidDate
+                await updateFixedExpense(fixedExpense.id, {
+                    lastPaidDate: createVenezuelaDate()
+                });
+
+                // Opcionalmente crear transacción de gasto
+                if (data.createTransaction) {
+                    const rate = await getBCVRate();
+                    await addTransaction({
+                        amount: fixedExpense.amount,
+                        type: "gasto",
+                        category: fixedExpense.category,
+                        description: `Pago mensual: ${fixedExpense.title}`,
+                        date: createVenezuelaDate(),
+                        currency: "USD",
+                        originalAmount: fixedExpense.amount,
+                        exchangeRate: rate
+                    } as any);
+                    aiResponse = `Marqué "${fixedExpense.title}" como pagado y registré el gasto de $${fixedExpense.amount}.`;
+                } else {
+                    aiResponse = `Marqué "${fixedExpense.title}" como pagado.`;
+                }
+
+                success = true;
                 break;
 
             case "correct_transaction":

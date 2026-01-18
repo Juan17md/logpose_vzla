@@ -254,11 +254,8 @@ Usa esto cuando el usuario pida ver gráficos, "ver" gastos visualmente, "en qu�
   "intent": "new_fixed_expense",
   "name": string,
   "amount": number,
-  "dueDay": number,
-  "description": string (opcional)
-  "description": string (opcional)
-}
-
+  "dueDay": number (1-31),
+  "category": string (opcional, default: "Servicios"),
   "description": string (opcional)
 }
 
@@ -275,9 +272,16 @@ Usa esto cuando el usuario pida ver gráficos, "ver" gastos visualmente, "en qu�
   "intent": "update_item",
   "itemType": "debt" | "goal" | "fixed_expense" | "shopping_list",
   "name": string,
-  "field": "amount" | "name" | "day" | "description",
+  "field": "amount" | "name" | "day" | "description" | "category",
   "value": any
 }
+
+Ejemplos para fixed_expense:
+- "Cambia internet a $60" → field: "amount", value: 60
+- "Cambia el día de telefonía a 20" → field: "day", value: 20
+- "Renombra netflix a streaming" → field: "name", value: "streaming"
+- "Cambia la categoría de gym a deporte" → field: "category", value: "Deporte"
+
 
 1️⃣5️⃣ ACTUALIZAR AHORROS (update_savings):
 {
@@ -285,6 +289,19 @@ Usa esto cuando el usuario pida ver gráficos, "ver" gastos visualmente, "en qu�
   "type": "physical" | "digital" | "budget",
   "amount": number
 }
+
+1️⃣6️⃣ PAGAR GASTO FIJO (pay_fixed_expense):
+{
+  "intent": "pay_fixed_expense",
+  "name": string,
+  "createTransaction": boolean (opcional, default: false)
+}
+
+Ejemplos:
+- "Marca telefonía como pagado" → createTransaction: false (solo marca como pagado)
+- "Pagué internet" → createTransaction: true (marca como pagado Y crea el gasto)
+- "Registra el pago de netflix" → createTransaction: true
+
 
 ═══════════════════════════════════════════════════════════════════
 💱 REGLAS DE CONVERSIÓN DE MONEDA
