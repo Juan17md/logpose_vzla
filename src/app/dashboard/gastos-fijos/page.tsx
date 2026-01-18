@@ -483,17 +483,16 @@ export default function FixedExpensesPage() {
                                     className={`lg:col-span-1 bg-slate-900/50 backdrop-blur-md border rounded-3xl p-6 relative group overflow-hidden transition-all hover:-translate-y-1 ${isPaid ? 'border-emerald-500/30 shadow-lg shadow-emerald-500/5' : 'border-slate-700/50 hover:border-slate-600'
                                         }`}
                                 >
-                                    {isPaid && (
-                                        <div className="absolute top-0 right-0 p-4">
-                                            <div className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-emerald-500/30">
-                                                <FiCheckCircle /> PAGADO
-                                            </div>
-                                        </div>
-                                    )}
-
                                     <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-slate-800 rounded-2xl">
-                                            <FiActivity className="text-2xl text-slate-400" />
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-3 bg-slate-800 rounded-2xl">
+                                                <FiActivity className="text-2xl text-slate-400" />
+                                            </div>
+                                            {isPaid && (
+                                                <div className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-emerald-500/30">
+                                                    <FiCheckCircle /> PAGADO
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex gap-1">
                                             <button
