@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Swal from "sweetalert2";
 import { FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff } from "react-icons/fi";
+import { FcGoogle } from "react-icons/fc";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,6 +52,43 @@ export default function LoginPage() {
                 errorMessage = "El correo electrónico no es válido.";
             } else if (error.code === "auth/too-many-requests") {
                 errorMessage = "Demasiados intentos fallidos. Intenta más tarde.";
+            }
+
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: errorMessage,
+                background: "#1f2937",
+                color: "#fff",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        setLoading(true);
+        try {
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            Swal.fire({
+                icon: "success",
+                title: "¡Bienvenido!",
+                text: "Has iniciado sesión con Google correctamente.",
+                timer: 1500,
+                showConfirmButton: false,
+                background: "#1f2937",
+                color: "#fff",
+            });
+            router.push("/dashboard");
+        } catch (error: any) {
+            console.error(error);
+            let errorMessage = "Ocurrió un error al iniciar sesión con Google.";
+
+            if (error.code === "auth/popup-closed-by-user") {
+                errorMessage = "Inicio de sesión cancelado.";
+            } else if (error.code === "auth/account-exists-with-different-credential") {
+                errorMessage = "Ya existe una cuenta con este correo usando otro método.";
             }
 
             Swal.fire({
@@ -123,6 +161,27 @@ export default function LoginPage() {
                         )}
                     </button>
                 </form>
+
+                {/* Divider */}
+                <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-slate-700/50"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-4 bg-slate-900/50 text-slate-400 backdrop-blur-sm">O continúa con</span>
+                    </div>
+                </div>
+
+                {/* Google Sign-In Button */}
+                <button
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                    type="button"
+                    className="w-full bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3.5 rounded-xl shadow-lg transform transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-3 disabled:opacity-70 disabled:cursor-not-allowed border border-gray-200"
+                >
+                    <FcGoogle size={24} />
+                    <span>Continuar con Google</span>
+                </button>
 
                 <p className="mt-8 text-center text-sm text-slate-400">
                     ¿No tienes una cuenta?{" "}
