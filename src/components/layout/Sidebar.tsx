@@ -81,8 +81,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         </button>
                     </div>
 
-                    {/* Scrollable Content Area */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar px-4 relative z-10">
+                    {/* Scrollable Content Area - pb-24 accounts for mobile bottom nav (80px) */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-24 md:pb-0 relative z-10">
                         {/* Navigation */}
                         <nav className="space-y-2">
                             <div className="text-xs font-bold text-slate-500 uppercase tracking-widest px-4 mb-2 mt-4 ml-1">Menu Principal</div>
