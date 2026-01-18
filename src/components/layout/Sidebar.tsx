@@ -111,13 +111,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         </nav>
 
                         {/* Footer / Logout - Now inside scrollable area */}
-                        <div className="p-4 mt-4 mb-4">
+                        <div className="p-4 mt-6 mb-6">
+                            {/* Separator */}
+                            <div className="h-px bg-gradient-to-r from-transparent via-slate-700/50 to-transparent mb-6"></div>
+
                             <button
                                 onClick={handleLogout}
-                                className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all group border border-transparent hover:border-red-500/20"
+                                className="w-full flex items-center justify-center space-x-3 px-6 py-4 md:py-3 rounded-2xl 
+                                text-red-400 bg-red-500/10 hover:bg-red-500/20 
+                                transition-all duration-300 group 
+                                border border-red-500/30 hover:border-red-500/50
+                                shadow-lg shadow-red-500/10 hover:shadow-red-500/20
+                                active:scale-95"
                             >
-                                <FiLogOut className="text-lg group-hover:scale-110 transition-transform" />
-                                <span className="font-medium">Cerrar Sesión</span>
+                                <FiLogOut className="text-xl md:text-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
+                                <span className="font-bold text-base md:text-sm">Cerrar Sesión</span>
                             </button>
                         </div>
                     </div>
