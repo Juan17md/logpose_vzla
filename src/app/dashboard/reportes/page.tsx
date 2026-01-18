@@ -69,7 +69,7 @@ export default function ReportsPage() {
     const balanceData = [
         { name: "Ingresos", value: stats.income, color: "#10b981" },
         { name: "Gastos", value: stats.expense, color: "#ef4444" },
-        { name: "Ahorro", value: Math.max(0, stats.balance), color: "#3b82f6" }
+        { name: "Ahorro", value: Math.max(0, savingsStats.netSavings), color: "#3b82f6" }
     ];
 
     const MONTHS = [
@@ -87,8 +87,6 @@ export default function ReportsPage() {
 
     return (
         <div className="space-y-8">
-            {/* Header & Filter */}
-            {/* Header & Filter */}
             {/* Header & Filter */}
             <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
