@@ -40,6 +40,7 @@ export function useFixedExpenses() {
                             id: doc.id,
                             ...docData,
                             createdAt: docData.createdAt instanceof Timestamp ? docData.createdAt.toDate() : new Date(docData.createdAt || Date.now()),
+                            lastPaidDate: docData.lastPaidDate instanceof Timestamp ? docData.lastPaidDate.toDate() : docData.lastPaidDate ? new Date(docData.lastPaidDate) : undefined,
                         } as FixedExpense;
                     });
                     setFixedExpenses(data);
@@ -91,8 +92,15 @@ export function useFixedExpenses() {
         if (!auth.currentUser) return;
         try {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id: _, createdAt, ...validUpdates } = updates; // Exclude non-updatable fields if passed
-            await updateDoc(doc(db, "users", auth.currentUser.uid, "fixed_expenses", id), validUpdates);
+            const { id: _, createdAt, ...validUpdates } = updates; // Exclude non-updatable fields
+            // Convert Date objects to Firestore Timestamps
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const processedUpdates: any = { ...validUpdates };
+            if (validUpdates.lastPaidDate instanceof Date) {
+                processedUpdates.lastPaidDate = Timestamp.fromDate(validUpdates.lastPaidDate);
+            }
+
+            await updateDoc(doc(db, "users", auth.currentUser.uid, "fixed_expenses", id), processedUpdates);
             return true;
         } catch (error) {
             console.error("Error updating fixed expense:", error);
