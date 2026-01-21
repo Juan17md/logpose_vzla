@@ -268,20 +268,49 @@ export default function Chatbot() {
                 let exchangeRate = 1;
                 let originalAmount = undefined;
 
-                // Caso especial: "Recibí 5$ pero en bolívares"
+                // 🔍 DEBUG: Ver qué está enviando la IA
+                if (data.currency === "VES") {
+                    console.log('💱 DEBUG VES Transaction:', {
+                        receivedAmount: data.amount,
+                        typeOfAmount: typeof data.amount,
+                        parsedAmount: amountUSD,
+                        amountInUSD: data.amountInUSD
+                    });
+                }
+
+                // Caso especial: "Gasté 5$ en bolívares"
                 if (data.currency === "VES" && data.amountInUSD) {
                     // El usuario dijo "5 dólares en bolívares"
+                    // La IA ya calculó el equivalente en Bs y lo envió en 'amount'
                     const rate = await getBCVRate();
                     exchangeRate = rate;
                     const usdAmount = parseFloat(data.amountInUSD);
-                    originalAmount = usdAmount * rate; // Convertir USD a VES
-                    amountUSD = usdAmount; // Guardar en USD
+
+                    // Usar el monto en Bs que ya calculó la IA
+                    originalAmount = amountUSD; // Este es el monto en Bs calculado por la IA
+                    amountUSD = usdAmount; // Guardar el valor en USD para la base de datos
+
+                    console.log('💱 DEBUG "X$ en Bs" case:', {
+                        userSaidUSD: usdAmount,
+                        calculatedBs: originalAmount,
+                        rate: rate,
+                        willSaveAsUSD: amountUSD
+                    });
                 } else if (data.currency === "VES") {
                     // Caso normal: "100 bolívares"
                     const rate = await getBCVRate();
                     exchangeRate = rate;
-                    originalAmount = amountUSD;
-                    amountUSD = parseFloat((amountUSD / rate).toFixed(2));
+                    // 🔧 FIX: Guardar el monto EXACTO en Bs ANTES de cualquier conversión
+                    const exactBsAmount = amountUSD; // Guardar el valor original
+                    originalAmount = exactBsAmount; // Este es el valor que el usuario ingresó
+                    amountUSD = parseFloat((exactBsAmount / rate).toFixed(2)); // Convertir a USD con 2 decimales
+
+                    console.log('💱 DEBUG After Conversion:', {
+                        originalBs: exactBsAmount,
+                        rate: rate,
+                        convertedUSD: amountUSD,
+                        savedOriginalAmount: originalAmount
+                    });
                 }
 
 
@@ -410,6 +439,11 @@ export default function Chatbot() {
                         // Construir updates
                         const updates: any = {};
                         if (data.field === 'amount') updates.amount = parseFloat(data.value);
+                        if (data.field === 'name') updates.personName = data.value;
+                        if (data.field === 'description') updates.description = data.value;
+                        if (data.field === 'date') updates.dueDate = new Date(data.value);
+                        if (data.field === 'type') updates.type = data.value; // "por_cobrar" | "por_pagar"
+
                         await updateDebt(target.id, updates);
                         aiResponse = `Actualicé la deuda de ${target.personName}.`;
                         success = true;

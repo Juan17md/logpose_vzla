@@ -7,7 +7,7 @@ export interface SavingsTransaction {
     id: string;
     amount: number;
     type: "deposit" | "withdrawal";
-    method: "physical" | "usdt";
+    method: "physical" | "usdt" | "bs";
     description: string;
     date: Date;
 }

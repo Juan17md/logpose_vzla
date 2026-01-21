@@ -1,0 +1,91 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================
+    // 📋 REGLAS DE SEGURIDAD - CONTROL DE GASTOS
+    // ========================================
+    // Estas reglas garantizan que cada usuario solo pueda
+    // acceder y modificar sus propios datos.
+
+
+    // ----------------------------------------
+    // 👤 USUARIOS - Documento principal del usuario
+    // ----------------------------------------
+    // Colección: users/{userId}
+    // Un usuario solo puede leer y escribir su propio documento.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // ----------------------------------------
+      // 💰 DEUDAS - Subcolección de deudas
+      // ----------------------------------------
+      // Colección: users/{userId}/debts/{debtId}
+      match /debts/{debtId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // ----------------------------------------
+      // 📅 GASTOS FIJOS - Subcolección de gastos recurrentes
+      // ----------------------------------------
+      // Colección: users/{userId}/fixed_expenses/{expenseId}
+      match /fixed_expenses/{expenseId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // ----------------------------------------
+      // 🎯 METAS DE AHORRO - Subcolección de metas
+      // ----------------------------------------
+      // Colección: users/{userId}/saving_goals/{goalId}
+      match /saving_goals/{goalId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // ----------------------------------------
+      // 💳 TRANSACCIONES DE AHORRO - Historial de movimientos de ahorro
+      // ----------------------------------------
+      // Colección: users/{userId}/savings_transactions/{transactionId}
+      match /savings_transactions/{transactionId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+
+    // ----------------------------------------
+    // 💵 TRANSACCIONES - Ingresos y gastos
+    // ----------------------------------------
+    // Colección: transactions/{transactionId}
+    // Contiene un campo `userId` para identificar al propietario.
+    // Solo el propietario puede crear, leer, actualizar o eliminar.
+    match /transactions/{transactionId} {
+      // Permitir lectura solo si el documento pertenece al usuario autenticado
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Permitir creación si el usuario está autenticado y establece su propio userId
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // Permitir actualización y eliminación solo si el documento pertenece al usuario
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+
+    // ----------------------------------------
+    // 🛒 LISTAS DE COMPRAS - Shopping lists
+    // ----------------------------------------
+    // Colección: shopping_lists/{listId}
+    // Contiene un campo `userId` para identificar al propietario.
+    // Solo el propietario puede crear, leer, actualizar o eliminar.
+    match /shopping_lists/{listId} {
+      // Permitir lectura solo si el documento pertenece al usuario autenticado
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Permitir creación si el usuario está autenticado y establece su propio userId
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // Permitir actualización y eliminación solo si el documento pertenece al usuario
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+  }
+}

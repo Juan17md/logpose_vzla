@@ -30,6 +30,7 @@ import {
     FiBriefcase,
     FiSearch
 } from "react-icons/fi";
+import { TbCoinFilled } from "react-icons/tb";
 import PaginationControls from "@/components/ui/PaginationControls";
 import { SiTether } from "react-icons/si";
 import { getBCVRate } from "@/lib/currency";
@@ -39,7 +40,7 @@ interface SavingsTransaction {
     id: string;
     amount: number;
     type: "deposit" | "withdrawal";
-    method: "physical" | "usdt"; // 'physical' or 'usdt'
+    method: "physical" | "usdt" | "bs"; // 'physical', 'usdt' or 'bs'
     description: string;
     date: any; // Timestamp
 }
@@ -50,12 +51,14 @@ export default function SavingsPage() {
     const [loading, setLoading] = useState(true);
     const [balancePhysical, setBalancePhysical] = useState(0);
     const [balanceUSDT, setBalanceUSDT] = useState(0);
+    const [balanceBs, setBalanceBs] = useState(0);
     const [bcvRate, setBcvRate] = useState(0);
 
     // Form State
     const [amount, setAmount] = useState("");
     const [description, setDescription] = useState("");
-    const [method, setMethod] = useState<"physical" | "usdt">("physical");
+    const [method, setMethod] = useState<"physical" | "usdt" | "bs">("physical");
+
     const [type, setType] = useState<"deposit" | "withdrawal">("deposit");
 
     const [searchTerm, setSearchTerm] = useState("");
@@ -74,6 +77,7 @@ export default function SavingsPage() {
                         const data = docSnap.data();
                         setBalancePhysical(data.savingsPhysical || 0);
                         setBalanceUSDT(data.savingsUSDT || 0);
+                        setBalanceBs(data.savingsBs || 0);
                     }
                 });
 
@@ -121,12 +125,13 @@ export default function SavingsPage() {
 
         // Validation for withdrawal
         if (type === "withdrawal") {
-            const currentBalance = method === "physical" ? balancePhysical : balanceUSDT;
+            const currentBalance = method === "physical" ? balancePhysical : method === "usdt" ? balanceUSDT : balanceBs;
             if (numAmount > currentBalance) {
+                const methodName = method === "physical" ? "Efectivo" : method === "usdt" ? "USDT" : "Bolívares";
                 Swal.fire({
                     icon: 'error',
                     title: 'Saldo insuficiente',
-                    text: `No tienes suficientes fondos en ${method === "physical" ? "Efectivo" : "USDT"} para retirar esa cantidad.`,
+                    text: `No tienes suficientes fondos en ${methodName} para retirar esa cantidad.`,
                     background: "#1f2937",
                     color: "#fff",
                 });
@@ -136,7 +141,7 @@ export default function SavingsPage() {
 
         try {
             const userRef = doc(db, "users", user.uid);
-            const fieldToUpdate = method === "physical" ? "savingsPhysical" : "savingsUSDT";
+            const fieldToUpdate = method === "physical" ? "savingsPhysical" : method === "usdt" ? "savingsUSDT" : "savingsBs";
             const incrementValue = type === "deposit" ? numAmount : -numAmount;
 
             // Run as a transaction to ensure data integrity
@@ -201,7 +206,7 @@ export default function SavingsPage() {
         if (result.isConfirmed) {
             try {
                 const userRef = doc(db, "users", user.uid);
-                const fieldToUpdate = trans.method === "physical" ? "savingsPhysical" : "savingsUSDT";
+                const fieldToUpdate = trans.method === "physical" ? "savingsPhysical" : trans.method === "usdt" ? "savingsUSDT" : "savingsBs";
 
                 // If it was a deposit, we subtract to revert. If withdrawal, we add to revert.
                 const revertValue = trans.type === "deposit" ? -trans.amount : trans.amount;
@@ -248,7 +253,7 @@ export default function SavingsPage() {
         );
     }
 
-    const totalBalance = balancePhysical + balanceUSDT;
+    const totalBalance = balancePhysical + balanceUSDT + (balanceBs / bcvRate || 0);
 
     const filteredTransactions = transactions.filter(t =>
         t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -277,9 +282,9 @@ export default function SavingsPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Balance Cards */}
-                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Physical */}
                     <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-green-500/20 transition-all"></div>
@@ -304,6 +309,19 @@ export default function SavingsPage() {
                         </div>
                         <p className="text-3xl font-bold text-white mb-1">{balanceUSDT.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} USDT</p>
                         <p className="text-sm text-slate-500">Dólar Digital</p>
+                    </div>
+
+                    {/* Bolívares */}
+                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/20 transition-all"></div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Bolívares</h3>
+                            <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400">
+                                <TbCoinFilled size={20} />
+                            </div>
+                        </div>
+                        <p className="text-3xl font-bold text-white mb-1">Bs. {balanceBs.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                        <p className="text-sm text-slate-500">≈ ${bcvRate > 0 ? (balanceBs / bcvRate).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}</p>
                     </div>
                 </div>
 
@@ -352,23 +370,28 @@ export default function SavingsPage() {
                             {/* Method Selection */}
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-500 uppercase ml-1">Billetera</label>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-3">
                                     <label className={`cursor-pointer border rounded-xl p-3 flex flex-col items-center gap-2 transition-all ${method === "physical" ? "bg-green-500/10 border-green-500/50" : "bg-slate-800/30 border-slate-700 hover:border-slate-600"}`}>
                                         <input type="radio" name="method" value="physical" className="hidden" checked={method === "physical"} onChange={() => setMethod("physical")} />
-                                        <FiDollarSign className={method === "physical" ? "text-green-400" : "text-slate-500"} size={24} />
-                                        <span className={`text-sm ${method === "physical" ? "text-green-400 font-bold" : "text-slate-400"}`}>Efectivo</span>
+                                        <FiDollarSign className={method === "physical" ? "text-green-400" : "text-slate-500"} size={22} />
+                                        <span className={`text-xs ${method === "physical" ? "text-green-400 font-bold" : "text-slate-400"}`}>Efectivo</span>
                                     </label>
                                     <label className={`cursor-pointer border rounded-xl p-3 flex flex-col items-center gap-2 transition-all ${method === "usdt" ? "bg-teal-500/10 border-teal-500/50" : "bg-slate-800/30 border-slate-700 hover:border-slate-600"}`}>
                                         <input type="radio" name="method" value="usdt" className="hidden" checked={method === "usdt"} onChange={() => setMethod("usdt")} />
-                                        <SiTether className={method === "usdt" ? "text-teal-400" : "text-slate-500"} size={24} />
-                                        <span className={`text-sm ${method === "usdt" ? "text-teal-400 font-bold" : "text-slate-400"}`}>USDT</span>
+                                        <SiTether className={method === "usdt" ? "text-teal-400" : "text-slate-500"} size={22} />
+                                        <span className={`text-xs ${method === "usdt" ? "text-teal-400 font-bold" : "text-slate-400"}`}>USDT</span>
+                                    </label>
+                                    <label className={`cursor-pointer border rounded-xl p-3 flex flex-col items-center gap-2 transition-all ${method === "bs" ? "bg-amber-500/10 border-amber-500/50" : "bg-slate-800/30 border-slate-700 hover:border-slate-600"}`}>
+                                        <input type="radio" name="method" value="bs" className="hidden" checked={method === "bs"} onChange={() => setMethod("bs")} />
+                                        <TbCoinFilled className={method === "bs" ? "text-amber-400" : "text-slate-500"} size={22} />
+                                        <span className={`text-xs ${method === "bs" ? "text-amber-400 font-bold" : "text-slate-400"}`}>Bs</span>
                                     </label>
                                 </div>
                             </div>
 
                             {/* Amount Input */}
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Monto ($)</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Monto ({method === "bs" ? "Bs" : "$"})</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -445,9 +468,11 @@ export default function SavingsPage() {
                                                     {t.description}
                                                     <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full border ${t.method === "physical"
                                                         ? "bg-green-500/10 text-green-400 border-green-500/20"
-                                                        : "bg-teal-500/10 text-teal-400 border-teal-500/20"
+                                                        : t.method === "usdt"
+                                                        ? "bg-teal-500/10 text-teal-400 border-teal-500/20"
+                                                        : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                                                         }`}>
-                                                        {t.method === "physical" ? "Efectivo" : "USDT"}
+                                                        {t.method === "physical" ? "Efectivo" : t.method === "usdt" ? "USDT" : "Bs"}
                                                     </span>
                                                 </p>
                                                 <p className="text-xs text-slate-500">
@@ -459,7 +484,7 @@ export default function SavingsPage() {
                                         <div className="flex items-center gap-4">
                                             <p className={`font-mono font-bold text-lg ${t.type === "deposit" ? "text-emerald-400" : "text-red-400"
                                                 }`}>
-                                                {t.type === "deposit" ? "+" : "-"}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                {t.type === "deposit" ? "+" : "-"}{t.method === "bs" ? "Bs." : "$"}{t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                             </p>
                                             <button
                                                 onClick={() => handleDelete(t)}

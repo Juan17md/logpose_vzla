@@ -49,14 +49,26 @@ export function BalanceChart({ data }: { data: ChartData[] }) {
         return <div className="h-64 flex items-center justify-center text-slate-500">Sin movimientos en este periodo</div>;
     }
 
+    // Formateador para mostrar solo 2 decimales
+    const formatValue = (value: number) => {
+        return value.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    };
+
     return (
         <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="name" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip cursor={{ fill: '#374151', opacity: 0.2 }} contentStyle={{ backgroundColor: "#1f2937", borderColor: "#374151", color: "#fff" }} />
+                    <YAxis
+                        stroke="#9ca3af"
+                        tickFormatter={formatValue}
+                    />
+                    <Tooltip
+                        cursor={{ fill: '#374151', opacity: 0.2 }}
+                        contentStyle={{ backgroundColor: "#1f2937", borderColor: "#374151", color: "#fff" }}
+                        formatter={(value: number | undefined) => value !== undefined ? `$${formatValue(value)}` : '$0'}
+                    />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                         {data.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
