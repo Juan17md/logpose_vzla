@@ -21,20 +21,27 @@ const RADIAN = Math.PI / 180;
 
 const renderActiveShape = (props: any) => {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+    // Detectar si es versión móvil basándonos en el radio (45 en móvil vs 85 en desktop)
+    const isCompact = outerRadius < 60;
 
     return (
         <g>
-            <text x={cx} y={cy} dy={-10} textAnchor="middle" fill="#fff" className="text-sm font-bold opacity-80">
-                {payload.name}
-            </text>
-            <text x={cx} y={cy} dy={15} textAnchor="middle" fill="#fff" className="text-xs">
-                {`${(percent * 100).toFixed(1)}%`}
-            </text>
+            {/* Solo mostrar texto en centro si NO es compacto */}
+            {!isCompact && (
+                <>
+                    <text x={cx} y={cy} dy={-10} textAnchor="middle" fill="#fff" className="text-sm font-bold opacity-80">
+                        {payload.name}
+                    </text>
+                    <text x={cx} y={cy} dy={15} textAnchor="middle" fill="#fff" className="text-xs">
+                        {`${(percent * 100).toFixed(1)}%`}
+                    </text>
+                </>
+            )}
             <Sector
                 cx={cx}
                 cy={cy}
                 innerRadius={innerRadius}
-                outerRadius={outerRadius + 6}
+                outerRadius={outerRadius + (isCompact ? 3 : 6)}
                 startAngle={startAngle}
                 endAngle={endAngle}
                 fill={fill}
@@ -44,8 +51,8 @@ const renderActiveShape = (props: any) => {
                 cy={cy}
                 startAngle={startAngle}
                 endAngle={endAngle}
-                innerRadius={outerRadius + 8}
-                outerRadius={outerRadius + 12}
+                innerRadius={outerRadius + (isCompact ? 5 : 8)}
+                outerRadius={outerRadius + (isCompact ? 8 : 12)}
                 fill={fill}
             />
         </g>
