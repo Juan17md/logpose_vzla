@@ -1,9 +1,9 @@
 "use client";
 
-import { useDebts, Debt } from "@/hooks/useDebts";
+import { useDebts } from "@/hooks/useDebts";
 import { FiArrowUp, FiArrowDown, FiCreditCard, FiCheckCircle, FiClock, FiAlertCircle } from "react-icons/fi";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function PendingDebtsWidget() {
     const { debts, loadingDebts } = useDebts();

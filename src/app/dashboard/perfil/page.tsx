@@ -10,7 +10,7 @@ import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut
 
 export default function ProfilePage() {
     const [user, setUser] = useState<User | null>(null);
-    const [userData, setUserData] = useState<any>(null);
+    const [userData, setUserData] = useState<{ createdAt?: { toDate: () => Date } } | null>(null);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [newName, setNewName] = useState("");

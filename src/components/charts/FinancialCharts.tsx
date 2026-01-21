@@ -1,16 +1,15 @@
 "use client";
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 interface ChartData {
     name: string;
     value: number;
     color?: string;
-    [key: string]: any;
+    [key: string]: string | number | undefined;
 }
 
 const COLORS = ["#10b981", "#ef4444", "#3b82f6", "#f59e0b", "#8b5cf6", "#ec4899"];
-const COLORS_EXPENSE = ["#ef4444", "#f87171", "#fca5a5", "#b91c1c", "#991b1b", "#7f1d1d"];
 
 export function ExpenseCategoryChart({ data }: { data: ChartData[] }) {
     if (data.length === 0) {

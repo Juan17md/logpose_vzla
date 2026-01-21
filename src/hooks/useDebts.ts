@@ -13,6 +13,16 @@ export interface Payment {
     exchangeRate?: number;
 }
 
+interface FirestorePayment {
+    id: string;
+    amount: number;
+    date: Timestamp | Date | string;
+    note?: string;
+    currency?: "USD" | "VES";
+    originalAmount?: number;
+    exchangeRate?: number;
+}
+
 export interface Debt {
     id: string;
     personName: string;
@@ -52,7 +62,7 @@ export function useDebts() {
                             ...docData,
                             createdAt: docData.createdAt instanceof Timestamp ? docData.createdAt.toDate() : new Date(docData.createdAt || Date.now()),
                             dueDate: docData.dueDate instanceof Timestamp ? docData.dueDate.toDate() : (docData.dueDate ? new Date(docData.dueDate) : undefined),
-                            payments: (docData.payments || []).map((p: any) => ({
+                            payments: (docData.payments || []).map((p: FirestorePayment) => ({
                                 ...p,
                                 date: p.date instanceof Timestamp ? p.date.toDate() : new Date(p.date)
                             }))
@@ -83,7 +93,7 @@ export function useDebts() {
         try {
             // Remove undefined fields to avoid Firestore errors
             const cleanDebt = Object.fromEntries(
-                Object.entries(debt).filter(([_, v]) => v !== undefined)
+                Object.entries(debt).filter(([, v]) => v !== undefined)
             );
 
             await addDoc(collection(db, "users", auth.currentUser.uid, "debts"), {
@@ -114,9 +124,9 @@ export function useDebts() {
         if (!auth.currentUser) return;
         try {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id: _, createdAt, ...updatesToClean } = updates;
+            const { id: _unused, createdAt, ...updatesToClean } = updates;
             const validUpdates = Object.fromEntries(
-                Object.entries(updatesToClean).filter(([__, v]) => v !== undefined)
+                Object.entries(updatesToClean).filter(([, v]) => v !== undefined)
             );
             await updateDoc(doc(db, "users", auth.currentUser.uid, "debts", id), validUpdates);
             return true;
@@ -141,7 +151,7 @@ export function useDebts() {
 
                 // Clean undefined
                 const cleanPayment = Object.fromEntries(
-                    Object.entries(payment).filter(([__, v]) => v !== undefined)
+                    Object.entries(payment).filter(([, v]) => v !== undefined)
                 );
 
                 const newPayment = { ...cleanPayment, id: crypto.randomUUID() } as Payment;

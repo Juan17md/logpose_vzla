@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, increment } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import Swal from "sweetalert2";
-import { FiTarget, FiPlus, FiTrash2, FiEdit2, FiCheck, FiX, FiDollarSign } from "react-icons/fi";
+import { FiTarget, FiPlus, FiTrash2, FiX } from "react-icons/fi";
 
 interface SavingGoal {
     id: string;
@@ -22,7 +22,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
     // New Goal States
     const [newGoalName, setNewGoalName] = useState("");
     const [newGoalTarget, setNewGoalTarget] = useState("");
-    const [newGoalColor, setNewGoalColor] = useState("#10b981");
+    const [newGoalColor] = useState("#10b981");
 
     useEffect(() => {
         if (!userId) return;

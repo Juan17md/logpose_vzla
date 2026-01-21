@@ -433,7 +433,7 @@ export default function TransactionForm() {
                                         className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-sm font-medium rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-all cursor-pointer hover:border-slate-600 hover:bg-slate-800"
                                         wrapperClassName="w-full"
                                         calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-xl !rounded-2xl overflow-hidden"
-                                        dayClassName={(date: Date) => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-all"}
+                                        dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-all"}
                                         weekDayClassName={() => "!text-slate-500 !uppercase !text-xs !tracking-wider"}
                                         popperClassName="!z-50"
                                     />

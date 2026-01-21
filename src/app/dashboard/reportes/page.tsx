@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useTransactions } from "@/hooks/useTransactions";
 import { ExpenseCategoryChart, BalanceChart } from "@/components/charts/FinancialCharts";
-import { FiCalendar, FiTrendingUp, FiTrendingDown, FiDollarSign, FiPieChart, FiBriefcase } from "react-icons/fi";
+import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiPieChart, FiBriefcase } from "react-icons/fi";
 import { useSavingsTransactions } from "@/hooks/useSavingsTransactions";
 
 export default function ReportsPage() {

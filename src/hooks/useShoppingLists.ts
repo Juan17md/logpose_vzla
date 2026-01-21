@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, arrayUnion, runTransaction } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, arrayUnion, runTransaction, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 
 export interface ShoppingItem {
@@ -16,7 +16,7 @@ export interface ShoppingList {
     userId: string;
     name: string;
     items: ShoppingItem[];
-    createdAt: any;
+    createdAt: Timestamp | Date;
 }
 
 export const useShoppingLists = () => {

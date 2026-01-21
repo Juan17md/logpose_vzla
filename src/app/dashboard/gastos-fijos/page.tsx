@@ -9,6 +9,7 @@ import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { getBCVRate } from "@/lib/currency";
 import FixedExpensesCalendar from "@/components/ui/FixedExpensesCalendar";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function FixedExpensesPage() {
     const { fixedExpenses, loadingFixedExpenses, addFixedExpense, deleteFixedExpense, updateFixedExpense } = useFixedExpenses();
@@ -378,17 +379,17 @@ export default function FixedExpensesPage() {
 
     return (
         <div className="space-y-8 pb-10">
-            {/* Header */}
-            <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+            {/* Desktop Header */}
+            <div className="hidden md:block bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                    <FiCalendar className="text-7xl md:text-9xl text-emerald-400" />
+                    <FiCalendar className="text-9xl text-emerald-400" />
                 </div>
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
 
-                <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 items-end">
+                <div className="relative z-10 grid grid-cols-2 gap-8 items-end">
                     <div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Gastos Fijos</h1>
-                        <p className="text-slate-400 text-sm md:text-lg">
+                        <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Gastos Fijos</h1>
+                        <p className="text-slate-400 text-lg">
                             Gestiona tus pagos recurrentes mensuales.
                         </p>
                     </div>
@@ -405,37 +406,81 @@ export default function FixedExpensesPage() {
                             </div>
                         </div>
                         <div className="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
-                                style={{ width: `${progress}%` }}
-                            ></div>
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                            ></motion.div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Header & Summary */}
+            <div className="md:hidden space-y-4">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-2xl font-bold text-white tracking-tight">Gastos Fijos</h1>
+                        <p className="text-slate-500 text-xs">Recursivos mensuales</p>
+                    </div>
+                </div>
+
+                <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-lg">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                            <FiActivity className="text-emerald-500 text-xl" />
+                        </div>
+                        <div className="text-right">
+                            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Progreso</p>
+                            <p className="text-xl font-bold text-emerald-400">{progress.toFixed(0)}%</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Pagado</p>
+                                <p className="text-xl font-bold text-white">${totalPaid.toLocaleString("es-ES")}</p>
+                            </div>
+                            <div className="text-right text-slate-400">
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Total</p>
+                                <p className="text-lg font-medium">${totalMonthly.toLocaleString("es-ES")}</p>
+                            </div>
+                        </div>
+                        <div className="relative h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress}%` }}
+                                className="absolute top-0 left-0 h-full bg-emerald-500 rounded-full"
+                            />
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Controls */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/40 p-4 rounded-2xl border border-slate-700/30">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/40 p-4 rounded-3xl border border-slate-700/30 sticky top-4 z-20 backdrop-blur-md md:static md:bg-slate-900/40 md:p-4">
                 <div className="flex items-center gap-2 w-full md:w-auto">
-                    <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
+                    <div className="flex bg-slate-800/50 rounded-2xl p-1 border border-slate-700/50">
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-slate-700 text-emerald-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                            className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
                             title="Vista Lista"
                         >
-                            <FiList />
+                            <FiList size={20} />
                         </button>
                         <button
                             onClick={() => setViewMode('calendar')}
-                            className={`p-2 rounded-md transition-all ${viewMode === 'calendar' ? 'bg-slate-700 text-emerald-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                            className={`p-2.5 rounded-xl transition-all ${viewMode === 'calendar' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
                             title="Vista Calendario"
                         >
-                            <FiCalendar />
+                            <FiCalendar size={20} />
                         </button>
                     </div>
 
                     <div className="relative w-full md:w-80">
-                        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
+                        <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" />
                         <input
                             type="text"
                             placeholder="Buscar gasto..."
@@ -444,14 +489,14 @@ export default function FixedExpensesPage() {
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl py-2 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder-slate-600 transition-all"
+                            className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-2.5 pl-11 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 placeholder-slate-600 transition-all"
                         />
                     </div>
                 </div>
 
                 <button
                     onClick={handleAddExpense}
-                    className="flex items-center gap-2 px-6 py-2 bg-white text-slate-900 rounded-xl font-bold hover:bg-slate-200 transition-colors shadow-lg shadow-white/5 w-full md:w-auto justify-center"
+                    className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-2xl font-bold hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20"
                 >
                     <FiPlus /> Nuevo Gasto
                 </button>
@@ -461,90 +506,129 @@ export default function FixedExpensesPage() {
             {viewMode === 'calendar' ? (
                 <FixedExpensesCalendar expenses={filteredExpenses} onPayExpense={handlePayExpense} />
             ) : (
-                <>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {paginatedExpenses.length === 0 && (
-                            <div className="col-span-full py-12 text-center border border-dashed border-slate-700 rounded-3xl bg-slate-900/30">
-                                <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <FiInfo className="text-2xl text-slate-500" />
-                                </div>
-                                <p className="text-slate-400">
-                                    {searchTerm ? "No se encontraron gastos." : "No hay gastos fijos registrados."}
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Expense Cards */}
-                        {paginatedExpenses.map((expense) => {
-                            const isPaid = isPaidCurrentMonth(expense.lastPaidDate);
-                            return (
-                                <div
-                                    key={expense.id}
-                                    className={`lg:col-span-1 bg-slate-900/50 backdrop-blur-md border rounded-3xl p-6 relative group overflow-hidden transition-all hover:-translate-y-1 ${isPaid ? 'border-emerald-500/30 shadow-lg shadow-emerald-500/5' : 'border-slate-700/50 hover:border-slate-600'
-                                        }`}
+                <div className="space-y-4">
+                    <AnimatePresence mode="popLayout">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {paginatedExpenses.length === 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="col-span-full py-20 text-center border-2 border-dashed border-slate-800 rounded-[2.5rem] bg-slate-900/20"
                                 >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-3 bg-slate-800 rounded-2xl">
-                                                <FiActivity className="text-2xl text-slate-400" />
-                                            </div>
-                                            {isPaid && (
-                                                <div className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-emerald-500/30">
-                                                    <FiCheckCircle /> PAGADO
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex gap-1">
-                                            <button
-                                                onClick={() => handleEditExpense(expense)}
-                                                className="p-2 text-slate-600 hover:text-blue-400 transition-colors"
-                                                title="Editar"
-                                            >
-                                                <FiEdit2 />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(expense.id)}
-                                                className="p-2 text-slate-600 hover:text-red-400 transition-colors"
-                                                title="Eliminar"
-                                            >
-                                                <FiTrash2 />
-                                            </button>
-                                        </div>
+                                    <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                                        <FiInfo className="text-3xl text-slate-500" />
                                     </div>
+                                    <h3 className="text-white font-bold text-xl mb-2">No hay resultados</h3>
+                                    <p className="text-slate-500 max-w-xs mx-auto">
+                                        {searchTerm ? "No encontramos gastos que coincidan con tu búsqueda." : "Aún no has registrado ningún gasto fijo mensual."}
+                                    </p>
+                                </motion.div>
+                            )}
 
-                                    <h3 className="text-xl font-bold text-white mb-1">{expense.title}</h3>
-                                    <p className="text-slate-500 text-sm mb-4">{expense.category} • Día {expense.dueDay}</p>
+                            {/* Expense Cards */}
+                            {paginatedExpenses.map((expense, index) => {
+                                const isPaid = isPaidCurrentMonth(expense.lastPaidDate);
+                                return (
+                                    <motion.div
+                                        key={expense.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05 }}
+                                        className={`group relative flex flex-col bg-slate-900/40 backdrop-blur-xl border-2 rounded-[2rem] p-5 transition-all hover:bg-slate-900/60 ${isPaid ? 'border-emerald-500/20 shadow-lg shadow-emerald-500/5' : 'border-slate-800 hover:border-slate-700'
+                                            }`}
+                                    >
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`p-4 rounded-2xl shadow-inner ${isPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
+                                                    <FiActivity size={24} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-white text-lg tracking-tight">{expense.title}</h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{expense.category}</span>
+                                                        <span className="h-1 w-1 bg-slate-700 rounded-full"></span>
+                                                        <span className="text-xs font-bold text-emerald-500/80">Día {expense.dueDay}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                    <div className="flex items-end justify-between mt-auto">
-                                        <div>
-                                            <p className="text-2xl font-bold text-white">${expense.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
-                                            <p className="text-xs text-slate-500">
-                                                ≈ Bs. {(expense.amount * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                            <div className="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => handleEditExpense(expense)}
+                                                    className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-xl transition-all"
+                                                >
+                                                    <FiEdit2 size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(expense.id)}
+                                                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all"
+                                                >
+                                                    <FiTrash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col gap-1 mb-8">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-3xl font-black text-white">$</span>
+                                                <span className="text-4xl font-black text-white tracking-tighter">
+                                                    {Math.floor(expense.amount).toLocaleString("es-ES")}
+                                                    <span className="text-xl text-slate-500 font-bold">
+                                                        ,{(expense.amount % 1).toFixed(2).split('.')[1] || '00'}
+                                                    </span>
+                                                </span>
+                                            </div>
+                                            <p className="text-xs font-bold text-slate-500 tracking-wide">
+                                                ≈ Bs. {(expense.amount * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </p>
                                         </div>
-                                        <button
-                                            onClick={() => handlePayExpense(expense)}
-                                            disabled={isPaid}
-                                            className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${isPaid
-                                                ? "bg-slate-800 text-slate-500 cursor-not-allowed"
-                                                : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20"
-                                                }`}
-                                        >
-                                            <FiDollarSign /> {isPaid ? "Pagado" : "Pagar"}
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
 
-                    <PaginationControls
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
-                </>
+                                        <div className="mt-auto flex items-center justify-between gap-3">
+                                            <button
+                                                onClick={() => handlePayExpense(expense)}
+                                                disabled={isPaid}
+                                                className={`flex-1 py-3.5 rounded-2xl text-sm font-black flex items-center justify-center gap-2 transition-all active:scale-95 ${isPaid
+                                                    ? "bg-slate-800/50 text-emerald-500 cursor-not-allowed border border-emerald-500/20"
+                                                    : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-xl shadow-emerald-500/20"
+                                                    }`}
+                                            >
+                                                {isPaid ? (
+                                                    <>
+                                                        <FiCheckCircle size={18} /> PAGADO
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FiDollarSign size={18} /> PAGAR ESTE MES
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </AnimatePresence>
+
+                    <div className="pt-6">
+                        <PaginationControls
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                </div>
             )}
+
+            {/* Floating Action Button for Mobile */}
+            <motion.button
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleAddExpense}
+                className="md:hidden fixed bottom-24 right-6 w-16 h-16 bg-emerald-500 text-white rounded-3xl shadow-2xl shadow-emerald-500/40 flex items-center justify-center z-50 border-4 border-slate-900"
+            >
+                <FiPlus size={32} />
+            </motion.button>
         </div>
     );
 }

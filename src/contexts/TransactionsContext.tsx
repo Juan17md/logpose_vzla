@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from "react";
 import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -80,7 +80,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
-    const deleteTransaction = async (id: string) => {
+    const deleteTransaction = useCallback(async (id: string) => {
         try {
             await deleteDoc(doc(db, "transactions", id));
             return true;
@@ -88,9 +88,9 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
             console.error("Error deleting transaction:", error);
             return false;
         }
-    };
+    }, []);
 
-    const duplicateTransaction = async (id: string) => {
+    const duplicateTransaction = useCallback(async (id: string) => {
         const transactionToCopy = transactions.find(t => t.id === id);
         if (!transactionToCopy || !auth.currentUser) return false;
 
@@ -109,9 +109,9 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
             console.error("Error duplicating transaction:", error);
             return false;
         }
-    };
+    }, [transactions]);
 
-    const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+    const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id'>) => {
         if (!auth.currentUser) return null;
 
         try {
@@ -120,15 +120,14 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                 userId: auth.currentUser.uid,
                 createdAt: serverTimestamp()
             });
-            // ✅ Return the document ID
             return docRef.id;
         } catch (error) {
             console.error("Error adding transaction:", error);
             return null;
         }
-    };
+    }, []);
 
-    const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
+    const updateTransaction = useCallback(async (id: string, updates: Partial<Transaction>) => {
         if (!auth.currentUser) return false;
         try {
             await updateDoc(doc(db, "transactions", id), updates);
@@ -137,7 +136,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
             console.error("Error updating transaction:", error);
             return false;
         }
-    };
+    }, []);
 
     const value = useMemo(() => ({
         transactions,
@@ -145,8 +144,8 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         deleteTransaction,
         duplicateTransaction,
         addTransaction,
-        updateTransaction // ✅ Added update functionality
-    }), [transactions, loading]);
+        updateTransaction
+    }), [transactions, loading, deleteTransaction, duplicateTransaction, addTransaction, updateTransaction]);
 
     return (
         <TransactionsContext.Provider value={value}>

@@ -2,7 +2,7 @@
 
 import { useGoals, Goal } from "@/hooks/useGoals";
 import Swal from "sweetalert2";
-import { FiTarget, FiPlus, FiTrash2, FiEdit2 } from "react-icons/fi";
+import { FiTarget, FiPlus, FiTrash2 } from "react-icons/fi";
 
 export default function SavingsGoalsWidget({ bcvRate }: { bcvRate: number }) {
     const { goals, loading, addGoal, deleteGoal, addContribution } = useGoals();

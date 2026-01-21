@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { doc, updateDoc, onSnapshot } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Swal from "sweetalert2";
-import { FiDollarSign, FiEdit2, FiBox, FiCpu } from "react-icons/fi";
+import { FiDollarSign, FiEdit2, FiBox } from "react-icons/fi";
 import { SiTether } from "react-icons/si";
 
 interface WalletData {
@@ -16,13 +15,6 @@ import { useUserData } from "@/contexts/UserDataContext";
 
 export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: string | undefined, bcvRate: number }) {
     const { userData, loading } = useUserData();
-
-    // Local state for optimistic UI or just use context? Context will update automatically.
-    // We don't need local state for display anymore.
-
-    // We keep handleUpdate for writing.
-
-
 
     const handleUpdate = async (field: keyof WalletData, label: string) => {
         if (!userId) return;
@@ -38,7 +30,7 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
             background: "#1f2937",
             color: "#fff",
             confirmButtonColor: '#10b981',
-            inputValidator: (value) => {
+            inputValidator: (value: string) => {
                 if (!value || isNaN(parseFloat(value)) || parseFloat(value) < 0) {
                     return 'Ingresa un monto válido';
                 }
@@ -72,8 +64,6 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
             }
         }
     };
-
-    if (loading) return <div className="h-48 bg-slate-900/50 rounded-3xl animate-pulse"></div>;
 
     if (loading) return <div className="h-48 bg-slate-900/50 rounded-3xl animate-pulse"></div>;
 

@@ -3,8 +3,17 @@
 import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
+interface TransactionInput {
+    id: string;
+    amount: number;
+    type: string;
+    category: string;
+    description: string;
+    date: Date | { seconds: number };
+}
+
 interface CashFlowChartProps {
-    transactions: any[];
+    transactions: TransactionInput[];
 }
 
 export default function CashFlowChart({ transactions }: CashFlowChartProps) {
@@ -84,7 +93,7 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
                     <Tooltip
                         contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#fff' }}
                         itemStyle={{ color: '#fff' }}
-                        formatter={(value: any) => [`$${Number(value).toFixed(2)}`, '']}
+                        formatter={(value) => [`$${Number(value).toFixed(2)}`, '']}
                         labelFormatter={(day) => `Día ${day}`}
                     />
                     <Legend iconType="circle" />

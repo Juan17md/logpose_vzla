@@ -20,18 +20,15 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
 
     let statusColor = "bg-emerald-500";
     let textColor = "text-emerald-400";
-    let glowColor = "group-hover:bg-emerald-500/10";
     let borderColor = "hover:border-emerald-500/30";
 
     if (percentage >= 100) {
         statusColor = "bg-red-500";
         textColor = "text-red-400";
-        glowColor = "group-hover:bg-red-500/10";
         borderColor = "hover:border-red-500/30";
     } else if (percentage >= 80) {
         statusColor = "bg-yellow-500";
         textColor = "text-yellow-400";
-        glowColor = "group-hover:bg-yellow-500/10";
         borderColor = "hover:border-yellow-500/30";
     }
 
@@ -55,7 +52,6 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
             try {
                 const userRef = doc(db, "users", userId);
                 await updateDoc(userRef, { monthlyBudget: newLimit });
-                // Context updates automatically
 
                 Swal.fire({
                     icon: "success",
@@ -117,7 +113,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
                     >
                         {/* Track Circle */}
                         <circle
-                            stroke="#1e293b" // slate-800
+                            stroke="#1e293b"
                             strokeWidth="12"
                             fill="transparent"
                             r="68"
@@ -172,4 +168,3 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
         </div>
     );
 }
-

@@ -1,6 +1,6 @@
 "use client";
 
-import { FiDollarSign, FiBriefcase } from "react-icons/fi";
+import { FiBriefcase } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";

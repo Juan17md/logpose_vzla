@@ -1,23 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getBCVRate } from "@/lib/currency";
-import { FiRefreshCw, FiDollarSign } from "react-icons/fi";
+import { FiRefreshCw } from "react-icons/fi";
 
 export default function ExchangeRateWidget() {
     const [rate, setRate] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchRate = async () => {
+    const fetchRate = useCallback(async () => {
         setLoading(true);
         const val = await getBCVRate();
         setRate(val);
         setLoading(false);
-    };
+    }, []);
 
     useEffect(() => {
         fetchRate();
-    }, []);
+    }, [fetchRate]);
 
     return (
         <div className="bg-gradient-to-br from-emerald-900/50 to-slate-900 border border-emerald-500/30 p-4 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-sm">

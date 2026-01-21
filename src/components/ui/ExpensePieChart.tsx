@@ -4,6 +4,23 @@ import { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from 'recharts';
 import { FiPieChart } from 'react-icons/fi';
 
+interface ChartDataItem {
+    name: string;
+    value: number;
+}
+
+interface ActiveShapeProps {
+    cx: number;
+    cy: number;
+    innerRadius: number;
+    outerRadius: number;
+    startAngle: number;
+    endAngle: number;
+    fill: string;
+    payload: ChartDataItem;
+    percent: number;
+}
+
 const COLORS = [
     '#10B981', // Emerald Note
     '#3B82F6', // Blue Note
@@ -17,10 +34,10 @@ const COLORS = [
     '#14B8A6', // Teal Note
 ];
 
-const RADIAN = Math.PI / 180;
+const RADIAN = Math.PI / 180; // eslint-disable-line @typescript-eslint/no-unused-vars
 
-const renderActiveShape = (props: any) => {
-    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+const renderActiveShape = (props: ActiveShapeProps) => {
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
     // Detectar si es versión móvil basándonos en el radio (45 en móvil vs 85 en desktop)
     const isCompact = outerRadius < 60;
 
@@ -60,7 +77,14 @@ const renderActiveShape = (props: any) => {
 };
 
 interface ExpensePieChartProps {
-    transactions: any[];
+    transactions: Array<{
+        id: string;
+        amount: number;
+        type: string;
+        category: string;
+        description: string;
+        date: Date | { seconds: number };
+    }>;
 }
 
 export default function ExpensePieChart({ transactions }: ExpensePieChartProps) {
@@ -89,10 +113,10 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
         // 3. Formatear para Recharts
         return Object.entries(grouped)
             .map(([name, value]) => ({ name, value }))
-            .sort((a: any, b: any) => b.value - a.value); // Ordenar mayor a menor
+            .sort((a, b) => b.value - a.value); // Ordenar mayor a menor
     }, [transactions]);
 
-    const onPieEnter = (_: any, index: number) => {
+    const onPieEnter = (_: unknown, index: number) => {
         setActiveIndex(index);
     };
 
@@ -113,8 +137,8 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
-                            // @ts-ignore
                             activeIndex={activeIndex}
+                            // @ts-expect-error Recharts types incomplete for activeShape
                             activeShape={renderActiveShape}
                             data={data}
                             cx="50%"
@@ -145,7 +169,7 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
                                 fontSize: '12px'
                             }}
                             itemStyle={{ color: '#fff', fontSize: '0.75rem' }}
-                            formatter={(value: any) => [`$${Number(value).toLocaleString('es-ES', { minimumFractionDigits: 0 })}`, '']}
+                            formatter={(value) => [`$${Number(value).toLocaleString('es-ES', { minimumFractionDigits: 0 })}`, '']}
                         />
                     </PieChart>
                 </ResponsiveContainer>
@@ -176,7 +200,7 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
                                 ${Number(entry.value).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </div>
                             <div className="text-[9px] text-slate-500">
-                                {((Number(entry.value) / data.reduce((acc: any, curr: any) => acc + Number(curr.value), 0)) * 100).toFixed(0)}%
+                                {((Number(entry.value) / data.reduce((acc, curr) => acc + curr.value, 0)) * 100).toFixed(0)}%
                             </div>
                         </div>
                     </div>

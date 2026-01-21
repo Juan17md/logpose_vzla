@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, onSnapshot, addDoc, collection, Timestamp } from "firebase/firestore";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { addDoc, collection, Timestamp } from "firebase/firestore";
 import { useTransactions } from "@/hooks/useTransactions";
-import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2, FiEye, FiEyeOff, FiPlus, FiDollarSign, FiChevronRight, FiClock, FiAlertCircle, FiSave } from "react-icons/fi";
+import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2, FiEye, FiEyeOff, FiDollarSign, FiChevronRight, FiClock, FiAlertCircle, FiSave } from "react-icons/fi";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import RecentTransactions from "@/components/ui/RecentTransactions";
@@ -21,9 +21,12 @@ import { getBCVRate } from "@/lib/currency";
 import ExpensePieChart from "@/components/ui/ExpensePieChart";
 import CashFlowChart from "@/components/ui/CashFlowChart";
 
+// MotionLink creado fuera del componente para evitar recrearlo en cada render
+const MotionLink = motion.create(Link);
+
 export default function DashboardPage() {
     const router = useRouter();
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
     const { transactions, loading: transactionsLoading } = useTransactions();
     const [bcvRate, setBcvRate] = useState<number>(0);
@@ -201,7 +204,7 @@ export default function DashboardPage() {
 
             try {
                 await addDoc(collection(db, "transactions"), {
-                    userId: user.uid,
+                    userId: user!.uid,
                     amount: adjustmentAmount,
                     type: isIncome ? 'ingreso' : 'gasto',
                     category: 'Ajuste',
@@ -248,7 +251,7 @@ export default function DashboardPage() {
         ? Math.max(0, ((stats.monthlyIncome - stats.monthlyExpense) / stats.monthlyIncome) * 100)
         : 0;
 
-    const MotionLink = motion(Link);
+
 
     return (
         <>
@@ -825,7 +828,7 @@ export default function DashboardPage() {
 
                     <BudgetAlertWidget
                         currentExpense={stats.monthlyExpense}
-                        userId={user?.uid}
+                        userId={user?.uid ?? ''}
                     />
 
 

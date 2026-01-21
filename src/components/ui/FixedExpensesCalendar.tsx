@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { FixedExpense } from "@/hooks/useFixedExpenses";
 import { FiChevronLeft, FiChevronRight, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface FixedExpensesCalendarProps {
     expenses: FixedExpense[];
