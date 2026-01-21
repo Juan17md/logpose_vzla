@@ -122,44 +122,44 @@ export default function ReportsPage() {
                 </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 relative overflow-hidden group">
+            {/* Summary Cards - Horizontal scroll en móvil */}
+            <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 scrollbar-hide">
+                <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-all"></div>
                     <div className="flex items-center space-x-3 text-emerald-400 mb-3 relative z-10">
-                        <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20"><FiTrendingUp size={20} /></div>
-                        <span className="font-bold uppercase tracking-wider text-xs text-slate-400">Ingresos Totales</span>
+                        <div className="p-2 md:p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20"><FiTrendingUp size={18} /></div>
+                        <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Ingresos</span>
                     </div>
-                    <p className="text-4xl font-bold text-white relative z-10">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                    <p className="text-2xl md:text-4xl font-bold text-white relative z-10">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                 </div>
 
-                <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 relative overflow-hidden group">
+                <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-red-500/20 transition-all"></div>
                     <div className="flex items-center space-x-3 text-red-400 mb-3 relative z-10">
-                        <div className="p-2.5 bg-red-500/10 rounded-xl border border-red-500/20"><FiTrendingDown size={20} /></div>
-                        <span className="font-bold uppercase tracking-wider text-xs text-slate-400">Gastos Totales</span>
+                        <div className="p-2 md:p-2.5 bg-red-500/10 rounded-xl border border-red-500/20"><FiTrendingDown size={18} /></div>
+                        <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Gastos</span>
                     </div>
-                    <p className="text-4xl font-bold text-white relative z-10">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                    <p className="text-2xl md:text-4xl font-bold text-white relative z-10">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                 </div>
 
-                <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 relative overflow-hidden group">
+                <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all"></div>
                     <div className="flex items-center space-x-3 text-blue-400 mb-3 relative z-10">
-                        <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20"><FiDollarSign size={20} /></div>
-                        <span className="font-bold uppercase tracking-wider text-xs text-slate-400">Balance Neto</span>
+                        <div className="p-2 md:p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20"><FiDollarSign size={18} /></div>
+                        <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Balance</span>
                     </div>
-                    <p className={`text-4xl font-bold relative z-10 ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
+                    <p className={`text-2xl md:text-4xl font-bold relative z-10 ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
                         $ {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </p>
                 </div>
 
-                <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 relative overflow-hidden group">
+                <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-purple-500/20 transition-all"></div>
                     <div className="flex items-center space-x-3 text-purple-400 mb-3 relative z-10">
-                        <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20"><FiBriefcase size={20} /></div>
-                        <span className="font-bold uppercase tracking-wider text-xs text-slate-400">Ahorro del Periodo</span>
+                        <div className="p-2 md:p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20"><FiBriefcase size={18} /></div>
+                        <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Ahorro</span>
                     </div>
-                    <p className={`text-4xl font-bold relative z-10 ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
+                    <p className={`text-2xl md:text-4xl font-bold relative z-10 ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
                         $ {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </p>
                 </div>

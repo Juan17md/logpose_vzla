@@ -582,33 +582,33 @@ export default function DebtsPage() {
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Stats Cards - Horizontal scroll en móvil */}
+            <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 scrollbar-hide">
                 <div
-                    className={`p-6 rounded-3xl border transition-all cursor-pointer relative overflow-hidden group ${activeTab === 'por_cobrar' ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10' : 'bg-slate-900/50 border-slate-700/50 hover:border-emerald-500/30'}`}
+                    className={`flex-none w-56 md:w-auto p-5 md:p-6 rounded-2xl md:rounded-3xl border transition-all cursor-pointer relative overflow-hidden group ${activeTab === 'por_cobrar' ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10' : 'bg-slate-900/50 border-slate-700/50 hover:border-emerald-500/30'}`}
                     onClick={() => setActiveTab('por_cobrar')}
                 >
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <FiArrowUpRight className="text-8xl text-emerald-500" />
+                        <FiArrowUpRight className="text-6xl md:text-8xl text-emerald-500" />
                     </div>
                     <div className="relative z-10">
-                        <p className={`text-sm font-bold uppercase tracking-wider mb-1 ${activeTab === 'por_cobrar' ? 'text-emerald-400' : 'text-slate-400'}`}>Por Cobrar</p>
-                        <h2 className="text-3xl font-bold text-white">${totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h2>
-                        <p className="text-xs text-slate-500 mt-1">Gente que te debe dinero</p>
+                        <p className={`text-xs md:text-sm font-bold uppercase tracking-wider mb-1 ${activeTab === 'por_cobrar' ? 'text-emerald-400' : 'text-slate-400'}`}>Por Cobrar</p>
+                        <h2 className="text-2xl md:text-3xl font-bold text-white">${totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h2>
+                        <p className="text-[10px] md:text-xs text-slate-500 mt-1">Gente que te debe</p>
                     </div>
                 </div>
 
                 <div
-                    className={`p-6 rounded-3xl border transition-all cursor-pointer relative overflow-hidden group ${activeTab === 'por_pagar' ? 'bg-rose-500/10 border-rose-500/50 shadow-lg shadow-rose-500/10' : 'bg-slate-900/50 border-slate-700/50 hover:border-rose-500/30'}`}
+                    className={`flex-none w-56 md:w-auto p-5 md:p-6 rounded-2xl md:rounded-3xl border transition-all cursor-pointer relative overflow-hidden group ${activeTab === 'por_pagar' ? 'bg-rose-500/10 border-rose-500/50 shadow-lg shadow-rose-500/10' : 'bg-slate-900/50 border-slate-700/50 hover:border-rose-500/30'}`}
                     onClick={() => setActiveTab('por_pagar')}
                 >
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <FiArrowDownLeft className="text-8xl text-rose-500" />
+                        <FiArrowDownLeft className="text-6xl md:text-8xl text-rose-500" />
                     </div>
                     <div className="relative z-10">
-                        <p className={`text-sm font-bold uppercase tracking-wider mb-1 ${activeTab === 'por_pagar' ? 'text-rose-400' : 'text-slate-400'}`}>Por Pagar</p>
-                        <h2 className="text-3xl font-bold text-white">${totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h2>
-                        <p className="text-xs text-slate-500 mt-1">Dinero que debes</p>
+                        <p className={`text-xs md:text-sm font-bold uppercase tracking-wider mb-1 ${activeTab === 'por_pagar' ? 'text-rose-400' : 'text-slate-400'}`}>Por Pagar</p>
+                        <h2 className="text-2xl md:text-3xl font-bold text-white">${totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h2>
+                        <p className="text-[10px] md:text-xs text-slate-500 mt-1">Dinero que debes</p>
                     </div>
                 </div>
             </div>

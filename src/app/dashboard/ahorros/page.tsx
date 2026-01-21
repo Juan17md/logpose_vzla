@@ -283,45 +283,47 @@ export default function SavingsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Balance Cards */}
-                <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Physical */}
-                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-green-500/20 transition-all"></div>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Efectivo Físico</h3>
-                            <div className="p-2 bg-green-500/20 rounded-lg text-green-400">
-                                <FiDollarSign size={20} />
+                {/* Balance Cards - Horizontal scroll en móvil */}
+                <div className="lg:col-span-3">
+                    <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 scrollbar-hide">
+                        {/* Physical */}
+                        <div className="flex-none w-64 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-green-500/20 transition-all"></div>
+                            <div className="flex items-center justify-between mb-3 md:mb-4">
+                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Efectivo Físico</h3>
+                                <div className="p-2 bg-green-500/20 rounded-lg text-green-400">
+                                    <FiDollarSign size={18} />
+                                </div>
                             </div>
+                            <p className="text-2xl md:text-3xl font-bold text-white mb-1">$ {balancePhysical.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                            <p className="text-xs md:text-sm text-slate-500">Valor estable</p>
                         </div>
-                        <p className="text-3xl font-bold text-white mb-1">$ {balancePhysical.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
-                        <p className="text-sm text-slate-500">Valor estable</p>
-                    </div>
 
-                    {/* USDT */}
-                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-teal-500/20 transition-all"></div>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">USDT (Cripto)</h3>
-                            <div className="p-2 bg-teal-500/20 rounded-lg text-teal-400">
-                                <SiTether size={20} />
+                        {/* USDT */}
+                        <div className="flex-none w-64 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-teal-500/20 transition-all"></div>
+                            <div className="flex items-center justify-between mb-3 md:mb-4">
+                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">USDT (Cripto)</h3>
+                                <div className="p-2 bg-teal-500/20 rounded-lg text-teal-400">
+                                    <SiTether size={18} />
+                                </div>
                             </div>
+                            <p className="text-2xl md:text-3xl font-bold text-white mb-1">{balanceUSDT.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} USDT</p>
+                            <p className="text-xs md:text-sm text-slate-500">Dólar Digital</p>
                         </div>
-                        <p className="text-3xl font-bold text-white mb-1">{balanceUSDT.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} USDT</p>
-                        <p className="text-sm text-slate-500">Dólar Digital</p>
-                    </div>
 
-                    {/* Bolívares */}
-                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/20 transition-all"></div>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Bolívares</h3>
-                            <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400">
-                                <TbCoinFilled size={20} />
+                        {/* Bolívares */}
+                        <div className="flex-none w-64 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/20 transition-all"></div>
+                            <div className="flex items-center justify-between mb-3 md:mb-4">
+                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Bolívares</h3>
+                                <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400">
+                                    <TbCoinFilled size={18} />
+                                </div>
                             </div>
+                            <p className="text-2xl md:text-3xl font-bold text-white mb-1">Bs. {balanceBs.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                            <p className="text-xs md:text-sm text-slate-500">≈ ${bcvRate > 0 ? (balanceBs / bcvRate).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}</p>
                         </div>
-                        <p className="text-3xl font-bold text-white mb-1">Bs. {balanceBs.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
-                        <p className="text-sm text-slate-500">≈ ${bcvRate > 0 ? (balanceBs / bcvRate).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}</p>
                     </div>
                 </div>
 
@@ -329,7 +331,7 @@ export default function SavingsPage() {
                 <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 backdrop-blur-md p-6 rounded-3xl border border-indigo-500/30 shadow-lg flex flex-col justify-center relative overflow-hidden">
                     <div className="relative z-10">
                         <h3 className="text-indigo-200 text-sm font-bold uppercase tracking-wider mb-2">Total Ahorrado</h3>
-                        <p className="text-4xl font-bold text-white mb-2">$ {totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl md:text-4xl font-bold text-white mb-2">$ {totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                         <div className="inline-block px-3 py-1 bg-white/10 rounded-full border border-white/10 text-xs text-indigo-100 mb-4">
                             ≈ Bs. {(totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </div>
@@ -469,8 +471,8 @@ export default function SavingsPage() {
                                                     <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full border ${t.method === "physical"
                                                         ? "bg-green-500/10 text-green-400 border-green-500/20"
                                                         : t.method === "usdt"
-                                                        ? "bg-teal-500/10 text-teal-400 border-teal-500/20"
-                                                        : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                                            ? "bg-teal-500/10 text-teal-400 border-teal-500/20"
+                                                            : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                                                         }`}>
                                                         {t.method === "physical" ? "Efectivo" : t.method === "usdt" ? "USDT" : "Bs"}
                                                     </span>
