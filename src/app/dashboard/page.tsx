@@ -405,7 +405,9 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
                                     <p className={`font-bold text-sm ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                        {t.type === 'ingreso' ? '+' : '-'}${isPrivacyMode ? '••••' : Number(t.amount).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                        {t.type === 'ingreso' ? '+' : '-'}
+                                        {t.currency === 'VES' ? 'Bs.' : '$'}
+                                        {isPrivacyMode ? '••••' : Number(t.currency === 'VES' && t.originalAmount ? t.originalAmount : t.amount).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                                     </p>
                                 </div>
                             ))
