@@ -106,107 +106,190 @@ export default function RecentTransactions() {
                     <p>No se encontraron movimientos.</p>
                 </div>
             ) : (
-                <div className="overflow-x-auto flex-1">
-                    <table className="w-full">
-                        <thead className="bg-slate-900/50 text-slate-400 text-xs uppercase font-medium">
-                            <tr>
-                                <th className="px-6 py-4 text-left tracking-wider">Categoría / Detalle</th>
-                                <th className="px-6 py-4 text-left tracking-wider">Fecha</th>
-                                <th className="px-6 py-4 text-right tracking-wider">Monto</th>
-                                <th className="px-6 py-4 text-right tracking-wider">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-700/50">
-                            {paginatedTransactions.map((t) => (
-                                <tr key={t.id} className="hover:bg-slate-800/50 transition-colors group">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div className={`p-2 rounded-lg mr-3 ${t.type === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                                                }`}>
-                                                {t.type === 'ingreso' ? <FiTrendingUp /> : <FiTrendingDown />}
+                <div className="flex-1 overflow-hidden">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto h-full">
+                        <table className="w-full">
+                            <thead className="bg-slate-900/50 text-slate-400 text-xs uppercase font-medium sticky top-0 bg-slate-900 z-10 backdrop-blur-md">
+                                <tr>
+                                    <th className="px-6 py-4 text-left tracking-wider">Categoría / Detalle</th>
+                                    <th className="px-6 py-4 text-left tracking-wider">Fecha</th>
+                                    <th className="px-6 py-4 text-right tracking-wider">Monto</th>
+                                    <th className="px-6 py-4 text-right tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700/50">
+                                {paginatedTransactions.map((t) => (
+                                    <tr key={t.id} className="hover:bg-slate-800/50 transition-colors group">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <div className={`p-2 rounded-lg mr-3 ${t.type === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                                                    }`}>
+                                                    {t.type === 'ingreso' ? <FiTrendingUp /> : <FiTrendingDown />}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-medium text-white">{t.category}</div>
+                                                    <div className="text-xs text-slate-500 truncate max-w-[150px]">{t.description}</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-white">{t.category}</div>
-                                                <div className="text-xs text-slate-500 truncate max-w-[150px]">{t.description}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                            {t.date.toLocaleDateString("es-ES", { day: 'numeric', month: 'short' })}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            {t.currency === 'VES' && t.originalAmount ? (
+                                                <div className="flex flex-col items-end">
+                                                    <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                        {t.type === 'ingreso' ? '+' : '-'}Bs. {t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                    </span>
+                                                    <span className="text-xs text-slate-500">
+                                                        ≈ ${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                    {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <div className="flex items-center justify-end space-x-2">
+                                                <button
+                                                    onClick={() => {
+                                                        startEditing(t);
+                                                        if (pathname !== "/dashboard/movimientos") {
+                                                            router.push("/dashboard/movimientos");
+                                                        } else {
+                                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                        }
+                                                    }}
+                                                    className="text-slate-500 hover:text-blue-400 transition-colors p-2 hover:bg-blue-500/10 rounded-lg"
+                                                    title="Editar"
+                                                >
+                                                    <FiEdit2 />
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        Swal.fire({
+                                                            title: "¿Duplicar movimiento?",
+                                                            text: `Se creará una copia de "${t.description}" con fecha de hoy.`,
+                                                            icon: "question",
+                                                            showCancelButton: true,
+                                                            confirmButtonText: "Sí, duplicar",
+                                                            cancelButtonText: "Cancelar",
+                                                            background: "#1f2937",
+                                                            color: "#fff",
+                                                        }).then(async (res) => {
+                                                            if (res.isConfirmed) {
+                                                                const success = await duplicateTransaction(t.id);
+                                                                if (success) {
+                                                                    Swal.fire({
+                                                                        icon: "success", title: "Duplicado", text: "Movimiento registrado hoy.",
+                                                                        timer: 1500, showConfirmButton: false, background: "#1f2937", color: "#fff"
+                                                                    });
+                                                                }
+                                                            }
+                                                        });
+                                                    }}
+                                                    className="text-slate-500 hover:text-emerald-400 transition-colors p-2 hover:bg-emerald-500/10 rounded-lg"
+                                                    title="Duplicar hoy"
+                                                >
+                                                    <FiCopy />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(t.id)}
+                                                    className="text-slate-500 hover:text-red-400 transition-colors p-2 hover:bg-red-500/10 rounded-lg"
+                                                    title="Eliminar"
+                                                >
+                                                    <FiTrash2 />
+                                                </button>
                                             </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile List View */}
+                    <div className="md:hidden space-y-3 p-4">
+                        {paginatedTransactions.map((t) => (
+                            <div key={t.id} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col gap-3">
+                                <div className="flex justify-between items-start">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2.5 rounded-xl ${t.type === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                            {t.type === 'ingreso' ? <FiTrendingUp size={18} /> : <FiTrendingDown size={18} />}
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
-                                        {t.date.toLocaleDateString("es-ES", { day: 'numeric', month: 'short' })}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                                        <div>
+                                            <p className="font-bold text-white text-sm">{t.category}</p>
+                                            <p className="text-xs text-slate-400 flex items-center gap-1">
+                                                <FiClock size={10} />
+                                                {t.date.toLocaleDateString("es-ES", { day: 'numeric', month: 'short' })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
                                         {t.currency === 'VES' && t.originalAmount ? (
                                             <div className="flex flex-col items-end">
-                                                <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                    {t.type === 'ingreso' ? '+' : '-'}Bs. {t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                <span className={`text-base font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-white'}`}>
+                                                    {t.type === 'ingreso' ? '+' : '-'}Bs.{t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </span>
-                                                <span className="text-xs text-slate-500">
-                                                    ≈ ${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                <span className="text-[10px] text-slate-500">
+                                                    ${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
                                         ) : (
-                                            <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                            <span className={`text-base font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-white'}`}>
                                                 {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                             </span>
                                         )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div className="flex items-center justify-end space-x-2">
-                                            <button
-                                                onClick={() => {
-                                                    startEditing(t);
-                                                    if (pathname !== "/dashboard/movimientos") {
-                                                        router.push("/dashboard/movimientos");
-                                                    } else {
-                                                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                                                    }
-                                                }}
-                                                className="text-slate-500 hover:text-blue-400 transition-colors p-2 hover:bg-blue-500/10 rounded-lg"
-                                                title="Editar"
-                                            >
-                                                <FiEdit2 />
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    Swal.fire({
-                                                        title: "¿Duplicar movimiento?",
-                                                        text: `Se creará una copia de "${t.description}" con fecha de hoy.`,
-                                                        icon: "question",
-                                                        showCancelButton: true,
-                                                        confirmButtonText: "Sí, duplicar",
-                                                        cancelButtonText: "Cancelar",
-                                                        background: "#1f2937",
-                                                        color: "#fff",
-                                                    }).then(async (res) => {
-                                                        if (res.isConfirmed) {
-                                                            const success = await duplicateTransaction(t.id);
-                                                            if (success) {
-                                                                Swal.fire({
-                                                                    icon: "success", title: "Duplicado", text: "Movimiento registrado hoy.",
-                                                                    timer: 1500, showConfirmButton: false, background: "#1f2937", color: "#fff"
-                                                                });
-                                                            }
-                                                        }
-                                                    });
-                                                }}
-                                                className="text-slate-500 hover:text-emerald-400 transition-colors p-2 hover:bg-emerald-500/10 rounded-lg"
-                                                title="Duplicar hoy"
-                                            >
-                                                <FiCopy />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(t.id)}
-                                                className="text-slate-500 hover:text-red-400 transition-colors p-2 hover:bg-red-500/10 rounded-lg"
-                                                title="Eliminar"
-                                            >
-                                                <FiTrash2 />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    </div>
+                                </div>
+
+                                {t.description && (
+                                    <div className="text-xs text-slate-400 bg-slate-900/30 p-2 rounded-lg leading-relaxed">
+                                        {t.description}
+                                    </div>
+                                )}
+
+                                <div className="flex items-center justify-end gap-2 border-t border-slate-700/30 pt-2.5">
+                                    <button
+                                        onClick={() => {
+                                            startEditing(t);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        className="p-2 text-slate-400 hover:text-blue-400 bg-slate-900/50 rounded-lg text-xs font-medium flex-1 flex justify-center items-center gap-1"
+                                    >
+                                        <FiEdit2 /> Editar
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            Swal.fire({
+                                                title: "¿Duplicar?",
+                                                icon: "question",
+                                                showCancelButton: true,
+                                                confirmButtonText: "Sí",
+                                                cancelButtonText: "No",
+                                                background: "#1f2937",
+                                                color: "#fff",
+                                            }).then(async (res) => {
+                                                if (res.isConfirmed) await duplicateTransaction(t.id);
+                                            });
+                                        }}
+                                        className="p-2 text-slate-400 hover:text-emerald-400 bg-slate-900/50 rounded-lg"
+                                    >
+                                        <FiCopy />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(t.id)}
+                                        className="p-2 text-slate-400 hover:text-red-400 bg-slate-900/50 rounded-lg text-xs font-medium flex-1 flex justify-center items-center gap-1"
+                                    >
+                                        <FiTrash2 /> Borrar
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 

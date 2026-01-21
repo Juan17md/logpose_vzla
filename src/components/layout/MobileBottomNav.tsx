@@ -13,10 +13,10 @@ export default function MobileBottomNav({ onMenuClick, onNavigate }: MobileBotto
     const pathname = usePathname();
 
     const navItems = [
-        { name: "Inicio", icon: <FiHome />, href: "/dashboard" },
         { name: "Movimientos", icon: <FiList />, href: "/dashboard/movimientos" },
-        { name: "Listas", icon: <FiShoppingCart />, href: "/dashboard/listas" },
         { name: "Reportes", icon: <FiPieChart />, href: "/dashboard/reportes" },
+        { name: "Inicio", icon: <FiHome />, href: "/dashboard" },
+        { name: "Listas", icon: <FiShoppingCart />, href: "/dashboard/listas" },
     ];
 
     return (
