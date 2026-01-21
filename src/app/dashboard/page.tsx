@@ -294,9 +294,12 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Acciones Rápidas - Horizontal Scroll */}
-                <div>
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 pl-1">Acceso Rápido</h3>
-                    <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                <div className="-mx-4">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-4 pl-5">Acceso Rápido</h3>
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                        {/* Spacer inicial */}
+                        <div className="flex-none w-4"></div>
+
                         <Link
                             href="/dashboard/movimientos"
                             className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 rounded-2xl active:scale-95 transition-transform"
@@ -356,6 +359,9 @@ export default function DashboardPage() {
                             </div>
                             <span className="text-[10px] font-semibold text-red-400">Deudas</span>
                         </Link>
+
+                        {/* Spacer final */}
+                        <div className="flex-none w-4"></div>
                     </div>
                 </div>
 
@@ -408,9 +414,12 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Widgets en Cards Compactas - Horizontal Scroll */}
-                <div>
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 pl-1">Resumen Rápido</h3>
-                    <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                <div className="-mx-4">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-4 pl-5">Resumen Rápido</h3>
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                        {/* Spacer inicial */}
+                        <div className="flex-none w-4"></div>
+
                         {/* Widget Tasa */}
                         <div className="flex-none w-44 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50">
                             <div className="flex items-center gap-2 mb-2">
@@ -473,6 +482,40 @@ export default function DashboardPage() {
                                     savingsPercentage >= 10 ? "Puedes mejorar 💪" :
                                         "Reduce gastos 📊"}
                             </p>
+                        </div>
+
+                        {/* Spacer final */}
+                        <div className="flex-none w-4"></div>
+                    </div>
+                </div>
+
+                {/* Gráficas compactas para móvil */}
+                <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider pl-1">Análisis del Mes</h3>
+
+                    {/* Gráfico de Flujo de Caja */}
+                    <div className="bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-7 h-7 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <FiActivity className="text-blue-400" size={14} />
+                            </div>
+                            <span className="text-white text-sm font-semibold">Flujo de Caja</span>
+                        </div>
+                        <div className="h-44">
+                            <CashFlowChart transactions={transactions} />
+                        </div>
+                    </div>
+
+                    {/* Gráfico de Gastos por Categoría */}
+                    <div className="bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-7 h-7 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <FiPieChart className="text-purple-400" size={14} />
+                            </div>
+                            <span className="text-white text-sm font-semibold">Gastos por Categoría</span>
+                        </div>
+                        <div className="h-52">
+                            <ExpensePieChart transactions={transactions} />
                         </div>
                     </div>
                 </div>
