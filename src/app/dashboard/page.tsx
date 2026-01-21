@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
@@ -27,6 +28,32 @@ export default function DashboardPage() {
     const { transactions, loading: transactionsLoading } = useTransactions();
     const [bcvRate, setBcvRate] = useState<number>(0);
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+
+    // Variantes de animación para Staggered Entrance
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0, scale: 0.95 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            transition: {
+                type: "spring",
+                stiffness: 100,
+                damping: 10
+            } as const
+        }
+    };
 
     useEffect(() => {
         getBCVRate().then(setBcvRate);
@@ -221,29 +248,37 @@ export default function DashboardPage() {
         ? Math.max(0, ((stats.monthlyIncome - stats.monthlyExpense) / stats.monthlyIncome) * 100)
         : 0;
 
+    const MotionLink = motion(Link);
+
     return (
         <>
             {/* ===== MOBILE-FIRST LAYOUT ===== */}
-            <div className="md:hidden flex flex-col gap-4 pb-6">
+            <motion.div
+                className="md:hidden flex flex-col gap-4 pb-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
 
                 {/* Saludo compacto + Privacidad */}
-                <div className="flex items-center justify-between">
+                <motion.div variants={itemVariants} className="flex items-center justify-between">
                     <div>
                         <p className="text-slate-400 text-sm">¡Hola de nuevo!</p>
                         <h1 className="text-xl font-bold text-white">{user?.displayName || "Usuario"}</h1>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
+                        <motion.button
+                            whileTap={{ scale: 0.9 }}
                             onClick={() => setIsPrivacyMode(!isPrivacyMode)}
-                            className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/50 text-slate-400 active:scale-95 transition-transform"
+                            className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/50 text-slate-400 transition-colors"
                         >
                             {isPrivacyMode ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-                        </button>
+                        </motion.button>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Balance Card Principal - Hero */}
-                <div className="relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 p-5 rounded-3xl shadow-2xl overflow-hidden">
+                <motion.div variants={itemVariants} className="relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 p-5 rounded-3xl shadow-2xl overflow-hidden">
                     {/* Decoración de fondo */}
                     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-teal-400/20 rounded-full blur-2xl -ml-16 -mb-16"></div>
@@ -291,82 +326,88 @@ export default function DashboardPage() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Acciones Rápidas - Horizontal Scroll */}
-                <div className="-mx-4">
+                <motion.div variants={itemVariants} className="-mx-4">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-4 pl-5">Acceso Rápido</h3>
                     <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                         {/* Spacer inicial */}
                         <div className="flex-none w-4"></div>
 
-                        <Link
+                        <MotionLink
                             href="/dashboard/movimientos"
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 rounded-2xl active:scale-95 transition-transform"
+                            whileTap={{ scale: 0.9 }}
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-emerald-500/30 rounded-xl flex items-center justify-center">
                                 <FiPlusCircle className="text-emerald-400" size={22} />
                             </div>
                             <span className="text-[10px] font-semibold text-emerald-400">Registrar</span>
-                        </Link>
+                        </MotionLink>
 
-                        <Link
+                        <MotionLink
                             href="/dashboard/reportes"
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30 rounded-2xl active:scale-95 transition-transform"
+                            whileTap={{ scale: 0.9 }}
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-blue-500/30 rounded-xl flex items-center justify-center">
                                 <FiPieChart className="text-blue-400" size={22} />
                             </div>
                             <span className="text-[10px] font-semibold text-blue-400">Reportes</span>
-                        </Link>
+                        </MotionLink>
 
-                        <Link
+                        <MotionLink
                             href="/dashboard/ahorros"
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30 rounded-2xl active:scale-95 transition-transform"
+                            whileTap={{ scale: 0.9 }}
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-purple-500/30 rounded-xl flex items-center justify-center">
                                 <FiTarget className="text-purple-400" size={22} />
                             </div>
                             <span className="text-[10px] font-semibold text-purple-400">Ahorros</span>
-                        </Link>
+                        </MotionLink>
 
-                        <Link
+                        <MotionLink
                             href="/dashboard/listas"
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 rounded-2xl active:scale-95 transition-transform"
+                            whileTap={{ scale: 0.9 }}
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-orange-500/30 rounded-xl flex items-center justify-center">
                                 <FiShoppingCart className="text-orange-400" size={22} />
                             </div>
                             <span className="text-[10px] font-semibold text-orange-400">Listas</span>
-                        </Link>
+                        </MotionLink>
 
-                        <Link
+                        <MotionLink
                             href="/dashboard/gastos-fijos"
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-teal-500/20 to-teal-600/10 border border-teal-500/30 rounded-2xl active:scale-95 transition-transform"
+                            whileTap={{ scale: 0.9 }}
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-teal-500/20 to-teal-600/10 border border-teal-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-teal-500/30 rounded-xl flex items-center justify-center">
                                 <FiCalendar className="text-teal-400" size={22} />
                             </div>
                             <span className="text-[10px] font-semibold text-teal-400">Fijos</span>
-                        </Link>
+                        </MotionLink>
 
-                        <Link
+                        <MotionLink
                             href="/dashboard/deudas"
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 rounded-2xl active:scale-95 transition-transform"
+                            whileTap={{ scale: 0.9 }}
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-red-500/30 rounded-xl flex items-center justify-center">
                                 <FiAlertCircle className="text-red-400" size={22} />
                             </div>
                             <span className="text-[10px] font-semibold text-red-400">Deudas</span>
-                        </Link>
+                        </MotionLink>
 
                         {/* Spacer final */}
                         <div className="flex-none w-4"></div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Últimos Movimientos - Preview Compacta */}
-                <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden">
+                <motion.div variants={itemVariants} className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden">
                     <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-slate-700/50 rounded-xl flex items-center justify-center">
@@ -387,7 +428,11 @@ export default function DashboardPage() {
                             </div>
                         ) : (
                             recentThree.map((t) => (
-                                <div key={t.id} className="flex items-center justify-between p-4 active:bg-slate-800/50 transition-colors">
+                                <motion.div
+                                    key={t.id}
+                                    className="flex items-center justify-between p-4 active:bg-slate-800/50 transition-colors"
+                                    whileTap={{ scale: 0.98, backgroundColor: "rgba(30, 41, 59, 0.8)" }}
+                                >
                                     <div className="flex items-center gap-3">
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.type === 'ingreso' ? 'bg-emerald-500/20' : 'bg-red-500/20'
                                             }`}>
@@ -409,30 +454,36 @@ export default function DashboardPage() {
                                         {t.currency === 'VES' ? 'Bs.' : '$'}
                                         {isPrivacyMode ? '••••' : Number(t.currency === 'VES' && t.originalAmount ? t.originalAmount : t.amount).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
-                                </div>
+                                </motion.div>
                             ))
                         )}
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Widgets en Cards Compactas - Horizontal Scroll */}
-                <div className="-mx-4">
+                <motion.div variants={itemVariants} className="-mx-4">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-4 pl-5">Resumen Rápido</h3>
                     <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                         {/* Spacer inicial */}
                         <div className="flex-none w-4"></div>
 
                         {/* Widget Tasa */}
-                        <div className="flex-none w-44 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50">
+                        <motion.div
+                            whileTap={{ scale: 0.95 }}
+                            className="flex-none w-44 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
+                        >
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="text-lg">🇻🇪</span>
                                 <span className="text-slate-400 text-xs font-medium">Tasa BCV</span>
                             </div>
                             <p className="text-white text-xl font-bold">{bcvRate.toLocaleString("es-VE", { minimumFractionDigits: 2 })} <span className="text-slate-500 text-sm font-normal">Bs/$</span></p>
-                        </div>
+                        </motion.div>
 
                         {/* Widget Balance en Bs */}
-                        <div className="flex-none w-44 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50">
+                        <motion.div
+                            whileTap={{ scale: 0.95 }}
+                            className="flex-none w-44 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
+                        >
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
                                     <FiDollarSign className="text-blue-400" size={14} />
@@ -442,10 +493,13 @@ export default function DashboardPage() {
                             <p className="text-white text-lg font-bold truncate">
                                 Bs. {isPrivacyMode ? "••••" : (stats.totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </p>
-                        </div>
+                        </motion.div>
 
                         {/* Widget Ratio Gasto/Ingreso */}
-                        <div className="flex-none w-44 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50">
+                        <motion.div
+                            whileTap={{ scale: 0.95 }}
+                            className="flex-none w-44 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
+                        >
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
                                     <FiPieChart className="text-purple-400" size={14} />
@@ -455,10 +509,13 @@ export default function DashboardPage() {
                             <p className="text-white text-xl font-bold">
                                 {stats.monthlyIncome > 0 ? Math.round((stats.monthlyExpense / stats.monthlyIncome) * 100) : 0}%
                             </p>
-                        </div>
+                        </motion.div>
 
                         {/* Widget Ahorro del Mes */}
-                        <div className="flex-none w-52 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50">
+                        <motion.div
+                            whileTap={{ scale: 0.95 }}
+                            className="flex-none w-52 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
+                        >
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
@@ -484,19 +541,22 @@ export default function DashboardPage() {
                                     savingsPercentage >= 10 ? "Puedes mejorar 💪" :
                                         "Reduce gastos 📊"}
                             </p>
-                        </div>
+                        </motion.div>
 
                         {/* Spacer final */}
                         <div className="flex-none w-4"></div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Gráficas compactas para móvil */}
-                <div className="space-y-4">
+                <motion.div variants={itemVariants} className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider pl-1">Análisis del Mes</h3>
 
                     {/* Gráfico de Flujo de Caja */}
-                    <div className="bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50">
+                    <motion.div
+                        whileTap={{ scale: 0.98 }}
+                        className="bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
+                    >
                         <div className="flex items-center gap-2 mb-3">
                             <div className="w-7 h-7 bg-blue-500/20 rounded-lg flex items-center justify-center">
                                 <FiActivity className="text-blue-400" size={14} />
@@ -506,10 +566,13 @@ export default function DashboardPage() {
                         <div className="h-44">
                             <CashFlowChart transactions={transactions} />
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Gráfico de Gastos por Categoría */}
-                    <div className="bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50">
+                    <motion.div
+                        whileTap={{ scale: 0.98 }}
+                        className="bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
+                    >
                         <div className="flex items-center gap-2 mb-3">
                             <div className="w-7 h-7 bg-purple-500/20 rounded-lg flex items-center justify-center">
                                 <FiPieChart className="text-purple-400" size={14} />
@@ -519,13 +582,15 @@ export default function DashboardPage() {
                         <div className="h-52">
                             <ExpensePieChart transactions={transactions} />
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
 
                 {/* CTA Ajustar Saldo */}
-                <button
+                <motion.button
+                    variants={itemVariants}
+                    whileTap={{ scale: 0.95 }}
                     onClick={handleUpdateBalance}
-                    className="w-full py-4 px-5 bg-slate-800/80 border border-slate-700/50 rounded-2xl flex items-center justify-between active:scale-[0.98] transition-transform"
+                    className="w-full py-4 px-5 bg-slate-800/80 border border-slate-700/50 rounded-2xl flex items-center justify-between transition-colors"
                 >
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
@@ -537,8 +602,8 @@ export default function DashboardPage() {
                         </div>
                     </div>
                     <FiChevronRight className="text-slate-500" size={20} />
-                </button>
-            </div>
+                </motion.button>
+            </motion.div>
 
             {/* ===== DESKTOP LAYOUT (Original) ===== */}
             <div className="hidden md:flex flex-col gap-8 pb-10">
