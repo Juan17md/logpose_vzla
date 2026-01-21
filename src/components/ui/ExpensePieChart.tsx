@@ -153,7 +153,7 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
 
             {/* Custom Legend Section - Compacta */}
             <div className="flex-1 flex flex-col gap-1.5 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
-                {data.slice(0, 5).map((entry, index) => (
+                {data.map((entry, index) => (
                     <div
                         key={entry.name}
                         className={`flex items-center justify-between p-2 rounded-lg transition-all cursor-pointer ${index === activeIndex
@@ -181,11 +181,6 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
                         </div>
                     </div>
                 ))}
-                {data.length > 5 && (
-                    <div className="text-center text-[10px] text-slate-500 py-1">
-                        +{data.length - 5} más
-                    </div>
-                )}
             </div>
 
             <style jsx global>{`
