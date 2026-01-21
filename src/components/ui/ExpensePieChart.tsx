@@ -100,9 +100,9 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
     }
 
     return (
-        <div className="flex flex-col md:flex-row items-center gap-6 h-full min-h-[250px]">
-            {/* Chart Section */}
-            <div className="w-full md:w-1/2 h-48 relative">
+        <div className="flex items-start gap-4 h-full">
+            {/* Chart Section - Más compacto */}
+            <div className="flex-none w-28 h-28 md:w-48 md:h-48 relative">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
@@ -112,11 +112,11 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
                             data={data}
                             cx="50%"
                             cy="50%"
-                            innerRadius={65}
-                            outerRadius={85}
+                            innerRadius={30}
+                            outerRadius={45}
                             dataKey="value"
                             onMouseEnter={onPieEnter}
-                            paddingAngle={4}
+                            paddingAngle={3}
                             stroke="none"
                         >
                             {data.map((entry, index) => (
@@ -131,51 +131,54 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
                             contentStyle={{
                                 backgroundColor: 'rgba(30, 41, 59, 0.95)',
                                 borderColor: 'rgba(51, 65, 85, 0.5)',
-                                borderRadius: '16px',
+                                borderRadius: '12px',
                                 color: '#fff',
-                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                                padding: '12px'
+                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                padding: '8px',
+                                fontSize: '12px'
                             }}
-                            itemStyle={{ color: '#fff', fontSize: '0.875rem' }}
-                            formatter={(value: any) => [`$${Number(value).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, '']}
+                            itemStyle={{ color: '#fff', fontSize: '0.75rem' }}
+                            formatter={(value: any) => [`$${Number(value).toLocaleString('es-ES', { minimumFractionDigits: 0 })}`, '']}
                         />
                     </PieChart>
                 </ResponsiveContainer>
             </div>
 
-            {/* Custom Legend Section */}
-            <div className="w-full md:w-1/2 flex flex-col gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                {data.map((entry, index) => (
+            {/* Custom Legend Section - Compacta */}
+            <div className="flex-1 flex flex-col gap-1.5 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
+                {data.slice(0, 5).map((entry, index) => (
                     <div
                         key={entry.name}
-                        className={`flex items-center justify-between p-2.5 rounded-xl transition-all cursor-pointer ${index === activeIndex
-                            ? 'bg-slate-700/50 border border-slate-600/50 shadow-sm scale-[1.02]'
-                            : 'hover:bg-slate-800/30 border border-transparent hover:border-slate-700/30'
+                        className={`flex items-center justify-between p-2 rounded-lg transition-all cursor-pointer ${index === activeIndex
+                            ? 'bg-slate-700/50 border border-slate-600/50'
+                            : 'hover:bg-slate-800/30 border border-transparent'
                             }`}
                         onMouseEnter={() => setActiveIndex(index)}
                     >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                             <div
-                                className="w-3 h-3 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.3)] transition-transform duration-300"
-                                style={{
-                                    backgroundColor: COLORS[index % COLORS.length],
-                                    transform: index === activeIndex ? 'scale(1.25)' : 'scale(1)'
-                                }}
+                                className="w-2.5 h-2.5 rounded-full"
+                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
                             />
-                            <span className={`text-sm font-medium transition-colors ${index === activeIndex ? 'text-white' : 'text-slate-300'}`}>
+                            <span className={`text-xs font-medium truncate max-w-[80px] ${index === activeIndex ? 'text-white' : 'text-slate-300'}`}>
                                 {entry.name}
                             </span>
                         </div>
                         <div className="text-right">
-                            <div className={`text-sm font-bold transition-colors ${index === activeIndex ? 'text-white' : 'text-slate-400'}`}>
+                            <div className={`text-xs font-bold ${index === activeIndex ? 'text-white' : 'text-slate-400'}`}>
                                 ${Number(entry.value).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </div>
-                            <div className="text-[10px] text-slate-500">
-                                {((Number(entry.value) / data.reduce((acc: any, curr: any) => acc + Number(curr.value), 0)) * 100).toFixed(1)}%
+                            <div className="text-[9px] text-slate-500">
+                                {((Number(entry.value) / data.reduce((acc: any, curr: any) => acc + Number(curr.value), 0)) * 100).toFixed(0)}%
                             </div>
                         </div>
                     </div>
                 ))}
+                {data.length > 5 && (
+                    <div className="text-center text-[10px] text-slate-500 py-1">
+                        +{data.length - 5} más
+                    </div>
+                )}
             </div>
 
             <style jsx global>{`
