@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { addDoc, collection, Timestamp } from "firebase/firestore";
 import { useTransactions } from "@/hooks/useTransactions";
-import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2, FiEye, FiEyeOff, FiDollarSign, FiChevronRight, FiClock, FiAlertCircle, FiSave } from "react-icons/fi";
+import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2, FiEye, FiEyeOff, FiDollarSign, FiChevronRight, FiClock, FiAlertCircle, FiSave, FiTag } from "react-icons/fi";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import RecentTransactions from "@/components/ui/RecentTransactions";
@@ -76,10 +76,12 @@ export default function DashboardPage() {
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
+        const daysPassed = now.getDate();
 
         let totalBalance = 0;
         let monthlyIncome = 0;
         let monthlyExpense = 0;
+        const expensesByCategory: Record<string, number> = {};
 
         transactions.forEach(t => {
             const amount = Number(t.amount);
@@ -94,11 +96,25 @@ export default function DashboardPage() {
                     monthlyIncome += amount;
                 } else {
                     monthlyExpense += amount;
+                    // Track category expenses
+                    expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + amount;
                 }
             }
         });
 
-        return { totalBalance, monthlyIncome, monthlyExpense };
+        // Find top category
+        let topCategoryName = "N/A";
+        let topCategoryAmount = 0;
+        Object.entries(expensesByCategory).forEach(([cat, amount]) => {
+            if (amount > topCategoryAmount) {
+                topCategoryAmount = amount;
+                topCategoryName = cat;
+            }
+        });
+
+        const dailyAverage = daysPassed > 0 ? monthlyExpense / daysPassed : 0;
+
+        return { totalBalance, monthlyIncome, monthlyExpense, topCategoryName, topCategoryAmount, dailyAverage };
     }, [transactions]);
 
     const handleUpdateBalance = async (e: React.MouseEvent) => {
@@ -466,88 +482,112 @@ export default function DashboardPage() {
                 {/* Widgets en Cards Compactas - Horizontal Scroll */}
                 <motion.div variants={itemVariants} className="-mx-4">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-4 pl-5">Resumen Rápido</h3>
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                        {/* Spacer inicial */}
-                        <div className="flex-none w-4"></div>
-
-                        {/* Widget Tasa */}
+                    <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-4 -mx-4 scrollbar-hide">
+                        {/* Widget: Mayor Gasto - Premium Look */}
                         <motion.div
                             whileTap={{ scale: 0.95 }}
-                            className="flex-none w-44 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
+                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
                         >
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-lg">🇻🇪</span>
-                                <span className="text-slate-400 text-xs font-medium">Tasa BCV</span>
-                            </div>
-                            <p className="text-white text-xl font-bold">{bcvRate.toLocaleString("es-VE", { minimumFractionDigits: 2 })} <span className="text-slate-500 text-sm font-normal">Bs/$</span></p>
-                        </motion.div>
+                            <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-orange-500/20 transition-all"></div>
 
-                        {/* Widget Balance en Bs */}
-                        <motion.div
-                            whileTap={{ scale: 0.95 }}
-                            className="flex-none w-44 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
-                        >
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                                    <FiDollarSign className="text-blue-400" size={14} />
+                            <div className="flex items-start justify-between mb-3 relative z-10">
+                                <div className="p-2 bg-orange-500/20 rounded-xl text-orange-400">
+                                    <FiTag size={18} />
                                 </div>
-                                <span className="text-slate-400 text-xs font-medium">En Bolívares</span>
+                                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Top Gasto</span>
                             </div>
-                            <p className="text-white text-lg font-bold truncate">
-                                Bs. {isPrivacyMode ? "••••" : (stats.totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                            </p>
+
+                            <div className="relative z-10">
+                                <h4 className="text-white font-bold text-lg truncate mb-1">
+                                    {stats.topCategoryName}
+                                </h4>
+                                <p className="text-orange-400 font-semibold text-sm">
+                                    {isPrivacyMode ? "••••" : `$${stats.topCategoryAmount.toLocaleString("es-ES", { minimumFractionDigits: 0 })}`}
+                                </p>
+                            </div>
                         </motion.div>
 
-                        {/* Widget Ratio Gasto/Ingreso */}
+                        {/* Widget: Promedio Diario - Premium Look */}
                         <motion.div
                             whileTap={{ scale: 0.95 }}
-                            className="flex-none w-44 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
+                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
                         >
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                                    <FiPieChart className="text-purple-400" size={14} />
+                            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-blue-500/20 transition-all"></div>
+
+                            <div className="flex items-start justify-between mb-3 relative z-10">
+                                <div className="p-2 bg-blue-500/20 rounded-xl text-blue-400">
+                                    <FiCalendar size={18} />
                                 </div>
-                                <span className="text-slate-400 text-xs font-medium">Uso Ingresos</span>
+                                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Promedio</span>
                             </div>
-                            <p className="text-white text-xl font-bold">
-                                {stats.monthlyIncome > 0 ? Math.round((stats.monthlyExpense / stats.monthlyIncome) * 100) : 0}%
-                            </p>
+
+                            <div className="relative z-10">
+                                <h4 className="text-white font-bold text-lg truncate mb-1">
+                                    Diario
+                                </h4>
+                                <p className="text-blue-400 font-semibold text-sm">
+                                    {isPrivacyMode ? "••••" : `$${stats.dailyAverage.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`} <span className="text-slate-600 text-xs text-normal">/día</span>
+                                </p>
+                            </div>
                         </motion.div>
 
-                        {/* Widget Ahorro del Mes */}
+                        {/* Widget: Uso de Ingresos - Premium Look */}
                         <motion.div
                             whileTap={{ scale: 0.95 }}
-                            className="flex-none w-52 bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
+                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
                         >
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                                        <FiSave className="text-purple-400" size={14} />
-                                    </div>
-                                    <span className="text-slate-400 text-xs font-medium">Ahorro mes</span>
+                            <div className="absolute bottom-0 left-0 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl -ml-10 -mb-10 group-hover:bg-purple-500/20 transition-all"></div>
+
+                            <div className="flex items-start justify-between mb-3 relative z-10">
+                                <div className="p-2 bg-purple-500/20 rounded-xl text-purple-400">
+                                    <FiPieChart size={18} />
                                 </div>
-                                <span className={`text-sm font-bold ${savingsPercentage >= 20 ? 'text-emerald-400' : savingsPercentage >= 10 ? 'text-yellow-400' : 'text-red-400'}`}>
-                                    {savingsPercentage.toFixed(0)}%
-                                </span>
+                                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Uso</span>
                             </div>
-                            <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full rounded-full transition-all duration-700 ${savingsPercentage >= 20 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' :
-                                        savingsPercentage >= 10 ? 'bg-gradient-to-r from-yellow-500 to-orange-400' :
-                                            'bg-gradient-to-r from-red-500 to-pink-500'
-                                        }`}
-                                    style={{ width: `${Math.min(savingsPercentage, 100)}%` }}
-                                ></div>
+
+                            <div className="relative z-10">
+                                <div className="flex items-end gap-2 mb-1">
+                                    <h4 className="text-white font-bold text-2xl">
+                                        {stats.monthlyIncome > 0 ? Math.round((stats.monthlyExpense / stats.monthlyIncome) * 100) : 0}%
+                                    </h4>
+                                </div>
+                                <div className="w-full h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-purple-500 rounded-full"
+                                        style={{ width: `${stats.monthlyIncome > 0 ? Math.min((stats.monthlyExpense / stats.monthlyIncome) * 100, 100) : 0}%` }}
+                                    ></div>
+                                </div>
                             </div>
-                            <p className="text-slate-500 text-[10px] mt-1.5 truncate">
-                                {savingsPercentage >= 20 ? "¡Excelente! 🎉" :
-                                    savingsPercentage >= 10 ? "Puedes mejorar 💪" :
-                                        "Reduce gastos 📊"}
-                            </p>
                         </motion.div>
 
-                        {/* Spacer final */}
-                        <div className="flex-none w-4"></div>
+                        {/* Widget: Tasa de Ahorro - Premium Look */}
+                        <motion.div
+                            whileTap={{ scale: 0.95 }}
+                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
+                        >
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-emerald-500/20 transition-all"></div>
+
+                            <div className="flex items-start justify-between mb-3 relative z-10">
+                                <div className="p-2 bg-emerald-500/20 rounded-xl text-emerald-400">
+                                    <FiSave size={18} />
+                                </div>
+                                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Ahorro</span>
+                            </div>
+
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between">
+                                    <h4 className={`font-bold text-2xl ${savingsPercentage >= 20 ? 'text-emerald-400' : savingsPercentage >= 10 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                        {savingsPercentage.toFixed(0)}%
+                                    </h4>
+                                    <span className="text-xl">
+                                        {savingsPercentage >= 20 ? "🚀" : savingsPercentage >= 10 ? "👍" : "⚠️"}
+                                    </span>
+                                </div>
+                                <p className="text-slate-500 text-[10px] mt-1 truncate">
+                                    {savingsPercentage >= 20 ? "¡Sigue así!" : "Puedes más"}
+                                </p>
+                            </div>
+                        </motion.div>
                     </div>
                 </motion.div>
 
