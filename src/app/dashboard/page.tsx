@@ -482,7 +482,7 @@ export default function DashboardPage() {
                 {/* Widgets en Cards Compactas - Horizontal Scroll */}
                 <motion.div variants={itemVariants} className="-mx-4">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-4 pl-5">Resumen Rápido</h3>
-                    <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-4 -mx-4 scrollbar-hide">
+                    <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-5 scrollbar-hide">
                         {/* Widget: Mayor Gasto - Premium Look */}
                         <motion.div
                             whileTap={{ scale: 0.95 }}
