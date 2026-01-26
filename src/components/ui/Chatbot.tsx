@@ -1013,7 +1013,7 @@ export default function Chatbot() {
                                     onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
                                     placeholder={isListening && interimTranscript ? interimTranscript : "Escribe un gasto..."}
                                     disabled={isLoading}
-                                    className="flex-1 bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:bg-slate-900 transition-all placeholder:text-slate-500 disabled:opacity-50"
+                                    className="flex-1 bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-violet-500/50 focus:bg-slate-900 transition-all placeholder:text-slate-500 disabled:opacity-50"
                                 />
                                 <button
                                     onClick={toggleListening}
