@@ -625,7 +625,7 @@ export default function FixedExpensesPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={handleAddExpense}
-                className="md:hidden fixed bottom-24 right-6 w-16 h-16 bg-emerald-500 text-white rounded-3xl shadow-2xl shadow-emerald-500/40 flex items-center justify-center z-50 border-4 border-slate-900"
+                className="md:hidden fixed bottom-44 right-6 w-16 h-16 bg-emerald-500 text-white rounded-3xl shadow-2xl shadow-emerald-500/40 flex items-center justify-center z-50 border-4 border-slate-900"
             >
                 <FiPlus size={32} />
             </motion.button>

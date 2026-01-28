@@ -684,7 +684,7 @@ export default function ShoppingListsPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={selectedList ? handleAddItem : handleCreateList}
-                className="md:hidden fixed bottom-24 right-6 w-16 h-16 bg-emerald-500 text-white rounded-3xl shadow-2xl shadow-emerald-500/40 flex items-center justify-center z-50 border-4 border-slate-900 transition-colors"
+                className="md:hidden fixed bottom-44 right-6 w-16 h-16 bg-emerald-500 text-white rounded-3xl shadow-2xl shadow-emerald-500/40 flex items-center justify-center z-50 border-4 border-slate-900 transition-colors"
             >
                 <FiPlus size={32} />
             </motion.button>

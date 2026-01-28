@@ -863,11 +863,12 @@ export default function Chatbot() {
     return (
         <>
             {/* Floating Button */}
+            {/* Floating Button */}
             <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-24 left-4 md:bottom-8 md:right-8 bg-gradient-to-r from-violet-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl z-50 border border-violet-400/30 flex items-center justify-center"
+                className="fixed bottom-24 right-6 md:bottom-8 md:right-8 bg-gradient-to-r from-violet-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl z-50 border border-violet-400/30 flex items-center justify-center"
             >
                 <FiCpu size={28} />
             </motion.button>

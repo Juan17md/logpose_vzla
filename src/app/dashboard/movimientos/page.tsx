@@ -73,7 +73,7 @@ export default function MovimientosPage() {
                             <motion.button
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => setMobileView('form')}
-                                className="fixed bottom-24 right-6 w-14 h-14 bg-emerald-500 rounded-full text-white shadow-xl shadow-emerald-500/30 flex items-center justify-center z-50 border border-white/10"
+                                className="fixed bottom-44 right-6 w-14 h-14 bg-emerald-500 rounded-full text-white shadow-xl shadow-emerald-500/30 flex items-center justify-center z-50 border border-white/10"
                             >
                                 <FiPlus size={28} />
                             </motion.button>
