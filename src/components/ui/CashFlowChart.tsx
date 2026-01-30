@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface TransactionInput {
@@ -50,6 +50,12 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
         return days.filter(d => d.day <= today);
     }, [transactions]);
 
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     if (transactions.length === 0) {
         return (
             <div className="h-64 flex flex-col items-center justify-center text-slate-500 bg-slate-800/20 rounded-xl border border-slate-700 border-dashed">
@@ -58,8 +64,12 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
         );
     }
 
+    if (!isMounted) {
+        return <div className="w-full h-full min-h-[160px] animate-pulse bg-slate-800/30 rounded-xl" />;
+    }
+
     return (
-        <div className="w-full h-full min-h-[180px]">
+        <div className="w-full h-full min-h-[160px]">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                     data={data}

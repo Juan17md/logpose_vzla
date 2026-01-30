@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from 'recharts';
 import { FiPieChart } from 'react-icons/fi';
 
@@ -89,6 +89,11 @@ interface ExpensePieChartProps {
 
 export default function ExpensePieChart({ transactions }: ExpensePieChartProps) {
     const [activeIndex, setActiveIndex] = useState(0);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const data = useMemo(() => {
         const now = new Date();
@@ -134,45 +139,49 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
         <div className="flex items-start gap-4 h-full">
             {/* Chart Section - Más compacto */}
             <div className="flex-none w-28 h-28 md:w-48 md:h-48 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                        <Pie
-                            activeIndex={activeIndex}
-                            // @ts-expect-error Recharts types incomplete for activeShape
-                            activeShape={renderActiveShape}
-                            data={data}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={30}
-                            outerRadius={45}
-                            dataKey="value"
-                            onMouseEnter={onPieEnter}
-                            paddingAngle={3}
-                            stroke="none"
-                        >
-                            {data.map((entry, index) => (
-                                <Cell
-                                    key={`cell-${index}`}
-                                    fill={COLORS[index % COLORS.length]}
-                                    className="transition-all duration-300 focus:outline-none"
-                                />
-                            ))}
-                        </Pie>
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                                borderColor: 'rgba(51, 65, 85, 0.5)',
-                                borderRadius: '12px',
-                                color: '#fff',
-                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                padding: '8px',
-                                fontSize: '12px'
-                            }}
-                            itemStyle={{ color: '#fff', fontSize: '0.75rem' }}
-                            formatter={(value) => [`$${Number(value).toLocaleString('es-ES', { minimumFractionDigits: 0 })}`, '']}
-                        />
-                    </PieChart>
-                </ResponsiveContainer>
+                {isMounted ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                activeIndex={activeIndex}
+                                // @ts-expect-error Recharts types incomplete for activeShape
+                                activeShape={renderActiveShape}
+                                data={data}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={30}
+                                outerRadius={45}
+                                dataKey="value"
+                                onMouseEnter={onPieEnter}
+                                paddingAngle={3}
+                                stroke="none"
+                            >
+                                {data.map((entry, index) => (
+                                    <Cell
+                                        key={`cell-${index}`}
+                                        fill={COLORS[index % COLORS.length]}
+                                        className="transition-all duration-300 focus:outline-none"
+                                    />
+                                ))}
+                            </Pie>
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                                    borderColor: 'rgba(51, 65, 85, 0.5)',
+                                    borderRadius: '12px',
+                                    color: '#fff',
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                    padding: '8px',
+                                    fontSize: '12px'
+                                }}
+                                itemStyle={{ color: '#fff', fontSize: '0.75rem' }}
+                                formatter={(value) => [`$${Number(value).toLocaleString('es-ES', { minimumFractionDigits: 0 })}`, '']}
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <div className="w-full h-full rounded-full border-4 border-slate-700/50 animate-pulse"></div>
+                )}
             </div>
 
             {/* Custom Legend Section - Compacta */}

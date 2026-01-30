@@ -93,8 +93,9 @@ export default function TransactionForm() {
     useEffect(() => {
         getBCVRate().then(r => {
             if (r) {
-                setRate(r);
-                setValue("exchangeRate", r.toString());
+                const formattedRate = parseFloat(r.toFixed(2));
+                setRate(formattedRate);
+                setValue("exchangeRate", formattedRate.toFixed(2));
             }
         });
     }, [setValue]);
@@ -218,7 +219,7 @@ export default function TransactionForm() {
                 reset({
                     amount: "", description: "", category: "Comida", customCategory: "",
                     date: createVenezuelaDate(), type: "gasto", currency: "USD",
-                    exchangeRate: rate.toString(), vesAmount: ""
+                    exchangeRate: rate.toFixed(2), vesAmount: ""
                 });
             }
         } catch (error) {
@@ -250,7 +251,7 @@ export default function TransactionForm() {
                             reset({
                                 amount: "", description: "", category: "Comida", customCategory: "",
                                 date: createVenezuelaDate(), type: "gasto", currency: "USD",
-                                exchangeRate: rate.toString(), vesAmount: ""
+                                exchangeRate: rate.toFixed(2), vesAmount: ""
                             });
                         }}
                         className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-xl transition-all"
