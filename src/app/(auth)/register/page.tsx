@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
@@ -62,13 +63,15 @@ export default function RegisterPage() {
             });
 
             router.push("/dashboard");
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
             let errorMessage = "Ocurrió un error al registrarse.";
-            if (error.code === "auth/email-already-in-use") {
-                errorMessage = "Este correo ya está registrado.";
-            } else if (error.code === "auth/weak-password") {
-                errorMessage = "La contraseña debe tener al menos 6 caracteres.";
+            if (error instanceof FirebaseError) {
+                if (error.code === "auth/email-already-in-use") {
+                    errorMessage = "Este correo ya está registrado.";
+                } else if (error.code === "auth/weak-password") {
+                    errorMessage = "La contraseña debe tener al menos 6 caracteres.";
+                }
             }
 
             Swal.fire({

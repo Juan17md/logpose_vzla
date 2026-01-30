@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useFixedExpenses, FixedExpense } from "@/hooks/useFixedExpenses";
-import { FiCalendar, FiPlus, FiTrash2, FiCheckCircle, FiDollarSign, FiEdit2, FiInfo, FiActivity, FiSearch, FiList, FiGrid } from "react-icons/fi";
+import { FiCalendar, FiPlus, FiTrash2, FiCheckCircle, FiDollarSign, FiEdit2, FiInfo, FiActivity, FiSearch, FiList } from "react-icons/fi";
 import PaginationControls from "@/components/ui/PaginationControls";
 import Swal from "sweetalert2";
 import { db, auth } from "@/lib/firebase";

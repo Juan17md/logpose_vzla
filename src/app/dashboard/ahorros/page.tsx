@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Firestore Timestamps use any type */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,20 +10,14 @@ import {
     query,
     orderBy,
     onSnapshot,
-    addDoc,
     serverTimestamp,
     doc,
-    updateDoc,
-    increment,
-    deleteDoc,
-    getDoc,
     runTransaction
 } from "firebase/firestore";
 import Swal from "sweetalert2";
 import {
     FiDollarSign,
     FiPlus,
-    FiMinus,
     FiActivity,
     FiCalendar,
     FiTrash2,

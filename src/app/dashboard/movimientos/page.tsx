@@ -14,6 +14,7 @@ export default function MovimientosPage() {
     // Automatically switch to form view when editing starts
     useEffect(() => {
         if (transactionToEdit) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate use: switch view when editing starts
             setMobileView('form');
         }
     }, [transactionToEdit]);

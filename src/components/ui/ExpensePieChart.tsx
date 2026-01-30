@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from 'recharts';
 import { FiPieChart } from 'react-icons/fi';
 
@@ -89,11 +89,13 @@ interface ExpensePieChartProps {
 
 export default function ExpensePieChart({ transactions }: ExpensePieChartProps) {
     const [activeIndex, setActiveIndex] = useState(0);
-    const [isMounted, setIsMounted] = useState(false);
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+    // Use useSyncExternalStore to safely detect client-side mounting
+    const isMounted = useSyncExternalStore(
+        () => () => { },
+        () => true,
+        () => false
+    );
 
     const data = useMemo(() => {
         const now = new Date();

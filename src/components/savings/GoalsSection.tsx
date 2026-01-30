@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, increment } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import Swal from "sweetalert2";
 import { FiTarget, FiPlus, FiTrash2, FiX } from "react-icons/fi";
 

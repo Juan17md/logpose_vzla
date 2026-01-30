@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useDebts, Debt, Payment } from "@/hooks/useDebts";
-import { FiPlus, FiTrash2, FiCheckCircle, FiDollarSign, FiUser, FiInfo, FiArrowUpRight, FiArrowDownLeft, FiClock, FiActivity, FiSearch, FiEdit2, FiChevronRight, FiCreditCard } from "react-icons/fi";
+import { useDebts, Debt } from "@/hooks/useDebts";
+import { FiPlus, FiTrash2, FiCheckCircle, FiDollarSign, FiUser, FiInfo, FiArrowUpRight, FiArrowDownLeft, FiClock, FiSearch, FiEdit2 } from "react-icons/fi";
 import PaginationControls from "@/components/ui/PaginationControls";
 import Swal from "sweetalert2";
 import { getBCVRate } from "@/lib/currency";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function DebtsPage() {
     const { debts, loadingDebts, addDebt, deleteDebt, updateDebt, addPayment } = useDebts();
@@ -19,6 +19,7 @@ export default function DebtsPage() {
     const itemsPerPage = 6;
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate use: reset pagination on filter change
         setCurrentPage(1);
     }, [activeTab, searchTerm]);
 

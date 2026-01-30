@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface TransactionInput {
@@ -50,11 +50,12 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
         return days.filter(d => d.day <= today);
     }, [transactions]);
 
-    const [isMounted, setIsMounted] = useState(false);
-
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+    // Use useSyncExternalStore to safely detect client-side mounting
+    const isMounted = useSyncExternalStore(
+        () => () => { },
+        () => true,
+        () => false
+    );
 
     if (transactions.length === 0) {
         return (

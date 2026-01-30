@@ -3,7 +3,7 @@
 // Shopping Lists Page - Redesigned
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useShoppingLists, ShoppingList, ShoppingItem } from "@/hooks/useShoppingLists";
-import { FiShoppingCart, FiPlus, FiTrash2, FiCheck, FiSquare, FiList, FiMinus, FiSearch, FiEdit2, FiCopy, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
+import { FiShoppingCart, FiPlus, FiTrash2, FiSquare, FiList, FiMinus, FiSearch, FiEdit2, FiCopy, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
 import PaginationControls from "@/components/ui/PaginationControls";
 import Swal from "sweetalert2";
 import { getBCVRate } from "@/lib/currency";
@@ -255,6 +255,7 @@ export default function ShoppingListsPage() {
 
     // Reset page when filter/sort changes (Add useEffect)
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate use: reset pagination on filter change
         setListPage(1);
     }, [filterText, sortBy]);
 

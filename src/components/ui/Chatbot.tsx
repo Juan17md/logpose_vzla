@@ -1,7 +1,8 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any -- AI data handling requires dynamic typing */
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { FiMessageSquare, FiMic, FiSend, FiX, FiCpu } from "react-icons/fi";
+import { FiMic, FiSend, FiX, FiCpu } from "react-icons/fi";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useDebts } from "@/hooks/useDebts";
 import { useGoals } from "@/hooks/useGoals";
@@ -90,9 +91,9 @@ export default function Chatbot() {
 
     // Hooks
     const { transactions, addTransaction, deleteTransaction, updateTransaction } = useTransactions();
-    const { debts, addDebt, addPayment, deleteDebt, updateDebt } = useDebts();
-    const { goals, addGoal, addContribution, updateGoal, deleteGoal } = useGoals();
-    const { lists, createList, addItem, deleteList, updateItem, deleteItem, updateListName } = useShoppingLists();
+    const { debts, addDebt, deleteDebt, updateDebt } = useDebts();
+    const { goals, updateGoal, deleteGoal } = useGoals();
+    const { lists, deleteList, updateListName } = useShoppingLists();
     const { fixedExpenses, addFixedExpense, deleteFixedExpense, updateFixedExpense } = useFixedExpenses();
     const { userData, updateUserData } = useUserData();
 
@@ -159,29 +160,29 @@ export default function Chatbot() {
                         amount: parseFloat((d.amount - paid).toFixed(2))
                     };
                 }),
-            fixedExpenses: fixedExpenses.map((e: any) => ({
+            fixedExpenses: fixedExpenses.map((e) => ({
                 name: e.title || e.description,
                 amount: e.amount,
                 dueDay: e.dueDay
             })),
-            shoppingLists: lists.map((l: any) => ({
+            shoppingLists: lists.map((l) => ({
                 name: l.name,
                 totalItems: l.items.length,
-                pendingItems: l.items.filter((i: any) => !i.completed).length
+                pendingItems: l.items.filter((i) => !i.completed).length
             })),
             monthlyBudget: userData.monthlyBudget || 0,
             monthlySalary: userData.monthlySalary || 0,
             topCategories: Object.entries(
                 monthlyTransactions
                     .filter(t => t.type === 'gasto')
-                    .reduce((acc: any, t) => {
+                    .reduce((acc: Record<string, number>, t) => {
                         acc[t.category] = (acc[t.category] || 0) + t.amount;
                         return acc;
                     }, {})
             )
-                .sort((a: any, b: any) => b[1] - a[1])
+                .sort((a, b) => (b[1] as number) - (a[1] as number))
                 .slice(0, 3)
-                .map(([category, amount]: any) => ({ category, amount: parseFloat(amount.toFixed(2)) })),
+                .map(([category, amount]) => ({ category, amount: parseFloat((amount as number).toFixed(2)) })),
 
             lastTransaction,
             // 🆕 Análisis Avanzado: Mes Anterior
@@ -238,13 +239,16 @@ export default function Chatbot() {
 
     // Cleanup: detener reconocimiento al desmontar o cerrar
     useEffect(() => {
+        // Copiar refs a variables locales para el cleanup
+        const recognition = recognitionRef.current;
+        const silenceTimeout = silenceTimeoutRef.current;
+
         return () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.stop();
-                recognitionRef.current = null;
+            if (recognition) {
+                recognition.stop();
             }
-            if (silenceTimeoutRef.current) {
-                clearTimeout(silenceTimeoutRef.current);
+            if (silenceTimeout) {
+                clearTimeout(silenceTimeout);
             }
         };
     }, []);
@@ -945,11 +949,11 @@ export default function Chatbot() {
                                             <div className="text-sm prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-slate-800 prose-pre:rounded-lg prose-pre:p-2">
                                                 <ReactMarkdown
                                                     components={{
-                                                        ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-2 space-y-1" {...props} />,
-                                                        ol: ({ node, ...props }) => <ol className="list-decimal pl-4 mb-2 space-y-1" {...props} />,
-                                                        li: ({ node, ...props }) => <li className="mb-0.5" {...props} />,
-                                                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
-                                                        strong: ({ node, ...props }) => <strong className="font-bold text-violet-300" {...props} />,
+                                                        ul: ({ ...props }) => <ul className="list-disc pl-4 mb-2 space-y-1" {...props} />,
+                                                        ol: ({ ...props }) => <ol className="list-decimal pl-4 mb-2 space-y-1" {...props} />,
+                                                        li: ({ ...props }) => <li className="mb-0.5" {...props} />,
+                                                        p: ({ ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                                        strong: ({ ...props }) => <strong className="font-bold text-violet-300" {...props} />,
                                                     }}
                                                 >
                                                     {msg.content}

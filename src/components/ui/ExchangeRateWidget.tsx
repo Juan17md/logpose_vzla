@@ -16,8 +16,9 @@ export default function ExchangeRateWidget() {
     }, []);
 
     useEffect(() => {
-        fetchRate();
-    }, [fetchRate]);
+        void fetchRate();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <div className="bg-gradient-to-br from-emerald-900/50 to-slate-900 border border-emerald-500/30 p-4 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-sm">

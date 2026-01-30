@@ -1,4 +1,4 @@
-
+/* eslint-disable @typescript-eslint/no-explicit-any -- API endpoint handles dynamic AI data */
 import { Groq } from 'groq-sdk';
 import { NextResponse } from 'next/server';
 

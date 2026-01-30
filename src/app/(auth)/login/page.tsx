@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
@@ -43,15 +44,17 @@ export default function LoginPage() {
                 color: "#fff",
             });
             router.push("/dashboard");
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
             let errorMessage = "Ocurrió un error al iniciar sesión.";
-            if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
-                errorMessage = "Credenciales incorrectas.";
-            } else if (error.code === "auth/invalid-email") {
-                errorMessage = "El correo electrónico no es válido.";
-            } else if (error.code === "auth/too-many-requests") {
-                errorMessage = "Demasiados intentos fallidos. Intenta más tarde.";
+            if (error instanceof FirebaseError) {
+                if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+                    errorMessage = "Credenciales incorrectas.";
+                } else if (error.code === "auth/invalid-email") {
+                    errorMessage = "El correo electrónico no es válido.";
+                } else if (error.code === "auth/too-many-requests") {
+                    errorMessage = "Demasiados intentos fallidos. Intenta más tarde.";
+                }
             }
 
             Swal.fire({
@@ -81,14 +84,16 @@ export default function LoginPage() {
                 color: "#fff",
             });
             router.push("/dashboard");
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
             let errorMessage = "Ocurrió un error al iniciar sesión con Google.";
 
-            if (error.code === "auth/popup-closed-by-user") {
-                errorMessage = "Inicio de sesión cancelado.";
-            } else if (error.code === "auth/account-exists-with-different-credential") {
-                errorMessage = "Ya existe una cuenta con este correo usando otro método.";
+            if (error instanceof FirebaseError) {
+                if (error.code === "auth/popup-closed-by-user") {
+                    errorMessage = "Inicio de sesión cancelado.";
+                } else if (error.code === "auth/account-exists-with-different-credential") {
+                    errorMessage = "Ya existe una cuenta con este correo usando otro método.";
+                }
             }
 
             Swal.fire({

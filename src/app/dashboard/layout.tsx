@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/layout/Sidebar";
-import { FiMenu } from "react-icons/fi";
+
 
 import { EditTransactionProvider } from "@/contexts/EditTransactionContext";
 import { TransactionsProvider } from "@/contexts/TransactionsContext";
