@@ -105,8 +105,4 @@ Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE)
 ## 👤 Desarrollado por
 
 **Juan17md** - *Full Stack Developer*
-- GitHub: [@Juan17md](https://github.com/Juan17md)
-- Portfolio: [Proximamente](#)
-
 ---
-<p align="center">Diseñado con ❤️ para un control financiero excepcional.</p>
