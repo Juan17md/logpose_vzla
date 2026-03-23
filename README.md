@@ -1,141 +1,112 @@
 # LogPose Vzla 💰
 
-> Aplicación web para gestión integral de finanzas personales con diseño Glassmorphism y asistente financiero con IA.
+> **LogPose Vzla** es una avanzada plataforma de gestión financiera personal diseñada para ofrecer una experiencia visual premium y una funcionalidad robusta. Inspirada en la estética *Glassmorphism* y el diseño moderno, esta aplicación permite un control total sobre tus finanzas con la ayuda de un asistente inteligente basado en IA.
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat&logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?style=flat&logo=tailwind-css)
-![Firebase](https://img.shields.io/badge/Firebase-Firestone-ffca28?style=flat&logo=firebase)
-![React](https://img.shields.io/badge/React-19-61dafb?style=flat&logo=react)
+<p align="center">
+  <img src="public/images/login-preview.png" alt="LogPose Vzla Hero" width="100%" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+</p>
 
----
-
-## 📸 Preview
-
-> **Nota:** Agrega una captura de pantalla de tu aplicación en la carpeta `/public` y actualiza esta sección.
-
-```markdown
-![Dashboard](public/dashboard-preview.png)
-```
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestone-ffca28?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
+[![Groq](https://img.shields.io/badge/IA_Asistente-Groq-orange?style=for-the-badge)](https://groq.com/)
 
 ---
 
-## 🌟 Características
+## ✨ Características Principales
 
-### Dashboard Inteligente
-- Widgets de ingresos, gastos, ahorros y metas financieras
-- Botones de acceso rápido para acciones frecuentes
-- Conversión de divisas con caché de 15 minutos (tasa BCV)
-- Edición directa de transacciones desde el historial
+### 🖥️ Dashboard Inteligente & UI Premium
+*   **Diseño Glassmorphism**: Una interfaz moderna y translúcida que proporciona una experiencia de usuario fluida y profesional.
+*   **Widgets Dinámicos**: Visualización en tiempo real de ingresos, gastos, ahorros y metas financieras.
+*   **Conversión en Tiempo Real**: Sincronización automática con la tasa oficial del BCV (caché de 15 min).
 
-### Asistente Financiero "Nami"
-- Chatbot con IA para consultas financieras personalizadas
-- Análisis de gastos y recomendaciones automáticas
-- Respuestas en tiempo real sobre tu situación financiera
+### 🤖 Asistente Financiero "Nami"
+*   **IA Personalizada**: Integramos el SDK de Groq para ofrecer recomendaciones financieras basadas en tus datos reales.
+*   **Análisis Predictivo**: Consulta tu situación financiera y recibe consejos sobre cómo optimizar tus ahorros.
 
-### Gestión de Metas de Ahorro
-- Creación de objetivos con montos objetivo
-- Aportes inteligentes que actualizan progreso y saldo
-- Barra de visualización del porcentaje alcanzado
+### 🎯 Gestión de Metas y Ahorros
+*   **Objetivos Claros**: Establece metas de ahorro con barras de progreso visuales.
+*   **Billetera Multi-Divisa**: Soporte completo para Efectivo en $ y BS, además de activos digitales como USDT.
 
-### Billetera Multi-Divisa
-- Control unificado de Efectivo Físico y USDT
-- Sincronización automática con metas de ahorro
-- Validación de fondos para prevenir sobregiros
-
-### Listas de Compras
-- Calculadora en tiempo real (USD/BS)
-- Checklists interactivos con seguimiento de estado
-- Filtrado, búsqueda y ordenamiento flexible
-
-### Deudas y Gastos Fijos
-- Registro sin movimientos automáticos
-- Soporte multi-moneda (USD/VES)
-- Historial inmutable con tasa de cambio original
+### 📋 Herramientas de Control
+*   **Listas de Compras**: Calculadora integrada con tasas de cambio y seguimiento de artículos.
+*   **Deudas y Gastos Fijos**: Registro organizado de compromisos financieros recurrentes.
 
 ---
 
-## 🛠️ Tecnologías
+## 🛠️ Stack Tecnológico
 
-| Categoría | Tecnología |
-|-----------|------------|
-| Framework | Next.js 16 (App Router) |
-| Lenguaje | TypeScript |
-| Estilos | Tailwind CSS v4 |
-| Base de Datos | Firebase Firestore |
-| Auth | Firebase Auth |
-| Estado | React Context API |
-| IA | Groq SDK (Nami) |
-| UI | Recharts, Framer Motion, React Hook Form |
+| Componente | Tecnología |
+| :--- | :--- |
+| **Frontend** | [Next.js 15](https://nextjs.org/) (App Router), [React 19](https://react.dev/) |
+| **Estilizado** | [Tailwind CSS v4](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/) |
+| **Backend & Auth** | [Firebase](https://firebase.google.com/) (Firestore, Authentication) |
+| **Inteligencia Artificial** | [Groq Cloud SDK](https://groq.com/) |
+| **Gráficos** | [Recharts](https://recharts.org/) |
+| **Formularios** | [React Hook Form](https://react-hook-form.com/) con [Zod](https://zod.dev/) |
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Instalación y Configuración
 
-### Prerrequisitos
+Sigue estos pasos para ejecutar el proyecto localmente:
 
-- Node.js 18+
-- Cuenta de Firebase (Firestore + Auth)
-
-### Instalación
-
+### 1. Clonar el repositorio
 ```bash
-# Clonar repositorio
-git clone https://github.com/tu-usuario/logpose-vzla.git
-cd logpose-vzla
+git clone https://github.com/Juan17md/logpose_vzla.git
+cd logpose_vzla
+```
 
-# Instalar dependencias
+### 2. Instalar dependencias
+```bash
 npm install
-
-# Configurar variables de entorno
-cp .env.example .env.local
-# Edita .env.local con tus credenciales de Firebase
 ```
 
-### Variables de Entorno
-
+### 3. Configurar variables de entorno
+Crea un archivo `.env.local` en la raíz del proyecto y añade tus credenciales:
 ```env
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
+NEXT_PUBLIC_FIREBASE_API_KEY=tu_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu_dominio
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tu_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=tu_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=tu_app_id
+GROQ_API_KEY=tu_groq_api_key
 ```
 
-### Ejecutar
-
+### 4. Iniciar el servidor de desarrollo
 ```bash
 npm run dev
 ```
-
-Abre [http://localhost:3000](http://localhost:3000)
+Accede a [http://localhost:3000](http://localhost:3000) para ver la aplicación en acción.
 
 ---
 
-## 📁 Estructura
+## 📸 Galería de la Interfaz
 
-```
-├── src/
-│   ├── app/              # Next.js App Router
-│   ├── components/       # Componentes React
-│   ├── contexts/        # React Context (estado global)
-│   ├── hooks/           # Custom hooks
-│   ├── lib/             # Utilidades y Firebase
-│   └── types/           # Definiciones de TypeScript
-├── public/              # Assets estáticos
-└── package.json
-```
+<details>
+  <summary>Ver Capturas de Pantalla</summary>
+  <br>
+  <p align="center">
+    <b>Página de Inicio de Sesión</b><br>
+    <img src="public/images/login-preview.png" width="80%" alt="Login Screen">
+  </p>
+</details>
 
 ---
 
 ## 📄 Licencia
 
-MIT License - see [LICENSE](LICENSE) for details.
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
 
 ---
 
-## 👤 Contacto
+## 👤 Desarrollado por
 
-- GitHub: [@tu-usuario](https://github.com/tu-usuario)
-- Email: tu-email@ejemplo.com
+**Juan17md** - *Full Stack Developer*
+- GitHub: [@Juan17md](https://github.com/Juan17md)
+- Portfolio: [Proximamente](#)
+
+---
+<p align="center">Diseñado con ❤️ para un control financiero excepcional.</p>
