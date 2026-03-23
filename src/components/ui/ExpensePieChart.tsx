@@ -22,16 +22,16 @@ interface ActiveShapeProps {
 }
 
 const COLORS = [
-    '#10B981', // Emerald Note
-    '#3B82F6', // Blue Note
-    '#F59E0B', // Amber Note
-    '#EF4444', // Red Note
-    '#8B5CF6', // Violet Note
-    '#EC4899', // Pink Note
-    '#06B6D4', // Cyan Note
-    '#F97316', // Orange Note
-    '#6366F1', // Indigo Note
-    '#14B8A6', // Teal Note
+    '#F59E0B', // Amber
+    '#EF4444', // Red
+    '#10B981', // Emerald
+    '#8B5CF6', // Violet
+    '#F97316', // Orange
+    '#0EA5E9', // Sky/Cyan
+    '#6366F1', // Indigo
+    '#3B82F6', // Blue
+    '#EC4899', // Pink
+    '#14B8A6', // Teal
 ];
 
 const RADIAN = Math.PI / 180; // eslint-disable-line @typescript-eslint/no-unused-vars

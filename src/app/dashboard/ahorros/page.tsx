@@ -14,7 +14,8 @@ import {
     doc,
     runTransaction
 } from "firebase/firestore";
-import Swal from "sweetalert2";
+import { toast } from "sonner";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import {
     FiDollarSign,
     FiPlus,
@@ -31,6 +32,7 @@ import PaginationControls from "@/components/ui/PaginationControls";
 import { SiTether } from "react-icons/si";
 import { getBCVRate } from "@/lib/currency";
 import GoalsSection from "@/components/savings/GoalsSection";
+import AhorrosForm from "@/components/forms/AhorrosForm";
 
 interface SavingsTransaction {
     id: string;
@@ -51,14 +53,15 @@ export default function SavingsPage() {
     const [bcvRate, setBcvRate] = useState(0);
 
     // Form State
-    const [amount, setAmount] = useState("");
-    const [description, setDescription] = useState("");
-    const [method, setMethod] = useState<"physical" | "usdt" | "bs">("physical");
 
     const [type, setType] = useState<"deposit" | "withdrawal">("deposit");
 
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    // Delete Confirm State
+    const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+    const [deletingTrans, setDeletingTrans] = useState<SavingsTransaction | null>(null);
+
     const itemsPerPage = 8;
 
     useEffect(() => {
@@ -104,16 +107,12 @@ export default function SavingsPage() {
         return () => unsubscribeAuth();
     }, []);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleFormSubmit = async (data: { amount: string; description: string; method: "physical" | "usdt" | "bs" }) => {
+        const { amount, description, method } = data;
+        
         if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Monto inválido',
-                text: 'Por favor ingresa un monto mayor a 0',
-                background: "#1f2937",
-                color: "#fff",
-            });
+
+            toast.error("Por favor ingresa un monto mayor a 0");
             return;
         }
 
@@ -124,13 +123,7 @@ export default function SavingsPage() {
             const currentBalance = method === "physical" ? balancePhysical : method === "usdt" ? balanceUSDT : balanceBs;
             if (numAmount > currentBalance) {
                 const methodName = method === "physical" ? "Efectivo" : method === "usdt" ? "USDT" : "Bolívares";
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Saldo insuficiente',
-                    text: `No tienes suficientes fondos en ${methodName} para retirar esa cantidad.`,
-                    background: "#1f2937",
-                    color: "#fff",
-                });
+                toast.error(`No tienes suficientes fondos en ${methodName} para retirar esa cantidad.`);
                 return;
             }
         }
@@ -161,83 +154,50 @@ export default function SavingsPage() {
                 });
             });
 
-            Swal.fire({
-                icon: 'success',
-                title: 'Movimiento registrado',
-                timer: 1500,
-                showConfirmButton: false,
-                background: "#1f2937",
-                color: "#fff",
-            });
+            toast.success("Movimiento registrado exitosamente");
 
-            // Reset Form (keep method/type as prefernece or reset? Let's reset amount/desc)
-            setAmount("");
-            setDescription("");
+            // Reset Form (Handled by component)
 
         } catch (error) {
             console.error("Error adding transaction:", error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo registrar el movimiento',
-                background: "#1f2937",
-                color: "#fff",
-            });
+            toast.error("No se pudo registrar el movimiento");
         }
     };
 
-    const handleDelete = async (trans: SavingsTransaction) => {
-        const result = await Swal.fire({
-            title: '¿Eliminar registro?',
-            text: "Esto revertirá el saldo asociado.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Sí, eliminar',
-            background: "#1f2937",
-            color: "#fff",
-        });
+    const handleDeleteClick = (trans: SavingsTransaction) => {
+        setDeletingTrans(trans);
+        setShowConfirmDelete(true);
+    };
 
-        if (result.isConfirmed) {
-            try {
-                const userRef = doc(db, "users", user.uid);
-                const fieldToUpdate = trans.method === "physical" ? "savingsPhysical" : trans.method === "usdt" ? "savingsUSDT" : "savingsBs";
+    const confirmDelete = async () => {
+        if (!deletingTrans) return;
+        
+        try {
+            const userRef = doc(db, "users", user.uid);
+            const fieldToUpdate = deletingTrans.method === "physical" ? "savingsPhysical" : deletingTrans.method === "usdt" ? "savingsUSDT" : "savingsBs";
 
-                // If it was a deposit, we subtract to revert. If withdrawal, we add to revert.
-                const revertValue = trans.type === "deposit" ? -trans.amount : trans.amount;
+            const revertValue = deletingTrans.type === "deposit" ? -deletingTrans.amount : deletingTrans.amount;
 
-                await runTransaction(db, async (transaction) => {
-                    const userDoc = await transaction.get(userRef);
-                    if (!userDoc.exists()) throw "User does not exist";
+            await runTransaction(db, async (transaction) => {
+                const userDoc = await transaction.get(userRef);
+                if (!userDoc.exists()) throw "User does not exist";
 
-                    const newBalance = (userDoc.data()[fieldToUpdate] || 0) + revertValue;
+                const newBalance = (userDoc.data()[fieldToUpdate] || 0) + revertValue;
 
-                    transaction.update(userRef, {
-                        [fieldToUpdate]: newBalance
-                    });
-
-                    transaction.delete(doc(db, "users", user.uid, "savings_transactions", trans.id));
+                transaction.update(userRef, {
+                    [fieldToUpdate]: newBalance
                 });
 
-                Swal.fire({
-                    title: 'Eliminado',
-                    icon: 'success',
-                    timer: 1000,
-                    showConfirmButton: false,
-                    background: "#1f2937",
-                    color: "#fff",
-                });
-            } catch (error) {
-                console.error("Error deleting transaction:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo eliminar el registro',
-                    background: "#1f2937",
-                    color: "#fff",
-                });
-            }
+                transaction.delete(doc(db, "users", user.uid, "savings_transactions", deletingTrans.id));
+            });
+
+            toast.success("Eliminado exitosamente");
+        } catch (error) {
+            console.error("Error deleting transaction:", error);
+            toast.error("No se pudo eliminar el registro");
+        } finally {
+            setShowConfirmDelete(false);
+            setDeletingTrans(null);
         }
     };
 
@@ -269,7 +229,7 @@ export default function SavingsPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
-                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -311,11 +271,11 @@ export default function SavingsPage() {
                         {/* Physical Card */}
                         <motion.div
                             whileTap={{ scale: 0.98 }}
-                            className="flex-none w-40 bg-gradient-to-br from-green-600/20 to-green-900/10 p-4 rounded-2xl border border-green-500/20 relative overflow-hidden"
+                            className="flex-none w-40 bg-linear-to-br from-emerald-600/20 to-emerald-900/10 p-4 rounded-2xl border border-emerald-500/20 relative overflow-hidden"
                         >
                             <div className="flex items-center gap-2 mb-3">
-                                <div className="p-1.5 bg-green-500/20 rounded-lg text-green-400"><FiDollarSign size={14} /></div>
-                                <span className="text-xs font-bold text-green-200 uppercase tracking-wider">Efectivo</span>
+                                <div className="p-1.5 bg-emerald-500/20 rounded-lg text-emerald-400"><FiDollarSign size={14} /></div>
+                                <span className="text-xs font-bold text-emerald-200 uppercase tracking-wider">Efectivo</span>
                             </div>
                             <p className="text-xl font-bold text-white mb-0.5">$ {balancePhysical.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                         </motion.div>
@@ -323,7 +283,7 @@ export default function SavingsPage() {
                         {/* USDT Card */}
                         <motion.div
                             whileTap={{ scale: 0.98 }}
-                            className="flex-none w-40 bg-gradient-to-br from-teal-600/20 to-teal-900/10 p-4 rounded-2xl border border-teal-500/20 relative overflow-hidden"
+                            className="flex-none w-40 bg-linear-to-br from-teal-600/20 to-teal-900/10 p-4 rounded-2xl border border-teal-500/20 relative overflow-hidden"
                         >
                             <div className="flex items-center gap-2 mb-3">
                                 <div className="p-1.5 bg-teal-500/20 rounded-lg text-teal-400"><SiTether size={14} /></div>
@@ -335,7 +295,7 @@ export default function SavingsPage() {
                         {/* Bs Card */}
                         <motion.div
                             whileTap={{ scale: 0.98 }}
-                            className="flex-none w-48 bg-gradient-to-br from-amber-600/20 to-amber-900/10 p-4 rounded-2xl border border-amber-500/20 relative overflow-hidden"
+                            className="flex-none w-48 bg-linear-to-br from-amber-600/20 to-amber-900/10 p-4 rounded-2xl border border-amber-500/20 relative overflow-hidden"
                         >
                             <div className="flex items-center gap-2 mb-3">
                                 <div className="p-1.5 bg-amber-500/20 rounded-lg text-amber-400"><TbCoinFilled size={14} /></div>
@@ -349,77 +309,12 @@ export default function SavingsPage() {
 
                 {/* Quick Add Form Section */}
                 <motion.div variants={itemVariants} className="bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-slate-700/50">
-                    <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                        <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
-                        Nuevo Movimiento
-                    </h3>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Type Switcher */}
-                        <div className="grid grid-cols-2 gap-1 p-1 bg-slate-800/80 rounded-xl">
-                            <button
-                                type="button"
-                                onClick={() => setType("deposit")}
-                                className={`py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${type === "deposit" ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-slate-400 hover:text-white"}`}
-                            >
-                                <FiArrowUpRight size={14} /> Ingreso
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setType("withdrawal")}
-                                className={`py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${type === "withdrawal" ? "bg-red-500 text-white shadow-lg shadow-red-500/20" : "text-slate-400 hover:text-white"}`}
-                            >
-                                <FiArrowDownLeft size={14} /> Retiro
-                            </button>
-                        </div>
-
-                        {/* Method Selector Boxes */}
-                        <div className="grid grid-cols-3 gap-2">
-                            {[
-                                { id: "physical", icon: FiDollarSign, label: "Efectivo", color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/50" },
-                                { id: "usdt", icon: SiTether, label: "USDT", color: "text-teal-400", bg: "bg-teal-500/10", border: "border-teal-500/50" },
-                                { id: "bs", icon: TbCoinFilled, label: "Bs", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/50" }
-                            ].map((m) => (
-                                <motion.button
-                                    key={m.id}
-                                    type="button"
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => setMethod(m.id as any)}
-                                    className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all ${method === m.id ? `${m.bg} ${m.border}` : "bg-slate-800/30 border-slate-700/50"}`}
-                                >
-                                    <m.icon className={method === m.id ? m.color : "text-slate-500"} size={18} />
-                                    <span className={`text-[10px] uppercase font-bold ${method === m.id ? m.color : "text-slate-500"}`}>{m.label}</span>
-                                </motion.button>
-                            ))}
-                        </div>
-
-                        {/* Amount & Description */}
-                        <div className="space-y-3">
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                placeholder="0.00"
-                                className="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-xl py-3 px-4 text-center text-xl font-bold font-mono focus:border-emerald-500/50 outline-none placeholder:text-slate-600"
-                            />
-                            <input
-                                type="text"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Nota opcional..."
-                                className="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-xl py-3 px-4 text-sm focus:border-emerald-500/50 outline-none placeholder:text-slate-600"
-                            />
-                        </div>
-
-                        <motion.button
-                            whileTap={{ scale: 0.98 }}
-                            type="submit"
-                            className="w-full bg-white text-slate-900 font-bold py-3.5 rounded-xl shadow-lg transform transition-all flex items-center justify-center space-x-2"
-                        >
-                            <FiPlus className="text-lg" />
-                            <span>Registrar</span>
-                        </motion.button>
-                    </form>
+                    <AhorrosForm 
+                        type={type} 
+                        setType={setType} 
+                        onSubmit={handleFormSubmit} 
+                        isLoading={false} 
+                    />
                 </motion.div>
 
                 {/* Goals Preview */}
@@ -447,7 +342,7 @@ export default function SavingsPage() {
                                             <p className="text-white text-sm font-medium">{t.description}</p>
                                             <div className="flex items-center gap-1.5">
                                                 <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded ${t.method === "physical"
-                                                    ? "bg-green-500/10 text-green-400"
+                                                    ? "bg-emerald-500/10 text-emerald-400"
                                                     : t.method === "usdt"
                                                         ? "bg-teal-500/10 text-teal-400"
                                                         : "bg-amber-500/10 text-amber-400"
@@ -464,7 +359,7 @@ export default function SavingsPage() {
                                             {t.type === "deposit" ? "+" : "-"}{t.method === "bs" ? "Bs." : "$"}{t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                         </p>
                                         <button
-                                            onClick={() => handleDelete(t)}
+                                            onClick={() => handleDeleteClick(t)}
                                             className="text-slate-600 active:text-red-400"
                                         >
                                             <FiTrash2 size={16} />
@@ -484,11 +379,11 @@ export default function SavingsPage() {
             {/* ===== DESKTOP LAYOUT (Original wrapped) ===== */}
             <div className="hidden md:block space-y-8 pb-10">
                 {/* Header */}
-                <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+                <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                     <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                        <FiBriefcase className="text-7xl md:text-9xl text-emerald-400" />
+                        <FiBriefcase className="text-7xl md:text-9xl text-violet-400" />
                     </div>
-                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
+                    <div className="absolute top-0 left-0 w-full h-full bg-linear-to-r from-violet-500/10 to-transparent pointer-events-none"></div>
 
                     <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6">
                         <div>
@@ -506,10 +401,10 @@ export default function SavingsPage() {
                         <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 scrollbar-hide">
                             {/* Physical */}
                             <div className="flex-none w-64 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-green-500/20 transition-all"></div>
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-all"></div>
                                 <div className="flex items-center justify-between mb-3 md:mb-4">
                                     <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Efectivo Físico</h3>
-                                    <div className="p-2 bg-green-500/20 rounded-lg text-green-400">
+                                    <div className="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
                                         <FiDollarSign size={18} />
                                     </div>
                                 </div>
@@ -546,11 +441,11 @@ export default function SavingsPage() {
                     </div>
 
                     {/* Total Summary */}
-                    <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 backdrop-blur-md p-6 rounded-3xl border border-indigo-500/30 shadow-lg flex flex-col justify-center relative overflow-hidden">
+                    <div className="bg-linear-to-br from-violet-900/40 to-slate-900/40 backdrop-blur-md p-6 rounded-3xl border border-violet-500/30 shadow-lg flex flex-col justify-center relative overflow-hidden">
                         <div className="relative z-10">
-                            <h3 className="text-indigo-200 text-sm font-bold uppercase tracking-wider mb-2">Total Ahorrado</h3>
+                            <h3 className="text-violet-200 text-sm font-bold uppercase tracking-wider mb-2">Total Ahorrado</h3>
                             <p className="text-3xl md:text-4xl font-bold text-white mb-2">$ {totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
-                            <div className="inline-block px-3 py-1 bg-white/10 rounded-full border border-white/10 text-xs text-indigo-100 mb-4">
+                            <div className="inline-block px-3 py-1 bg-white/10 rounded-full border border-white/10 text-xs text-violet-200 mb-4">
                                 ≈ Bs. {(totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </div>
                         </div>
@@ -560,89 +455,12 @@ export default function SavingsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Transaction Form */}
                     <div className="lg:col-span-1">
-                        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg">
-                            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <FiActivity className="text-emerald-400" />
-                                Registrar Movimiento
-                            </h3>
-
-                            <form onSubmit={handleSubmit} className="space-y-5">
-                                {/* Type Selection */}
-                                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-800/50 rounded-xl border border-slate-700/30">
-                                    <button
-                                        type="button"
-                                        onClick={() => setType("deposit")}
-                                        className={`py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${type === "deposit" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-slate-400 hover:text-white"
-                                            }`}
-                                    >
-                                        <FiArrowUpRight /> Ingreso
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setType("withdrawal")}
-                                        className={`py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${type === "withdrawal" ? "bg-red-500/20 text-red-400 border border-red-500/30" : "text-slate-400 hover:text-white"
-                                            }`}
-                                    >
-                                        <FiArrowDownLeft /> Retiro
-                                    </button>
-                                </div>
-
-                                {/* Method Selection */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase ml-1">Billetera</label>
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <label className={`cursor-pointer border rounded-xl p-3 flex flex-col items-center gap-2 transition-all ${method === "physical" ? "bg-green-500/10 border-green-500/50" : "bg-slate-800/30 border-slate-700 hover:border-slate-600"}`}>
-                                            <input type="radio" name="method" value="physical" className="hidden" checked={method === "physical"} onChange={() => setMethod("physical")} />
-                                            <FiDollarSign className={method === "physical" ? "text-green-400" : "text-slate-500"} size={22} />
-                                            <span className={`text-xs ${method === "physical" ? "text-green-400 font-bold" : "text-slate-400"}`}>Efectivo</span>
-                                        </label>
-                                        <label className={`cursor-pointer border rounded-xl p-3 flex flex-col items-center gap-2 transition-all ${method === "usdt" ? "bg-teal-500/10 border-teal-500/50" : "bg-slate-800/30 border-slate-700 hover:border-slate-600"}`}>
-                                            <input type="radio" name="method" value="usdt" className="hidden" checked={method === "usdt"} onChange={() => setMethod("usdt")} />
-                                            <SiTether className={method === "usdt" ? "text-teal-400" : "text-slate-500"} size={22} />
-                                            <span className={`text-xs ${method === "usdt" ? "text-teal-400 font-bold" : "text-slate-400"}`}>USDT</span>
-                                        </label>
-                                        <label className={`cursor-pointer border rounded-xl p-3 flex flex-col items-center gap-2 transition-all ${method === "bs" ? "bg-amber-500/10 border-amber-500/50" : "bg-slate-800/30 border-slate-700 hover:border-slate-600"}`}>
-                                            <input type="radio" name="method" value="bs" className="hidden" checked={method === "bs"} onChange={() => setMethod("bs")} />
-                                            <TbCoinFilled className={method === "bs" ? "text-amber-400" : "text-slate-500"} size={22} />
-                                            <span className={`text-xs ${method === "bs" ? "text-amber-400 font-bold" : "text-slate-400"}`}>Bs</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {/* Amount Input */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase ml-1">Monto ({method === "bs" ? "Bs" : "$"})</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        placeholder="0.00"
-                                        className="w-full bg-slate-900/50 border border-slate-700 text-white rounded-xl py-3 px-4 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-600 font-mono text-lg"
-                                    />
-                                </div>
-
-                                {/* Description Input */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase ml-1">Nota (Opcional)</label>
-                                    <input
-                                        type="text"
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        placeholder="Ej. Ahorro semanal"
-                                        className="w-full bg-slate-900/50 border border-slate-700 text-white rounded-xl py-3 px-4 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-600"
-                                    />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-500/20 transform transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2"
-                                >
-                                    <FiPlus className="text-xl" />
-                                    <span>Registrar Movimiento</span>
-                                </button>
-                            </form>
-                        </div>
+                        <AhorrosForm 
+                            type={type} 
+                            setType={setType} 
+                            onSubmit={handleFormSubmit} 
+                            isLoading={false} 
+                        />
                     </div>
 
                     {/* History List */}
@@ -650,7 +468,7 @@ export default function SavingsPage() {
                         <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg flex flex-col h-full">
                             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <FiCalendar className="text-blue-400" />
+                                    <FiCalendar className="text-violet-400" />
                                     Historial de Movimientos
                                 </h3>
                                 <div className="relative w-full md:w-64">
@@ -663,7 +481,7 @@ export default function SavingsPage() {
                                             setSearchTerm(e.target.value);
                                             setCurrentPage(1);
                                         }}
-                                        className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl py-2 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder-slate-600 transition-all"
+                                        className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl py-2 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-violet-500/50 placeholder-slate-600 transition-all"
                                     />
                                 </div>
                             </div>
@@ -687,7 +505,7 @@ export default function SavingsPage() {
                                                     <p className="font-bold text-white flex items-center gap-2">
                                                         {t.description}
                                                         <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full border ${t.method === "physical"
-                                                            ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                                                             : t.method === "usdt"
                                                                 ? "bg-teal-500/10 text-teal-400 border-teal-500/20"
                                                                 : "bg-amber-500/10 text-amber-400 border-amber-500/20"
@@ -707,7 +525,7 @@ export default function SavingsPage() {
                                                     {t.type === "deposit" ? "+" : "-"}{t.method === "bs" ? "Bs." : "$"}{t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </p>
                                                 <button
-                                                    onClick={() => handleDelete(t)}
+                                                    onClick={() => handleDeleteClick(t)}
                                                     className="p-2 text-slate-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100"
                                                 >
                                                     <FiTrash2 />

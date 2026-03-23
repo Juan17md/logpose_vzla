@@ -2,9 +2,11 @@
 
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import Swal from "sweetalert2";
+import { toast } from "sonner";
+import Modal from "@/components/ui/Modal";
 import { FiDollarSign, FiEdit2, FiBox } from "react-icons/fi";
 import { SiTether } from "react-icons/si";
+import { useState } from "react";
 
 interface WalletData {
     savingsPhysical: number;
@@ -16,52 +18,32 @@ import { useUserData } from "@/contexts/UserDataContext";
 export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: string | undefined, bcvRate: number }) {
     const { userData, loading } = useUserData();
 
-    const handleUpdate = async (field: keyof WalletData, label: string) => {
-        if (!userId) return;
+    const [editConfig, setEditConfig] = useState<{ field: keyof WalletData | null, label: string, value: string }>({ field: null, label: "", value: "" });
 
-        const currentValue = userData[field];
+    const openEditModal = (field: keyof WalletData, label: string) => {
+        setEditConfig({ field, label, value: userData[field].toString() });
+    };
 
-        const { value: amount } = await Swal.fire({
-            title: `Actualizar ${label}`,
-            input: 'number',
-            inputLabel: 'Nuevo monto total ($)',
-            inputValue: currentValue,
-            showCancelButton: true,
-            background: "#1f2937",
-            color: "#fff",
-            confirmButtonColor: '#10b981',
-            inputValidator: (value: string) => {
-                if (!value || isNaN(parseFloat(value)) || parseFloat(value) < 0) {
-                    return 'Ingresa un monto válido';
-                }
-                return null;
-            }
-        });
+    const handleUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const { field, value } = editConfig;
+        if (!userId || !field) return;
 
-        if (amount !== undefined) {
-            try {
-                await updateDoc(doc(db, "users", userId), {
-                    [field]: parseFloat(amount)
-                });
+        const amount = parseFloat(value);
+        if (isNaN(amount) || amount < 0) {
+            toast.error("Ingresa un monto válido");
+            return;
+        }
 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Actualizado',
-                    timer: 1000,
-                    showConfirmButton: false,
-                    background: "#1f2937",
-                    color: "#fff",
-                });
-            } catch (error) {
-                console.error("Error updating wallet:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error al actualizar',
-                    text: 'Inténtalo de nuevo',
-                    background: "#1f2937",
-                    color: "#fff",
-                });
-            }
+        try {
+            await updateDoc(doc(db, "users", userId), {
+                [field]: amount
+            });
+            toast.success("Actualizado");
+            setEditConfig({ field: null, label: "", value: "" });
+        } catch (error) {
+            console.error("Error updating wallet:", error);
+            toast.error("Error al actualizar");
         }
     };
 
@@ -72,11 +54,11 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
     return (
         <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group hover:bg-slate-900/70 transition-all duration-300 flex flex-col justify-between">
             {/* Background Decoration */}
-            <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mb-16 group-hover:bg-purple-500/20 transition-all opacity-50"></div>
+            <div className="absolute bottom-0 right-0 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mb-16 group-hover:bg-violet-500/20 transition-all opacity-50"></div>
 
             <div className="flex justify-between items-center mb-6 relative z-10">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    <span className="p-2 bg-purple-500/20 rounded-lg text-purple-400">
+                    <span className="p-2 bg-violet-500/20 rounded-lg text-violet-400">
                         <FiBox />
                     </span>
                     Fondos Ahorrados
@@ -96,7 +78,7 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
                         </div>
                     </div>
                     <button
-                        onClick={() => handleUpdate('savingsPhysical', 'Efectivo Físico')}
+                        onClick={() => openEditModal('savingsPhysical', 'Efectivo Físico')}
                         className="p-2 text-slate-500 hover:text-white hover:bg-slate-700 rounded-lg transition-colors opacity-0 group-hover/item:opacity-100"
                     >
                         <FiEdit2 size={16} />
@@ -115,7 +97,7 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
                         </div>
                     </div>
                     <button
-                        onClick={() => handleUpdate('savingsUSDT', 'USDT')}
+                        onClick={() => openEditModal('savingsUSDT', 'USDT')}
                         className="p-2 text-slate-500 hover:text-white hover:bg-slate-700 rounded-lg transition-colors opacity-0 group-hover/item:opacity-100"
                     >
                         <FiEdit2 size={16} />
@@ -131,7 +113,7 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
                             ≈ Bs. {(totalSaved * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
-                    <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
+                    <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-indigo-400">
                         $ {totalSaved.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </p>
                 </div>
@@ -142,6 +124,43 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
                     Registrar Ahorro
                 </a>
             </div>
+
+            {/* Edit Modal */}
+            <Modal
+                isOpen={editConfig.field !== null}
+                onClose={() => setEditConfig({ field: null, label: "", value: "" })}
+                title={`Actualizar ${editConfig.label}`}
+            >
+                <form onSubmit={handleUpdate} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-1">Nuevo monto total ($)</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            required
+                            value={editConfig.value}
+                            onChange={(e) => setEditConfig({ ...editConfig, value: e.target.value })}
+                            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-violet-500/50 transition-colors"
+                        />
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                        <button
+                            type="button"
+                            onClick={() => setEditConfig({ field: null, label: "", value: "" })}
+                            className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-6 py-2 bg-violet-500 hover:bg-violet-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-violet-500/20"
+                        >
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 }

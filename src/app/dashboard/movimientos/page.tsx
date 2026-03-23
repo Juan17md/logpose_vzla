@@ -30,10 +30,10 @@ export default function MovimientosPage() {
             {/* Desktop Header */}
             <div className="hidden md:block bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                    <FiList className="text-7xl md:text-9xl text-emerald-400" />
+                    <FiList className="text-7xl md:text-9xl text-violet-400" />
                 </div>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-violet-500/10 to-transparent pointer-events-none"></div>
 
                 <div className="relative z-10">
                     <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Movimientos</h1>
@@ -74,7 +74,7 @@ export default function MovimientosPage() {
                             <motion.button
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => setMobileView('form')}
-                                className="fixed bottom-44 right-6 w-14 h-14 bg-emerald-500 rounded-full text-white shadow-xl shadow-emerald-500/30 flex items-center justify-center z-50 border border-white/10"
+                                className="fixed bottom-[180px] right-4 w-14 h-14 bg-violet-500 rounded-full text-white shadow-xl shadow-violet-500/30 flex items-center justify-center z-50 border border-white/10"
                             >
                                 <FiPlus size={28} />
                             </motion.button>

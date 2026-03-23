@@ -1,132 +1,71 @@
 "use client";
 
 import { useGoals, Goal } from "@/hooks/useGoals";
-import Swal from "sweetalert2";
+import { toast } from "sonner";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import Modal from "@/components/ui/Modal";
 import { FiTarget, FiPlus, FiTrash2 } from "react-icons/fi";
+import { useState } from "react";
 
 export default function SavingsGoalsWidget({ bcvRate }: { bcvRate: number }) {
     const { goals, loading, addGoal, deleteGoal, addContribution } = useGoals();
+    
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newGoalName, setNewGoalName] = useState("");
+    const [newGoalTarget, setNewGoalTarget] = useState("");
 
-    const handleAddGoal = async () => {
-        const { value: formValues } = await Swal.fire({
-            title: 'Nueva Meta de Ahorro',
-            html:
-                '<input id="swal-input1" class="swal2-input" placeholder="Nombre de la meta">' +
-                '<input id="swal-input2" class="swal2-input" type="number" placeholder="Monto Objetivo ($)">',
-            focusConfirm: false,
-            background: "#1f2937",
-            color: "#fff",
-            showCancelButton: true,
-            confirmButtonText: 'Crear Meta',
-            confirmButtonColor: '#10b981',
-            cancelButtonColor: '#6b7280',
-            preConfirm: () => {
-                return [
-                    (document.getElementById('swal-input1') as HTMLInputElement).value,
-                    (document.getElementById('swal-input2') as HTMLInputElement).value
-                ]
-            }
-        });
+    const [showProgressModal, setShowProgressModal] = useState<Goal | null>(null);
+    const [progressAmount, setProgressAmount] = useState("");
+    const [progressMethod, setProgressMethod] = useState<"physical" | "usdt">("physical");
 
-        if (formValues && formValues[0] && formValues[1]) {
-            await addGoal(formValues[0], parseFloat(formValues[1]));
-            Swal.fire({
-                icon: 'success',
-                title: 'Meta creada',
-                timer: 1500,
-                showConfirmButton: false,
-                background: "#1f2937",
-                color: "#fff",
-            });
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
+    const handleCreateGoal = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newGoalName || !newGoalTarget) return;
+
+        try {
+            await addGoal(newGoalName, parseFloat(newGoalTarget));
+            toast.success("Meta creada exitosamente");
+            setShowAddModal(false);
+            setNewGoalName("");
+            setNewGoalTarget("");
+        } catch (error) {
+            console.error(error);
+            toast.error("Error al crear la meta");
         }
     };
 
-    const handleAddContribution = async (goal: Goal) => {
-        const { value: formValues } = await Swal.fire({
-            title: `Ahorrar para: ${goal.name}`,
-            html: `
-                <div class="flex flex-col gap-4 text-left">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Monto a agregar</label>
-                        <input id="swal-amt" class="swal2-input w-full m-0" type="number" step="0.01" placeholder="0.00">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Origen del dinero</label>
-                        <div class="grid grid-cols-2 gap-2">
-                             <label class="cursor-pointer border border-slate-600 rounded-lg p-3 flex flex-col items-center gap-1 hover:bg-slate-700 transition-colors">
-                                <input type="radio" name="swal-method" value="physical" class="accent-emerald-500" checked>
-                                <span class="text-sm font-bold text-green-400">Efectivo</span>
-                            </label>
-                            <label class="cursor-pointer border border-slate-600 rounded-lg p-3 flex flex-col items-center gap-1 hover:bg-slate-700 transition-colors">
-                                <input type="radio" name="swal-method" value="usdt" class="accent-emerald-500">
-                                <span class="text-sm font-bold text-teal-400">USDT</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            `,
-            focusConfirm: false,
-            showCancelButton: true,
-            confirmButtonText: 'Registrar',
-            confirmButtonColor: '#10b981',
-            cancelButtonColor: '#6b7280',
-            background: "#1f2937",
-            color: "#fff",
-            preConfirm: () => {
-                const amt = (document.getElementById('swal-amt') as HTMLInputElement).value;
-                const methodRadio = document.querySelector('input[name="swal-method"]:checked') as HTMLInputElement;
+    const confirmAddProgress = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!showProgressModal || !progressAmount || isNaN(Number(progressAmount))) {
+            toast.error("Monto inválido");
+            return;
+        }
 
-                if (!amt || parseFloat(amt) <= 0) {
-                    Swal.showValidationMessage('Ingresa un monto válido');
-                    return false;
-                }
-                return { amount: parseFloat(amt), method: methodRadio.value as "physical" | "usdt" };
-            }
-        });
-
-        if (formValues) {
-            try {
-                await addContribution(goal.id, goal.name, formValues.amount, formValues.method);
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Ahorro registrado!',
-                    text: `Se agregaron $${formValues.amount} a tu meta y billetera.`,
-                    timer: 2000,
-                    showConfirmButton: false,
-                    background: "#1f2937",
-                    color: "#fff",
-                });
-            } catch (error) {
-                console.error(error);
-                Swal.fire('Error', 'No se pudo registrar el ahorro', 'error');
-            }
+        const amt = parseFloat(progressAmount);
+        try {
+            await addContribution(showProgressModal.id, showProgressModal.name, amt, progressMethod);
+            toast.success(`Se agregaron $${amt} a tu meta`);
+            setShowProgressModal(null);
+            setProgressAmount("");
+        } catch (error) {
+            console.error(error);
+            toast.error("Error al registrar el ahorro");
         }
     };
 
-    const handleDelete = async (id: string) => {
-        Swal.fire({
-            title: '¿Borrar meta?',
-            text: "No podrás revertir esto",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Sí, borrar',
-            background: "#1f2937",
-            color: "#fff",
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                await deleteGoal(id);
-                Swal.fire({
-                    title: 'Borrado',
-                    icon: 'success',
-                    timer: 1000,
-                    showConfirmButton: false,
-                    background: "#1f2937",
-                    color: "#fff",
-                });
-            }
-        });
+    const confirmDelete = async () => {
+        if (!showDeleteConfirm) return;
+        try {
+            await deleteGoal(showDeleteConfirm);
+            toast.success("Meta eliminada");
+        } catch (error) {
+            console.error(error);
+            toast.error("Error al eliminar la meta");
+        } finally {
+            setShowDeleteConfirm(null);
+        }
     };
 
     if (loading) return <div className="h-48 bg-slate-900/50 rounded-3xl animate-pulse"></div>;
@@ -143,7 +82,7 @@ export default function SavingsGoalsWidget({ bcvRate }: { bcvRate: number }) {
                     Metas de Ahorro
                 </h3>
                 <button
-                    onClick={handleAddGoal}
+                    onClick={() => setShowAddModal(true)}
                     className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-500 hover:text-white transition-all transform hover:scale-105"
                 >
                     <FiPlus size={20} />
@@ -155,7 +94,7 @@ export default function SavingsGoalsWidget({ bcvRate }: { bcvRate: number }) {
                     <div className="text-center text-slate-500 py-8 flex flex-col items-center">
                         <FiTarget size={32} className="mb-2 opacity-50" />
                         <p className="mb-2">No tienes metas activas.</p>
-                        <button onClick={handleAddGoal} className="text-emerald-400 text-sm font-medium hover:underline">Crear mi primera meta</button>
+                        <button onClick={() => setShowAddModal(true)} className="text-emerald-400 text-sm font-medium hover:underline">Crear mi primera meta</button>
                     </div>
                 ) : (
                     goals.map(goal => {
@@ -171,13 +110,13 @@ export default function SavingsGoalsWidget({ bcvRate }: { bcvRate: number }) {
                                     </div>
                                     <div className="flex space-x-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
                                         <button
-                                            onClick={() => handleAddContribution(goal)}
+                                            onClick={() => setShowProgressModal(goal)}
                                             className="p-1.5 text-emerald-400 hover:text-white hover:bg-emerald-500 rounded-lg transition-colors flex items-center gap-1"
                                             title="Agregar Ahorro"
                                         >
                                             <FiPlus size={14} /> <span className="text-[10px] font-bold">Aportar</span>
                                         </button>
-                                        <button onClick={() => handleDelete(goal.id)} className="p-1.5 text-red-400 hover:text-white hover:bg-red-500 rounded-lg transition-colors">
+                                        <button onClick={() => setShowDeleteConfirm(goal.id)} className="p-1.5 text-red-400 hover:text-white hover:bg-red-500 rounded-lg transition-colors">
                                             <FiTrash2 size={14} />
                                         </button>
                                     </div>
@@ -186,12 +125,12 @@ export default function SavingsGoalsWidget({ bcvRate }: { bcvRate: number }) {
                                 {/* Barra de Progreso */}
                                 <div className="w-full bg-slate-700/50 rounded-full h-3 mb-2 overflow-hidden backdrop-blur-sm">
                                     <div
-                                        className={`h-full rounded-full transition-all duration-1000 ease-out shadow-lg ${progress >= 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-blue-500 to-indigo-500'}`}
+                                        className={`h-full rounded-full transition-all duration-1000 ease-out shadow-lg ${progress >= 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-violet-500 to-indigo-500'}`}
                                         style={{ width: `${progress}%` }}
                                     ></div>
                                 </div>
                                 <div className="flex justify-between text-xs text-slate-500 font-medium">
-                                    <span className={progress >= 100 ? "text-emerald-400 font-bold" : "text-blue-400"}>{progress.toFixed(0)}% Completado</span>
+                                    <span className={progress >= 100 ? "text-emerald-400 font-bold" : "text-violet-400"}>{progress.toFixed(0)}% Completado</span>
                                     <span>Meta: Bs. {(goal.targetAmount * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
@@ -199,6 +138,134 @@ export default function SavingsGoalsWidget({ bcvRate }: { bcvRate: number }) {
                     })
                 )}
             </div>
+
+            {/* Modal for Creating Goal */}
+            <Modal
+                isOpen={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                title="Nueva Meta de Ahorro"
+            >
+                <form onSubmit={handleCreateGoal} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-1">Nombre de la meta</label>
+                        <input
+                            type="text"
+                            required
+                            value={newGoalName}
+                            onChange={(e) => setNewGoalName(e.target.value)}
+                            placeholder="Ej. Viaje, Auto nuevo..."
+                            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-500/50 transition-colors"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-1">Monto Objetivo ($)</label>
+                        <input
+                            type="number"
+                            required
+                            min="1"
+                            step="0.01"
+                            value={newGoalTarget}
+                            onChange={(e) => setNewGoalTarget(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-500/50 transition-colors"
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-3 mt-6">
+                        <button
+                            type="button"
+                            onClick={() => setShowAddModal(false)}
+                            className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+                        >
+                            Crear Meta
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Modal for Adding Progress */}
+            <Modal
+                isOpen={!!showProgressModal}
+                onClose={() => {
+                    setShowProgressModal(null);
+                    setProgressAmount("");
+                }}
+                title={`Ahorrar para ${showProgressModal?.name}`}
+            >
+                <form onSubmit={confirmAddProgress} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Monto a agregar ($)</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            required
+                            value={progressAmount}
+                            onChange={(e) => setProgressAmount(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500/50"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Origen del dinero</label>
+                        <div className="grid grid-cols-2 gap-2">
+                            <label className={`cursor-pointer border rounded-lg p-3 flex flex-col items-center gap-1 transition-colors ${progressMethod === 'physical' ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-700/50 bg-slate-800/30'}`}>
+                                <input
+                                    type="radio"
+                                    className="hidden"
+                                    checked={progressMethod === 'physical'}
+                                    onChange={() => setProgressMethod('physical')}
+                                />
+                                <span className={`text-sm font-bold ${progressMethod === 'physical' ? 'text-emerald-400' : 'text-slate-400'}`}>Efectivo</span>
+                            </label>
+                            <label className={`cursor-pointer border rounded-lg p-3 flex flex-col items-center gap-1 transition-colors ${progressMethod === 'usdt' ? 'border-teal-500 bg-teal-500/10' : 'border-slate-700/50 bg-slate-800/30'}`}>
+                                <input
+                                    type="radio"
+                                    className="hidden"
+                                    checked={progressMethod === 'usdt'}
+                                    onChange={() => setProgressMethod('usdt')}
+                                />
+                                <span className={`text-sm font-bold ${progressMethod === 'usdt' ? 'text-teal-400' : 'text-slate-400'}`}>USDT</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6 pt-2 border-t border-slate-700/50">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowProgressModal(null);
+                                setProgressAmount("");
+                            }}
+                            className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+                        >
+                            Registrar
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Confirm Delete Form */}
+            <ConfirmDialog
+                isOpen={!!showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(null)}
+                onConfirm={confirmDelete}
+                title="¿Borrar Meta?"
+                message="No podrás revertir esto. Se eliminará la meta y su progreso."
+                confirmText="Sí, borrar"
+                type="danger"
+            />
         </div>
     );
 }

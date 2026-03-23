@@ -1,22 +1,35 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useDebts, Debt } from "@/hooks/useDebts";
 import { FiPlus, FiTrash2, FiCheckCircle, FiDollarSign, FiUser, FiInfo, FiArrowUpRight, FiArrowDownLeft, FiClock, FiSearch, FiEdit2 } from "react-icons/fi";
 import PaginationControls from "@/components/ui/PaginationControls";
-import Swal from "sweetalert2";
+import { toast } from "sonner";
+import Modal from "@/components/ui/Modal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { getBCVRate } from "@/lib/currency";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { motion } from "framer-motion";
 
 export default function DebtsPage() {
+    const router = useRouter();
     const { debts, loadingDebts, addDebt, deleteDebt, updateDebt, addPayment } = useDebts();
     const [bcvRate, setBcvRate] = useState(0);
     const [activeTab, setActiveTab] = useState<"por_cobrar" | "por_pagar">("por_cobrar");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
+    // Debt Modal
+
+    // Payment Modal
+    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+
+    // Confirm Delete
+    const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate use: reset pagination on filter change
@@ -44,518 +57,33 @@ export default function DebtsPage() {
     const totalReceivable = debts.filter(d => d.type === "por_cobrar").reduce((acc, d) => acc + (d.amount - d.payments.reduce((pAcc, p) => pAcc + p.amount, 0)), 0);
     const totalPayable = debts.filter(d => d.type === "por_pagar").reduce((acc, d) => acc + (d.amount - d.payments.reduce((pAcc, p) => pAcc + p.amount, 0)), 0);
 
-    const handleAddDebt = async () => {
-        const { value: formValues } = await Swal.fire({
-            title: activeTab === "por_cobrar" ? 'Nueva Deuda a mi favor' : 'Nueva Deuda a pagar',
-            html: `
-                <div class="flex flex-col gap-4 text-left">
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold uppercase block mb-1">
-                            ${activeTab === "por_cobrar" ? 'Deudor (¿Quién me debe?)' : 'Acreedor (¿A quién le debo?)'}
-                        </label>
-                        <input id="swal-person" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none transition-colors" placeholder="Nombre de la persona">
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold uppercase block mb-1">Monto</label>
-                        <div class="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-xl p-1.5 focus-within:border-emerald-500 transition-colors">
-                            <input id="swal-amount" type="number" step="0.01" class="w-full bg-transparent border-none text-white text-lg px-2 focus:ring-0 focus:outline-none placeholder-slate-600" placeholder="0.00">
-                            <div class="flex bg-slate-700/50 rounded-lg p-1 shrink-0 gap-1">
-                                <button type="button" id="btn-usd" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white shadow-lg transition-all">USD</button>
-                                <button type="button" id="btn-bs" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-600 transition-all">Bs</button>
-                            </div>
-                        </div>
-                        <div id="conversion-text" class="text-right text-xs text-slate-500 mt-2 font-mono">≈ Bs. 0.00</div>
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold uppercase block mb-1">Fecha Límite (Opcional)</label>
-                        <input id="swal-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white focus:border-emerald-500 focus:outline-none transition-colors">
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold uppercase block mb-1">Nota / Descripción</label>
-                        <input id="swal-desc" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none transition-colors" placeholder="Ej: Préstamo personal">
-                    </div>
-                </div>
-            `,
-            focusConfirm: false,
-            background: "#1f2937",
-            color: "#fff",
-            showCancelButton: true,
-            confirmButtonText: 'Guardar',
-            confirmButtonColor: '#10b981',
-            cancelButtonText: 'Cancelar',
-            cancelButtonColor: '#374151',
-            customClass: {
-                popup: 'rounded-3xl border border-slate-700 shadow-2xl',
-                input: 'text-white'
-            },
-            didOpen: () => {
-                const inputAmount = document.getElementById('swal-amount') as HTMLInputElement;
-                const btnUsd = document.getElementById('btn-usd') as HTMLButtonElement;
-                const btnBs = document.getElementById('btn-bs') as HTMLButtonElement;
-                const conversionText = document.getElementById('conversion-text') as HTMLDivElement;
-
-                let isUsd = true;
-
-                const updateConversion = () => {
-                    const val = parseFloat(inputAmount.value);
-                    if (isNaN(val) || bcvRate <= 0) {
-                        conversionText.innerText = '≈ 0.00';
-                        return;
-                    }
-
-                    if (isUsd) {
-                        const bsVal = val * bcvRate;
-                        conversionText.innerText = `≈ Bs. ${bsVal.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-                    } else {
-                        const usdVal = val / bcvRate;
-                        conversionText.innerText = `≈ $${usdVal.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-                    }
-                };
-
-                const setMode = (mode: 'USD' | 'Bs') => {
-                    if (mode === 'USD') {
-                        isUsd = true;
-                        btnUsd.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white shadow-lg transition-all";
-                        btnBs.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-600 transition-all";
-
-                        // Convert currently displayed value from Bs to USD
-                        const currentVal = parseFloat(inputAmount.value);
-                        if (!isNaN(currentVal) && bcvRate > 0) {
-                            inputAmount.value = (currentVal / bcvRate).toFixed(2);
-                        }
-                    } else {
-                        isUsd = false;
-                        btnBs.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white shadow-lg transition-all";
-                        btnUsd.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-600 transition-all";
-
-                        // Convert currently displayed value from USD to Bs
-                        const currentVal = parseFloat(inputAmount.value);
-                        if (!isNaN(currentVal) && bcvRate > 0) {
-                            inputAmount.value = (currentVal * bcvRate).toFixed(2);
-                        }
-                    }
-                    updateConversion();
-                };
-
-                btnUsd.addEventListener('click', () => setMode('USD'));
-                btnBs.addEventListener('click', () => setMode('Bs'));
-                inputAmount.addEventListener('input', updateConversion);
-            },
-            preConfirm: () => {
-                const person = (document.getElementById('swal-person') as HTMLInputElement).value;
-                const amountVal = parseFloat((document.getElementById('swal-amount') as HTMLInputElement).value);
-                const date = (document.getElementById('swal-date') as HTMLInputElement).value;
-                const desc = (document.getElementById('swal-desc') as HTMLInputElement).value;
-                const btnUsd = document.getElementById('btn-usd') as HTMLButtonElement;
-
-                const isUsd = btnUsd.classList.contains('bg-emerald-500');
-
-                let finalAmount = amountVal;
-                if (!isUsd && bcvRate > 0) {
-                    finalAmount = amountVal / bcvRate;
-                }
-
-                return [person, finalAmount, date, desc];
-            }
-        });
-
-        if (formValues) {
-            const [person, amount, date, desc] = formValues;
-
-            if (!person || !amount) {
-                Swal.fire({ icon: 'error', title: 'Faltan datos', text: 'Nombre y monto son obligatorios.', background: "#1f2937", color: "#fff" });
-                return;
-            }
-
-            const debtAmount = parseFloat(amount);
-
-            await addDebt({
-                personName: person,
-                amount: debtAmount,
-                type: activeTab,
-                description: desc,
-                dueDate: date ? new Date(date) : undefined,
-            });
-
-            Swal.fire({
-                icon: "success",
-                title: "Registrado",
-                text: "Se ha registrado la deuda exitosamente.",
-                timer: 2000,
-                showConfirmButton: false,
-                background: "#1f2937",
-                color: "#fff",
-            });
-        }
+    const handleAddDebtClick = () => {
+        router.push("/dashboard/deudas/nueva");
     };
 
-    const handleAddPayment = async (debt: Debt) => {
-        const totalPaid = debt.payments.reduce((a, b) => a + b.amount, 0);
-        const remaining = debt.amount - totalPaid;
-
-        const { value: formValues } = await Swal.fire({
-            title: 'Registrar Abono',
-            html: `
-                <div class="text-left mb-4 text-sm text-slate-400 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                    <div class="flex justify-between items-center mb-1">
-                        <span>Total deuda:</span>
-                        <span class="text-white font-bold">$${debt.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span>Restante:</span>
-                        <div>
-                            <span class="text-emerald-400 font-bold text-lg">$${remaining.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
-                            <span class="text-xs text-slate-500 ml-1">(${remaining * bcvRate > 0 ? '≈ Bs. ' + (remaining * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : ''})</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-4 text-left">
-                     <div>
-                        <label class="text-xs text-slate-400 font-bold uppercase block mb-1">Monto del Abono</label>
-                        <div class="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-xl p-1.5 focus-within:border-emerald-500 transition-colors">
-                             <input id="swal-payment-amount" type="number" step="0.01" max="${remaining}" class="w-full bg-transparent border-none text-white text-lg px-2 focus:ring-0 focus:outline-none placeholder-slate-600" placeholder="0.00">
-                            <div class="flex bg-slate-700/50 rounded-lg p-1 shrink-0 gap-1">
-                                <button type="button" id="btn-pay-usd" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white shadow-lg transition-all">USD</button>
-                                <button type="button" id="btn-pay-bs" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-600 transition-all">Bs</button>
-                            </div>
-                        </div>
-                        <div id="payment-conversion-text" class="text-right text-xs text-slate-500 mt-2 font-mono">≈ Bs. 0.00</div>
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold uppercase block mb-1">Fecha del Pago</label>
-                        <input id="swal-payment-date" type="date" value="${new Date().toISOString().split('T')[0]}" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white focus:border-emerald-500 focus:outline-none transition-colors">
-                    </div>
-
-                    <div class="mt-2 border-t border-slate-700 pt-4">
-                        <p class="text-xs font-bold text-slate-400 mb-2 uppercase">Últimos Pagos</p>
-                        <div class="space-y-2">
-                        ${debt.payments.length > 0 ?
-                    debt.payments.slice(-3).reverse().map(p =>
-                        `<div class="flex justify-between items-center bg-slate-800/30 p-2 rounded-lg text-xs text-slate-300">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                        <span>${new Date(p.date).toLocaleDateString()}</span>
-                                    </div>
-                                    <span class="font-bold text-white">$${p.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
-                                 </div>`
-                    ).join('')
-                    : '<p class="text-xs text-slate-500 italic text-center py-2">No hay pagos registrados</p>'
-                }
-                        </div>
-                    </div>
-                </div>
-            `,
-            focusConfirm: false,
-            background: "#1f2937",
-            color: "#fff",
-            showCancelButton: true,
-            confirmButtonText: 'Registrar Pago',
-            confirmButtonColor: '#10b981',
-            cancelButtonText: 'Cancelar',
-            cancelButtonColor: '#374151',
-            customClass: {
-                popup: 'rounded-3xl border border-slate-700 shadow-2xl',
-                input: 'text-white'
-            },
-            didOpen: () => {
-                const inputAmount = document.getElementById('swal-payment-amount') as HTMLInputElement;
-                const btnUsd = document.getElementById('btn-pay-usd') as HTMLButtonElement;
-                const btnBs = document.getElementById('btn-pay-bs') as HTMLButtonElement;
-                const conversionText = document.getElementById('payment-conversion-text') as HTMLDivElement;
-
-                let isUsd = true;
-
-                const updateConversion = () => {
-                    const val = parseFloat(inputAmount.value);
-                    if (isNaN(val) || bcvRate <= 0) {
-                        conversionText.innerText = '≈ 0.00';
-                        return;
-                    }
-
-                    if (isUsd) {
-                        const bsVal = val * bcvRate;
-                        conversionText.innerText = `≈ Bs. ${bsVal.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-                    } else {
-                        const usdVal = val / bcvRate;
-                        conversionText.innerText = `≈ $${usdVal.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-                    }
-                };
-
-                const setMode = (mode: 'USD' | 'Bs') => {
-                    if (mode === 'USD') {
-                        isUsd = true;
-                        btnUsd.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white shadow-lg transition-all";
-                        btnBs.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-600 transition-all";
-
-                        // Convert value in input from BS to USD
-                        const currentVal = parseFloat(inputAmount.value);
-                        if (!isNaN(currentVal) && bcvRate > 0) {
-                            inputAmount.value = (currentVal / bcvRate).toFixed(2);
-                        }
-                    } else {
-                        isUsd = false;
-                        btnBs.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white shadow-lg transition-all";
-                        btnUsd.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-600 transition-all";
-
-                        // Convert value in input from USD to BS
-                        const currentVal = parseFloat(inputAmount.value);
-                        if (!isNaN(currentVal) && bcvRate > 0) {
-                            inputAmount.value = (currentVal * bcvRate).toFixed(2);
-                        }
-                    }
-                    updateConversion();
-                };
-
-                btnUsd.addEventListener('click', () => setMode('USD'));
-                btnBs.addEventListener('click', () => setMode('Bs'));
-                inputAmount.addEventListener('input', updateConversion);
-            },
-            preConfirm: () => {
-                const amountVal = parseFloat((document.getElementById('swal-payment-amount') as HTMLInputElement).value);
-                const date = (document.getElementById('swal-payment-date') as HTMLInputElement).value;
-                const btnUsd = document.getElementById('btn-pay-usd') as HTMLButtonElement;
-
-                const isUsd = btnUsd.classList.contains('bg-emerald-500');
-
-                let finalAmount = amountVal;
-                if (!isUsd && bcvRate > 0) {
-                    finalAmount = amountVal / bcvRate;
-                }
-
-                return [finalAmount.toString(), date, isUsd.toString(), amountVal.toString()];
-            }
-        });
-
-        if (formValues) {
-            const [amountStr, dateStr, isUsdStr, rawAmountStr] = formValues;
-            const amount = parseFloat(amountStr);
-            const isUsd = isUsdStr === 'true';
-            const rawAmount = parseFloat(rawAmountStr);
-
-            if (!amount || amount <= 0) {
-                Swal.fire({ icon: 'error', title: 'Monto inválido', background: "#1f2937", color: "#fff" });
-                return;
-            }
-            if (amount > remaining + 0.01) { // small epsilon for float precision
-                Swal.fire({ icon: 'error', title: 'El monto excede la deuda restante', background: "#1f2937", color: "#fff" });
-                return;
-            }
-
-            await addPayment(debt.id, {
-                amount: amount,
-                date: new Date(dateStr),
-                currency: isUsd ? 'USD' : 'VES',
-                originalAmount: isUsd ? amount : rawAmount,
-                exchangeRate: isUsd ? 1 : bcvRate
-            });
-
-            // Create Transaction Record
-            try {
-                if (auth.currentUser) {
-                    await addDoc(collection(db, "transactions"), {
-                        userId: auth.currentUser.uid,
-                        amount: amount,
-                        type: debt.type === 'por_cobrar' ? 'ingreso' : 'gasto',
-                        category: 'Deudas',
-                        description: `Abono: ${debt.personName} (${debt.description || 'Deuda'})`,
-                        date: Timestamp.fromDate(new Date(dateStr)),
-                        currency: isUsd ? "USD" : "VES",
-                        originalAmount: isUsd ? amount : rawAmount,
-                        exchangeRate: isUsd ? 1 : bcvRate,
-                    });
-                }
-            } catch (error) {
-                console.error("Error creating transaction for debt payment:", error);
-                // We don't stop the flow here, as the debt update was successful, but we log it.
-            }
-
-            Swal.fire({
-                icon: "success",
-                title: "Abono registrado",
-                text: "Se ha actualizado la deuda y registrado el movimiento.",
-                timer: 2000,
-                showConfirmButton: false,
-                background: "#1f2937",
-                color: "#fff",
-            });
-        }
+    const handleEditDebtClick = (debt: Debt) => {
+        router.push(`/dashboard/deudas/${debt.id}/editar`);
     };
 
-    const handleEditDebt = async (debt: Debt) => {
-        const { value: formValues } = await Swal.fire({
-            title: 'Editar Registro',
-            html: `
-                <div class="flex flex-col gap-4 text-left">
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold uppercase block mb-1">
-                            ${debt.type === "por_cobrar" ? 'Deudor (¿Quién me debe?)' : 'Acreedor (¿A quién le debo?)'}
-                        </label>
-                        <input id="swal-person" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none transition-colors" placeholder="Nombre de la persona" value="${debt.personName}">
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold uppercase block mb-1">Monto</label>
-                        <div class="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-xl p-1.5 focus-within:border-emerald-500 transition-colors">
-                            <input id="swal-amount" type="number" step="0.01" class="w-full bg-transparent border-none text-white text-lg px-2 focus:ring-0 focus:outline-none placeholder-slate-600" placeholder="0.00" value="${debt.amount}">
-                            <div class="flex bg-slate-700/50 rounded-lg p-1 shrink-0 gap-1">
-                                <button type="button" id="btn-usd" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white shadow-lg transition-all">USD</button>
-                                <button type="button" id="btn-bs" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-600 transition-all">Bs</button>
-                            </div>
-                        </div>
-                        <div id="conversion-text" class="text-right text-xs text-slate-500 mt-2 font-mono">≈ Bs. 0.00</div>
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold uppercase block mb-1">Fecha Límite (Opcional)</label>
-                        <input id="swal-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white focus:border-emerald-500 focus:outline-none transition-colors" value="${debt.dueDate ? new Date(debt.dueDate).toISOString().split('T')[0] : ''}">
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold uppercase block mb-1">Nota / Descripción</label>
-                        <input id="swal-desc" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none transition-colors" placeholder="Ej: Préstamo personal" value="${debt.description || ''}">
-                    </div>
-                </div>
-            `,
-            focusConfirm: false,
-            background: "#1f2937",
-            color: "#fff",
-            showCancelButton: true,
-            confirmButtonText: 'Actualizar',
-            confirmButtonColor: '#10b981',
-            cancelButtonText: 'Cancelar',
-            cancelButtonColor: '#374151',
-            customClass: {
-                popup: 'rounded-3xl border border-slate-700 shadow-2xl',
-                input: 'text-white'
-            },
-            didOpen: () => {
-                const inputAmount = document.getElementById('swal-amount') as HTMLInputElement;
-                const btnUsd = document.getElementById('btn-usd') as HTMLButtonElement;
-                const btnBs = document.getElementById('btn-bs') as HTMLButtonElement;
-                const conversionText = document.getElementById('conversion-text') as HTMLDivElement;
-
-                let isUsd = true;
-
-                const updateConversion = () => {
-                    const val = parseFloat(inputAmount.value);
-                    if (isNaN(val) || bcvRate <= 0) {
-                        conversionText.innerText = '≈ 0.00';
-                        return;
-                    }
-
-                    if (isUsd) {
-                        const bsVal = val * bcvRate;
-                        conversionText.innerText = `≈ Bs. ${bsVal.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-                    } else {
-                        const usdVal = val / bcvRate;
-                        conversionText.innerText = `≈ $${usdVal.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-                    }
-                };
-
-                const setMode = (mode: 'USD' | 'Bs') => {
-                    if (mode === 'USD') {
-                        isUsd = true;
-                        btnUsd.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white shadow-lg transition-all";
-                        btnBs.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-600 transition-all";
-
-                        // Convert currently displayed value from Bs to USD
-                        const currentVal = parseFloat(inputAmount.value);
-                        if (!isNaN(currentVal) && bcvRate > 0) {
-                            inputAmount.value = (currentVal / bcvRate).toFixed(2);
-                        }
-                    } else {
-                        isUsd = false;
-                        btnBs.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white shadow-lg transition-all";
-                        btnUsd.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-600 transition-all";
-
-                        // Convert currently displayed value from USD to Bs
-                        const currentVal = parseFloat(inputAmount.value);
-                        if (!isNaN(currentVal) && bcvRate > 0) {
-                            inputAmount.value = (currentVal * bcvRate).toFixed(2);
-                        }
-                    }
-                    updateConversion();
-                };
-
-                btnUsd.addEventListener('click', () => setMode('USD'));
-                btnBs.addEventListener('click', () => setMode('Bs'));
-                inputAmount.addEventListener('input', updateConversion);
-                updateConversion(); // Initial call
-            },
-            preConfirm: () => {
-                const person = (document.getElementById('swal-person') as HTMLInputElement).value;
-                const amountVal = parseFloat((document.getElementById('swal-amount') as HTMLInputElement).value);
-                const date = (document.getElementById('swal-date') as HTMLInputElement).value;
-                const desc = (document.getElementById('swal-desc') as HTMLInputElement).value;
-                const btnUsd = document.getElementById('btn-usd') as HTMLButtonElement;
-
-                const isUsd = btnUsd.classList.contains('bg-emerald-500');
-
-                let finalAmount = amountVal;
-                if (!isUsd && bcvRate > 0) {
-                    finalAmount = amountVal / bcvRate;
-                }
-
-                return [person, finalAmount, date, desc];
-            }
-        });
-
-        if (formValues) {
-            const [person, amount, date, desc] = formValues;
-
-            if (!person || !amount) {
-                Swal.fire({ icon: 'error', title: 'Faltan datos', text: 'Nombre y monto son obligatorios.', background: "#1f2937", color: "#fff" });
-                return;
-            }
-
-            await updateDebt(debt.id, {
-                personName: person,
-                amount: parseFloat(amount),
-                description: desc,
-                dueDate: date ? new Date(date) : undefined,
-            });
-
-            Swal.fire({
-                icon: "success",
-                title: "Actualizado",
-                text: "Se ha actualizado el registro exitosamente.",
-                timer: 2000,
-                showConfirmButton: false,
-                background: "#1f2937",
-                color: "#fff",
-            });
-        }
+    const handleAddPaymentClick = (debt: Debt) => {
+        router.push(`/dashboard/deudas/${debt.id}/pagar`);
     };
 
-    const handleDelete = async (id: string) => {
-        Swal.fire({
-            title: '¿Eliminar registro?',
-            text: "Se borrará todo el historial de pagos de esta deuda.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#374151',
-            confirmButtonText: 'Sí, borrar',
-            background: "#1f2937",
-            color: "#fff"
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                await deleteDebt(id);
-                Swal.fire({
-                    title: 'Borrado!',
-                    icon: 'success',
-                    background: "#1f2937",
-                    color: "#fff",
-                    timer: 1500,
-                    showConfirmButton: false
-                })
-            }
-        })
+    const handleDeleteClick = (id: string) => {
+        setDeletingId(id);
+        setShowConfirmDelete(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deletingId) return;
+        try {
+            await deleteDebt(deletingId);
+            toast.success('Borrado!');
+        } catch (err) {
+            toast.error('Error al borrar');
+        } finally {
+            setShowConfirmDelete(false);
+        }
     };
 
     // Animation Variants
@@ -586,7 +114,7 @@ export default function DebtsPage() {
     if (loadingDebts) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
-                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -633,12 +161,12 @@ export default function DebtsPage() {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setActiveTab('por_pagar')}
                         className={`flex-none w-40 p-4 rounded-2xl border transition-all relative overflow-hidden ${activeTab === 'por_pagar'
-                            ? 'bg-rose-500/10 border-rose-500/50 shadow-lg shadow-rose-500/10'
+                            ? 'bg-red-500/10 border-red-500/50 shadow-lg shadow-red-500/10'
                             : 'bg-slate-900/50 border-slate-700/50'
                             }`}
                     >
                         <div className="flex flex-col h-full justify-between relative z-10">
-                            <div className={`p-2 rounded-full w-fit ${activeTab === 'por_pagar' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-400'}`}>
+                            <div className={`p-2 rounded-full w-fit ${activeTab === 'por_pagar' ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}>
                                 <FiArrowDownLeft size={18} />
                             </div>
                             <div>
@@ -652,12 +180,14 @@ export default function DebtsPage() {
                 {/* Mobile Actions: Add Button */}
                 <motion.div variants={itemVariants} className="px-1">
                     <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleAddDebt}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold text-white shadow-lg shadow-emerald-500/20"
+                        whileHover={{ scale: 1.01, translateY: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleAddDebtClick}
+                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl font-bold text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 transition-all relative overflow-hidden group"
                     >
-                        <FiPlus className="text-xl" />
-                        <span>Nuevo Registro</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        <FiPlus className="text-xl relative z-10" />
+                        <span className="relative z-10 tracking-wide text-shadow-sm">Nuevo Registro</span>
                     </motion.button>
                 </motion.div>
 
@@ -701,7 +231,7 @@ export default function DebtsPage() {
 
                                         <div className="flex justify-between items-start mb-3">
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${debt.type === 'por_cobrar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${debt.type === 'por_cobrar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                                                     <FiUser />
                                                 </div>
                                                 <div>
@@ -716,7 +246,7 @@ export default function DebtsPage() {
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <span className={`block text-lg font-bold ${remaining > 0 ? (debt.type === 'por_cobrar' ? 'text-emerald-400' : 'text-rose-400') : 'text-slate-400'}`}>
+                                                <span className={`block text-lg font-bold ${remaining > 0 ? (debt.type === 'por_cobrar' ? 'text-emerald-400' : 'text-red-400') : 'text-slate-400'}`}>
                                                     ${remaining.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                 </span>
                                                 <span className="text-[10px] text-slate-500">
@@ -728,7 +258,7 @@ export default function DebtsPage() {
                                         {/* Progress Bar Compact */}
                                         <div className="h-1.5 w-full bg-slate-700/50 rounded-full mb-3 overflow-hidden">
                                             <div
-                                                className={`h-full rounded-full ${isFullyPaid ? 'bg-emerald-500' : (debt.type === 'por_cobrar' ? 'bg-emerald-500' : 'bg-rose-500')}`}
+                                                className={`h-full rounded-full ${isFullyPaid ? 'bg-emerald-500' : (debt.type === 'por_cobrar' ? 'bg-emerald-500' : 'bg-red-500')}`}
                                                 style={{ width: `${Math.min(progress, 100)}%` }}
                                             />
                                         </div>
@@ -738,7 +268,7 @@ export default function DebtsPage() {
                                             {!isFullyPaid && (
                                                 <motion.button
                                                     whileTap={{ scale: 0.95 }}
-                                                    onClick={() => handleAddPayment(debt)}
+                                                    onClick={() => handleAddPaymentClick(debt)}
                                                     className="flex-1 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1"
                                                 >
                                                     <FiDollarSign /> Abonar
@@ -746,15 +276,15 @@ export default function DebtsPage() {
                                             )}
                                             <motion.button
                                                 whileTap={{ scale: 0.95 }}
-                                                onClick={() => handleEditDebt(debt)}
+                                                onClick={() => handleEditDebtClick(debt)}
                                                 className="p-1.5 text-slate-400 bg-slate-800 rounded-lg hover:text-white"
                                             >
                                                 <FiEdit2 size={14} />
                                             </motion.button>
                                             <motion.button
                                                 whileTap={{ scale: 0.95 }}
-                                                onClick={() => handleDelete(debt.id)}
-                                                className="p-1.5 text-slate-400 bg-slate-800 rounded-lg hover:text-rose-400"
+                                                onClick={() => handleDeleteClick(debt.id)}
+                                                className="p-1.5 text-slate-400 bg-slate-800 rounded-lg hover:text-red-400"
                                             >
                                                 <FiTrash2 size={14} />
                                             </motion.button>
@@ -794,10 +324,10 @@ export default function DebtsPage() {
                 {/* Header */}
                 <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                     <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                        <FiDollarSign className="text-7xl md:text-9xl text-emerald-400" />
+                        <FiDollarSign className="text-7xl md:text-9xl text-violet-400" />
                     </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-violet-500/10 to-transparent pointer-events-none"></div>
 
                     <div className="relative z-10">
                         <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Deudas y Préstamos</h1>
@@ -824,14 +354,14 @@ export default function DebtsPage() {
                     </div>
 
                     <div
-                        className={`flex-none w-56 md:w-auto p-5 md:p-6 rounded-2xl md:rounded-3xl border transition-all cursor-pointer relative overflow-hidden group ${activeTab === 'por_pagar' ? 'bg-rose-500/10 border-rose-500/50 shadow-lg shadow-rose-500/10' : 'bg-slate-900/50 border-slate-700/50 hover:border-rose-500/30'}`}
+                        className={`flex-none w-56 md:w-auto p-5 md:p-6 rounded-2xl md:rounded-3xl border transition-all cursor-pointer relative overflow-hidden group ${activeTab === 'por_pagar' ? 'bg-red-500/10 border-red-500/50 shadow-lg shadow-red-500/10' : 'bg-slate-900/50 border-slate-700/50 hover:border-red-500/30'}`}
                         onClick={() => setActiveTab('por_pagar')}
                     >
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <FiArrowDownLeft className="text-6xl md:text-8xl text-rose-500" />
+                            <FiArrowDownLeft className="text-6xl md:text-8xl text-red-500" />
                         </div>
                         <div className="relative z-10">
-                            <p className={`text-xs md:text-sm font-bold uppercase tracking-wider mb-1 ${activeTab === 'por_pagar' ? 'text-rose-400' : 'text-slate-400'}`}>Por Pagar</p>
+                            <p className={`text-xs md:text-sm font-bold uppercase tracking-wider mb-1 ${activeTab === 'por_pagar' ? 'text-red-400' : 'text-slate-400'}`}>Por Pagar</p>
                             <h2 className="text-2xl md:text-3xl font-bold text-white">${totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h2>
                             <p className="text-[10px] md:text-xs text-slate-500 mt-1">Dinero que debes</p>
                         </div>
@@ -850,16 +380,20 @@ export default function DebtsPage() {
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl py-2 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder-slate-600 transition-all"
+                            className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl py-2 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-violet-500/50 placeholder-slate-600 transition-all"
                         />
                     </div>
 
-                    <button
-                        onClick={handleAddDebt}
-                        className="flex items-center gap-2 px-6 py-2 bg-white text-slate-900 rounded-xl font-bold hover:bg-slate-200 transition-colors shadow-lg shadow-white/5 w-full md:w-auto justify-center"
+                    <motion.button
+                        whileHover={{ scale: 1.05, translateY: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleAddDebtClick}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold hover:from-violet-500 hover:to-indigo-500 transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 w-full md:w-auto justify-center relative overflow-hidden group"
                     >
-                        <FiPlus /> Nuevo Registro
-                    </button>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        <FiPlus className="relative z-10" /> 
+                        <span className="relative z-10 tracking-wide text-shadow-sm">Nuevo Registro</span>
+                    </motion.button>
                 </div>
 
                 {/* List */}
@@ -892,7 +426,7 @@ export default function DebtsPage() {
                                 )}
 
                                 <div className="flex items-start gap-4 mb-4">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${debt.type === 'por_cobrar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${debt.type === 'por_cobrar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                                         <FiUser />
                                     </div>
                                     <div>
@@ -965,21 +499,21 @@ export default function DebtsPage() {
                                 <div className="flex gap-2 mt-auto">
                                     {!isFullyPaid && (
                                         <button
-                                            onClick={() => handleAddPayment(debt)}
-                                            className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-emerald-500/20"
+                                            onClick={() => handleAddPaymentClick(debt)}
+                                            className="flex-1 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                                         >
                                             Registrar Abono
                                         </button>
                                     )}
                                     <button
-                                        onClick={() => handleEditDebt(debt)}
+                                        onClick={() => handleEditDebtClick(debt)}
                                         className="p-2 text-slate-500 hover:text-emerald-400 transition-colors bg-slate-800 hover:bg-slate-700 rounded-xl"
                                         title="Editar"
                                     >
                                         <FiEdit2 />
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(debt.id)}
+                                        onClick={() => handleDeleteClick(debt.id)}
                                         className="p-2 text-slate-500 hover:text-red-400 transition-colors bg-slate-800 hover:bg-slate-700 rounded-xl"
                                         title="Eliminar"
                                     >

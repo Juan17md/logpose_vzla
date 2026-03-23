@@ -1,20 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Bungee } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+const bungee = Bungee({ variable: "--font-bungee", weight: "400", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Control de Gastos",
+  title: "LogPose Vzla",
   description: "Tu sistema financiero personal premium.",
 };
 
@@ -26,11 +19,11 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${bungee.variable} antialiased`}
         suppressHydrationWarning
       >
         {children}
-        <Toaster position="top-right" theme="dark" richColors closeButton />
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

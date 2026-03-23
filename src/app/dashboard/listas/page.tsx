@@ -2,20 +2,28 @@
 
 // Shopping Lists Page - Redesigned
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import ShoppingItemForm from "@/components/forms/ShoppingItemForm";
 import { useShoppingLists, ShoppingList, ShoppingItem } from "@/hooks/useShoppingLists";
 import { FiShoppingCart, FiPlus, FiTrash2, FiSquare, FiList, FiMinus, FiSearch, FiEdit2, FiCopy, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
 import PaginationControls from "@/components/ui/PaginationControls";
-import Swal from "sweetalert2";
+import { toast } from "sonner";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { getBCVRate } from "@/lib/currency";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ShoppingListsPage() {
+    const router = useRouter();
     const { lists, loading, createList, deleteList, addItem, toggleItem, deleteItem, updateItemProgress, updateListName, duplicateList, updateItem } = useShoppingLists();
     const [selectedList, setSelectedList] = useState<ShoppingList | null>(null);
     const [bcvRate, setBcvRate] = useState(0);
     const [filterText, setFilterText] = useState("");
     const [itemFilterText, setItemFilterText] = useState("");
     const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az" | "za">("newest");
+    const [confirmConfig, setConfirmConfig] = useState<{ type: "duplicate" | "delete" | null, listId: string }>({ type: null, listId: "" });
+    const [showItemForm, setShowItemForm] = useState(false);
+    const [isEditingItem, setIsEditingItem] = useState(false);
+    const [editingItemId, setEditingItemId] = useState<string | null>(null);
     const detailRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -30,178 +38,65 @@ export default function ShoppingListsPage() {
         }
     }, [selectedList]);
 
-    const handleCreateList = async () => {
-        const { value: name } = await Swal.fire({
-            title: 'Nueva Lista de Compras',
-            input: 'text',
-            inputPlaceholder: 'Ej: Supermercado Mensual',
-            showCancelButton: true,
-            background: "#1f2937",
-            color: "#fff",
-            confirmButtonText: 'Crear',
-            confirmButtonColor: '#10b981',
-            inputValidator: (value) => {
-                if (!value) return 'Necesitas escribir un nombre';
-            }
-        });
+    const handleAddListClick = () => {
+        router.push("/dashboard/listas/nueva");
+    };
 
-        if (name) {
-            await createList(name);
-            Swal.fire({
-                icon: "success",
-                title: "Lista creada",
-                timer: 1000,
-                showConfirmButton: false,
-                background: "#1f2937",
-                color: "#fff",
-            });
+    const handleEditListNameClick = () => {
+        if (!selectedList) return;
+        router.push(`/dashboard/listas/${selectedList.id}/editar`);
+    };
+
+    const handleAddItemClick = () => {
+        setIsEditingItem(false);
+        setEditingItemId(null);
+        setShowItemForm(true);
+    };
+
+    const handleEditItemClick = (item: ShoppingItem) => {
+        setIsEditingItem(true);
+        setEditingItemId(item.id);
+        setShowItemForm(false);
+    };
+
+    const handleItemSubmit = async (data: any) => {
+        if (!selectedList) return;
+        
+        try {
+            if (isEditingItem && editingItemId) {
+                await updateItem(selectedList.id, selectedList.items, editingItemId, {
+                    name: data.name,
+                    quantity: data.quantity,
+                    price: data.price
+                });
+                toast.success("Artículo actualizado");
+                setEditingItemId(null);
+                setIsEditingItem(false);
+            } else {
+                await addItem(selectedList.id, {
+                    name: data.name,
+                    quantity: data.quantity,
+                    price: data.price
+                });
+                toast.success("Artículo agregado a la lista");
+                setShowItemForm(false); 
+            }
+        } catch (error) {
+            toast.error("Error al procesar el artículo");
         }
     };
 
-    const handleEditListName = async () => {
-        if (!selectedList) return;
-
-        const { value: name } = await Swal.fire({
-            title: 'Editar nombre de la lista',
-            input: 'text',
-            inputValue: selectedList.name,
-            inputPlaceholder: 'Nuevo nombre',
-            showCancelButton: true,
-            background: "#1f2937",
-            color: "#fff",
-            confirmButtonText: 'Guardar',
-            confirmButtonColor: '#10b981',
-            inputValidator: (value) => {
-                if (!value) return 'Necesitas escribir un nombre';
-            }
-        });
-
-        if (name) {
-            await updateListName(selectedList.id, name);
-            Swal.fire({
-                icon: "success",
-                title: "Nombre actualizado",
-                timer: 1000,
-                showConfirmButton: false,
-                background: "#1f2937",
-                color: "#fff",
-            });
+    const executeConfirm = async () => {
+        if (!confirmConfig.type || !confirmConfig.listId) return;
+        if (confirmConfig.type === "duplicate") {
+            await duplicateList(confirmConfig.listId);
+            toast.success("Lista duplicada");
+        } else if (confirmConfig.type === "delete") {
+            if (selectedList?.id === confirmConfig.listId) setSelectedList(null);
+            await deleteList(confirmConfig.listId);
+            toast.success("Lista eliminada");
         }
-    };
-
-    const handleAddItem = async () => {
-        if (!selectedList) return;
-
-        const { value: formValues } = await Swal.fire({
-            title: 'Agregar Producto',
-            html:
-                '<div class="flex flex-col gap-3">' +
-                '<input id="swal-input1" class="swal2-input m-0 w-full" placeholder="Nombre (ej: Arroz)">' +
-                '<input id="swal-input2" class="swal2-input m-0 w-full" type="number" placeholder="Cantidad">' +
-                '<input id="swal-input3" class="swal2-input m-0 w-full" type="number" step="0.01" placeholder="Precio Unitario ($)">' +
-                `<div id="bs-reference" class="text-emerald-400 font-bold text-sm text-right">≈ Bs. 0.00</div>` +
-                '</div>',
-            focusConfirm: false,
-            background: "#1f2937",
-            color: "#fff",
-            showCancelButton: true,
-            confirmButtonText: 'Agregar',
-            confirmButtonColor: '#10b981',
-            didOpen: () => {
-                const priceInput = Swal.getPopup()?.querySelector('#swal-input3') as HTMLInputElement;
-                const bsRef = Swal.getPopup()?.querySelector('#bs-reference');
-
-                if (priceInput && bsRef) {
-                    priceInput.addEventListener('input', () => {
-                        const val = parseFloat(priceInput.value);
-                        if (!isNaN(val)) {
-                            bsRef.textContent = `≈ Bs. ${(val * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 })}`;
-                        } else {
-                            bsRef.textContent = `≈ Bs. 0.00`;
-                        }
-                    })
-                }
-            },
-            preConfirm: () => {
-                return [
-                    (document.getElementById('swal-input1') as HTMLInputElement).value,
-                    (document.getElementById('swal-input2') as HTMLInputElement).value,
-                    (document.getElementById('swal-input3') as HTMLInputElement).value
-                ]
-            }
-        });
-
-        if (formValues) {
-            const [name, qty, price] = formValues;
-            if (!name) return;
-
-            await addItem(selectedList.id, {
-                name,
-                quantity: qty ? parseFloat(qty) : 1,
-                price: price ? parseFloat(price) : 0
-            });
-        }
-    };
-
-    const handleEditItem = async (item: ShoppingItem) => {
-        if (!selectedList) return;
-
-        const { value: formValues } = await Swal.fire({
-            title: 'Editar Producto',
-            html:
-                '<div class="flex flex-col gap-3">' +
-                `<input id="swal-edit-input1" class="swal2-input m-0 w-full" placeholder="Nombre" value="${item.name}">` +
-                `<input id="swal-edit-input2" class="swal2-input m-0 w-full" type="number" placeholder="Cantidad" value="${item.quantity}">` +
-                `<input id="swal-edit-input3" class="swal2-input m-0 w-full" type="number" step="0.01" placeholder="Precio Unitario ($)" value="${item.price > 0 ? item.price : ''}">` +
-                `<div id="bs-reference-edit" class="text-emerald-400 font-bold text-sm text-right">≈ Bs. 0.00</div>` +
-                '</div>',
-            focusConfirm: false,
-            background: "#1f2937",
-            color: "#fff",
-            showCancelButton: true,
-            confirmButtonText: 'Guardar',
-            confirmButtonColor: '#3b82f6',
-            didOpen: () => {
-                const priceInput = Swal.getPopup()?.querySelector('#swal-edit-input3') as HTMLInputElement;
-                const bsRef = Swal.getPopup()?.querySelector('#bs-reference-edit');
-
-                const updateBs = () => {
-                    const val = parseFloat(priceInput.value);
-                    if (!isNaN(val) && bsRef) {
-                        bsRef.textContent = `≈ Bs. ${(val * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 2 })}`;
-                    } else if (bsRef) {
-                        bsRef.textContent = `≈ Bs. 0.00`;
-                    }
-                };
-
-                if (priceInput) {
-                    updateBs(); // Initial update
-                    priceInput.addEventListener('input', updateBs);
-                }
-            },
-            preConfirm: () => {
-                return [
-                    (document.getElementById('swal-edit-input1') as HTMLInputElement).value,
-                    (document.getElementById('swal-edit-input2') as HTMLInputElement).value,
-                    (document.getElementById('swal-edit-input3') as HTMLInputElement).value
-                ]
-            }
-        });
-
-        if (formValues) {
-            const [name, qty, price] = formValues;
-            if (!name) return;
-
-            // Get the current list from the lists array to ensure we have the latest items
-            const currentList = lists.find(l => l.id === selectedList.id);
-            if (!currentList) return;
-
-            await updateItem(selectedList.id, currentList.items, item.id, {
-                name,
-                quantity: qty ? parseFloat(qty) : 1,
-                price: price ? parseFloat(price) : 0
-            });
-        }
+        setConfirmConfig({ type: null, listId: "" });
     };
 
     const calculateTotal = (items: ShoppingItem[]) => {
@@ -262,7 +157,7 @@ export default function ShoppingListsPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
-                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -270,11 +165,11 @@ export default function ShoppingListsPage() {
     return (
         <div className="space-y-8 pb-10">
             {/* Desktop Header */}
-            <div className="hidden md:block bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                    <FiShoppingCart className="text-9xl text-emerald-400" />
+                    <FiShoppingCart className="text-9xl text-amber-400" />
                 </div>
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
+                <div className="absolute top-0 left-0 w-full h-full bg-linear-to-r from-amber-500/10 to-transparent pointer-events-none"></div>
 
                 <div className="relative z-10">
                     <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Listas de Compras</h1>
@@ -299,8 +194,8 @@ export default function ShoppingListsPage() {
                                     <h1 className="text-2xl font-bold text-white tracking-tight">Mis Listas</h1>
                                     <p className="text-slate-500 text-xs text-[10px] uppercase font-bold tracking-widest">{lists.length} Listas creadas</p>
                                 </div>
-                                <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
-                                    <FiList className="text-emerald-500 text-xl" />
+                                <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20">
+                                    <FiList className="text-amber-500 text-xl" />
                                 </div>
                             </div>
 
@@ -325,8 +220,8 @@ export default function ShoppingListsPage() {
                 {/* Lists Sidebar */}
                 <div className={`lg:col-span-1 space-y-6 ${selectedList ? 'hidden lg:block' : 'block'}`}>
                     <button
-                        onClick={handleCreateList}
-                        className="hidden md:flex w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold py-4 px-6 rounded-2xl items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 transform hover:-translate-y-1"
+                        onClick={handleAddListClick}
+                        className="hidden md:flex w-full bg-linear-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-900 font-bold py-4 px-6 rounded-2xl items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/20 transform hover:-translate-y-1"
                     >
                         <FiPlus size={24} /> Nueva Lista
                     </button>
@@ -339,26 +234,26 @@ export default function ShoppingListsPage() {
                                 placeholder="Buscar listas..."
                                 value={filterText}
                                 onChange={(e) => setFilterText(e.target.value)}
-                                className="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 placeholder-slate-600 transition-all"
+                                className="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 placeholder-slate-600 transition-all"
                             />
                         </div>
 
                         <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                             <button
                                 onClick={() => setSortBy("newest")}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-2 ${sortBy === "newest" ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-slate-900/30 text-slate-500 border-slate-800 hover:border-slate-700"}`}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-2 ${sortBy === "newest" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg shadow-amber-500/20" : "bg-slate-900/30 text-slate-500 border-slate-800 hover:border-slate-700"}`}
                             >
                                 Recientes
                             </button>
                             <button
                                 onClick={() => setSortBy("az")}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-2 ${sortBy === "az" ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-slate-900/30 text-slate-500 border-slate-800 hover:border-slate-700"}`}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-2 ${sortBy === "az" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg shadow-amber-500/20" : "bg-slate-900/30 text-slate-500 border-slate-800 hover:border-slate-700"}`}
                             >
                                 A-Z
                             </button>
                             <button
                                 onClick={() => setSortBy("za")}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-2 ${sortBy === "za" ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-slate-900/30 text-slate-500 border-slate-800 hover:border-slate-700"}`}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-2 ${sortBy === "za" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg shadow-amber-500/20" : "bg-slate-900/30 text-slate-500 border-slate-800 hover:border-slate-700"}`}
                             >
                                 Z-A
                             </button>
@@ -385,12 +280,12 @@ export default function ShoppingListsPage() {
                                         transition={{ delay: index * 0.05 }}
                                         onClick={() => setSelectedList(list)}
                                         className={`group relative p-6 rounded-[2rem] border-2 cursor-pointer transition-all flex justify-between items-center overflow-hidden ${selectedList?.id === list.id
-                                            ? "bg-slate-800 border-emerald-500/50 shadow-2xl shadow-emerald-500/5"
+                                            ? "bg-slate-800 border-amber-500/50 shadow-2xl shadow-amber-500/5"
                                             : "bg-slate-900/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/60"
                                             }`}
                                     >
                                         <div className="flex items-center gap-5">
-                                            <div className={`p-4 rounded-2xl transition-all ${selectedList?.id === list.id ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-800 text-slate-500'}`}>
+                                            <div className={`p-4 rounded-2xl transition-all ${selectedList?.id === list.id ? 'bg-amber-500 text-slate-900 shadow-lg' : 'bg-slate-800 text-slate-500'}`}>
                                                 <FiShoppingCart size={24} />
                                             </div>
                                             <div>
@@ -415,40 +310,16 @@ export default function ShoppingListsPage() {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        Swal.fire({
-                                                            title: '¿Duplicar lista?',
-                                                            text: "Se creará una copia vacía.",
-                                                            icon: 'question',
-                                                            showCancelButton: true,
-                                                            confirmButtonText: 'Sí, duplicar',
-                                                            background: "#1f2937",
-                                                            color: "#fff",
-                                                        }).then(async (res) => {
-                                                            if (res.isConfirmed) await duplicateList(list.id);
-                                                        })
+                                                        setConfirmConfig({ type: "duplicate", listId: list.id });
                                                     }}
-                                                    className="p-2.5 text-slate-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-xl transition-all"
+                                                    className="p-2.5 text-slate-500 hover:text-violet-400 hover:bg-violet-400/10 rounded-xl transition-all"
                                                 >
                                                     <FiCopy size={18} />
                                                 </button>
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        Swal.fire({
-                                                            title: '¿Borrar lista?',
-                                                            text: "Esta acción es irreversible.",
-                                                            icon: 'warning',
-                                                            showCancelButton: true,
-                                                            confirmButtonColor: '#ef4444',
-                                                            confirmButtonText: 'Borrar',
-                                                            background: "#1f2937",
-                                                            color: "#fff",
-                                                        }).then((res) => {
-                                                            if (res.isConfirmed) {
-                                                                if (selectedList?.id === list.id) setSelectedList(null);
-                                                                deleteList(list.id);
-                                                            }
-                                                        })
+                                                        setConfirmConfig({ type: "delete", listId: list.id });
                                                     }}
                                                     className="p-2.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all"
                                                 >
@@ -482,7 +353,7 @@ export default function ShoppingListsPage() {
                                 exit={{ opacity: 0, x: 20 }}
                                 className="bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] border-2 border-slate-800 shadow-2xl p-6 md:p-10 min-h-[600px] flex flex-col relative overflow-hidden"
                             >
-                                <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                                <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
                                 {/* Refresh context for reactivity */}
                                 {(() => {
@@ -508,8 +379,8 @@ export default function ShoppingListsPage() {
                                                         <div className="flex items-center gap-4 mb-2">
                                                             <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter">{currentList.name}</h2>
                                                             <button
-                                                                onClick={handleEditListName}
-                                                                className="p-3 bg-slate-800 text-slate-400 hover:text-emerald-400 rounded-2xl transition-all"
+                                                                onClick={handleEditListNameClick}
+                                                                className="p-3 bg-slate-800 text-slate-400 hover:text-amber-400 rounded-2xl transition-all"
                                                             >
                                                                 <FiEdit2 size={20} />
                                                             </button>
@@ -526,8 +397,8 @@ export default function ShoppingListsPage() {
                                                     </div>
 
                                                     <button
-                                                        onClick={handleAddItem}
-                                                        className="hidden md:flex items-center gap-2 px-6 py-4 bg-emerald-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/20"
+                                                        onClick={handleAddItemClick}
+                                                        className="hidden md:flex items-center gap-2 px-6 py-4 bg-amber-500 text-slate-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-amber-400 transition-all shadow-xl shadow-amber-500/20"
                                                     >
                                                         <FiPlus size={20} /> Agregar Item
                                                     </button>
@@ -543,7 +414,7 @@ export default function ShoppingListsPage() {
                                                         <motion.div
                                                             initial={{ width: 0 }}
                                                             animate={{ width: `${progressPercent}%` }}
-                                                            className="h-full bg-gradient-to-r from-emerald-500 to-teal-400"
+                                                            className="h-full bg-linear-to-r from-emerald-500 to-teal-400"
                                                         />
                                                     </div>
                                                 </div>
@@ -556,7 +427,7 @@ export default function ShoppingListsPage() {
                                                     placeholder="Filtrar productos..."
                                                     value={itemFilterText}
                                                     onChange={(e) => setItemFilterText(e.target.value)}
-                                                    className="w-full bg-slate-800/40 border-2 border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-emerald-500/30 placeholder-slate-600 transition-all"
+                                                    className="w-full bg-slate-800/40 border-2 border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-amber-500/30 placeholder-slate-600 transition-all"
                                                 />
                                             </div>
 
@@ -592,7 +463,7 @@ export default function ShoppingListsPage() {
                                                                 <div className="flex items-center gap-4 mb-4">
                                                                     <button
                                                                         onClick={() => toggleItem(currentList.id, currentList.items, item.id)}
-                                                                        className={`p-3 rounded-xl transition-all active:scale-90 ${item.completed ? "bg-emerald-500 text-white" : "bg-slate-800 text-slate-500 hover:text-emerald-400"}`}
+                                                                        className={`p-3 rounded-xl transition-all active:scale-90 ${item.completed ? "bg-emerald-500 text-white" : "bg-slate-800 text-slate-500 hover:text-amber-400"}`}
                                                                     >
                                                                         {item.completed ? <FiCheckCircle size={24} /> : <FiSquare size={24} />}
                                                                     </button>
@@ -624,7 +495,7 @@ export default function ShoppingListsPage() {
                                                                         </div>
                                                                         <button
                                                                             onClick={() => updateItemProgress(currentList.id, currentList.items, item.id, 1)}
-                                                                            className="p-2 text-slate-500 hover:text-emerald-400 transition-colors"
+                                                                            className="p-2 text-slate-500 hover:text-amber-400 transition-colors"
                                                                         >
                                                                             <FiPlus size={16} />
                                                                         </button>
@@ -641,8 +512,8 @@ export default function ShoppingListsPage() {
                                                                 {/* Item actions */}
                                                                 <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-800/30">
                                                                     <button
-                                                                        onClick={() => handleEditItem(item)}
-                                                                        className="p-2 text-slate-600 hover:text-blue-400"
+                                                                        onClick={() => handleEditItemClick(item)}
+                                                                        className="p-2 text-slate-600 hover:text-violet-400"
                                                                     >
                                                                         <FiEdit2 size={16} />
                                                                     </button>
@@ -684,8 +555,8 @@ export default function ShoppingListsPage() {
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={selectedList ? handleAddItem : handleCreateList}
-                className="md:hidden fixed bottom-44 right-6 w-16 h-16 bg-emerald-500 text-white rounded-3xl shadow-2xl shadow-emerald-500/40 flex items-center justify-center z-50 border-4 border-slate-900 transition-colors"
+                onClick={selectedList ? handleAddItemClick : handleAddListClick}
+                className="md:hidden fixed bottom-44 right-6 w-16 h-16 bg-amber-500 text-slate-900 rounded-3xl shadow-2xl shadow-amber-500/40 flex items-center justify-center z-50 border-4 border-slate-900 transition-colors"
             >
                 <FiPlus size={32} />
             </motion.button>

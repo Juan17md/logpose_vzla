@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, increment } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import Swal from "sweetalert2";
 import { FiTarget, FiPlus, FiTrash2, FiX } from "react-icons/fi";
+import { toast } from "sonner";
+import ConfirmDialog from "../ui/ConfirmDialog";
+import Modal from "../ui/Modal";
 
 interface SavingGoal {
     id: string;
@@ -23,6 +25,10 @@ export default function GoalsSection({ userId }: { userId: string }) {
     const [newGoalName, setNewGoalName] = useState("");
     const [newGoalTarget, setNewGoalTarget] = useState("");
     const [newGoalColor] = useState("#10b981");
+
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+    const [showProgressModal, setShowProgressModal] = useState<SavingGoal | null>(null);
+    const [progressAmount, setProgressAmount] = useState("");
 
     useEffect(() => {
         if (!userId) return;
@@ -51,79 +57,45 @@ export default function GoalsSection({ userId }: { userId: string }) {
             setShowAddModal(false);
             setNewGoalName("");
             setNewGoalTarget("");
-            Swal.fire({
-                icon: "success",
-                title: "Meta creada",
-                toast: true,
-                position: "top-end",
-                showConfirmButton: false,
-                timer: 3000,
-                background: "#1f2937",
-                color: "#fff"
-            });
+            toast.success("Meta creada exitosamente");
         } catch (error) {
             console.error(error);
+            toast.error("Error al crear la meta");
         }
     };
 
-    const handleDeleteGoal = async (id: string) => {
-        const result = await Swal.fire({
-            title: '¿Eliminar meta?',
-            text: "Se perderá el progreso registrado.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Sí, eliminar',
-            background: "#1f2937",
-            color: "#fff"
-        });
-
-        if (result.isConfirmed) {
-            await deleteDoc(doc(db, "users", userId, "saving_goals", id));
+    const confirmDelete = async () => {
+        if (!showDeleteConfirm) return;
+        try {
+            await deleteDoc(doc(db, "users", userId, "saving_goals", showDeleteConfirm));
+            toast.success("Meta eliminada");
+        } catch (error) {
+            console.error("Error deleting goal:", error);
+            toast.error("Error al eliminar la meta");
+        } finally {
+            setShowDeleteConfirm(null);
         }
     };
 
-    const handleAddProgress = async (goal: SavingGoal) => {
-        const { value: amount } = await Swal.fire({
-            title: 'Agregar Ahorro',
-            text: `¿Cuánto deseas agregar a "${goal.name}"?`,
-            input: 'number',
-            inputAttributes: {
-                min: '0.01',
-                step: '0.01'
-            },
-            showCancelButton: true,
-            confirmButtonText: 'Agregar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#10b981',
-            cancelButtonColor: '#6b7280',
-            background: "#1f2937",
-            color: "#fff",
-            inputValidator: (value) => {
-                if (!value || parseFloat(value) <= 0) {
-                    return 'Debes ingresar un monto válido';
-                }
-            }
-        });
+    const confirmAddProgress = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!showProgressModal || !progressAmount || parseFloat(progressAmount) <= 0) {
+            toast.error("Ingresa un monto válido");
+            return;
+        }
 
-        if (amount) {
-            const numAmount = parseFloat(amount);
-            const goalRef = doc(db, "users", userId, "saving_goals", goal.id);
+        try {
+            const numAmount = parseFloat(progressAmount);
+            const goalRef = doc(db, "users", userId, "saving_goals", showProgressModal.id);
             await updateDoc(goalRef, {
                 currentAmount: increment(numAmount)
             });
-
-            Swal.fire({
-                icon: "success",
-                title: `¡+$${numAmount} agregados!`,
-                toast: true,
-                position: "top-end",
-                showConfirmButton: false,
-                timer: 3000,
-                background: "#1f2937",
-                color: "#fff"
-            });
+            toast.success(`¡+$${numAmount} agregados!`);
+            setShowProgressModal(null);
+            setProgressAmount("");
+        } catch (error) {
+            console.error(error);
+            toast.error("Error al guardar el progreso");
         }
     };
 
@@ -131,12 +103,12 @@ export default function GoalsSection({ userId }: { userId: string }) {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <FiTarget className="text-purple-400" />
+                    <FiTarget className="text-violet-400" />
                     Metas de Ahorro
                 </h3>
                 <button
                     onClick={() => setShowAddModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 text-purple-400 rounded-xl hover:bg-purple-500/20 transition-all border border-purple-500/20 text-sm font-bold"
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-500/10 text-violet-400 rounded-xl hover:bg-violet-500/20 transition-all border border-violet-500/20 text-sm font-bold"
                 >
                     <FiPlus /> Nueva Meta
                 </button>
@@ -150,7 +122,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
                             {/* Actions */}
                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
-                                    onClick={() => handleDeleteGoal(goal.id)}
+                                    onClick={() => setShowDeleteConfirm(goal.id)}
                                     className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
                                 >
                                     <FiTrash2 size={16} />
@@ -176,14 +148,14 @@ export default function GoalsSection({ userId }: { userId: string }) {
                                 </div>
                                 <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-1000"
+                                        className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-1000"
                                         style={{ width: `${progress}%` }}
                                     ></div>
                                 </div>
                             </div>
 
                             <button
-                                onClick={() => handleAddProgress(goal)}
+                                onClick={() => setShowProgressModal(goal)}
                                 className="w-full mt-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 border border-slate-700"
                             >
                                 <FiPlus /> Agregar Ahorro
@@ -196,9 +168,9 @@ export default function GoalsSection({ userId }: { userId: string }) {
                 {goals.length === 0 && !loading && (
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-700 rounded-2xl p-6 text-slate-500 hover:text-purple-400 hover:border-purple-500/50 hover:bg-purple-500/5 transition-all group min-h-[200px]"
+                        className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-700 rounded-2xl p-6 text-slate-500 hover:text-violet-400 hover:border-violet-500/50 hover:bg-violet-500/5 transition-all group min-h-[200px]"
                     >
-                        <div className="p-4 rounded-full bg-slate-800 group-hover:bg-purple-500/10 transition-colors">
+                        <div className="p-4 rounded-full bg-slate-800 group-hover:bg-violet-500/10 transition-colors">
                             <FiPlus className="text-2xl" />
                         </div>
                         <span className="font-medium">Crear primera meta</span>
@@ -228,7 +200,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
                                     value={newGoalName}
                                     onChange={(e) => setNewGoalName(e.target.value)}
                                     placeholder="Ej. Viaje, Auto nuevo..."
-                                    className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-purple-500 transition-colors"
+                                    className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-violet-500 transition-colors"
                                 />
                             </div>
                             <div>
@@ -241,13 +213,13 @@ export default function GoalsSection({ userId }: { userId: string }) {
                                     value={newGoalTarget}
                                     onChange={(e) => setNewGoalTarget(e.target.value)}
                                     placeholder="0.00"
-                                    className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-purple-500 transition-colors"
+                                    className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-violet-500 transition-colors"
                                 />
                             </div>
 
                             <button
                                 type="submit"
-                                className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3.5 rounded-xl transition-colors mt-2"
+                                className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-colors mt-2"
                             >
                                 Crear Meta
                             </button>
@@ -255,6 +227,47 @@ export default function GoalsSection({ userId }: { userId: string }) {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                isOpen={!!showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(null)}
+                onConfirm={confirmDelete}
+                title="¿Eliminar Meta?"
+                message="Esta acción no se puede deshacer. Se perderá todo el progreso registrado."
+                confirmText="Eliminar"
+                type="danger"
+            />
+
+            <Modal
+                isOpen={!!showProgressModal}
+                onClose={() => {
+                    setShowProgressModal(null);
+                    setProgressAmount("");
+                }}
+                title={`Ahorrar para ${showProgressModal?.name}`}
+            >
+                <form onSubmit={confirmAddProgress} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-1">Monto a agregar ($)</label>
+                        <input
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            required
+                            value={progressAmount}
+                            onChange={(e) => setProgressAmount(e.target.value)}
+                            placeholder="Ej. 50.00"
+                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-violet-500 transition-colors"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-colors mt-2 shadow-lg shadow-violet-900/20"
+                    >
+                        Agregar Ahorro
+                    </button>
+                </form>
+            </Modal>
         </div>
     );
 }

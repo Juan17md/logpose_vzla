@@ -1,9 +1,11 @@
 "use client";
 
 import { FiAlertTriangle } from "react-icons/fi";
-import Swal from "sweetalert2";
+import { toast } from "sonner";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import Modal from "@/components/ui/Modal";
+import { useState } from "react";
 
 import { useUserData } from "@/contexts/UserDataContext";
 
@@ -32,40 +34,28 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
         borderColor = "hover:border-yellow-500/30";
     }
 
-    const handleSetLimit = async () => {
-        const { value: amount } = await Swal.fire({
-            title: 'Definir Límite Mensual',
-            text: 'Te avisaremos si tus gastos superan este monto.',
-            input: 'number',
-            inputValue: budgetLimit || '',
-            showCancelButton: true,
-            background: "#1f2937",
-            color: "#fff",
-            confirmButtonText: 'Guardar',
-            cancelButtonText: 'Cancelar / Eliminar',
-            confirmButtonColor: '#10b981',
-        });
+    const [showEdit, setShowEdit] = useState(false);
+    const [editAmount, setEditAmount] = useState("");
 
-        if (amount !== undefined) {
-            const newLimit = amount === "" ? 0 : parseFloat(amount);
+    const openEditModal = () => {
+        setEditAmount(budgetLimit ? budgetLimit.toString() : "");
+        setShowEdit(true);
+    };
 
-            try {
-                const userRef = doc(db, "users", userId);
-                await updateDoc(userRef, { monthlyBudget: newLimit });
+    const handleSetLimit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        const newLimit = editAmount === "" || isNaN(parseFloat(editAmount)) ? 0 : parseFloat(editAmount);
 
-                Swal.fire({
-                    icon: "success",
-                    title: "Límite actualizado",
-                    timer: 1000,
-                    showConfirmButton: false,
-                    background: "#1f2937",
-                    color: "#fff"
-                });
+        try {
+            const userRef = doc(db, "users", userId);
+            await updateDoc(userRef, { monthlyBudget: newLimit });
 
-            } catch (e) {
-                console.error(e);
-                Swal.fire("Error", "No se pudo actualizar.", "error");
-            }
+            toast.success("Límite actualizado");
+            setShowEdit(false);
+        } catch (e) {
+            console.error(e);
+            toast.error("No se pudo actualizar");
         }
     };
 
@@ -78,7 +68,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
                 <h3 className="text-white font-bold mb-2 text-lg">Sin Límite Definido</h3>
                 <p className="text-sm text-slate-400 mb-6 max-w-[200px]">Establece un tope de gastos para controlar mejor tus finanzas.</p>
                 <button
-                    onClick={handleSetLimit}
+                    onClick={openEditModal}
                     className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-semibold transition-colors border border-slate-700/50 hover:border-slate-600"
                 >
                     Definir Límite
@@ -159,12 +149,58 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
             {/* Footer Button */}
             <div className="mt-4 relative z-10">
                 <button
-                    onClick={handleSetLimit}
+                    onClick={openEditModal}
                     className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all border border-slate-700/50 hover:border-slate-600 shadow-lg uppercase tracking-wider"
                 >
                     Actualizar Límite
                 </button>
             </div>
+
+            <Modal
+                isOpen={showEdit}
+                onClose={() => setShowEdit(false)}
+                title="Definir Límite Mensual"
+            >
+                <form onSubmit={handleSetLimit} className="space-y-4">
+                    <p className="text-sm text-slate-400">Te avisaremos si tus gastos superan este monto.</p>
+                    <div>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={editAmount}
+                            onChange={(e) => setEditAmount(e.target.value)}
+                            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-500/50 transition-colors"
+                            placeholder="0.00"
+                        />
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setEditAmount("");
+                                handleSetLimit({ preventDefault: () => {} } as React.FormEvent);
+                            }}
+                            className="px-4 py-2 text-slate-400 hover:text-red-400 transition-colors"
+                        >
+                            Eliminar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setShowEdit(false)}
+                            className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+                        >
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 }

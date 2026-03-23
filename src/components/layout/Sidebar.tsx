@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { FiHome, FiList, FiPieChart, FiUser, FiLogOut, FiX, FiShoppingCart, FiBriefcase, FiCalendar, FiCreditCard } from "react-icons/fi";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import Logo from "./Logo";
 
 interface SidebarProps {
     isOpen: boolean;
@@ -64,19 +65,24 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     </div>
 
                     {/* Decorative glow */}
-                    <div className="absolute top-0 left-0 w-full h-32 bg-emerald-500/10 blur-3xl -translate-y-16 pointer-events-none"></div>
+                    <div className="absolute top-0 left-0 w-full h-32 bg-amber-500/10 blur-3xl -translate-y-16 pointer-events-none"></div>
 
                     {/* Header */}
-                    <div className="px-8 pb-4 pt-2 md:p-8 flex items-center justify-between relative z-10 flex-shrink-0">
-                        <div>
-                            <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                                Control Gastos
-                            </h2>
-                            <p className="text-xs text-slate-500 font-medium tracking-wider uppercase mt-1">
-                                Finanzas Personales
-                            </p>
+                    <div className="px-4 pt-4 pb-2 md:p-6 flex items-start md:items-center justify-between relative z-10 flex-shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-slate-800/80 rounded-2xl border border-slate-700/50 shadow-inner">
+                                <Logo variant="icon" width={36} height={36} />
+                            </div>
+                            <div className="flex flex-col justify-center">
+                                <h2 className="text-lg md:text-xl font-one-piece tracking-wider text-white uppercase leading-none drop-shadow-md">
+                                    LogPose <span className="text-amber-500">Vzla</span>
+                                </h2>
+                                <p className="text-[10px] text-violet-400 font-bold tracking-widest uppercase mt-1">
+                                    Premium Dashboard
+                                </p>
+                            </div>
                         </div>
-                        <button onClick={onClose} className="md:hidden p-2 bg-slate-800/50 rounded-full text-slate-400 hover:text-white transition-colors">
+                        <button onClick={onClose} className="md:hidden p-2 bg-slate-800/80 rounded-full text-slate-400 hover:text-white transition-colors border border-slate-700/50">
                             <FiX className="text-xl" />
                         </button>
                     </div>
@@ -94,14 +100,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                         href={item.href}
                                         onClick={onClose}
                                         className={`flex items-center space-x-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative overflow-hidden ${isActive
-                                            ? "text-emerald-400 font-medium shadow-lg shadow-emerald-500/10 bg-slate-800/50"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/30"
+                                            ? "text-amber-400 font-medium shadow-lg shadow-amber-500/10 bg-slate-800/80 border border-slate-700/50"
+                                            : "text-slate-400 hover:text-white hover:bg-slate-800/40"
                                             }`}
                                     >
                                         {isActive && (
-                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-emerald-500 rounded-lg shadow-[0_0_10px_2px_rgba(16,185,129,0.5)]"></div>
+                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1.5 bg-amber-500 rounded-lg shadow-[0_0_10px_2px_rgba(245,158,11,0.5)]"></div>
                                         )}
-                                        <span className={`text-xl relative z-10 transition-transform duration-300 ${isActive ? "text-emerald-400 scale-110" : "text-slate-500 group-hover:text-slate-300 group-hover:scale-110"}`}>
+                                        <span className={`text-xl relative z-10 transition-transform duration-300 ${isActive ? "text-amber-400 scale-110" : "text-slate-500 group-hover:text-slate-300 group-hover:scale-110"}`}>
                                             {item.icon}
                                         </span>
                                         <span className="relative z-10">{item.name}</span>

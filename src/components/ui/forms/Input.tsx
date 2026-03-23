@@ -24,7 +24,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                 )}
                 <div className="relative group">
                     {icon && (
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10 text-slate-400 group-focus-within:text-emerald-400 transition-colors">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10 text-slate-500 group-focus-within:text-white transition-colors duration-300">
                             {icon}
                         </div>
                     )}
@@ -33,7 +33,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                         whileFocus={{ scale: 1.01 }}
                         transition={{ duration: 0.2 }}
                         className={cn(
-                            "w-full bg-slate-800/50 border border-slate-700/50 text-white text-sm font-medium rounded-2xl py-3.5 outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-all placeholder:text-slate-600 hover:border-slate-600 hover:bg-slate-800",
+                            "w-full bg-[#0F172A]/60 border border-slate-700/60 text-white text-sm font-medium rounded-2xl py-3.5 outline-none focus:ring-2 focus:ring-slate-400/20 focus:border-slate-400/50 transition-all placeholder:text-slate-500 hover:border-slate-500/60 hover:bg-[#0F172A]/80 shadow-inner",
                             icon ? "pl-11" : "pl-4",
                             rightElement ? "pr-12" : "pr-4",
                             error && "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20",

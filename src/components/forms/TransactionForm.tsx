@@ -6,7 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addDoc, collection, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
-import Swal from "sweetalert2";
+import { toast } from "sonner";
 import { FiDollarSign, FiCalendar, FiTag, FiFileText, FiSave, FiTrendingUp, FiTrendingDown, FiX } from "react-icons/fi";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -177,7 +177,7 @@ export default function TransactionForm() {
         setLoading(true);
 
         if (!auth.currentUser) {
-            Swal.fire("Error", "Debes iniciar sesión", "error");
+            toast.error("Debes iniciar sesión");
             setLoading(false);
             return;
         }
@@ -198,10 +198,7 @@ export default function TransactionForm() {
 
             if (transactionToEdit) {
                 await updateDoc(doc(db, "transactions", transactionToEdit.id), transactionData);
-                Swal.fire({
-                    icon: "success", title: "Actualizado", text: "El movimiento ha sido modificado.",
-                    timer: 1500, showConfirmButton: false, background: "#1f2937", color: "#fff",
-                });
+                toast.success("El movimiento ha sido modificado.");
                 clearEditing();
             } else {
                 await addDoc(collection(db, "transactions"), {
@@ -210,10 +207,7 @@ export default function TransactionForm() {
                     period: "mensual",
                     createdAt: serverTimestamp(),
                 });
-                Swal.fire({
-                    icon: "success", title: "Guardado", text: "El movimiento se ha registrado correctamente.",
-                    timer: 1500, showConfirmButton: false, background: "#1f2937", color: "#fff",
-                });
+                toast.success("El movimiento se ha registrado correctamente.");
 
                 // Reset form but keep some defaults
                 reset({
@@ -224,7 +218,7 @@ export default function TransactionForm() {
             }
         } catch (error) {
             console.error(error);
-            Swal.fire({ icon: "error", title: "Error", text: "No se pudo guardar.", background: "#1f2937", color: "#fff" });
+            toast.error("No se pudo guardar el movimiento.");
         } finally {
             setLoading(false);
         }
@@ -237,10 +231,10 @@ export default function TransactionForm() {
 
             <div className="flex items-center justify-between mb-8 relative z-10">
                 <div className="flex items-center gap-3">
-                    <span className="p-3 bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-400 rounded-2xl border border-emerald-500/20 shadow-inner">
+                    <span className="p-3 bg-gradient-to-tr from-violet-500/20 to-fuchsia-500/20 text-violet-400 rounded-2xl border border-violet-500/30 shadow-[inset_0_1px_rgba(255,255,255,0.1)]">
                         <FiDollarSign size={24} />
                     </span>
-                    <h2 className="text-xl md:text-2xl font-bold text-white">
+                    <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
                         {transactionToEdit ? "Editar Movimiento" : "Nuevo Movimiento"}
                     </h2>
                 </div>
@@ -264,7 +258,7 @@ export default function TransactionForm() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative z-10">
 
                 {/* Type Toggle */}
-                <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-950/50 rounded-2xl border border-slate-800/50 text-sm">
+                <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-950/60 rounded-[1.25rem] border border-slate-800/80 text-sm shadow-inner relative z-10">
                     <Controller
                         control={control}
                         name="type"
@@ -273,9 +267,9 @@ export default function TransactionForm() {
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("ingreso")}
-                                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${field.value === "ingreso"
-                                        ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-500/20"
-                                        : "text-slate-400 hover:text-white"
+                                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all duration-300 ${field.value === "ingreso"
+                                        ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border border-transparent"
                                         }`}
                                 >
                                     <FiTrendingUp /> Ingreso
@@ -283,9 +277,9 @@ export default function TransactionForm() {
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("gasto")}
-                                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${field.value === "gasto"
-                                        ? "bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg shadow-red-500/20"
-                                        : "text-slate-400 hover:text-white"
+                                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all duration-300 ${field.value === "gasto"
+                                        ? "bg-red-500/15 text-red-400 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
+                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border border-transparent"
                                         }`}
                                 >
                                     <FiTrendingDown /> Gasto
@@ -305,7 +299,7 @@ export default function TransactionForm() {
                                 control={control}
                                 name="currency"
                                 render={({ field }) => (
-                                    <div className="flex p-1 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                                    <div className="flex p-1 bg-slate-900/60 rounded-[1.25rem] border border-slate-700/50 shadow-inner">
                                         {(["USD", "VES"] as const).map((curr) => (
                                             <button
                                                 key={curr}
@@ -315,9 +309,11 @@ export default function TransactionForm() {
                                                     setValue("amount", "");
                                                     setValue("vesAmount", "");
                                                 }}
-                                                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${field.value === curr
-                                                    ? curr === "USD" ? "bg-emerald-500 text-white shadow-md" : "bg-blue-500 text-white shadow-md"
-                                                    : "text-slate-400 hover:text-white"
+                                                className={`flex-1 py-3 text-xs md:text-sm font-bold rounded-xl transition-all duration-300 ${field.value === curr
+                                                    ? curr === "USD" 
+                                                        ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]" 
+                                                        : "bg-slate-800 text-cyan-400 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+                                                    : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 border border-transparent"
                                                     }`}
                                             >
                                                 {curr === "VES" ? "Bs (VES)" : "USD"}
@@ -462,19 +458,20 @@ export default function TransactionForm() {
 
                 {/* Action Button */}
                 <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.01, translateY: -2 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full relative group overflow-hidden bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
                 >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                     {loading ? (
-                        <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin z-10"></span>
                     ) : (
-                        <>
+                        <div className="flex items-center space-x-2 z-10 text-shadow-sm">
                             <FiSave size={18} />
-                            <span>{transactionToEdit ? "ACTUALIZAR MOVIMIENTO" : "GUARDAR MOVIMIENTO"}</span>
-                        </>
+                            <span className="tracking-wide">{transactionToEdit ? "ACTUALIZAR MOVIMIENTO" : "GUARDAR MOVIMIENTO"}</span>
+                        </div>
                     )}
                 </motion.button>
 

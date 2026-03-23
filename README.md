@@ -1,93 +1,141 @@
-# Control de Gastos & Finanzas Personales 💰
+# LogPose Vzla 💰
 
-Una aplicación web progresiva y moderna para la gestión integral de finanzas personales. Diseñada con un estilo "Premium Glassmorphism", ofrece herramientas avanzadas para el control de ingresos, gastos, ahorros en múltiples divisas y planificación financiera.
+> Aplicación web para gestión integral de finanzas personales con diseño Glassmorphism y asistente financiero con IA.
 
-![Dashboard Preview](https://via.placeholder.com/800x400?text=Control+de+Gastos+App+Preview)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat&logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?style=flat&logo=tailwind-css)
+![Firebase](https://img.shields.io/badge/Firebase-Firestone-ffca28?style=flat&logo=firebase)
+![React](https://img.shields.io/badge/React-19-61dafb?style=flat&logo=react)
 
-## 🚀 Características Principales
+---
 
-### 📊 Dashboard Interactivo
-- **Widgets Inteligentes**: Visualización centralizada de ingresos, gastos, ahorros globales y metas.
-- **Accesos Rápidos**: Botones de acción directa para registrar, reportar, ahorrar y comprar con un solo clic.
-- **Conversión de Divisas (Caché)**: Integración optimizada de la tasa BCV con caché de 15 minutos para mayor rapidez.
-- **Edición Rápida**: Modifica registros de ingresos/gastos directamente desde el historial.
-- **Diseño Glassmorphism**: Interfaz moderna y oscura con efectos translúcidos y animaciones fluidas.
+## 📸 Preview
 
-### 🎯 Metas de Ahorro (Nuevo)
-- **Gestión de Objetivos**: Crea metas específicas (ej. "Viaje", "Carro") con montos objetivo.
-- **Aportes Inteligentes**: Botón "Aportar" que actualiza simultáneamente el progreso de la meta y restaura el saldo en tu billetera (Físico/USDT).
-- **Barra de Progreso**: Visualización gráfica del porcentaje alcanzado en cada meta.
+> **Nota:** Agrega una captura de pantalla de tu aplicación en la carpeta `/public` y actualiza esta sección.
 
-### 💰 Billetera y Ahorros
-- **Multi-Divisa**: Control unificado de **Efectivo Físico** y **USDT**.
-- **Sincronización Automática**: Los aportes a metas se reflejan automáticamente en el balance general de ahorros.
-- **Validación de Fondos**: Bloqueo de retiros o movimientos si el saldo es insuficiente.
+```markdown
+![Dashboard](public/dashboard-preview.png)
+```
 
-### 📝 Listas de Compras
-- **Calculadora en Tiempo Real**: Suma automática en USD y conversión instantánea a Bs.
-- **Checklists Interactivas**: Control de estado (pendiente/comprado) para cada item.
-- **Seguimiento de Cantidades Parciales**: Marca productos comprados gradualmente cuando hay múltiples unidades.
-- **Indicador de Pagos Pendientes**: Muestra el monto restante por pagar cuando se compran productos parcialmente.
-- **Filtrado y Búsqueda**: 
-  - Busca listas por nombre
-  - Filtra productos dentro de cada lista
-- **Ordenamiento Flexible**:
-  - Por fecha (más recientes/antiguas)
-  - Alfabético (A-Z / Z-A)
-  - Productos pendientes aparecen primero automáticamente
+---
 
-### 📈 Reportes Actualizados
-- **Consolidado Financiero**: Visión clara de ingresos vs. gastos del mes.
-- **Estadísticas de Ahorro**: Gráficos que integran tus avances en metas y ahorros libres.
+## 🌟 Características
 
-### 💳 Deudas y Gastos Fijos (Upgrade)
-- **Lógica Financiera Precisa**: El registro de deudas *no* genera movimientos automáticos. Los egresos/ingresos se registran únicamente al momento de realizar un *abono* o pago real.
-- **Soporte Multi-Moneda Real**: Registra abonos tanto en Dólares (USD) como en Bolívares (VES).
-- **Historial Inmutable**: El sistema almacena la moneda original y la tasa de cambio exacta del momento del pago, asegurando que el historial refleje lo que realmente pagaste sin alterarse por la fluctuación diaria del dólar.
-- **Gestión Visual**: Tabla de pagos con indicadores claros de moneda original y referencia en dólares.
+### Dashboard Inteligente
+- Widgets de ingresos, gastos, ahorros y metas financieras
+- Botones de acceso rápido para acciones frecuentes
+- Conversión de divisas con caché de 15 minutos (tasa BCV)
+- Edición directa de transacciones desde el historial
 
-### 🔒 Core Técnico Optimizado
-- **Context API**: Gestión de estado global con `TransactionsContext` y `UserDataContext` para minimizar lecturas a Firebase (lectura única).
-- **Atomic Transactions**: Uso de `runTransaction` de Firestore para asegurar integridad en datos financieros críticos.
-- **Autenticación Robusta**: Protección de rutas y datos privados por usuario.
-- **Data Integrity**: Estructura de datos extendida en pagos (`originalAmount`, `exchangeRate`) para auditoría precisa.
+### Asistente Financiero "Nami"
+- Chatbot con IA para consultas financieras personalizadas
+- Análisis de gastos y recomendaciones automáticas
+- Respuestas en tiempo real sobre tu situación financiera
 
-## 🛠️ Tecnologías Utilizadas
+### Gestión de Metas de Ahorro
+- Creación de objetivos con montos objetivo
+- Aportes inteligentes que actualizan progreso y saldo
+- Barra de visualización del porcentaje alcanzado
 
-- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
-- **Lenguaje**: TypeScript
-- **Estilos**: [Tailwind CSS](https://tailwindcss.com/)
-- **Base de Datos**: Firebase Firestore (con optimización de lecturas)
-- **Autenticación**: Firebase Auth
-- **Estado Global**: React Context API
-- **UI Libraries**: SweetAlert2, React Icons, React Datepicker, Recharts
+### Billetera Multi-Divisa
+- Control unificado de Efectivo Físico y USDT
+- Sincronización automática con metas de ahorro
+- Validación de fondos para prevenir sobregiros
 
-## 🏁 Comenzando
+### Listas de Compras
+- Calculadora en tiempo real (USD/BS)
+- Checklists interactivos con seguimiento de estado
+- Filtrado, búsqueda y ordenamiento flexible
 
-Clona el repositorio e instala las dependencias:
+### Deudas y Gastos Fijos
+- Registro sin movimientos automáticos
+- Soporte multi-moneda (USD/VES)
+- Historial inmutable con tasa de cambio original
+
+---
+
+## 🛠️ Tecnologías
+
+| Categoría | Tecnología |
+|-----------|------------|
+| Framework | Next.js 16 (App Router) |
+| Lenguaje | TypeScript |
+| Estilos | Tailwind CSS v4 |
+| Base de Datos | Firebase Firestore |
+| Auth | Firebase Auth |
+| Estado | React Context API |
+| IA | Groq SDK (Nami) |
+| UI | Recharts, Framer Motion, React Hook Form |
+
+---
+
+## 🚀 Getting Started
+
+### Prerrequisitos
+
+- Node.js 18+
+- Cuenta de Firebase (Firestore + Auth)
+
+### Instalación
 
 ```bash
-git clone https://github.com/tu-usuario/control-gastos-app.git
-cd control-gastos-app
+# Clonar repositorio
+git clone https://github.com/tu-usuario/logpose-vzla.git
+cd logpose-vzla
+
+# Instalar dependencias
 npm install
+
+# Configurar variables de entorno
+cp .env.example .env.local
+# Edita .env.local con tus credenciales de Firebase
 ```
 
-Configura tus variables de entorno en `.env.local`:
+### Variables de Entorno
 
 ```env
-NEXT_PUBLIC_FIREBASE_API_KEY=tu_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu_project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tu_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=tu_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=tu_app_id
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
 
-Inicia el servidor de desarrollo:
+### Ejecutar
 
 ```bash
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
+Abre [http://localhost:3000](http://localhost:3000)
 
+---
+
+## 📁 Estructura
+
+```
+├── src/
+│   ├── app/              # Next.js App Router
+│   ├── components/       # Componentes React
+│   ├── contexts/        # React Context (estado global)
+│   ├── hooks/           # Custom hooks
+│   ├── lib/             # Utilidades y Firebase
+│   └── types/           # Definiciones de TypeScript
+├── public/              # Assets estáticos
+└── package.json
+```
+
+---
+
+## 📄 Licencia
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## 👤 Contacto
+
+- GitHub: [@tu-usuario](https://github.com/tu-usuario)
+- Email: tu-email@ejemplo.com

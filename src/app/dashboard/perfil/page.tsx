@@ -5,10 +5,12 @@ import { useState, useEffect } from "react";
 import { auth, db } from "@/lib/firebase";
 import { updateProfile, sendPasswordResetEmail, User } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import Swal from "sweetalert2";
+import { toast } from "sonner";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut } from "react-icons/fi";
 
 export default function ProfilePage() {
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [userData, setUserData] = useState<{ createdAt?: { toDate: () => Date } } | null>(null);
     const [loading, setLoading] = useState(true);
@@ -59,68 +61,35 @@ export default function ProfilePage() {
             await updateDoc(userRef, { displayName: newName });
 
             setEditing(false);
-            Swal.fire({
-                icon: "success",
-                title: "Perfil Actualizado",
-                text: "Tu nombre se ha guardado correctamente.",
-                timer: 1500,
-                showConfirmButton: false,
-                background: "#1f2937",
-                color: "#fff",
-            });
+            toast.success("Perfil actualizado");
         } catch (error) {
             console.error(error);
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "No se pudo actualizar el perfil.",
-                background: "#1f2937",
-                color: "#fff",
-            });
+            toast.error("No se pudo actualizar el perfil");
         }
     };
 
-    const handlePasswordReset = async () => {
+    const handlePasswordReset = () => {
         if (!user?.email) return;
+        setShowResetConfirm(true);
+    };
 
-        Swal.fire({
-            title: "¿Enviar correo de recuperación?",
-            text: `Se enviará un enlace a ${user.email}`,
-            icon: "question",
-            showCancelButton: true,
-            confirmButtonText: "Enviar",
-            cancelButtonText: "Cancelar",
-            background: "#1f2937",
-            color: "#fff",
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    await sendPasswordResetEmail(auth, user.email!);
-                    Swal.fire({
-                        icon: "success",
-                        title: "Correo Enviado",
-                        text: "Revisa tu bandeja de entrada.",
-                        background: "#1f2937",
-                        color: "#fff",
-                    });
-                } catch (error) {
-                    console.error(error);
-                    Swal.fire({
-                        icon: "error",
-                        title: "Error",
-                        text: "No se pudo enviar el correo.",
-                        background: "#1f2937",
-                        color: "#fff",
-                    });
-                }
-            }
-        });
+    const confirmPasswordReset = async () => {
+        if (!user?.email) return;
+        try {
+            await sendPasswordResetEmail(auth, user.email);
+            toast.success("Correo de recuperación enviado");
+        } catch (error) {
+            console.error(error);
+            toast.error("No se pudo enviar el correo");
+        } finally {
+            setShowResetConfirm(false);
+        }
     };
 
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
-                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -131,10 +100,10 @@ export default function ProfilePage() {
             {/* Header */}
             <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                    <FiUser className="text-9xl text-emerald-400" />
+                    <FiUser className="text-9xl text-violet-400" />
                 </div>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-violet-500/10 to-transparent pointer-events-none"></div>
 
                 <div className="relative z-10">
                     <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Mi Perfil</h1>
@@ -145,10 +114,10 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Profile Card */}
                 <div className="md:col-span-2 bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-3xl p-8 shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-400"></div>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-indigo-400"></div>
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            <FiUser className="text-emerald-400" />
+                            <FiUser className="text-violet-400" />
                             Información Personal
                         </h2>
                         <button
@@ -157,7 +126,7 @@ export default function ProfilePage() {
                                 else setEditing(true);
                             }}
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg ${editing
-                                ? "bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-500/20"
+                                ? "bg-violet-500 text-white hover:bg-violet-600 shadow-violet-500/20"
                                 : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/50"
                                 }`}
                         >
@@ -175,7 +144,7 @@ export default function ProfilePage() {
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value)}
                                     className={`w-full bg-slate-800/50 border text-white rounded-xl py-3 px-4 outline-none transition-all ${editing
-                                        ? "border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                        ? "border-violet-500 focus:ring-2 focus:ring-violet-500/20"
                                         : "border-slate-700/50 text-slate-400 cursor-not-allowed"
                                         }`}
                                 />
@@ -186,7 +155,7 @@ export default function ProfilePage() {
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-1">Correo Electrónico</label>
                                 <div className="flex items-center gap-3 bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 text-slate-400">
-                                    <FiMail className="text-emerald-500" />
+                                    <FiMail className="text-violet-500" />
                                     <span>{user?.email}</span>
                                 </div>
                             </div>
@@ -194,7 +163,7 @@ export default function ProfilePage() {
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-1">Miembro Desde</label>
                                 <div className="flex items-center gap-3 bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 text-slate-400">
-                                    <FiCalendar className="text-emerald-500" />
+                                    <FiCalendar className="text-violet-500" />
                                     <span>
                                         {userData?.createdAt?.toDate
                                             ? userData.createdAt.toDate().toLocaleDateString()
@@ -236,6 +205,16 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={showResetConfirm}
+                onClose={() => setShowResetConfirm(false)}
+                onConfirm={confirmPasswordReset}
+                title="¿Enviar correo de recuperación?"
+                message={`Se enviará un enlace temporal a ${user?.email}`}
+                confirmText="Enviar Correo"
+                type="info"
+            />
         </div>
     );
 }

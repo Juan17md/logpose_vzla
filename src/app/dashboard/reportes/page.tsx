@@ -70,7 +70,7 @@ export default function ReportsPage() {
     const balanceData = [
         { name: "Ingresos", value: stats.income, color: "#10b981" },
         { name: "Gastos", value: stats.expense, color: "#ef4444" },
-        { name: "Ahorro", value: Math.max(0, savingsStats.netSavings), color: "#3b82f6" }
+        { name: "Ahorro", value: Math.max(0, savingsStats.netSavings), color: "#8b5cf6" }
     ];
 
     const MONTHS = [
@@ -106,7 +106,7 @@ export default function ReportsPage() {
     if (loading || loadingSavings) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
-                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -127,7 +127,7 @@ export default function ReportsPage() {
                             <h1 className="text-2xl font-bold text-white">Reportes</h1>
                             <p className="text-slate-400 text-xs">Resumen financiero mensual</p>
                         </div>
-                        <div className="p-2 bg-slate-800/50 rounded-xl border border-slate-700/50 text-emerald-400">
+                        <div className="p-2 bg-slate-800/50 rounded-xl border border-slate-700/50 text-amber-400">
                             <FiPieChart size={20} />
                         </div>
                     </div>
@@ -182,21 +182,21 @@ export default function ReportsPage() {
                         <p className="text-lg font-bold text-white tracking-tight">${stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-4 rounded-2xl border border-blue-500/20 backdrop-blur-sm relative overflow-hidden">
-                        <div className="mb-2 w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                    <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 p-4 rounded-2xl border border-amber-500/20 backdrop-blur-sm relative overflow-hidden">
+                        <div className="mb-2 w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400">
                             <FiDollarSign size={16} />
                         </div>
-                        <p className="text-xs text-blue-200/70 font-medium uppercase tracking-wider mb-0.5">Balance</p>
+                        <p className="text-xs text-amber-200/70 font-medium uppercase tracking-wider mb-0.5">Balance</p>
                         <p className={`text-lg font-bold tracking-tight ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
                             ${stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 p-4 rounded-2xl border border-purple-500/20 backdrop-blur-sm relative overflow-hidden">
-                        <div className="mb-2 w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+                    <div className="bg-gradient-to-br from-violet-500/10 to-violet-600/5 p-4 rounded-2xl border border-violet-500/20 backdrop-blur-sm relative overflow-hidden">
+                        <div className="mb-2 w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center text-violet-400">
                             <FiBriefcase size={16} />
                         </div>
-                        <p className="text-xs text-purple-200/70 font-medium uppercase tracking-wider mb-0.5">Ahorro</p>
+                        <p className="text-xs text-violet-200/70 font-medium uppercase tracking-wider mb-0.5">Ahorro</p>
                         <p className={`text-lg font-bold tracking-tight ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
                             ${savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
@@ -234,7 +234,7 @@ export default function ReportsPage() {
                             stats.categoryData.map((item, index) => (
                                 <div key={item.name} className="flex items-center justify-between p-4 active:bg-slate-800/50">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: ["#10b981", "#ef4444", "#3b82f6", "#f59e0b", "#8b5cf6", "#ec4899"][index % 6] }}>
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: ["#10b981", "#ef4444", "#06b6d4", "#f59e0b", "#8b5cf6", "#ec4899"][index % 6] }}>
                                             {item.name.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
@@ -244,7 +244,7 @@ export default function ReportsPage() {
                                                     className="h-full rounded-full"
                                                     style={{
                                                         width: `${(item.value / stats.expense) * 100}%`,
-                                                        backgroundColor: ["#10b981", "#ef4444", "#3b82f6", "#f59e0b", "#8b5cf6", "#ec4899"][index % 6]
+                                                        backgroundColor: ["#10b981", "#ef4444", "#06b6d4", "#f59e0b", "#8b5cf6", "#ec4899"][index % 6]
                                                     }}
                                                 ></div>
                                             </div>
@@ -266,10 +266,10 @@ export default function ReportsPage() {
                 {/* Header & Filter */}
                 <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
                     <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                        <FiPieChart className="text-7xl md:text-9xl text-emerald-400" />
+                        <FiPieChart className="text-7xl md:text-9xl text-amber-400" />
                     </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-amber-500/10 to-transparent pointer-events-none"></div>
 
                     <div className="relative z-10">
                         <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Reportes Financieros</h1>
@@ -319,9 +319,9 @@ export default function ReportsPage() {
                     </div>
 
                     <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all"></div>
-                        <div className="flex items-center space-x-3 text-blue-400 mb-3 relative z-10">
-                            <div className="p-2 md:p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20"><FiDollarSign size={18} /></div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/20 transition-all"></div>
+                        <div className="flex items-center space-x-3 text-amber-400 mb-3 relative z-10">
+                            <div className="p-2 md:p-2.5 bg-amber-500/10 rounded-xl border border-amber-500/20"><FiDollarSign size={18} /></div>
                             <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Balance</span>
                         </div>
                         <p className={`text-2xl md:text-4xl font-bold relative z-10 ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
@@ -330,9 +330,9 @@ export default function ReportsPage() {
                     </div>
 
                     <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-purple-500/20 transition-all"></div>
-                        <div className="flex items-center space-x-3 text-purple-400 mb-3 relative z-10">
-                            <div className="p-2 md:p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20"><FiBriefcase size={18} /></div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-all"></div>
+                        <div className="flex items-center space-x-3 text-violet-400 mb-3 relative z-10">
+                            <div className="p-2 md:p-2.5 bg-violet-500/10 rounded-xl border border-violet-500/20"><FiBriefcase size={18} /></div>
                             <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Ahorro</span>
                         </div>
                         <p className={`text-2xl md:text-4xl font-bold relative z-10 ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
@@ -363,7 +363,7 @@ export default function ReportsPage() {
                             {stats.categoryData.map((item, index) => (
                                 <div key={item.name} className="flex items-center justify-between text-xs p-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 transition-colors border border-slate-700/30">
                                     <div className="flex items-center">
-                                        <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: ["#10b981", "#ef4444", "#3b82f6", "#f59e0b", "#8b5cf6", "#ec4899"][index % 6] }}></span>
+                                        <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: ["#10b981", "#ef4444", "#06b6d4", "#f59e0b", "#8b5cf6", "#ec4899"][index % 6] }}></span>
                                         <span className="text-slate-300 capitalize font-medium">{item.name}</span>
                                     </div>
                                     <span className="font-bold text-white">${item.value.toLocaleString()}</span>

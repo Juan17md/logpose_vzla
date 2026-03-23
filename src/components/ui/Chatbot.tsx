@@ -867,14 +867,13 @@ export default function Chatbot() {
     return (
         <>
             {/* Floating Button */}
-            {/* Floating Button */}
             <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-24 right-6 md:bottom-8 md:right-8 bg-gradient-to-r from-violet-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl z-50 border border-violet-400/30 flex items-center justify-center"
+                className="fixed bottom-[110px] right-4 md:bottom-8 md:right-8 bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-indigo-600 dark:to-purple-700 text-white p-4 rounded-full shadow-[0_8px_30px_rgb(139,92,246,0.3)] z-[60] border border-violet-400/30 flex items-center justify-center transition-all duration-300"
             >
-                <FiCpu size={28} />
+                <FiCpu size={26} />
             </motion.button>
 
             {/* Chat Window */}

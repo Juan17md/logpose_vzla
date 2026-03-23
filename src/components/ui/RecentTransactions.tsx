@@ -4,7 +4,8 @@ import { useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTransactions } from "@/hooks/useTransactions";
 import { FiTrendingUp, FiTrendingDown, FiTrash2, FiClock, FiEdit2, FiSearch, FiCopy } from "react-icons/fi";
-import Swal from "sweetalert2";
+import { toast } from "sonner";
+import ConfirmDialog from "./ConfirmDialog";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import PaginationControls from "./PaginationControls";
 
@@ -18,34 +19,23 @@ export default function RecentTransactions() {
     const [searchTerm, setSearchTerm] = useState("");
     const itemsPerPage = 8;
 
+    const [confirmConfig, setConfirmConfig] = useState<{ type: "delete" | "duplicate" | null, id: string }>({ type: null, id: "" });
+
+    const executeConfirm = async () => {
+        if (!confirmConfig.type || !confirmConfig.id) return;
+        
+        if (confirmConfig.type === "delete") {
+            const success = await deleteTransaction(confirmConfig.id);
+            if(success) toast.success("Registro eliminado");
+        } else if (confirmConfig.type === "duplicate") {
+            const success = await duplicateTransaction(confirmConfig.id);
+            if(success) toast.success("Movimiento registrado hoy");
+        }
+        setConfirmConfig({ type: null, id: "" });
+    };
+
     const handleDelete = (id: string) => {
-        Swal.fire({
-            title: "¿Estás seguro?",
-            text: "No podrás revertir esto.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#ef4444",
-            cancelButtonColor: "#374151",
-            confirmButtonText: "Sí, borrar",
-            cancelButtonText: "Cancelar",
-            background: "#1f2937",
-            color: "#fff",
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                const success = await deleteTransaction(id);
-                if (success) {
-                    Swal.fire({
-                        title: "¡Borrado!",
-                        text: "El registro ha sido eliminado.",
-                        icon: "success",
-                        background: "#1f2937",
-                        color: "#fff",
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                }
-            }
-        });
+        setConfirmConfig({ type: "delete", id });
     };
 
     // Filter transactions
@@ -163,34 +153,13 @@ export default function RecentTransactions() {
                                                             window.scrollTo({ top: 0, behavior: 'smooth' });
                                                         }
                                                     }}
-                                                    className="text-slate-500 hover:text-blue-400 transition-colors p-2 hover:bg-blue-500/10 rounded-lg"
+                                                    className="text-slate-500 hover:text-violet-400 transition-colors p-2 hover:bg-violet-500/10 rounded-lg"
                                                     title="Editar"
                                                 >
                                                     <FiEdit2 />
                                                 </button>
                                                 <button
-                                                    onClick={() => {
-                                                        Swal.fire({
-                                                            title: "¿Duplicar movimiento?",
-                                                            text: `Se creará una copia de "${t.description}" con fecha de hoy.`,
-                                                            icon: "question",
-                                                            showCancelButton: true,
-                                                            confirmButtonText: "Sí, duplicar",
-                                                            cancelButtonText: "Cancelar",
-                                                            background: "#1f2937",
-                                                            color: "#fff",
-                                                        }).then(async (res) => {
-                                                            if (res.isConfirmed) {
-                                                                const success = await duplicateTransaction(t.id);
-                                                                if (success) {
-                                                                    Swal.fire({
-                                                                        icon: "success", title: "Duplicado", text: "Movimiento registrado hoy.",
-                                                                        timer: 1500, showConfirmButton: false, background: "#1f2937", color: "#fff"
-                                                                    });
-                                                                }
-                                                            }
-                                                        });
-                                                    }}
+                                                    onClick={() => setConfirmConfig({ type: "duplicate", id: t.id })}
                                                     className="text-slate-500 hover:text-emerald-400 transition-colors p-2 hover:bg-emerald-500/10 rounded-lg"
                                                     title="Duplicar hoy"
                                                 >
@@ -258,24 +227,12 @@ export default function RecentTransactions() {
                                             startEditing(t);
                                             window.scrollTo({ top: 0, behavior: 'smooth' });
                                         }}
-                                        className="p-2 text-slate-400 hover:text-blue-400 bg-slate-900/50 rounded-lg text-xs font-medium flex-1 flex justify-center items-center gap-1"
+                                        className="p-2 text-slate-400 hover:text-violet-400 bg-slate-900/50 rounded-lg text-xs font-medium flex-1 flex justify-center items-center gap-1"
                                     >
                                         <FiEdit2 /> Editar
                                     </button>
                                     <button
-                                        onClick={() => {
-                                            Swal.fire({
-                                                title: "¿Duplicar?",
-                                                icon: "question",
-                                                showCancelButton: true,
-                                                confirmButtonText: "Sí",
-                                                cancelButtonText: "No",
-                                                background: "#1f2937",
-                                                color: "#fff",
-                                            }).then(async (res) => {
-                                                if (res.isConfirmed) await duplicateTransaction(t.id);
-                                            });
-                                        }}
+                                        onClick={() => setConfirmConfig({ type: "duplicate", id: t.id })}
                                         className="p-2 text-slate-400 hover:text-emerald-400 bg-slate-900/50 rounded-lg"
                                     >
                                         <FiCopy />
@@ -300,6 +257,16 @@ export default function RecentTransactions() {
                     onPageChange={setCurrentPage}
                 />
             </div>
+
+            <ConfirmDialog
+                isOpen={confirmConfig.type !== null}
+                onClose={() => setConfirmConfig({ type: null, id: "" })}
+                onConfirm={executeConfirm}
+                title={confirmConfig.type === "delete" ? "¿Borrar Movimiento?" : "¿Duplicar Movimiento?"}
+                message={confirmConfig.type === "delete" ? "Esta acción es irreversible." : "Se creará una copia con fecha de hoy."}
+                type={confirmConfig.type === "delete" ? "danger" : "info"}
+                confirmText={confirmConfig.type === "delete" ? "Sí, borrar" : "Sí, duplicar"}
+            />
         </div>
     );
 }
