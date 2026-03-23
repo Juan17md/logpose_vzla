@@ -83,25 +83,6 @@ Accede a [http://localhost:3000](http://localhost:3000) para ver la aplicación 
 
 ---
 
-## 📸 Galería de la Interfaz
-
-<details>
-  <summary>Ver Capturas de Pantalla</summary>
-  <br>
-  <p align="center">
-    <b>Página de Inicio de Sesión</b><br>
-    <img src="public/images/login-preview.png" width="80%" alt="Login Screen">
-  </p>
-</details>
-
----
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
-
----
-
 ## 👤 Desarrollado por
 
 **Juan17md** - *Full Stack Developer*
