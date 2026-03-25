@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { FiHome, FiList, FiPieChart, FiUser, FiLogOut, FiX, FiShoppingCart, FiBriefcase, FiCalendar, FiCreditCard } from "react-icons/fi";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged, User } from "firebase/auth";
 import Logo from "./Logo";
 import { Outfit } from "next/font/google";
 
@@ -18,9 +20,17 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const menuItems = [
-        { name: "Dashboard", icon: <FiHome />, href: "/dashboard" },
+        { name: "Pantalla Principal", icon: <FiHome />, href: "/dashboard" },
         { name: "Movimientos", icon: <FiList />, href: "/dashboard/movimientos" },
         { name: "Listas", icon: <FiShoppingCart />, href: "/dashboard/listas" },
         { name: "Gastos Fijos", icon: <FiCalendar />, href: "/dashboard/gastos-fijos" },
@@ -108,11 +118,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         </button>
                     </div>
 
-                    {/* Scrollable Content Area - pb-24 accounts for mobile bottom nav (80px) */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-24 md:pb-0 relative z-10">
+                    {/* Scrollable Content Area */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar px-4 relative z-10">
                         {/* Navigation */}
-                        <nav className="space-y-2">
-                            <div className="text-xs font-bold text-slate-500 uppercase tracking-widest px-4 mb-2 mt-4 ml-1">Menu Principal</div>
+                        <nav className="space-y-1 py-4">
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-2 ml-1 opacity-70">Menú Principal</div>
                             {menuItems.map((item) => {
                                 const isActive = pathname === item.href;
                                 return (
@@ -120,41 +130,49 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                         key={item.href}
                                         href={item.href}
                                         onClick={onClose}
-                                        className={`flex items-center space-x-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative overflow-hidden ${isActive
-                                            ? "text-amber-400 font-medium shadow-lg shadow-amber-500/10 bg-slate-800/80 border border-slate-700/50"
+                                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${isActive
+                                            ? "text-amber-400 font-semibold shadow-lg shadow-amber-500/10 bg-slate-800/80 border border-slate-700/50"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800/40"
                                             }`}
                                     >
                                         {isActive && (
-                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1.5 bg-amber-500 rounded-lg shadow-[0_0_10px_2px_rgba(245,158,11,0.5)]"></div>
+                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-amber-500 rounded-r-lg shadow-[0_0_10px_2px_rgba(245,158,11,0.5)]"></div>
                                         )}
                                         <span className={`text-xl relative z-10 transition-transform duration-300 ${isActive ? "text-amber-400 scale-110" : "text-slate-500 group-hover:text-slate-300 group-hover:scale-110"}`}>
                                             {item.icon}
                                         </span>
-                                        <span className="relative z-10">{item.name}</span>
+                                        <span className="relative z-10 text-sm tracking-wide">{item.name}</span>
                                     </Link>
                                 );
                             })}
                         </nav>
+                    </div>
 
-                        {/* Footer / Logout - Now inside scrollable area */}
-                        <div className="p-4 mt-6 mb-6">
-                            {/* Separator */}
-                            <div className="h-px bg-gradient-to-r from-transparent via-slate-700/50 to-transparent mb-6"></div>
-
-                            <button
-                                onClick={handleLogout}
-                                className="w-full flex items-center justify-center space-x-3 px-6 py-4 md:py-3 rounded-2xl 
-                                text-red-400 bg-red-500/10 hover:bg-red-500/20 
-                                transition-all duration-300 group 
-                                border border-red-500/30 hover:border-red-500/50
-                                shadow-lg shadow-red-500/10 hover:shadow-red-500/20
-                                active:scale-95"
-                            >
-                                <FiLogOut className="text-xl md:text-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
-                                <span className="font-bold text-base md:text-sm">Cerrar Sesión</span>
-                            </button>
+                    {/* Footer / Logout - Fixed at bottom */}
+                    <div className="p-4 mt-auto relative z-10 bg-slate-900/80 md:bg-transparent backdrop-blur-lg md:backdrop-blur-none border-t border-slate-800/50 md:border-t-0 pb-12 md:pb-8">
+                        {/* User Info */}
+                        <div className="flex items-center gap-3 px-4 py-3 mb-4 rounded-2xl bg-slate-800/60 border border-slate-700/50">
+                            <div className="p-2 bg-amber-500/20 rounded-full">
+                                <FiUser className="text-amber-400 text-lg" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Usuario Conectado</p>
+                                <p className="text-sm font-bold text-white truncate">{user?.displayName || "Usuario"}</p>
+                            </div>
                         </div>
+
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center justify-center space-x-3 px-6 py-4 md:py-3 rounded-2xl 
+                            text-red-400 bg-red-500/10 hover:bg-red-500/20 
+                            transition-all duration-300 group 
+                            border border-red-500/30 hover:border-red-500/50
+                            shadow-lg shadow-red-500/10 hover:shadow-red-500/20
+                            active:scale-95"
+                        >
+                            <FiLogOut className="text-xl md:text-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
+                            <span className="font-bold text-base md:text-sm">Cerrar Sesión</span>
+                        </button>
                     </div>
                 </div>
             </aside>

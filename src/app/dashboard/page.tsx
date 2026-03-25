@@ -223,7 +223,6 @@ export default function DashboardPage() {
                 <motion.div variants={itemVariants} className="flex items-center justify-between">
                     <div>
                         <p className="text-slate-400 text-sm">¡Hola de nuevo!</p>
-                        <h1 className="text-xl font-bold text-white">{user?.displayName || "Usuario"}</h1>
                     </div>
                     <div className="flex items-center gap-2">
                         <motion.button
