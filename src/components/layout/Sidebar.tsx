@@ -152,8 +152,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     <div className="p-4 mt-auto relative z-10 bg-slate-900/80 md:bg-transparent backdrop-blur-lg md:backdrop-blur-none border-t border-slate-800/50 md:border-t-0 pb-12 md:pb-8">
                         {/* User Info */}
                         <div className="flex items-center gap-3 px-4 py-3 mb-4 rounded-2xl bg-slate-800/60 border border-slate-700/50">
-                            <div className="p-2 bg-amber-500/20 rounded-full">
-                                <FiUser className="text-amber-400 text-lg" />
+                            <div className="relative shrink-0">
+                                {user?.photoURL ? (
+                                    <div className="w-9 h-9 rounded-full border border-amber-500/30 overflow-hidden shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                                        <img 
+                                            src={user.photoURL} 
+                                            alt={user.displayName || "Usuario"} 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="p-2 bg-amber-500/20 rounded-full border border-amber-500/30">
+                                        <FiUser className="text-amber-400 text-lg" />
+                                    </div>
+                                )}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Usuario Conectado</p>
