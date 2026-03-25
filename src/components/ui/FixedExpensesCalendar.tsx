@@ -141,7 +141,7 @@ export default function FixedExpensesCalendar({ expenses, onPayExpense }: FixedE
                                                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                                                             : 'bg-red-500/10 text-red-300 border border-red-500/20 hover:bg-red-500/20'}
                                                     `}
-                                                    title={`${expense.title} - $${expense.amount} ${paid ? '(Pagado)' : '(Pendiente)'}`}
+                                                    title={`${expense.title} - $${parseFloat(expense.amount.toFixed(2))} ${paid ? '(Pagado)' : '(Pendiente)'}`}
                                                 >
                                                     {paid ? <FiCheckCircle className="shrink-0" /> : <FiAlertCircle className="shrink-0" />}
                                                     <span className="truncate">{expense.title}</span>

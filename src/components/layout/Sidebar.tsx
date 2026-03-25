@@ -6,6 +6,9 @@ import { FiHome, FiList, FiPieChart, FiUser, FiLogOut, FiX, FiShoppingCart, FiBr
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Logo from "./Logo";
+import { Outfit } from "next/font/google";
+
+const outfit = Outfit({ variable: "--font-outfit", weight: ["400","500","600","700","800"], subsets: ["latin"] });
 
 interface SidebarProps {
     isOpen: boolean;
@@ -38,6 +41,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     return (
         <>
+            {/* Estilos del gradiente animado - mismo del login */}
+            <style>{`
+                @keyframes gtext {
+                    0%,100% { background-position:0% 50%; }
+                    50%     { background-position:100% 50%; }
+                }
+                .sidebar-grad-text {
+                    background: linear-gradient(135deg,#FBBF24,#F59E0B,#CA8A04,#FBBF24);
+                    background-size:300% 300%;
+                    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+                    background-clip:text;
+                    animation: gtext 5s ease infinite;
+                }
+            `}</style>
+
             {/* Overlay for mobile */}
             <div
                 className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity md:hidden ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -67,15 +85,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     {/* Decorative glow */}
                     <div className="absolute top-0 left-0 w-full h-32 bg-amber-500/10 blur-3xl -translate-y-16 pointer-events-none"></div>
 
-                    {/* Header */}
-                    <div className="px-4 pt-4 pb-2 md:p-6 flex items-start md:items-center justify-between relative z-10 flex-shrink-0">
+                    {/* Header - Mismo diseño del Login */}
+                    <div className={`${outfit.variable} px-4 pt-4 pb-2 md:p-6 flex items-start md:items-center justify-between relative z-10 flex-shrink-0`}>
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-slate-800/80 rounded-2xl border border-slate-700/50 shadow-inner">
-                                <Logo variant="icon" width={36} height={36} />
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-amber-500/15 blur-[20px] rounded-full scale-125 pointer-events-none"></div>
+                                <div className="relative p-2 bg-slate-800/80 rounded-2xl border border-amber-500/20 shadow-[0_0_15px_rgba(202,138,4,0.15)]">
+                                    <Logo variant="icon" width={36} height={36} />
+                                </div>
                             </div>
                             <div className="flex flex-col justify-center">
-                                <h2 className="text-lg md:text-xl font-one-piece tracking-wider text-white uppercase leading-none drop-shadow-md">
-                                    LogPose <span className="text-amber-500">Vzla</span>
+                                <h2 className="text-lg md:text-xl font-extrabold tracking-tight text-white leading-none" style={{fontFamily:"var(--font-outfit)"}}>
+                                    LogPose <span className="sidebar-grad-text">Vzla</span>
                                 </h2>
                                 <p className="text-[10px] text-violet-400 font-bold tracking-widest uppercase mt-1">
                                     Premium Dashboard

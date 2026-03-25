@@ -106,16 +106,16 @@ export default function TransactionForm() {
             const isStandardCategory = CATEGORIES.some(c => c.value === transactionToEdit.category);
 
             reset({
-                amount: transactionToEdit.amount.toString(),
+                amount: parseFloat(transactionToEdit.amount.toFixed(2)).toString(),
                 description: transactionToEdit.description || "",
                 category: isStandardCategory ? transactionToEdit.category : "Otra",
                 customCategory: isStandardCategory ? "" : transactionToEdit.category,
                 date: new Date(transactionToEdit.date),
                 type: transactionToEdit.type,
                 currency: transactionToEdit.currency || "USD",
-                exchangeRate: transactionToEdit.exchangeRate?.toString() || rate.toString(),
-                vesAmount: transactionToEdit.currency === "VES" && transactionToEdit.originalAmount // Assuming logic
-                    ? transactionToEdit.originalAmount.toString()
+                exchangeRate: transactionToEdit.exchangeRate ? parseFloat(transactionToEdit.exchangeRate.toFixed(2)).toString() : rate.toString(),
+                vesAmount: transactionToEdit.currency === "VES" && transactionToEdit.originalAmount
+                    ? parseFloat(transactionToEdit.originalAmount.toFixed(2)).toString()
                     : "",
             });
         }

@@ -349,7 +349,7 @@ export default function Chatbot() {
 
                 const amountDisplay = data.currency === "VES" && originalAmount
                     ? `Bs. ${originalAmount.toFixed(2)}`
-                    : `$${amountUSD}`;
+                    : `$${parseFloat(amountUSD.toFixed(2))}`;
                 aiResponse = `Registré el ${data.type} de ${amountDisplay} (${data.category}).`;
                 break;
 
@@ -377,7 +377,7 @@ export default function Chatbot() {
 
                 const debtDisplay = data.currency === "VES"
                     ? `Bs. ${debtOriginalAmount?.toFixed(2)} ($${debtAmount})`
-                    : `$${debtAmount}`;
+                    : `$${parseFloat(debtAmount.toFixed(2))}`;
 
                 aiResponse = `Creé la deuda de ${data.person} por ${debtDisplay}.`;
                 break;
@@ -391,7 +391,7 @@ export default function Chatbot() {
                     description: data.description || "Gasto fijo registrado por Nami"
                 } as any)) || false;
 
-                aiResponse = `He programado el gasto fijo "${data.name}" por $${data.amount} para el día ${data.dueDay} de cada mes.`;
+                aiResponse = `He programado el gasto fijo "${data.name}" por $${parseFloat(Number(data.amount).toFixed(2))} para el día ${data.dueDay} de cada mes.`;
                 break;
 
             case "delete_item":
@@ -496,13 +496,13 @@ export default function Chatbot() {
 
                 if (data.type === 'physical') {
                     updates.savingsPhysical = parseFloat(data.amount);
-                    confirmMsg = `Actualicé tus ahorros físicos a $${data.amount}.`;
+                    confirmMsg = `Actualicé tus ahorros físicos a $${parseFloat(Number(data.amount).toFixed(2))}.`;
                 } else if (data.type === 'digital') {
                     updates.savingsUSDT = parseFloat(data.amount);
-                    confirmMsg = `Actualicé tus ahorros digitales a $${data.amount}.`;
+                    confirmMsg = `Actualicé tus ahorros digitales a $${parseFloat(Number(data.amount).toFixed(2))}.`;
                 } else if (data.type === 'budget') {
                     updates.monthlyBudget = parseFloat(data.amount);
-                    confirmMsg = `Fijé tu presupuesto mensual en $${data.amount}.`;
+                    confirmMsg = `Fijé tu presupuesto mensual en $${parseFloat(Number(data.amount).toFixed(2))}.`;
                 }
 
                 if (confirmMsg) {
@@ -542,7 +542,7 @@ export default function Chatbot() {
                         originalAmount: fixedExpense.amount,
                         exchangeRate: rate
                     } as any);
-                    aiResponse = `Marqué "${fixedExpense.title}" como pagado y registré el gasto de $${fixedExpense.amount}.`;
+                    aiResponse = `Marqué "${fixedExpense.title}" como pagado y registré el gasto de $${parseFloat(fixedExpense.amount.toFixed(2))}.`;
                 } else {
                     aiResponse = `Marqué "${fixedExpense.title}" como pagado.`;
                 }

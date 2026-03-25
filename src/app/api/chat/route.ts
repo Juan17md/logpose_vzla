@@ -31,7 +31,7 @@ Tu objetivo es ayudar al usuario a gestionar sus finanzas de manera inteligente 
 
 ${upcomingFixedExpenses && upcomingFixedExpenses.length > 0 ? `🚨 RECORDATORIOS URGENTES
 Tienes los siguientes gastos fijos próximos a vencer (en los próximos 7 días):
-${upcomingFixedExpenses.map((e: any) => `- ${e.name}: $${e.amount} (vence día ${e.dueDay})`).join('\n')}
+${upcomingFixedExpenses.map((e: any) => `- ${e.name}: $${parseFloat(Number(e.amount).toFixed(2))} (vence día ${e.dueDay})`).join('\n')}
 ¡Avísale al usuario sobre esto si no lo ha mencionado!` : ''}
 
 ${balance !== undefined ? `💰 CONTEXTO FINANCIERO DEL USUARIO
@@ -42,12 +42,12 @@ ${balance !== undefined ? `💰 CONTEXTO FINANCIERO DEL USUARIO
 - Total gastado el mes ANTERIOR: $${previousMonthlyExpense || 0} ${previousMonthlyExpense ? `(El usuario ha gastado ${Math.round(((monthlyExpense - previousMonthlyExpense) / previousMonthlyExpense) * 100)}% ${monthlyExpense > previousMonthlyExpense ? 'más' : 'menos'} que el mes pasado)` : ''}
 - Total ingresado este mes: $${monthlyIncome || 0}
 - Gasto promedio diario: $${averageDailyExpense || 0}
-${topCategories && topCategories.length > 0 ? `- Top categorías de gasto este mes: ${topCategories.map((c: any) => `${c.category} ($${c.amount})`).join(', ')}` : ''}
+${topCategories && topCategories.length > 0 ? `- Top categorías de gasto este mes: ${topCategories.map((c: any) => `${c.category} ($${parseFloat(Number(c.amount).toFixed(2))})`).join(', ')}` : ''}
 ${goals && goals.length > 0 ? `- Metas activas: ${goals.map((g: any) => `${g.name} ($${g.current}/$${g.target})`).join(', ')}` : ''}
-${debts && debts.length > 0 ? `- Deudas pendientes: ${debts.map((d: any) => `${d.person} ($${d.amount})`).join(', ')}` : ''}
-${fixedExpenses && fixedExpenses.length > 0 ? `- Gastos fijos del mes: ${fixedExpenses.map((e: any) => `${e.name} ($${e.amount}, día ${e.dueDay})`).join(', ')}` : ''}
+${debts && debts.length > 0 ? `- Deudas pendientes: ${debts.map((d: any) => `${d.person} ($${parseFloat(Number(d.amount).toFixed(2))})`).join(', ')}` : ''}
+${fixedExpenses && fixedExpenses.length > 0 ? `- Gastos fijos del mes: ${fixedExpenses.map((e: any) => `${e.name} ($${parseFloat(Number(e.amount).toFixed(2))}, día ${e.dueDay})`).join(', ')}` : ''}
 ${shoppingLists && shoppingLists.length > 0 ? `- Listas de compras: ${shoppingLists.map((l: any) => `${l.name} (${l.pendingItems}/${l.totalItems} pendientes)`).join(', ')}` : ''}
-${lastTransaction ? `- Última transacción: ${lastTransaction.type} de $${lastTransaction.amount} en ${lastTransaction.category}` : ''}
+${lastTransaction ? `- Última transacción: ${lastTransaction.type} de $${parseFloat(Number(lastTransaction.amount).toFixed(2))} en ${lastTransaction.category}` : ''}
 ` : ''}
 
 💱 TASA OFICIAL BCV

@@ -118,7 +118,11 @@ export default function DashboardPage() {
 
         const dailyAverage = daysPassed > 0 ? monthlyExpense / daysPassed : 0;
 
-        return { totalBalance, monthlyIncome, monthlyExpense, topCategoryName, topCategoryAmount, dailyAverage };
+        // Redondear a 2 decimales y eliminar -0 por errores de punto flotante
+        const balanceRedondeado = Math.round(totalBalance * 100) / 100;
+        const balanceFinal = Object.is(balanceRedondeado, -0) ? 0 : balanceRedondeado;
+
+        return { totalBalance: balanceFinal, monthlyIncome, monthlyExpense, topCategoryName, topCategoryAmount, dailyAverage };
     }, [transactions]);
 
     const handleUpdateBalanceClick = (e: React.MouseEvent) => {

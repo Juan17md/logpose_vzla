@@ -40,7 +40,9 @@ export default function ReportsPage() {
             value
         })).sort((a, b) => b.value - a.value);
 
-        return { income, expense, balance: income - expense, categoryData };
+        const balanceCalculado = Math.round((income - expense) * 100) / 100;
+        const balanceFinal = Object.is(balanceCalculado, -0) ? 0 : balanceCalculado;
+        return { income, expense, balance: balanceFinal, categoryData };
     }, [filteredTransactions]);
 
     const savingsStats = useMemo(() => {
