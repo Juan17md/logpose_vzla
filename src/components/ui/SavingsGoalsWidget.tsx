@@ -7,8 +7,11 @@ import Modal from "@/components/ui/Modal";
 import { FiTarget, FiPlus, FiTrash2 } from "react-icons/fi";
 import { useState } from "react";
 
-export default function SavingsGoalsWidget({ bcvRate }: { bcvRate: number }) {
+import { useBankAccounts } from "@/contexts/BankAccountsContext";
+
+export default function SavingsGoalsWidget() {
     const { goals, loading, addGoal, deleteGoal, addContribution } = useGoals();
+    const { tasasEnBs } = useBankAccounts();
     
     const [showAddModal, setShowAddModal] = useState(false);
     const [newGoalName, setNewGoalName] = useState("");
@@ -131,7 +134,7 @@ export default function SavingsGoalsWidget({ bcvRate }: { bcvRate: number }) {
                                 </div>
                                 <div className="flex justify-between text-xs text-slate-500 font-medium">
                                     <span className={progress >= 100 ? "text-emerald-400 font-bold" : "text-violet-400"}>{progress.toFixed(0)}% Completado</span>
-                                    <span>Meta: Bs. {(goal.targetAmount * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+                                    <span>Meta: Bs. {(goal.targetAmount * tasasEnBs.USD).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
                         );

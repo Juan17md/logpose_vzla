@@ -32,9 +32,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const menuItems = [
         { name: "Pantalla Principal", icon: <FiHome />, href: "/dashboard" },
         { name: "Movimientos", icon: <FiList />, href: "/dashboard/movimientos" },
+        { name: "Cuentas", icon: <FiCreditCard />, href: "/dashboard/cuentas" },
         { name: "Listas", icon: <FiShoppingCart />, href: "/dashboard/listas" },
         { name: "Gastos Fijos", icon: <FiCalendar />, href: "/dashboard/gastos-fijos" },
-        { name: "Ahorros", icon: <FiBriefcase />, href: "/dashboard/ahorros" },
         { name: "Deudas", icon: <FiCreditCard />, href: "/dashboard/deudas" },
         { name: "Reportes", icon: <FiPieChart />, href: "/dashboard/reportes" },
         { name: "Perfil", icon: <FiUser />, href: "/dashboard/perfil" },
@@ -77,7 +77,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <aside
                 className={`fixed z-50 transition-transform duration-300 ease-in-out
                 /* Mobile: Full Screen Bottom Sheet */
-                bottom-0 left-0 w-full h-[100dvh] rounded-t-[2.5rem] border-t border-slate-700/50 
+                bottom-0 left-0 w-full h-dvh rounded-t-[2.5rem] border-t border-slate-700/50 
                 bg-slate-900/95 backdrop-blur-xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)]
                 ${isOpen ? "translate-y-0" : "translate-y-full"}
                 
@@ -88,19 +88,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             >
                 <div className="flex flex-col h-full relative">
                     {/* Mobile Handle */}
-                    <div className="md:hidden w-full flex justify-center pt-4 pb-1 flex-shrink-0" onClick={onClose}>
+                    <div className="md:hidden w-full flex justify-center pt-4 pb-1 shrink-0" onClick={onClose}>
                         <div className="w-12 h-1.5 bg-slate-700 rounded-full"></div>
                     </div>
 
-                    {/* Decorative glow */}
-                    <div className="absolute top-0 left-0 w-full h-32 bg-amber-500/10 blur-3xl -translate-y-16 pointer-events-none"></div>
-
                     {/* Header - Mismo diseño del Login */}
-                    <div className={`${outfit.variable} px-4 pt-4 pb-2 md:p-6 flex items-start md:items-center justify-between relative z-10 flex-shrink-0`}>
+                    <div className={`${outfit.variable} px-4 pt-4 pb-2 md:p-6 flex items-start md:items-center justify-between relative z-10 shrink-0`}>
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <div className="absolute inset-0 bg-amber-500/15 blur-[20px] rounded-full scale-125 pointer-events-none"></div>
-                                <div className="relative p-2 bg-slate-800/80 rounded-2xl border border-amber-500/20 shadow-[0_0_15px_rgba(202,138,4,0.15)]">
+                                <div className="relative p-2 bg-slate-800/80 rounded-2xl border border-amber-500/20 shadow-[0_0_15px_rgba(202,138,4,0.15)] shrink-0">
                                     <Logo variant="icon" width={36} height={36} />
                                 </div>
                             </div>

@@ -4,16 +4,18 @@ import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { addDoc, collection, serverTimestamp, doc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, doc, updateDoc, runTransaction } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { toast } from "sonner";
-import { FiDollarSign, FiCalendar, FiTag, FiFileText, FiSave, FiTrendingUp, FiTrendingDown, FiX } from "react-icons/fi";
+import { FiDollarSign, FiCalendar, FiTag, FiFileText, FiSave, FiTrendingUp, FiTrendingDown, FiX, FiCreditCard } from "react-icons/fi";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from 'date-fns/locale/es';
 import { getBCVRate } from "@/lib/currency";
 import { createVenezuelaDate } from "@/lib/timezone";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
+import { useBankAccounts } from "@/contexts/BankAccountsContext";
+import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 import Input from "../ui/forms/Input";
 import CustomCurrencyInput from "../ui/forms/CurrencyInput";
 import Select from "../ui/forms/Select";
@@ -51,6 +53,7 @@ const transactionSchema = z.object({
     currency: z.enum(["USD", "VES"]),
     exchangeRate: z.string().optional(),
     vesAmount: z.string().optional(),
+    accountId: z.string().min(1, "Debes seleccionar una cuenta"),
 }).refine(data => {
     if (data.category === "Otra" && (!data.customCategory || data.customCategory.trim() === "")) {
         return false;
@@ -65,6 +68,7 @@ type TransactionFormData = z.infer<typeof transactionSchema>;
 
 export default function TransactionForm() {
     const { transactionToEdit, clearEditing } = useEditTransaction();
+    const { cuentas } = useBankAccounts();
     const [loading, setLoading] = useState(false);
     const [rate, setRate] = useState<number>(0);
 
@@ -80,6 +84,7 @@ export default function TransactionForm() {
             currency: "USD",
             exchangeRate: "",
             vesAmount: "",
+            accountId: "",
         }
     });
 
@@ -174,6 +179,10 @@ export default function TransactionForm() {
     }, [currency, vesAmount, exchangeRate, setValue]);
 
     const onSubmit = async (data: TransactionFormData) => {
+        if (cuentas.length === 0) {
+            toast.error("Debes crear una cuenta bancaria antes de registrar movimientos.");
+            return;
+        }
         setLoading(true);
 
         if (!auth.currentUser) {
@@ -194,18 +203,49 @@ export default function TransactionForm() {
                 currency: data.currency,
                 originalAmount: data.currency === "VES" ? parseFloat(data.vesAmount || "0") : parseFloat(data.amount),
                 exchangeRate: data.currency === "VES" ? parseFloat(data.exchangeRate || "1") : 1,
+                accountId: data.accountId,
             };
 
+            const montoUSD = parseFloat(data.amount);
+
             if (transactionToEdit) {
-                await updateDoc(doc(db, "transactions", transactionToEdit.id), transactionData);
+                // Al editar, ajustar saldo: revertir el anterior y aplicar el nuevo
+                const cuentaRef = doc(db, "users", auth.currentUser.uid, "bank_accounts", data.accountId);
+                await runTransaction(db, async (transaction) => {
+                    const cuentaDoc = await transaction.get(cuentaRef);
+                    if (cuentaDoc.exists()) {
+                        let saldo = cuentaDoc.data().saldo || 0;
+                        // Revertir movimiento anterior si era de la misma cuenta
+                        if (transactionToEdit.accountId === data.accountId) {
+                            if (transactionToEdit.type === "ingreso") saldo -= transactionToEdit.amount;
+                            else saldo += transactionToEdit.amount;
+                        }
+                        // Aplicar nuevo movimiento
+                        if (data.type === "ingreso") saldo += montoUSD;
+                        else saldo -= montoUSD;
+                        transaction.update(cuentaRef, { saldo, actualizadoEn: serverTimestamp() });
+                    }
+                    transaction.update(doc(db, "transactions", transactionToEdit.id), transactionData);
+                });
                 toast.success("El movimiento ha sido modificado.");
                 clearEditing();
             } else {
-                await addDoc(collection(db, "transactions"), {
-                    userId: auth.currentUser.uid,
-                    ...transactionData,
-                    period: "mensual",
-                    createdAt: serverTimestamp(),
+                // Crear transacción y actualizar saldo de la cuenta en una transacción atómica
+                const cuentaRef = doc(db, "users", auth.currentUser.uid, "bank_accounts", data.accountId);
+                await runTransaction(db, async (transaction) => {
+                    const cuentaDoc = await transaction.get(cuentaRef);
+                    if (cuentaDoc.exists()) {
+                        const saldo = cuentaDoc.data().saldo || 0;
+                        const nuevoSaldo = data.type === "ingreso" ? saldo + montoUSD : saldo - montoUSD;
+                        transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
+                    }
+                    const newTransRef = doc(collection(db, "transactions"));
+                    transaction.set(newTransRef, {
+                        userId: auth.currentUser!.uid,
+                        ...transactionData,
+                        period: "mensual",
+                        createdAt: serverTimestamp(),
+                    });
                 });
                 toast.success("El movimiento se ha registrado correctamente.");
 
@@ -213,7 +253,7 @@ export default function TransactionForm() {
                 reset({
                     amount: "", description: "", category: "Comida", customCategory: "",
                     date: createVenezuelaDate(), type: "gasto", currency: "USD",
-                    exchangeRate: rate.toFixed(2), vesAmount: ""
+                    exchangeRate: rate.toFixed(2), vesAmount: "", accountId: data.accountId,
                 });
             }
         } catch (error) {
@@ -225,18 +265,20 @@ export default function TransactionForm() {
     };
 
     return (
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 md:p-8 rounded-3xl border border-slate-700/50 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
             {/* Decorative Background Elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
 
             <div className="flex items-center justify-between mb-8 relative z-10">
                 <div className="flex items-center gap-3">
-                    <span className="p-3 bg-gradient-to-tr from-violet-500/20 to-fuchsia-500/20 text-violet-400 rounded-2xl border border-violet-500/30 shadow-[inset_0_1px_rgba(255,255,255,0.1)]">
+                    <div className="p-3 bg-violet-500/10 text-violet-400 rounded-2xl border border-violet-500/20 ring-4 ring-violet-500/5">
                         <FiDollarSign size={24} />
-                    </span>
-                    <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-                        {transactionToEdit ? "Editar Movimiento" : "Nuevo Movimiento"}
-                    </h2>
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-black text-white tracking-tight">
+                            {transactionToEdit ? "Editar Movimiento" : "Nuevo Movimiento"}
+                        </h2>
+                    </div>
                 </div>
                 {transactionToEdit && (
                     <button
@@ -245,7 +287,7 @@ export default function TransactionForm() {
                             reset({
                                 amount: "", description: "", category: "Comida", customCategory: "",
                                 date: createVenezuelaDate(), type: "gasto", currency: "USD",
-                                exchangeRate: rate.toFixed(2), vesAmount: ""
+                                exchangeRate: rate.toFixed(2), vesAmount: "", accountId: "",
                             });
                         }}
                         className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-xl transition-all"
@@ -255,7 +297,7 @@ export default function TransactionForm() {
                 )}
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative z-10">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 relative z-10">
 
                 {/* Type Toggle */}
                 <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-950/60 rounded-[1.25rem] border border-slate-800/80 text-sm shadow-inner relative z-10">
@@ -285,6 +327,80 @@ export default function TransactionForm() {
                                     <FiTrendingDown /> Gasto
                                 </button>
                             </>
+                        )}
+                    />
+                </div>
+
+                {/* Advertencia de falta de cuentas */}
+                {cuentas.length === 0 && (
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3"
+                    >
+                        <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400 shrink-0">
+                            <FiCreditCard size={18} />
+                        </div>
+                        <div>
+                            <p className="text-amber-200 text-sm font-bold">Sin cuentas bancarias</p>
+                            <p className="text-amber-500/70 text-xs mt-0.5 leading-relaxed">
+                                No puedes registrar movimientos sin una cuenta de destino. Configure una en la sección de cuentas para continuar.
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Cuenta Bancaria - OBLIGATORIO */}
+                <div className="z-20 relative">
+                    <Controller
+                        control={control}
+                        name="accountId"
+                        render={({ field }) => (
+                            <Select
+                                label="Cuenta"
+                                icon={<FiCreditCard size={14} />}
+                                value={field.value}
+                                onChange={field.onChange}
+                                error={errors.accountId}
+                                placeholder="Seleccionar cuenta..."
+                                options={cuentas.map(c => ({
+                                    id: c.id,
+                                    value: c.id,
+                                    name: c.nombre,
+                                    moneda: c.moneda,
+                                    saldo: c.saldo,
+                                    banco: c.banco
+                                }))}
+                                renderOption={(opt) => (
+                                    <div className="flex flex-col">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-100">{opt.name}</span>
+                                            <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md border border-slate-700/50">
+                                                {opt.moneda}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-xs text-amber-500/80 font-medium">
+                                                {obtenerSimboloMoneda(opt.moneda as any)} {opt.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                            </span>
+                                            <span className="text-[10px] text-slate-500 italic uppercase tracking-tighter">
+                                                • {opt.banco}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                                renderValue={(opt) => (
+                                    <div className="flex items-center justify-between w-full pr-2">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <span className="truncate">{opt.name}</span>
+                                            <span className="text-[10px] text-slate-500 shrink-0">({opt.banco})</span>
+                                        </div>
+                                        <span className="text-amber-500 font-black text-xs shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg ml-2">
+                                            {obtenerSimboloMoneda(opt.moneda as any)} {opt.saldo.toLocaleString("es-ES", { maximumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                )}
+                            />
                         )}
                     />
                 </div>
@@ -332,14 +448,20 @@ export default function TransactionForm() {
                                     exit={{ opacity: 0, width: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <Input
-                                        label="Tasa"
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="0.00"
-                                        {...control.register("exchangeRate")}
-                                        error={errors.exchangeRate}
-                                        className="text-center"
+                                    <Controller
+                                        control={control}
+                                        name="exchangeRate"
+                                        render={({ field }) => (
+                                            <Input
+                                                label="Tasa"
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                {...field}
+                                                error={errors.exchangeRate}
+                                                className="text-center"
+                                            />
+                                        )}
                                     />
                                 </motion.div>
                             )}
@@ -400,11 +522,17 @@ export default function TransactionForm() {
                                     animate={{ opacity: 1, height: "auto", marginTop: 12 }}
                                     exit={{ opacity: 0, height: 0, marginTop: 0 }}
                                 >
-                                    <Input
-                                        placeholder="Especifica la categoría..."
-                                        icon={<FiTag className="text-emerald-400" />}
-                                        {...control.register("customCategory")}
-                                        error={errors.customCategory}
+                                    <Controller
+                                        control={control}
+                                        name="customCategory"
+                                        render={({ field }) => (
+                                            <Input
+                                                placeholder="Especifica la categoría..."
+                                                icon={<FiTag className="text-violet-400" />}
+                                                {...field}
+                                                error={errors.customCategory}
+                                            />
+                                        )}
                                     />
                                 </motion.div>
                             )}
@@ -427,7 +555,7 @@ export default function TransactionForm() {
                                         onChange={(date: Date | null) => field.onChange(date)}
                                         locale="es"
                                         dateFormat="dd/MM/yyyy"
-                                        className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-sm font-medium rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-all cursor-pointer hover:border-slate-600 hover:bg-slate-800"
+                                        className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-sm font-medium rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all cursor-pointer hover:border-slate-600 hover:bg-slate-800"
                                         wrapperClassName="w-full"
                                         calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-xl !rounded-2xl overflow-hidden"
                                         dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-all"}
@@ -447,11 +575,17 @@ export default function TransactionForm() {
                         <div className="absolute top-4 left-4 pointer-events-none text-slate-400">
                             <FiFileText />
                         </div>
-                        <textarea
-                            rows={3}
-                            {...control.register("description")}
-                            className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-sm font-medium rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-all placeholder:text-slate-600 resize-none hover:border-slate-600 hover:bg-slate-800"
-                            placeholder="Detalles opcionales..."
+                        <Controller
+                            control={control}
+                            name="description"
+                            render={({ field }) => (
+                                <textarea
+                                    rows={3}
+                                    {...field}
+                                    className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-sm font-medium rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-600 resize-none hover:border-slate-600 hover:bg-slate-800"
+                                    placeholder="Detalles opcionales..."
+                                />
+                            )}
                         />
                     </div>
                 </div>
@@ -462,9 +596,9 @@ export default function TransactionForm() {
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={loading}
-                    className="w-full relative group overflow-hidden bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+                    className="w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                     {loading ? (
                         <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin z-10"></span>
                     ) : (

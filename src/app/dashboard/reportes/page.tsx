@@ -6,6 +6,8 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { ExpenseCategoryChart, BalanceChart } from "@/components/charts/FinancialCharts";
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiPieChart, FiBriefcase } from "react-icons/fi";
 import { useSavingsTransactions } from "@/hooks/useSavingsTransactions";
+import Select from "@/components/ui/forms/Select";
+import { FiCalendar, FiClock } from "react-icons/fi";
 
 export default function ReportsPage() {
     const { transactions, loading } = useTransactions();
@@ -134,41 +136,33 @@ export default function ReportsPage() {
                         </div>
                     </div>
 
-                    <div className="bg-slate-900/60 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700/50 flex gap-2">
-                        <div className="relative flex-1">
-                            <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                className="w-full appearance-none bg-slate-800 text-white text-sm font-medium py-2.5 px-4 rounded-xl outline-none text-center"
-                            >
-                                {MONTHS.map((m, i) => (
-                                    <option key={m} value={i}>{m}</option>
-                                ))}
-                            </select>
-                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
+                    <div className="flex gap-4">
+                        <div className="flex-1">
+                            <Select
+                                label=""
+                                value={selectedMonth.toString()}
+                                onChange={(val) => setSelectedMonth(Number(val))}
+                                options={MONTHS.map((m, i) => ({ id: i.toString(), value: i.toString(), name: m }))}
+                                icon={<FiCalendar />}
+                                className="py-2.5!"
+                            />
                         </div>
-                        <div className="relative flex-1">
-                            <select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                className="w-full appearance-none bg-slate-800 text-white text-sm font-medium py-2.5 px-4 rounded-xl outline-none text-center"
-                            >
-                                {[2023, 2024, 2025, 2026].map(y => (
-                                    <option key={y} value={y}>{y}</option>
-                                ))}
-                            </select>
-                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
+                        <div className="flex-1">
+                            <Select
+                                label=""
+                                value={selectedYear.toString()}
+                                onChange={(val) => setSelectedYear(Number(val))}
+                                options={[2023, 2024, 2025, 2026].map(y => ({ id: y.toString(), value: y.toString(), name: y.toString() }))}
+                                icon={<FiClock />}
+                                className="py-2.5!"
+                            />
                         </div>
                     </div>
                 </motion.div>
 
                 {/* KPI Grid 2x2 */}
                 <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
-                    <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-4 rounded-2xl border border-emerald-500/20 backdrop-blur-sm relative overflow-hidden">
+                    <div className="bg-linear-to-br from-emerald-500/10 to-emerald-600/5 p-4 rounded-2xl border border-emerald-500/20 backdrop-blur-sm relative overflow-hidden">
                         <div className="mb-2 w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
                             <FiTrendingUp size={16} />
                         </div>
@@ -176,7 +170,7 @@ export default function ReportsPage() {
                         <p className="text-lg font-bold text-white tracking-tight">${stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 p-4 rounded-2xl border border-red-500/20 backdrop-blur-sm relative overflow-hidden">
+                    <div className="bg-linear-to-br from-red-500/10 to-red-600/5 p-4 rounded-2xl border border-red-500/20 backdrop-blur-sm relative overflow-hidden">
                         <div className="mb-2 w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400">
                             <FiTrendingDown size={16} />
                         </div>
@@ -184,7 +178,7 @@ export default function ReportsPage() {
                         <p className="text-lg font-bold text-white tracking-tight">${stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 p-4 rounded-2xl border border-amber-500/20 backdrop-blur-sm relative overflow-hidden">
+                    <div className="bg-linear-to-br from-amber-500/10 to-amber-600/5 p-4 rounded-2xl border border-amber-500/20 backdrop-blur-sm relative overflow-hidden">
                         <div className="mb-2 w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400">
                             <FiDollarSign size={16} />
                         </div>
@@ -194,7 +188,7 @@ export default function ReportsPage() {
                         </p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-violet-500/10 to-violet-600/5 p-4 rounded-2xl border border-violet-500/20 backdrop-blur-sm relative overflow-hidden">
+                    <div className="bg-linear-to-br from-violet-500/10 to-violet-600/5 p-4 rounded-2xl border border-violet-500/20 backdrop-blur-sm relative overflow-hidden">
                         <div className="mb-2 w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center text-violet-400">
                             <FiBriefcase size={16} />
                         </div>
@@ -266,37 +260,38 @@ export default function ReportsPage() {
             {/* ===== DESKTOP LAYOUT (Original wrapped) ===== */}
             <div className="hidden md:block space-y-8">
                 {/* Header & Filter */}
-                <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+                <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
                     <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                         <FiPieChart className="text-7xl md:text-9xl text-amber-400" />
                     </div>
                     <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-amber-500/10 to-transparent pointer-events-none"></div>
+                    <div className="absolute top-0 left-0 w-full h-full bg-linear-to-r from-amber-500/10 to-transparent pointer-events-none"></div>
 
                     <div className="relative z-10">
                         <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Reportes Financieros</h1>
                         <p className="text-slate-400 text-sm md:text-lg">Analiza tus finanzas por periodos.</p>
                     </div>
-
-                    <div className="relative z-10 flex space-x-2 bg-slate-800/50 p-1.5 rounded-2xl border border-slate-700/50 backdrop-blur-md">
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                            className="bg-transparent text-white font-medium p-2.5 rounded-xl outline-none cursor-pointer hover:bg-slate-700/50 transition-colors"
-                        >
-                            {MONTHS.map((m, i) => (
-                                <option key={m} value={i} className="bg-slate-900 text-slate-300">{m}</option>
-                            ))}
-                        </select>
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="bg-transparent text-white font-medium p-2.5 rounded-xl outline-none cursor-pointer hover:bg-slate-700/50 transition-colors"
-                        >
-                            {[2023, 2024, 2025, 2026].map(y => (
-                                <option key={y} value={y} className="bg-slate-900 text-slate-300">{y}</option>
-                            ))}
-                        </select>
+                    <div className="relative z-10 flex gap-3 min-w-[300px]">
+                        <div className="flex-1">
+                            <Select
+                                label=""
+                                value={selectedMonth.toString()}
+                                onChange={(val) => setSelectedMonth(Number(val))}
+                                options={MONTHS.map((m, i) => ({ id: i.toString(), value: i.toString(), name: m }))}
+                                icon={<FiCalendar />}
+                                className="bg-transparent border-slate-700/30 hover:border-amber-500/30"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <Select
+                                label=""
+                                value={selectedYear.toString()}
+                                onChange={(val) => setSelectedYear(Number(val))}
+                                options={[2023, 2024, 2025, 2026].map(y => ({ id: y.toString(), value: y.toString(), name: y.toString() }))}
+                                icon={<FiClock />}
+                                className="bg-transparent border-slate-700/30 hover:border-amber-500/30"
+                            />
+                        </div>
                     </div>
                 </div>
 

@@ -82,7 +82,7 @@ export default function FixedExpensesCalendar({ expenses, onPayExpense }: FixedE
         <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-3xl p-6 shadow-xl">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+                    <span className="bg-clip-text text-transparent bg-linear-to-r from-emerald-400 to-cyan-400">
                         {monthNames[month]}
                     </span>
                     <span className="text-slate-500">{year}</span>
@@ -136,15 +136,15 @@ export default function FixedExpensesCalendar({ expenses, onPayExpense }: FixedE
                                                     whileTap={{ scale: 0.98 }}
                                                     onClick={() => onPayExpense(expense)}
                                                     className={`
-                                                        text-[10px] px-2 py-1 rounded-md text-left truncate flex items-center gap-1 w-full
+                                                        text-[10px] px-2 py-1 rounded-md text-left flex items-start gap-1 w-full wrap-break-word leading-tight
                                                         ${paid
                                                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                                                             : 'bg-red-500/10 text-red-300 border border-red-500/20 hover:bg-red-500/20'}
                                                     `}
                                                     title={`${expense.title} - $${parseFloat(expense.amount.toFixed(2))} ${paid ? '(Pagado)' : '(Pendiente)'}`}
                                                 >
-                                                    {paid ? <FiCheckCircle className="shrink-0" /> : <FiAlertCircle className="shrink-0" />}
-                                                    <span className="truncate">{expense.title}</span>
+                                                    {paid ? <FiCheckCircle className="shrink-0 mt-0.5" /> : <FiAlertCircle className="shrink-0 mt-0.5" />}
+                                                    <span>{expense.title}</span>
                                                 </motion.button>
                                             );
                                         })}

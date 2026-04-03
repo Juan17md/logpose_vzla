@@ -42,3 +42,9 @@ next-env.d.ts
 
 #rules
 .cursorrules
+
+# Agent & AI Assistant files
+.agents/
+.agent/
+.claude/
+skills-lock.json

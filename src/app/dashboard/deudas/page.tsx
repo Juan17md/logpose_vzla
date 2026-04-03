@@ -6,12 +6,11 @@ import { useDebts, Debt } from "@/hooks/useDebts";
 import { FiPlus, FiTrash2, FiCheckCircle, FiDollarSign, FiUser, FiInfo, FiArrowUpRight, FiArrowDownLeft, FiClock, FiSearch, FiEdit2 } from "react-icons/fi";
 import PaginationControls from "@/components/ui/PaginationControls";
 import { toast } from "sonner";
-import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { getBCVRate } from "@/lib/currency";
-import { db, auth } from "@/lib/firebase";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import DebtForm from "@/components/forms/DebtForm";
+import DebtPaymentForm from "@/components/forms/DebtPaymentForm";
 
 export default function DebtsPage() {
     const router = useRouter();
@@ -21,15 +20,15 @@ export default function DebtsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
-    // Debt Modal
 
-    // Payment Modal
-    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+    // Inline Form State
+    const [view, setView] = useState<"create" | "edit" | "payment" | "none">("create");
+    const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Confirm Delete
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
-
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate use: reset pagination on filter change
@@ -52,21 +51,59 @@ export default function DebtsPage() {
     const paginatedDebts = filteredDebts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 
-    // Calculate totals (should align with search or raw? Usually totals at top align with TAB, regardless of search? 
-    // The user code previously calculated totals based on 'debts.filter(type)'. Let's keep totals global for the tab, not affected by search.)
+    // Calculate totals
     const totalReceivable = debts.filter(d => d.type === "por_cobrar").reduce((acc, d) => acc + (d.amount - d.payments.reduce((pAcc, p) => pAcc + p.amount, 0)), 0);
     const totalPayable = debts.filter(d => d.type === "por_pagar").reduce((acc, d) => acc + (d.amount - d.payments.reduce((pAcc, p) => pAcc + p.amount, 0)), 0);
 
     const handleAddDebtClick = () => {
-        router.push("/dashboard/deudas/nueva");
+        setView("create");
+        setEditingDebt(null);
     };
 
     const handleEditDebtClick = (debt: Debt) => {
-        router.push(`/dashboard/deudas/${debt.id}/editar`);
+        setEditingDebt(debt);
+        setView("edit");
     };
 
     const handleAddPaymentClick = (debt: Debt) => {
-        router.push(`/dashboard/deudas/${debt.id}/pagar`);
+        setEditingDebt(debt);
+        setView("payment");
+    };
+
+    const handleFormSubmit = async (data: any) => {
+        setIsSubmitting(true);
+        try {
+            if (view === "create") {
+                await addDebt(data);
+                toast.success("Deuda registrada correctamente");
+            } else if (view === "edit" && editingDebt) {
+                await updateDebt(editingDebt.id, data);
+                toast.success("Deuda actualizada correctamente");
+                setView("create");
+                setEditingDebt(null);
+            }
+        } catch (error) {
+            toast.error("Error al procesar la solicitud");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handlePaymentSubmit = async (paymentData: any) => {
+        if (!editingDebt) return;
+        setIsSubmitting(true);
+        try {
+            const success = await addPayment(editingDebt.id, paymentData);
+            if (success) {
+                toast.success("Pago registrado correctamente");
+                setView("create");
+                setEditingDebt(null);
+            }
+        } catch (error) {
+            toast.error("Error al registrar el pago");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleDeleteClick = (id: string) => {
@@ -178,17 +215,67 @@ export default function DebtsPage() {
                 </motion.div>
 
                 {/* Mobile Actions: Add Button */}
-                <motion.div variants={itemVariants} className="px-1">
+                <motion.div variants={itemVariants} className="px-1 space-y-6">
                     <motion.button
                         whileHover={{ scale: 1.01, translateY: -2 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleAddDebtClick}
-                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl font-bold text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 transition-all relative overflow-hidden group"
+                        className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold transition-all relative overflow-hidden group ${view === 'create' ? 'bg-amber-500 text-slate-950 border border-amber-400' : 'bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30'}`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                        <FiPlus className="text-xl relative z-10" />
-                        <span className="relative z-10 tracking-wide text-shadow-sm">Nuevo Registro</span>
+                        {view === 'create' ? <FiPlus className="text-xl relative z-10 rotate-45" /> : <FiPlus className="text-xl relative z-10" />}
+                        <span className="relative z-10 tracking-wide text-shadow-sm">
+                            {view === 'create' ? 'Cancelar / Cerrar' : 'Nuevo Registro'}
+                        </span>
                     </motion.button>
+
+                    {/* Mobile Inline Form */}
+                    <AnimatePresence mode="wait">
+                        {view !== "none" && (view !== "create" || view === "create") && (view !== "none") && (
+                            <motion.div
+                                key={view + (editingDebt?.id || "")}
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 overflow-hidden"
+                            >
+                                <div className="mb-4">
+                                    <h2 className="text-lg font-black text-white uppercase italic">
+                                        {view === "create" ? "Nueva Deuda" : view === "edit" ? "Editar Deuda" : "Registrar Pago"}
+                                    </h2>
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                        {view === "payment" ? "Abono al saldo" : "Detalles del registro"}
+                                    </p>
+                                </div>
+
+                                {view === "payment" && editingDebt ? (
+                                    <DebtPaymentForm 
+                                        debt={editingDebt} 
+                                        onSubmit={handlePaymentSubmit} 
+                                        onCancel={() => { setView("none"); setEditingDebt(null); }}
+                                        isLoading={isSubmitting} 
+                                    />
+                                ) : (
+                                    <DebtForm 
+                                        initialData={editingDebt} 
+                                        onSubmit={handleFormSubmit} 
+                                        onCancel={() => { setView("none"); setEditingDebt(null); }}
+                                        isLoading={isSubmitting}
+                                        defaultType={activeTab}
+                                    />
+                                )}
+                                
+                                {view !== "none" && (
+                                    <button
+                                        onClick={() => { setView("none"); setEditingDebt(null); }}
+                                        className="w-full mt-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors"
+                                    >
+                                        Cerrar Formulario
+                                    </button>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </motion.div>
 
                 {/* Mobile List */}
@@ -320,224 +407,296 @@ export default function DebtsPage() {
 
 
             {/* DESKTOP VIEW */}
-            <div className="hidden md:block space-y-8 pb-10">
-                {/* Header */}
-                <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
-                    <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                        <FiDollarSign className="text-7xl md:text-9xl text-violet-400" />
-                    </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-violet-500/10 to-transparent pointer-events-none"></div>
-
-                    <div className="relative z-10">
-                        <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Deudas y Préstamos</h1>
-                        <p className="text-slate-400 text-sm md:text-lg">
-                            Controla lo que debes y lo que te deben.
-                        </p>
-                    </div>
-                </div>
-
-                {/* Stats Cards - Horizontal scroll en móvil */}
-                <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 scrollbar-hide">
-                    <div
-                        className={`flex-none w-56 md:w-auto p-5 md:p-6 rounded-2xl md:rounded-3xl border transition-all cursor-pointer relative overflow-hidden group ${activeTab === 'por_cobrar' ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10' : 'bg-slate-900/50 border-slate-700/50 hover:border-emerald-500/30'}`}
-                        onClick={() => setActiveTab('por_cobrar')}
-                    >
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <FiArrowUpRight className="text-6xl md:text-8xl text-emerald-500" />
-                        </div>
-                        <div className="relative z-10">
-                            <p className={`text-xs md:text-sm font-bold uppercase tracking-wider mb-1 ${activeTab === 'por_cobrar' ? 'text-emerald-400' : 'text-slate-400'}`}>Por Cobrar</p>
-                            <h2 className="text-2xl md:text-3xl font-bold text-white">${totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h2>
-                            <p className="text-[10px] md:text-xs text-slate-500 mt-1">Gente que te debe</p>
-                        </div>
-                    </div>
-
-                    <div
-                        className={`flex-none w-56 md:w-auto p-5 md:p-6 rounded-2xl md:rounded-3xl border transition-all cursor-pointer relative overflow-hidden group ${activeTab === 'por_pagar' ? 'bg-red-500/10 border-red-500/50 shadow-lg shadow-red-500/10' : 'bg-slate-900/50 border-slate-700/50 hover:border-red-500/30'}`}
-                        onClick={() => setActiveTab('por_pagar')}
-                    >
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <FiArrowDownLeft className="text-6xl md:text-8xl text-red-500" />
-                        </div>
-                        <div className="relative z-10">
-                            <p className={`text-xs md:text-sm font-bold uppercase tracking-wider mb-1 ${activeTab === 'por_pagar' ? 'text-red-400' : 'text-slate-400'}`}>Por Pagar</p>
-                            <h2 className="text-2xl md:text-3xl font-bold text-white">${totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h2>
-                            <p className="text-[10px] md:text-xs text-slate-500 mt-1">Dinero que debes</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Controls */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/40 p-4 rounded-2xl border border-slate-700/30">
-                    <div className="relative w-full md:w-80">
-                        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
-                        <input
-                            type="text"
-                            placeholder={activeTab === "por_cobrar" ? "Buscar deudor..." : "Buscar acreedor..."}
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl py-2 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-violet-500/50 placeholder-slate-600 transition-all"
-                        />
-                    </div>
-
-                    <motion.button
-                        whileHover={{ scale: 1.05, translateY: -2 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleAddDebtClick}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold hover:from-violet-500 hover:to-indigo-500 transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 w-full md:w-auto justify-center relative overflow-hidden group"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                        <FiPlus className="relative z-10" /> 
-                        <span className="relative z-10 tracking-wide text-shadow-sm">Nuevo Registro</span>
-                    </motion.button>
-                </div>
-
-                {/* List */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {paginatedDebts.length === 0 && (
-                        <div className="col-span-full py-12 text-center border border-dashed border-slate-700 rounded-3xl bg-slate-900/30">
-                            <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <FiInfo className="text-2xl text-slate-500" />
-                            </div>
-                            <p className="text-slate-400">
-                                {searchTerm ? "No se encontraron resultados." : "No hay registros en esta sección."}
-                            </p>
-                        </div>
-                    )}
-
-                    {paginatedDebts.map((debt) => {
-                        const totalPaid = debt.payments.reduce((a, b) => a + b.amount, 0);
-                        const remaining = debt.amount - totalPaid;
-                        const progress = (totalPaid / debt.amount) * 100;
-                        const isFullyPaid = remaining <= 0.01;
-
-                        return (
-                            <div key={debt.id} className="bg-slate-900/50 border border-slate-700/50 rounded-3xl p-6 relative group hover:border-slate-600 transition-all">
-                                {isFullyPaid && (
-                                    <div className="absolute top-4 right-4">
-                                        <span className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1">
-                                            <FiCheckCircle /> PAGADO
-                                        </span>
-                                    </div>
-                                )}
-
-                                <div className="flex items-start gap-4 mb-4">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${debt.type === 'por_cobrar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                                        <FiUser />
-                                    </div>
+            <div className="hidden md:block pb-10">
+                <div className="flex flex-col lg:flex-row gap-8 items-start">
+                    
+                    {/* LEFT COLUMN: Sticky Form (1/3) */}
+                    <div className="w-full lg:w-[380px] lg:sticky lg:top-8 flex-none">
+                        <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden group">
+                            {/* Decorative background circle */}
+                            <div className="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-[80px] group-hover:bg-amber-500/20 transition-all duration-700" />
+                            
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-center mb-6">
                                     <div>
-                                        <h3 className="text-lg font-bold text-white">{debt.personName}</h3>
-                                        <p className="text-sm text-slate-500">{debt.description || "Sin descripción"}</p>
+                                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-amber-500 rounded-full" />
+                                            {view === "create" ? "Nueva Deuda" : view === "edit" ? "Editar Deuda" : "Registrar Pago"}
+                                        </h2>
+                                        <p className="text-xs text-slate-500 mt-1">
+                                            {view === "payment" ? "Abonar al saldo pendiente" : "Completa los detalles abajo"}
+                                        </p>
                                     </div>
-                                </div>
-
-                                {/* Amount Display */}
-                                <div className="mb-4 p-4 bg-slate-800/50 rounded-2xl border border-slate-700/30">
-                                    <div className="flex justify-between items-end mb-1">
-                                        <span className="text-xs text-slate-400 uppercase font-bold">Total</span>
-                                        <span className="text-xl font-bold text-white">${debt.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
-                                    </div>
-                                    <div className="flex justify-between items-end">
-                                        <span className="text-xs text-slate-400 uppercase font-bold">Restante</span>
-                                        <span className={`text-lg font-bold ${remaining > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                                            ${remaining.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                                        </span>
-                                    </div>
-                                    <div className="mt-2 text-right">
-                                        <span className="text-xs text-slate-500">
-                                            ≈ Bs. {(remaining * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Progress Bar */}
-                                <div className="mb-4">
-                                    <div className="flex justify-between text-xs mb-1 text-slate-400">
-                                        <span>Progreso de pago</span>
-                                        <span>{progress.toFixed(0)}%</span>
-                                    </div>
-                                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full transition-all duration-500 ${isFullyPaid ? 'bg-emerald-500' : 'bg-amber-400'}`}
-                                            style={{ width: `${Math.min(progress, 100)}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-
-                                {/* Payments History (Collapsible or just minimal info?) - Let's show last payment or count */}
-                                {debt.payments.length > 0 && (
-                                    <div className="mb-4 text-xs text-slate-500 bg-slate-800/30 p-3 rounded-xl">
-                                        <p className="font-bold text-slate-400 mb-1">Historial del Pagos ({debt.payments.length}):</p>
-                                        <div className="space-y-1 max-h-20 overflow-y-auto custom-scrollbar">
-                                            {debt.payments.slice().reverse().map((pay, i) => (
-                                                <div key={i} className="flex justify-between items-center">
-                                                    <span>{new Date(pay.date).toLocaleDateString()}</span>
-                                                    <div className="text-right">
-                                                        <div className="text-white font-bold">
-                                                            {pay.currency === 'VES' && pay.originalAmount
-                                                                ? `Bs. ${pay.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-                                                                : `$${pay.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-                                                            }
-                                                        </div>
-                                                        {pay.currency === 'VES' && (
-                                                            <div className="text-xs text-slate-500">
-                                                                ≈ ${pay.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Actions */}
-                                <div className="flex gap-2 mt-auto">
-                                    {!isFullyPaid && (
-                                        <button
-                                            onClick={() => handleAddPaymentClick(debt)}
-                                            className="flex-1 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                                    {(view !== "create") && (
+                                        <button 
+                                            onClick={() => { setView("create"); setEditingDebt(null); }}
+                                            className="p-2 hover:bg-white/5 rounded-xl text-slate-500 hover:text-white transition-colors"
                                         >
-                                            Registrar Abono
+                                            <FiPlus className="rotate-45" size={20} />
                                         </button>
                                     )}
-                                    <button
-                                        onClick={() => handleEditDebtClick(debt)}
-                                        className="p-2 text-slate-500 hover:text-emerald-400 transition-colors bg-slate-800 hover:bg-slate-700 rounded-xl"
-                                        title="Editar"
+                                </div>
+                                
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={view + (editingDebt?.id || "")}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 10 }}
+                                        transition={{ duration: 0.2 }}
                                     >
-                                        <FiEdit2 />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteClick(debt.id)}
-                                        className="p-2 text-slate-500 hover:text-red-400 transition-colors bg-slate-800 hover:bg-slate-700 rounded-xl"
-                                        title="Eliminar"
-                                    >
-                                        <FiTrash2 />
-                                    </button>
+                                        {view === "payment" && editingDebt ? (
+                                            <DebtPaymentForm 
+                                                debt={editingDebt} 
+                                                onSubmit={handlePaymentSubmit} 
+                                                isLoading={isSubmitting} 
+                                            />
+                                        ) : (
+                                            <DebtForm 
+                                                initialData={editingDebt} 
+                                                onSubmit={handleFormSubmit} 
+                                                isLoading={isSubmitting}
+                                                defaultType={activeTab}
+                                            />
+                                        )}
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        </div>
+
+                        {/* BCV Ticker Card */}
+                        <div className="mt-4 bg-amber-500/5 backdrop-blur-sm border border-amber-500/10 rounded-2xl p-4 flex items-center justify-between group overflow-hidden relative">
+                            <div className="absolute inset-0 bg-linear-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
+                            <div className="flex items-center gap-3 relative z-10">
+                                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500">
+                                    <FiDollarSign size={16} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-amber-500/60 uppercase tracking-widest leading-none mb-1">Tasa BCV hoy</p>
+                                    <p className="text-sm font-bold text-white leading-none">Bs. {bcvRate.toLocaleString("es-VE", { minimumFractionDigits: 2 })}</p>
+                                </div>
+                            </div>
+                            <div className="text-right relative z-10">
+                                <div className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Sincronizado</div>
+                                <div className="text-[10px] font-bold text-emerald-400 flex items-center gap-1 justify-end">
+                                    <div className="w-1 h-1 bg-emerald-400 rounded-full" /> En Vivo
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: Content (2/3) */}
+                    <div className="flex-1 space-y-8 w-full">
+                        {/* Header Modern / Urban Premium */}
+                        <div className="relative overflow-hidden bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem] group min-h-[160px] flex items-center">
+                            <div className="absolute top-0 right-0 w-80 h-80 bg-violet-600/10 rounded-full blur-[100px] -mr-40 -mt-40 animate-pulse" />
+                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-600/5 rounded-full blur-[80px] -ml-32 -mb-32" />
+                            
+                            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between w-full gap-6">
+                                <div>
+                                    <h1 className="text-3xl font-bold text-white leading-none mb-2">
+                                        Deudas y Préstamos
+                                    </h1>
+                                    <p className="text-sm text-slate-500 flex items-center gap-2">
+                                        Gestiona tus préstamos y cobros
+                                    </p>
                                 </div>
 
-                                {/* Due Date Indicator */}
-                                {debt.dueDate && (
-                                    <div className="mt-3 flex items-center gap-2 text-xs text-slate-500 justify-center">
-                                        <FiClock /> Vence: {new Date(debt.dueDate).toLocaleDateString()}
+                                {/* Quick Stats (Instead of separate cards) */}
+                                <div className="flex gap-4">
+                                    <div 
+                                        onClick={() => setActiveTab("por_cobrar")}
+                                        className={`px-6 py-4 rounded-3xl border transition-all cursor-pointer group/stat ${activeTab === "por_cobrar" ? "bg-emerald-500/10 border-emerald-500/50 shadow-2xl shadow-emerald-500/10" : "bg-slate-950/40 border-white/5 hover:border-emerald-500/20"}`}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${activeTab === "por_cobrar" ? "bg-emerald-500 text-slate-950" : "bg-slate-900 text-slate-500 group-hover/stat:text-emerald-400"}`}>
+                                                <FiArrowUpRight size={20} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 group-hover/stat:text-emerald-500/60 transition-colors">Por Cobrar</p>
+                                                <p className="text-xl font-black text-white leading-none">${totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</p>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    <div 
+                                        onClick={() => setActiveTab("por_pagar")}
+                                        className={`px-6 py-4 rounded-3xl border transition-all cursor-pointer group/stat ${activeTab === "por_pagar" ? "bg-red-500/10 border-red-500/50 shadow-2xl shadow-red-500/10" : "bg-slate-950/40 border-white/5 hover:border-red-500/20"}`}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${activeTab === "por_pagar" ? "bg-red-500 text-slate-950" : "bg-slate-900 text-slate-500 group-hover/stat:text-red-400"}`}>
+                                                <FiArrowDownLeft size={20} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 group-hover/stat:text-red-500/60 transition-colors">Por Pagar</p>
+                                                <p className="text-xl font-black text-white leading-none">${totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* List Area */}
+                        <div className="space-y-6">
+                            {/* Toolbar */}
+                            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-950/40 p-4 rounded-3xl border border-white/5 backdrop-blur-md">
+                                <div className="relative w-full md:w-80 group">
+                                    <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-600 group-focus-within:text-amber-500 transition-colors" />
+                                    <input
+                                        type="text"
+                                        placeholder={activeTab === "por_cobrar" ? "Buscar por nombre..." : "Buscar por acreedor..."}
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-amber-500/30 placeholder-slate-600 transition-all font-medium"
+                                    />
+                                </div>
+                                
+                                <div className="flex items-center gap-2 text-xs font-black text-slate-500 uppercase tracking-widest">
+                                    <span className="w-2 h-2 bg-slate-800 rounded-full" />
+                                    {filteredDebts.length} {activeTab === "por_cobrar" ? "Cobros" : "Pagos"} Encontrados
+                                </div>
+                            </div>
+
+                            {/* Grid List */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {paginatedDebts.length === 0 ? (
+                                    <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-[3rem] bg-slate-950/20">
+                                        <div className="w-20 h-20 bg-slate-900/50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-700 italic font-black text-2xl border border-white/5">
+                                            ?
+                                        </div>
+                                        <p className="text-slate-400 font-black uppercase tracking-[3px] text-sm">
+                                            {searchTerm ? "No hay coincidencias" : "Lista vacía"}
+                                        </p>
+                                        <p className="text-[10px] text-slate-600 mt-2 font-bold uppercase tracking-widest italic">Inicia registrando algo en el panel izquierdo</p>
+                                    </div>
+                                ) : (
+                                    paginatedDebts.map((debt) => {
+                                        const totalPaid = debt.payments.reduce((a, b) => a + b.amount, 0);
+                                        const remaining = debt.amount - totalPaid;
+                                        const progress = (totalPaid / debt.amount) * 100;
+                                        const isFullyPaid = remaining <= 0.01;
+
+                                        return (
+                                            <motion.div 
+                                                key={debt.id} 
+                                                layout
+                                                className={`bg-slate-950/40 border transition-all duration-300 rounded-[2.5rem] p-6 relative group/card flex flex-col ${isFullyPaid ? 'border-emerald-500/10' : (editingDebt?.id === debt.id ? 'border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/20' : 'border-white/5 hover:border-white/10')}`}
+                                            >
+                                                {isFullyPaid && (
+                                                    <div className="absolute top-6 right-6">
+                                                        <div className="bg-emerald-500/10 text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-full border border-emerald-500/20 flex items-center gap-1 uppercase tracking-widest shadow-lg shadow-emerald-500/10">
+                                                            <FiCheckCircle size={14} /> Saldado
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex items-start gap-5 mb-6">
+                                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-transform group-hover/card:scale-110 duration-500 ${debt.type === 'por_cobrar' ? 'bg-emerald-500/10 text-emerald-400 shadow-lg shadow-emerald-500/5' : 'bg-red-500/10 text-red-400 shadow-lg shadow-red-500/5'}`}>
+                                                        <FiUser />
+                                                    </div>
+                                                    <div className="flex-1 overflow-hidden">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h3 className="text-lg font-bold text-white truncate">{debt.personName}</h3>
+                                                        </div>
+                                                        <p className="text-xs text-slate-500 line-clamp-2 min-h-8">{debt.description || "Sin descripción"}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Amount Stats Modern */}
+                                                <div className="grid grid-cols-2 gap-3 mb-6">
+                                                    <div className="bg-slate-900/60 p-4 rounded-3xl border border-white/5 relative overflow-hidden group/statcard">
+                                                        <div className="absolute inset-x-0 bottom-0 h-1 bg-slate-800" />
+                                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Inicial</p>
+                                                        <p className="text-lg font-bold text-slate-400">${debt.amount.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</p>
+                                                    </div>
+                                                    <div className={`p-4 rounded-3xl border relative overflow-hidden group/statcard ${isFullyPaid ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-white/5 border-white/5'}`}>
+                                                        <div className={`absolute inset-x-0 bottom-0 h-1 ${isFullyPaid ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Restante</p>
+                                                        <p className={`text-lg font-bold ${remaining > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                                            ${remaining.toLocaleString("es-ES", { minimumFractionDigits: 0 })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Actions Section */}
+                                                <div className="mt-auto flex items-center gap-2">
+                                                    {isFullyPaid ? (
+                                                        <div className="flex-1 flex justify-center py-2.5 bg-slate-900/50 rounded-2xl border border-white/5">
+                                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Transacción Completada</span>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleAddPaymentClick(debt)}
+                                                            className="flex-1 py-3 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl font-bold text-xs transition-all shadow-xl shadow-emerald-500/10 border border-white/10 flex items-center justify-center gap-2 group-hover/card:scale-[1.02]"
+                                                        >
+                                                            <FiDollarSign size={14} /> Registrar Abono
+                                                        </button>
+                                                    )}
+                                                    
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => handleEditDebtClick(debt)}
+                                                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-2xl border border-white/5 transition-all"
+                                                            title="Editar"
+                                                        >
+                                                            <FiEdit2 size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteClick(debt.id)}
+                                                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-red-500 bg-slate-900/50 hover:bg-red-500/10 rounded-2xl border border-white/5 transition-all"
+                                                            title="Eliminar"
+                                                        >
+                                                            <FiTrash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Footer metadata */}
+                                                <div className="mt-5 pt-4 border-t border-white/5 flex justify-between items-center px-1">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-1 w-12 bg-slate-900 rounded-full overflow-hidden">
+                                                            <div className={`h-full ${isFullyPaid ? 'bg-emerald-500' : 'bg-amber-400'}`} style={{ width: `${progress}%` }} />
+                                                        </div>
+                                                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter italic">{progress.toFixed(0)}%</span>
+                                                    </div>
+                                                    
+                                                    {debt.dueDate && (
+                                                        <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                                                            <FiClock size={12} className={new Date(debt.dueDate) < new Date() && !isFullyPaid ? 'text-red-400' : ''} />
+                                                            <span>Vence: {new Date(debt.dueDate).toLocaleDateString()}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })
                                 )}
                             </div>
-                        );
-                    })}
-                </div>
 
-                <PaginationControls
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                />
+                            <div className="pt-4 flex justify-end">
+                                <PaginationControls
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={showConfirmDelete}
+                onClose={() => setShowConfirmDelete(false)}
+                onConfirm={confirmDelete}
+                title="Eliminar Deuda"
+                message="¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
+                type="danger"
+            />
         </>
     );
 }

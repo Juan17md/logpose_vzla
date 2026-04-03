@@ -10,6 +10,9 @@ import Logo from "@/components/layout/Logo";
 import { EditTransactionProvider } from "@/contexts/EditTransactionContext";
 import { TransactionsProvider } from "@/contexts/TransactionsContext";
 import { UserDataProvider } from "@/contexts/UserDataContext";
+import { BankAccountsProvider } from "@/contexts/BankAccountsContext";
+import MigracionCuentas from "@/components/cuentas/MigracionCuentas";
+import AvisoCuentasFaltantes from "@/components/cuentas/AvisoCuentasFaltantes";
 
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import Chatbot from "@/components/ui/Chatbot";
@@ -25,9 +28,10 @@ export default function DashboardLayout({
     <EditTransactionProvider>
       <TransactionsProvider>
         <UserDataProvider>
+          <BankAccountsProvider>
+            <MigracionCuentas />
+            <AvisoCuentasFaltantes />
           <div className="min-h-screen bg-slate-950 text-white selection:bg-amber-500/30 flex flex-col">
-
-            
             {/* Main Content Area */}
             <div className="flex-1 flex">
               {/* Sidebar Component */}
@@ -64,6 +68,7 @@ export default function DashboardLayout({
             
             <Chatbot />
           </div>
+          </BankAccountsProvider>
         </UserDataProvider>
       </TransactionsProvider>
     </EditTransactionProvider>

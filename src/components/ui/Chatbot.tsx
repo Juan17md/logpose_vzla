@@ -9,8 +9,9 @@ import { useGoals } from "@/hooks/useGoals";
 import { useShoppingLists } from "@/hooks/useShoppingLists";
 import { useFixedExpenses } from "@/hooks/useFixedExpenses";
 import { useUserData } from "@/contexts/UserDataContext";
-import { getBCVRate } from "@/lib/currency";
 import { createVenezuelaDate } from "@/lib/timezone";
+import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
+import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -96,6 +97,7 @@ export default function Chatbot() {
     const { lists, deleteList, updateListName } = useShoppingLists();
     const { fixedExpenses, addFixedExpense, deleteFixedExpense, updateFixedExpense } = useFixedExpenses();
     const { userData, updateUserData } = useUserData();
+    const { apiRates, tasasManuales, tasasEnBs } = useBankAccounts();
 
     // Calcular contexto financiero del usuario
     const userContext = useMemo(() => {
@@ -286,7 +288,7 @@ export default function Chatbot() {
                 if (data.currency === "VES" && data.amountInUSD) {
                     // El usuario dijo "5 dólares en bolívares"
                     // La IA ya calculó el equivalente en Bs y lo envió en 'amount'
-                    const rate = await getBCVRate();
+                    const rate = tasasEnBs.USD;
                     exchangeRate = rate;
                     const usdAmount = parseFloat(data.amountInUSD);
 
@@ -302,7 +304,11 @@ export default function Chatbot() {
                     });
                 } else if (data.currency === "VES") {
                     // Caso normal: "100 bolívares"
-                    const rate = await getBCVRate();
+                    // Identificar qué tasa usar (USD por defecto, o EUR/USDT si se detecta en el texto)
+                    let rate = tasasEnBs.USD;
+                    if (data.currency_type === "EUR") rate = tasasEnBs.EUR;
+                    if (data.currency_type === "USDT") rate = tasasEnBs.USDT;
+                    
                     exchangeRate = rate;
                     // 🔧 FIX: Guardar el monto EXACTO en Bs ANTES de cualquier conversión
                     const exactBsAmount = amountUSD; // Guardar el valor original
@@ -349,7 +355,7 @@ export default function Chatbot() {
 
                 const amountDisplay = data.currency === "VES" && originalAmount
                     ? `Bs. ${originalAmount.toFixed(2)}`
-                    : `$${parseFloat(amountUSD.toFixed(2))}`;
+                    : `${obtenerSimboloMoneda(data.currency as any || "USD")}${parseFloat(amountUSD.toFixed(2))}`;
                 aiResponse = `Registré el ${data.type} de ${amountDisplay} (${data.category}).`;
                 break;
 
@@ -359,7 +365,7 @@ export default function Chatbot() {
                 let debtAmount = parseFloat(data.amount);
 
                 if (data.currency === "VES") {
-                    const rate = await getBCVRate();
+                    const rate = tasasEnBs.USD;
                     debtExchangeRate = rate;
                     debtOriginalAmount = parseFloat(data.amount); // Monto en Bs
                     debtAmount = parseFloat((debtOriginalAmount / rate).toFixed(2)); // Guardar en USD
@@ -376,8 +382,8 @@ export default function Chatbot() {
                 } as any)) || false;
 
                 const debtDisplay = data.currency === "VES"
-                    ? `Bs. ${debtOriginalAmount?.toFixed(2)} ($${debtAmount})`
-                    : `$${parseFloat(debtAmount.toFixed(2))}`;
+                    ? `Bs. ${debtOriginalAmount?.toFixed(2)} (${obtenerSimboloMoneda("USD")}${debtAmount})`
+                    : `${obtenerSimboloMoneda(data.currency as any || "USD")}${parseFloat(debtAmount.toFixed(2))}`;
 
                 aiResponse = `Creé la deuda de ${data.person} por ${debtDisplay}.`;
                 break;
@@ -531,7 +537,7 @@ export default function Chatbot() {
 
                 // Opcionalmente crear transacción de gasto
                 if (data.createTransaction) {
-                    const rate = await getBCVRate();
+                    const rate = tasasEnBs.USD;
                     await addTransaction({
                         amount: fixedExpense.amount,
                         type: "gasto",
@@ -648,27 +654,17 @@ export default function Chatbot() {
                 content: msg.content
             }));
 
-            // ✅ Obtener tasa BCV actual para el contexto
-            let bcvRate = 56; // Valor por defecto
-            try {
-                bcvRate = await getBCVRate();
-            } catch (error) {
-                console.warn('No se pudo obtener tasa BCV, usando valor por defecto:', error);
-            }
-
-            // ✅ Añadir tasa BCV al contexto
-            const enrichedContext = {
-                ...userContext,
-                bcvRate: parseFloat(bcvRate.toFixed(2))
-            };
-
             const res = await fetchWithRetry("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     message: userMsg,
                     conversationHistory,
-                    userContext: enrichedContext  // ✨ Enviar contexto enriquecido con tasa BCV
+                    userContext: {
+                        ...userContext,
+                        apiRates,
+                        tasasManuales
+                    }
                 }),
             });
 

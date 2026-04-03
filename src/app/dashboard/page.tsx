@@ -5,20 +5,24 @@ import { useEffect, useState, useMemo } from "react";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { addDoc, collection, Timestamp } from "firebase/firestore";
+import { addDoc, collection, Timestamp, doc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { useTransactions } from "@/hooks/useTransactions";
 import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2, FiEye, FiEyeOff, FiChevronRight, FiClock, FiAlertCircle, FiSave, FiTag } from "react-icons/fi";
 import Link from "next/link";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import Modal from "@/components/ui/Modal";
 import RecentTransactions from "@/components/ui/RecentTransactions";
 import ExchangeRateWidget from "@/components/ui/ExchangeRateWidget";
 import SavingsGoalsWidget from "@/components/ui/SavingsGoalsWidget";
 import BudgetAlertWidget from "@/components/ui/BudgetAlertWidget";
 
-import CryptoCashWalletWidget from "@/components/ui/CryptoCashWalletWidget";
+import BankAccountsWidget from "@/components/ui/BankAccountsWidget";
 import PendingDebtsWidget from "@/components/ui/PendingDebtsWidget";
-import { getBCVRate } from "@/lib/currency";
+import SalaryPlanningWidget from "@/components/ui/SalaryPlanningWidget";
+import { useBankAccounts } from "@/contexts/BankAccountsContext";
+import { obtenerSimboloMoneda, MONEDAS_SOPORTADAS } from "@/lib/bankAccounts";
+import CurrencySelector from "@/components/ui/CurrencySelector";
 import ExpensePieChart from "@/components/ui/ExpensePieChart";
 import CashFlowChart from "@/components/ui/CashFlowChart";
 
@@ -30,11 +34,19 @@ export default function DashboardPage() {
     const [user, setUser] = useState<User | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
     const { transactions, loading: transactionsLoading } = useTransactions();
-    const [bcvRate, setBcvRate] = useState<number>(0);
+    const { 
+        cuentas, 
+        obtenerCuenta, 
+        calcularSaldoTotal, 
+        apiRates, 
+        tasasManuales, 
+        tasasEnBs,
+        monedaBase, 
+        actualizarMonedaBase 
+    } = useBankAccounts();
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);
-    const [showAdjustModal, setShowAdjustModal] = useState(false);
-    const [adjustAmount, setAdjustAmount] = useState<string>("");
-    const [adjustCurrency, setAdjustCurrency] = useState<"USD" | "BS">("USD");
+     const [showAdjustModal, setShowAdjustModal] = useState(false);
+    const [adjustingBalances, setAdjustingBalances] = useState<Record<string, string>>({});
 
     // Variantes de animación para Staggered Entrance
     const containerVariants = {
@@ -63,7 +75,6 @@ export default function DashboardPage() {
     };
 
     useEffect(() => {
-        getBCVRate().then(setBcvRate);
         const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
             if (!currentUser) {
                 router.push("/login");
@@ -82,18 +93,14 @@ export default function DashboardPage() {
         const currentYear = now.getFullYear();
         const daysPassed = now.getDate();
 
-        let totalBalance = 0;
         let monthlyIncome = 0;
         let monthlyExpense = 0;
         const expensesByCategory: Record<string, number> = {};
 
+        const totalBalance = calcularSaldoTotal();
+
         transactions.forEach(t => {
             const amount = Number(t.amount);
-            if (t.type === "ingreso") {
-                totalBalance += amount;
-            } else {
-                totalBalance -= amount;
-            }
             const tDate = new Date(t.date);
             if (tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear) {
                 if (t.type === "ingreso") {
@@ -123,73 +130,73 @@ export default function DashboardPage() {
         const balanceFinal = Object.is(balanceRedondeado, -0) ? 0 : balanceRedondeado;
 
         return { totalBalance: balanceFinal, monthlyIncome, monthlyExpense, topCategoryName, topCategoryAmount, dailyAverage };
-    }, [transactions]);
+    }, [transactions, calcularSaldoTotal]);
 
     const handleUpdateBalanceClick = (e: React.MouseEvent) => {
         e.stopPropagation();
 
-        if (bcvRate === 0) {
-            toast.warning("Espera a que se cargue la tasa del BCV para usar esta función.");
-            return;
-        }
-
-        setAdjustAmount(stats.totalBalance.toFixed(2));
-        setAdjustCurrency("USD");
+        const initialBalances: Record<string, string> = {};
+        cuentas.forEach(c => {
+            initialBalances[c.id] = c.saldo.toString();
+        });
+        setAdjustingBalances(initialBalances);
         setShowAdjustModal(true);
     };
 
-    const handleCurrencyChange = (newCurrency: "USD" | "BS") => {
-        if (newCurrency === adjustCurrency) return;
-        const currentVal = parseFloat(adjustAmount);
-        if (!isNaN(currentVal) && bcvRate > 0) {
-            if (newCurrency === "BS") {
-                setAdjustAmount((currentVal * bcvRate).toFixed(2));
-            } else {
-                setAdjustAmount((currentVal / bcvRate).toFixed(2));
-            }
-        }
-        setAdjustCurrency(newCurrency);
+    const handleBalanceChange = (accountId: string, value: string) => {
+        setAdjustingBalances(prev => ({
+            ...prev,
+            [accountId]: value
+        }));
     };
 
     const submitAdjustBalance = async (e: React.FormEvent) => {
         e.preventDefault();
-        const amount = parseFloat(adjustAmount);
         
-        if (isNaN(amount)) {
-            toast.error("Debes ingresar un monto válido");
-            return;
-        }
-
-        const newBalanceUSD = adjustCurrency === 'BS' ? amount / bcvRate : amount;
-        const currentBalance = stats.totalBalance;
-        const diff = newBalanceUSD - currentBalance;
-
-        if (Math.abs(diff) < 0.01) {
-            setShowAdjustModal(false);
-            return;
-        }
-
-        const isIncome = diff > 0;
-        const adjustmentAmount = Math.abs(diff);
+        if (!user) return;
 
         try {
-            await addDoc(collection(db, "transactions"), {
-                userId: user!.uid,
-                amount: adjustmentAmount,
-                type: isIncome ? 'ingreso' : 'gasto',
-                category: 'Ajuste',
-                description: `Ajuste manual de saldo (${adjustCurrency === 'BS' ? `Original: ${amount} Bs` : 'USD'})`,
-                date: Timestamp.now(),
-                currency: 'USD',
-                originalAmount: adjustmentAmount,
-                exchangeRate: 1,
+            await runTransaction(db, async (transaction) => {
+                for (const [id, newValue] of Object.entries(adjustingBalances)) {
+                    const amount = parseFloat(newValue);
+                    if (isNaN(amount)) continue;
+
+                    const cuenta = cuentas.find(c => c.id === id);
+                    if (!cuenta) continue;
+                    
+                    if (Math.abs(cuenta.saldo - amount) < 0.01) continue;
+
+                    const diff = amount - cuenta.saldo;
+                    const cuentaRef = doc(db, "users", user.uid, "bank_accounts", id);
+                    
+                    transaction.update(cuentaRef, { 
+                        saldo: amount, 
+                        actualizadoEn: serverTimestamp() 
+                    });
+
+                    // Crear registro de la transacción de ajuste
+                    const newTransRef = doc(collection(db, "transactions"));
+                    transaction.set(newTransRef, {
+                        userId: user.uid,
+                        accountId: id,
+                        amount: Math.abs(diff),
+                        type: diff > 0 ? 'ingreso' : 'gasto',
+                        category: 'Ajuste',
+                        description: `Ajuste manual de saldo`,
+                        date: Timestamp.now(),
+                        currency: cuenta.moneda,
+                        originalAmount: Math.abs(diff),
+                        exchangeRate: 1,
+                        createdAt: serverTimestamp()
+                    });
+                }
             });
 
-            toast.success(`Saldo ajustado: Se generó un ${isIncome ? 'Ingreso' : 'Gasto'} de $${adjustmentAmount.toFixed(2)}`);
+            toast.success("Cuentas actualizadas correctamente");
             setShowAdjustModal(false);
         } catch (error) {
-            console.error("Error creating adjustment transaction:", error);
-            toast.error("No se pudo ajustar el saldo.");
+            console.error("Error al ajustar saldos:", error);
+            toast.error("No se pudieron actualizar los saldos.");
         }
     };
 
@@ -236,7 +243,7 @@ export default function DashboardPage() {
                 </motion.div>
 
                 {/* Balance Card Principal - Hero */}
-                <motion.div variants={itemVariants} className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-500/30 p-5 rounded-3xl shadow-2xl overflow-hidden">
+                <motion.div variants={itemVariants} className="relative bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-500/30 p-5 rounded-3xl shadow-2xl overflow-hidden">
                     {/* Decoración de fondo */}
                     <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl -ml-16 -mb-16"></div>
@@ -244,18 +251,31 @@ export default function DashboardPage() {
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-1">
                             <p className="text-slate-400 text-sm font-medium">Balance Disponible</p>
-                            <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-full border border-amber-500/20">
-                                <span className="text-xs">🇻🇪</span>
-                                <span className="text-xs text-amber-500 font-medium">{bcvRate.toFixed(2)}</span>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-full border border-amber-500/20">
+                                    <span className="text-xs">🇻🇪</span>
+                                    <span className="text-[10px] text-amber-500 font-bold uppercase tracking-tighter">
+                                        {(tasasManuales.USD || apiRates.usd).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center bg-white/5 px-2 py-0.5 rounded-lg border border-white/10">
+                                    <span className="text-[10px] font-black text-amber-500 tracking-tighter">{monedaBase}</span>
+                                </div>
                             </div>
                         </div>
 
-                        <h2 className="text-4xl font-bold text-white tracking-tight mb-1">
-                            {isPrivacyMode ? "$ ••••••" : `$ ${stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                        <h2 className={cn(
+                            "text-3xl font-black text-white tracking-tight mb-1",
+                            isPrivacyMode && "blur-sm"
+                        )}>
+                            {isPrivacyMode ? `${obtenerSimboloMoneda(monedaBase)} ••••••` : `${obtenerSimboloMoneda(monedaBase)} ${stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                         </h2>
 
-                        <p className="text-slate-500 text-sm">
-                            ≈ Bs. {isPrivacyMode ? "••••••" : (stats.totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                        <p className="text-slate-500 text-sm font-medium">
+                            {monedaBase === "BS" 
+                                ? `≈ $ ${isPrivacyMode ? "••••" : (stats.totalBalance / (tasasManuales.USD || apiRates.usd)).toLocaleString("es-ES", { minimumFractionDigits: 2 })} USD`
+                                : `≈ Bs. ${isPrivacyMode ? "••••" : (stats.totalBalance * (tasasManuales.USD || apiRates.usd)).toLocaleString("es-VE", { minimumFractionDigits: 2 })}`
+                            }
                         </p>
 
                         {/* Mini estadísticas */}
@@ -296,7 +316,7 @@ export default function DashboardPage() {
                         <MotionLink
                             href="/dashboard/movimientos"
                             whileTap={{ scale: 0.9 }}
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 rounded-2xl transition-colors"
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-amber-500/30 rounded-xl flex items-center justify-center">
                                 <FiPlusCircle className="text-amber-400" size={22} />
@@ -307,7 +327,7 @@ export default function DashboardPage() {
                         <MotionLink
                             href="/dashboard/reportes"
                             whileTap={{ scale: 0.9 }}
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-violet-500/20 to-violet-600/10 border border-violet-500/30 rounded-2xl transition-colors"
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-violet-500/20 to-violet-600/10 border border-violet-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-violet-500/30 rounded-xl flex items-center justify-center">
                                 <FiPieChart className="text-violet-400" size={22} />
@@ -318,7 +338,7 @@ export default function DashboardPage() {
                         <MotionLink
                             href="/dashboard/ahorros"
                             whileTap={{ scale: 0.9 }}
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 border border-indigo-500/30 rounded-2xl transition-colors"
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-indigo-500/20 to-indigo-600/10 border border-indigo-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-indigo-500/30 rounded-xl flex items-center justify-center">
                                 <FiTarget className="text-indigo-400" size={22} />
@@ -329,7 +349,7 @@ export default function DashboardPage() {
                         <MotionLink
                             href="/dashboard/listas"
                             whileTap={{ scale: 0.9 }}
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 rounded-2xl transition-colors"
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-emerald-500/30 rounded-xl flex items-center justify-center">
                                 <FiShoppingCart className="text-emerald-400" size={22} />
@@ -340,7 +360,7 @@ export default function DashboardPage() {
                         <MotionLink
                             href="/dashboard/gastos-fijos"
                             whileTap={{ scale: 0.9 }}
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 rounded-2xl transition-colors"
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-cyan-500/30 rounded-xl flex items-center justify-center">
                                 <FiCalendar className="text-cyan-400" size={22} />
@@ -351,7 +371,7 @@ export default function DashboardPage() {
                         <MotionLink
                             href="/dashboard/deudas"
                             whileTap={{ scale: 0.9 }}
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 rounded-2xl transition-colors"
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-red-500/20 to-red-600/10 border border-red-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-red-500/30 rounded-xl flex items-center justify-center">
                                 <FiAlertCircle className="text-red-400" size={22} />
@@ -408,8 +428,11 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
                                     <p className={`font-bold text-sm ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                        {t.type === 'ingreso' ? '+' : '-'}
-                                        {t.currency === 'VES' ? 'Bs.' : '$'}
+                                        {t.type === 'ingreso' ? '+' : ''}
+                                        {t.currency === 'VES' 
+                                            ? 'Bs.' 
+                                            : obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')
+                                        } 
                                         {isPrivacyMode ? '••••' : Number(t.currency === 'VES' && t.originalAmount ? t.originalAmount : t.amount).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </motion.div>
@@ -425,7 +448,7 @@ export default function DashboardPage() {
                         {/* Widget: Mayor Gasto - Premium Look */}
                         <motion.div
                             whileTap={{ scale: 0.95 }}
-                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
+                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-linear-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
                         >
                             <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-red-500/20 transition-all"></div>
 
@@ -449,7 +472,7 @@ export default function DashboardPage() {
                         {/* Widget: Promedio Diario - Premium Look */}
                         <motion.div
                             whileTap={{ scale: 0.95 }}
-                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
+                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-linear-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
                         >
                             <div className="absolute top-0 right-0 w-20 h-20 bg-violet-500/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-violet-500/20 transition-all"></div>
 
@@ -473,7 +496,7 @@ export default function DashboardPage() {
                         {/* Widget: Uso de Ingresos - Premium Look */}
                         <motion.div
                             whileTap={{ scale: 0.95 }}
-                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
+                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-linear-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
                         >
                             <div className="absolute bottom-0 left-0 w-20 h-20 bg-indigo-500/10 rounded-full blur-2xl -ml-10 -mb-10 group-hover:bg-indigo-500/20 transition-all"></div>
 
@@ -502,7 +525,7 @@ export default function DashboardPage() {
                         {/* Widget: Tasa de Ahorro - Premium Look */}
                         <motion.div
                             whileTap={{ scale: 0.95 }}
-                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
+                            className="flex-none w-48 relative overflow-hidden rounded-2xl p-4 bg-linear-to-br from-slate-900 to-slate-800 border border-slate-700/50 shadow-lg group"
                         >
                             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-emerald-500/20 transition-all"></div>
 
@@ -590,11 +613,11 @@ export default function DashboardPage() {
             {/* ===== DESKTOP LAYOUT (Original) ===== */}
             <div className="hidden md:flex flex-col gap-8 pb-10">
                 {/* Header */}
-                <div className="order-1 bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+                <div className="order-1 bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                     <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                         <FiActivity className="text-7xl md:text-9xl text-amber-400" />
                     </div>
-                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-amber-500/10 to-transparent pointer-events-none"></div>
+                    <div className="absolute top-0 left-0 w-full h-full bg-linear-to-r from-amber-500/10 to-transparent pointer-events-none"></div>
 
                     <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6">
                         <div>
@@ -612,7 +635,7 @@ export default function DashboardPage() {
                                 Bienvenido de nuevo, <span className="text-amber-400 font-semibold">{user?.displayName || "Usuario"}</span>.
                             </p>
                         </div>
-                        <div className="bg-slate-800/50 backdrop-blur-md p-2 rounded-2xl border border-slate-700/50 shadow-inner">
+                        <div className="bg-slate-800/40 backdrop-blur-md p-1 px-2 rounded-2xl border border-slate-700/50 shadow-inner flex items-center">
                             <ExchangeRateWidget />
                         </div>
                     </div>
@@ -696,11 +719,14 @@ export default function DashboardPage() {
                                 <div className="flex items-center gap-2 mb-1">
                                     <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Saldo Total</p>
                                 </div>
-                                <h3 className={`text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400`}>
+                                <h3 className={`text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-white to-slate-400`}>
                                     {isPrivacyMode ? "****" : `$ ${stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </h3>
                                 <p className="text-sm text-slate-500 font-medium mt-1 pl-1 border-l-2 border-violet-500/30">
-                                    ≈ Bs. {isPrivacyMode ? "****" : (stats.totalBalance * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    {monedaBase === "BS"
+                                        ? `≈ $ ${isPrivacyMode ? "****" : (stats.totalBalance / tasasEnBs.USD).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+                                        : `≈ Bs. ${isPrivacyMode ? "****" : (stats.totalBalance * tasasEnBs.USD).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    }
                                 </p>
                             </div>
                             <div className="p-3 bg-violet-500/20 rounded-2xl border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.2)]">
@@ -729,7 +755,10 @@ export default function DashboardPage() {
                                     {isPrivacyMode ? "****" : `$ ${stats.monthlyIncome.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </h3>
                                 <p className="text-sm text-emerald-500/60 font-medium mt-1 pl-1 border-l-2 border-emerald-500/30">
-                                    ≈ Bs. {isPrivacyMode ? "****" : (stats.monthlyIncome * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    {monedaBase === "BS"
+                                        ? `≈ $ ${isPrivacyMode ? "****" : (stats.monthlyIncome / tasasEnBs.USD).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+                                        : `≈ Bs. ${isPrivacyMode ? "****" : (stats.monthlyIncome * tasasEnBs.USD).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    }
                                 </p>
                             </div>
                             <div className="p-3 bg-emerald-500/20 rounded-2xl border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
@@ -755,7 +784,10 @@ export default function DashboardPage() {
                                     {isPrivacyMode ? "****" : `$ ${stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </h3>
                                 <p className="text-sm text-red-500/60 font-medium mt-1 pl-1 border-l-2 border-red-500/30">
-                                    ≈ Bs. {isPrivacyMode ? "****" : (stats.monthlyExpense * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    {monedaBase === "BS"
+                                        ? `≈ $ ${isPrivacyMode ? "****" : (stats.monthlyExpense / tasasEnBs.USD).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+                                        : `≈ Bs. ${isPrivacyMode ? "****" : (stats.monthlyExpense * tasasEnBs.USD).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    }
                                 </p>
                             </div>
                             <div className="p-3 bg-red-500/20 rounded-2xl border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
@@ -766,7 +798,7 @@ export default function DashboardPage() {
                         {stats.monthlyIncome > 0 && (
                             <div className="w-full bg-slate-800 rounded-full h-2 mt-2 border border-slate-700/50 overflow-hidden">
                                 <div
-                                    className="bg-gradient-to-r from-red-500 to-orange-500 h-full rounded-full transition-all duration-500"
+                                    className="bg-linear-to-r from-red-500 to-orange-500 h-full rounded-full transition-all duration-500"
                                     style={{ width: `${Math.min((stats.monthlyExpense / stats.monthlyIncome) * 100, 100)}%` }}
                                 ></div>
                             </div>
@@ -800,16 +832,16 @@ export default function DashboardPage() {
 
                 {/* Widgets Section: Savings, Budget & Salary */}
                 <div className="order-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <SavingsGoalsWidget bcvRate={bcvRate} />
+                    <SavingsGoalsWidget />
 
-                    <CryptoCashWalletWidget userId={user?.uid} bcvRate={bcvRate} />
+                    <BankAccountsWidget />
 
                     <BudgetAlertWidget
                         currentExpense={stats.monthlyExpense}
                         userId={user?.uid ?? ''}
                     />
 
-
+                    <SalaryPlanningWidget userId={user?.uid || ""} />
 
                     <PendingDebtsWidget />
                 </div>
@@ -837,66 +869,61 @@ export default function DashboardPage() {
                 title="Ajustar Saldo Actual"
             >
                 <form onSubmit={submitAdjustBalance} className="flex flex-col gap-4 text-left">
-                    <p className="text-sm text-slate-400">Ingresa el monto real que tienes actualmente.</p>
+                    <p className="text-sm text-slate-400">Verifica y corrige el saldo de cada una de tus cuentas.</p>
                     
-                    <div className="flex flex-col gap-2">
-                         <label className="text-xs font-semibold text-slate-400 uppercase">Monto Real</label>
-                         <input
-                             type="number"
-                             step="0.01"
-                             value={adjustAmount}
-                             onChange={(e) => setAdjustAmount(e.target.value)}
-                             required
-                             className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-500 outline-none"
-                         />
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                        {cuentas.map((cuenta) => (
+                            <div key={cuenta.id} className="bg-slate-800/40 p-4 rounded-2xl border border-slate-700/50 hover:border-amber-500/30 transition-colors group">
+                                <div className="flex justify-between items-center mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
+                                        <span className="text-sm font-bold text-white uppercase tracking-wide">{cuenta.nombre}</span>
+                                    </div>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                        cuenta.moneda === 'USD' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' : 
+                                        cuenta.moneda === 'BS' ? 'text-amber-400 border-amber-500/20 bg-amber-500/10' :
+                                        'text-violet-400 border-violet-500/20 bg-violet-500/10'
+                                    }`}>
+                                        {cuenta.moneda}
+                                    </span>
+                                </div>
+                                <div className="relative">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
+                                        <span className="text-slate-500 font-bold text-lg">{obtenerSimboloMoneda(cuenta.moneda)}</span>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={adjustingBalances[cuenta.id] || ''}
+                                        onChange={(e) => handleBalanceChange(cuenta.id, e.target.value)}
+                                        className="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white font-bold text-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all placeholder:text-slate-700"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                            </div>
+                        ))}
+
+                        {cuentas.length === 0 && (
+                            <div className="py-8 text-center text-slate-500 italic border border-dashed border-slate-700 rounded-2xl">
+                                No hay cuentas registradas para ajustar.
+                            </div>
+                        )}
                     </div>
 
-                    <div className="flex gap-4">
-                        <label className="flex-1 cursor-pointer">
-                            <input
-                                type="radio"
-                                name="currency"
-                                value="USD"
-                                className="peer sr-only"
-                                checked={adjustCurrency === "USD"}
-                                onChange={() => handleCurrencyChange("USD")}
-                            />
-                            <div className="rounded-lg border border-slate-600 bg-slate-800 p-3 text-center peer-checked:border-amber-500 peer-checked:bg-amber-500/20 peer-checked:text-amber-400 transition-all">
-                                <span className="font-bold">USD ($)</span>
-                            </div>
-                        </label>
-                        <label className="flex-1 cursor-pointer">
-                            <input
-                                type="radio"
-                                name="currency"
-                                value="BS"
-                                className="peer sr-only"
-                                checked={adjustCurrency === "BS"}
-                                onChange={() => handleCurrencyChange("BS")}
-                            />
-                            <div className="rounded-lg border border-slate-600 bg-slate-800 p-3 text-center peer-checked:border-amber-500 peer-checked:bg-amber-500/20 peer-checked:text-amber-400 transition-all">
-                                <span className="font-bold">Bs. (VES)</span>
-                            </div>
-                        </label>
-                    </div>
-                    
-                    <p className="text-xs text-center text-slate-500 mt-2">
-                        Tasa BCV: {bcvRate} Bs/$
-                    </p>
-
-                    <div className="flex justify-end gap-3 mt-4">
+                    <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-700/50">
                         <button
                             type="button"
                             onClick={() => setShowAdjustModal(false)}
-                            className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                            className="px-5 py-2.5 text-slate-400 hover:text-white font-semibold transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20"
+                            disabled={cuentas.length === 0}
+                            className="px-8 py-2.5 bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                         >
-                            Ajustar
+                            Actualizar Todo
                         </button>
                     </div>
                 </form>

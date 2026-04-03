@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from "react";
-import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp, updateDoc, runTransaction } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { createVenezuelaDate } from "@/lib/timezone";
@@ -17,6 +17,7 @@ export interface Transaction {
     currency?: "USD" | "VES";
     originalAmount?: number;
     exchangeRate?: number;
+    accountId?: string;
 }
 
 interface TransactionsContextType {
@@ -81,62 +82,153 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const deleteTransaction = useCallback(async (id: string) => {
+        if (!auth.currentUser) return false;
         try {
-            await deleteDoc(doc(db, "transactions", id));
+            await runTransaction(db, async (transaction) => {
+                const transRef = doc(db, "transactions", id);
+                const transDoc = await transaction.get(transRef);
+                
+                if (!transDoc.exists()) throw "La transacción no existe";
+
+                const transData = transDoc.data();
+                const { accountId, amount, type } = transData;
+
+                if (accountId) {
+                    const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
+                    const cuentaDoc = await transaction.get(cuentaRef);
+                    if (cuentaDoc.exists()) {
+                        const currentSaldo = cuentaDoc.data().saldo || 0;
+                        const nuevoSaldo = type === 'ingreso' ? currentSaldo - amount : currentSaldo + amount;
+                        transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
+                    }
+                }
+
+                transaction.delete(transRef);
+            });
             return true;
         } catch (error) {
             console.error("Error deleting transaction:", error);
             return false;
         }
-    }, []);
+    }, [db]);
 
     const duplicateTransaction = useCallback(async (id: string) => {
         const transactionToCopy = transactions.find(t => t.id === id);
         if (!transactionToCopy || !auth.currentUser) return false;
 
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id: _, date, ...rest } = transactionToCopy;
+            await runTransaction(db, async (transaction) => {
+                const { id: _, date, ...rest } = transactionToCopy;
+                const { accountId, amount, type } = rest;
 
-            await addDoc(collection(db, "transactions"), {
-                ...rest,
-                userId: auth.currentUser.uid,
-                date: createVenezuelaDate(), // Set to current Venezuela time
-                createdAt: serverTimestamp()
+                if (accountId) {
+                    const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
+                    const cuentaDoc = await transaction.get(cuentaRef);
+                    if (cuentaDoc.exists()) {
+                        const currentSaldo = cuentaDoc.data().saldo || 0;
+                        const nuevoSaldo = type === 'ingreso' ? currentSaldo + amount : currentSaldo - amount;
+                        transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
+                    }
+                }
+
+                const newTransRef = doc(collection(db, "transactions"));
+                transaction.set(newTransRef, {
+                    ...rest,
+                    userId: auth.currentUser!.uid,
+                    date: createVenezuelaDate(),
+                    createdAt: serverTimestamp()
+                });
             });
             return true;
         } catch (error) {
             console.error("Error duplicating transaction:", error);
             return false;
         }
-    }, [transactions]);
+    }, [transactions, db]);
 
-    const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id'>) => {
+    const addTransaction = useCallback(async (transactionData: Omit<Transaction, 'id'>) => {
         if (!auth.currentUser) return null;
 
         try {
-            const docRef = await addDoc(collection(db, "transactions"), {
-                ...transaction,
-                userId: auth.currentUser.uid,
-                createdAt: serverTimestamp()
+            let newId = "";
+            await runTransaction(db, async (transaction) => {
+                const { accountId, amount, type } = transactionData;
+
+                if (accountId) {
+                    const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
+                    const cuentaDoc = await transaction.get(cuentaRef);
+                    if (cuentaDoc.exists()) {
+                        const currentSaldo = cuentaDoc.data().saldo || 0;
+                        const nuevoSaldo = type === 'ingreso' ? currentSaldo + amount : currentSaldo - amount;
+                        transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
+                    }
+                }
+
+                const newTransRef = doc(collection(db, "transactions"));
+                newId = newTransRef.id;
+                transaction.set(newTransRef, {
+                    ...transactionData,
+                    userId: auth.currentUser!.uid,
+                    createdAt: serverTimestamp()
+                });
             });
-            return docRef.id;
+            return newId;
         } catch (error) {
             console.error("Error adding transaction:", error);
             return null;
         }
-    }, []);
+    }, [db]);
 
     const updateTransaction = useCallback(async (id: string, updates: Partial<Transaction>) => {
         if (!auth.currentUser) return false;
         try {
-            await updateDoc(doc(db, "transactions", id), updates);
+            await runTransaction(db, async (transaction) => {
+                const transRef = doc(db, "transactions", id);
+                const transDoc = await transaction.get(transRef);
+                if (!transDoc.exists()) throw "Transacción no encontrada";
+
+                const oldData = transDoc.data() as Transaction;
+                const newData = { ...oldData, ...updates };
+
+                // Si ha cambiado la cuenta, el monto o el tipo, necesitamos recalcular saldos
+                const needsBalanceUpdate = 
+                    oldData.accountId !== updates.accountId || 
+                    oldData.amount !== updates.amount || 
+                    oldData.type !== updates.type;
+
+                if (needsBalanceUpdate) {
+                    // 1. Revertir impacto en la cuenta anterior
+                    if (oldData.accountId) {
+                        const oldCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", oldData.accountId);
+                        const oldCuentaDoc = await transaction.get(oldCuentaRef);
+                        if (oldCuentaDoc.exists()) {
+                            const currentSaldo = oldCuentaDoc.data().saldo || 0;
+                            const restoredSaldo = oldData.type === 'ingreso' ? currentSaldo - oldData.amount : currentSaldo + oldData.amount;
+                            transaction.update(oldCuentaRef, { saldo: restoredSaldo, actualizadoEn: serverTimestamp() });
+                        }
+                    }
+
+                    // 2. Aplicar impacto en la cuenta nueva (o misma cuenta con nuevos datos)
+                    if (newData.accountId) {
+                        // Importante: Si es la misma cuenta, debemos obtener el saldo actualizado (ya revertido arriba)
+                        const newCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", newData.accountId);
+                        const newCuentaDoc = await transaction.get(newCuentaRef);
+                        if (newCuentaDoc.exists()) {
+                            const currentSaldo = newCuentaDoc.data().saldo || 0;
+                            const appliedSaldo = newData.type === 'ingreso' ? currentSaldo + newData.amount : currentSaldo - newData.amount;
+                            transaction.update(newCuentaRef, { saldo: appliedSaldo, actualizadoEn: serverTimestamp() });
+                        }
+                    }
+                }
+
+                transaction.update(transRef, updates);
+            });
             return true;
         } catch (error) {
             console.error("Error updating transaction:", error);
             return false;
         }
-    }, []);
+    }, [db]);
 
     const value = useMemo(() => ({
         transactions,

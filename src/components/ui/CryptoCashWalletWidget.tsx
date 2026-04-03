@@ -1,22 +1,25 @@
 "use client";
 
+import { createVenezuelaDate } from "@/lib/timezone";
+import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
+import { useBankAccounts } from "@/contexts/BankAccountsContext";
+import { useUserData } from "@/contexts/UserDataContext";
+import { useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import Modal from "@/components/ui/Modal";
 import { FiDollarSign, FiEdit2, FiBox } from "react-icons/fi";
 import { SiTether } from "react-icons/si";
-import { useState } from "react";
+import Modal from "@/components/ui/Modal";
 
 interface WalletData {
     savingsPhysical: number;
     savingsUSDT: number;
 }
 
-import { useUserData } from "@/contexts/UserDataContext";
-
-export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: string | undefined, bcvRate: number }) {
+export default function CryptoCashWalletWidget({ userId }: { userId: string | undefined }) {
     const { userData, loading } = useUserData();
+    const { tasasEnBs } = useBankAccounts();
 
     const [editConfig, setEditConfig] = useState<{ field: keyof WalletData | null, label: string, value: string }>({ field: null, label: "", value: "" });
 
@@ -110,10 +113,10 @@ export default function CryptoCashWalletWidget({ userId, bcvRate }: { userId: st
                     <div>
                         <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Ahorrado</p>
                         <p className="text-sm text-slate-400 mt-1">
-                            ≈ Bs. {(totalSaved * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                            ≈ Bs. {(totalSaved * tasasEnBs.USD).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
-                    <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-indigo-400">
+                    <p className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-violet-400 to-indigo-400">
                         $ {totalSaved.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </p>
                 </div>

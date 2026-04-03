@@ -4,6 +4,7 @@ import { useDebts } from "@/hooks/useDebts";
 import { FiArrowUp, FiArrowDown, FiCreditCard, FiCheckCircle, FiClock, FiAlertCircle } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 
 export default function PendingDebtsWidget() {
     const { debts, loadingDebts } = useDebts();
@@ -57,13 +58,13 @@ export default function PendingDebtsWidget() {
                     <p className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1">
                         <FiArrowDown className="text-emerald-400" /> Por Cobrar
                     </p>
-                    <p className="text-lg font-bold text-emerald-400">$ {totalReceivable.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                    <p className="text-lg font-bold text-emerald-400">{obtenerSimboloMoneda("USD")} {totalReceivable.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                 </div>
                 <div className="bg-slate-800/50 p-3 rounded-2xl border border-red-500/10">
                     <p className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1">
                         <FiArrowUp className="text-red-400" /> Por Pagar
                     </p>
-                    <p className="text-lg font-bold text-red-400">$ {totalPayable.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                    <p className="text-lg font-bold text-red-400">{obtenerSimboloMoneda("USD")} {totalPayable.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                 </div>
             </div>
 
@@ -91,7 +92,7 @@ export default function PendingDebtsWidget() {
                                     </div>
                                 </div>
                                 <span className={`text-sm font-bold ${debt.type === 'por_cobrar' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                    ${remaining.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                    {obtenerSimboloMoneda(debt.currency as any || "USD")} {remaining.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                 </span>
                             </div>
                         );

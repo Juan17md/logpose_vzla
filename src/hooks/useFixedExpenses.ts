@@ -7,6 +7,7 @@ export interface FixedExpense {
     id: string;
     title: string;
     amount: number;
+    currency: "USD" | "BS";
     category: string;
     dueDay: number; // 1-31
     description?: string;

@@ -33,6 +33,9 @@ export interface Debt {
     payments: Payment[];
     isPaid: boolean;
     createdAt: Date;
+    currency?: "USD" | "VES" | "EUR" | "USDT";
+    originalAmount?: number;
+    exchangeRate?: number;
 }
 
 export function useDebts() {

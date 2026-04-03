@@ -3,6 +3,8 @@
 import { useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useBankAccounts } from "@/contexts/BankAccountsContext";
+import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 import { FiTrendingUp, FiTrendingDown, FiTrash2, FiClock, FiEdit2, FiSearch, FiCopy } from "react-icons/fi";
 import { toast } from "sonner";
 import ConfirmDialog from "./ConfirmDialog";
@@ -13,6 +15,7 @@ export default function RecentTransactions() {
     const router = useRouter();
     const pathname = usePathname();
     const { transactions, loading, deleteTransaction, duplicateTransaction } = useTransactions();
+    const { obtenerCuenta } = useBankAccounts();
     const { startEditing } = useEditTransaction();
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -133,12 +136,12 @@ export default function RecentTransactions() {
                                                         {t.type === 'ingreso' ? '+' : '-'}Bs. {t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                     </span>
                                                     <span className="text-xs text-slate-500">
-                                                        ≈ ${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                        ≈ {obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')} {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                     </span>
                                                 </div>
                                             ) : (
                                                 <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                    {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                    {t.type === 'ingreso' ? '+' : '-'}{obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')} {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </span>
                                             )}
                                         </td>
@@ -204,12 +207,12 @@ export default function RecentTransactions() {
                                                     {t.type === 'ingreso' ? '+' : '-'}Bs.{t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </span>
                                                 <span className="text-[10px] text-slate-500">
-                                                    ${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                    {obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')} {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
                                         ) : (
                                             <span className={`text-base font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-white'}`}>
-                                                {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                {t.type === 'ingreso' ? '+' : '-'}{obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')} {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                             </span>
                                         )}
                                     </div>

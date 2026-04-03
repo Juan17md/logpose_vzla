@@ -9,13 +9,15 @@ import { useState } from "react";
 
 import { useUserData } from "@/contexts/UserDataContext";
 
+import { useBankAccounts } from "@/contexts/BankAccountsContext";
+
 interface Props {
     userId: string;
-    bcvRate: number;
 }
 
-export default function SalaryPlanningWidget({ userId, bcvRate }: Props) {
+export default function SalaryPlanningWidget({ userId }: Props) {
     const { userData } = useUserData();
+    const { tasasEnBs } = useBankAccounts();
     const salary = userData.monthlySalary;
 
     const [showEdit, setShowEdit] = useState(false);
@@ -71,7 +73,7 @@ export default function SalaryPlanningWidget({ userId, bcvRate }: Props) {
                 <div className="flex justify-between items-center border-t border-slate-700/50 pt-2 mt-2">
                     <span className="text-slate-500 text-xs">Equivalente Estimado</span>
                     <span className="font-semibold text-violet-400 text-sm">
-                        Bs. {(salary * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                        Bs. {(salary * tasasEnBs.USD).toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </span>
                 </div>
             </div>

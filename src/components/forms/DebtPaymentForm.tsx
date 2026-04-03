@@ -1,24 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FiSave, FiX, FiInfo } from "react-icons/fi";
+import { FiSave, FiX, FiInfo, FiFileText, FiTrendingUp, FiTrendingDown } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { Debt, Payment } from "@/hooks/useDebts";
 import { getBCVRate } from "@/lib/currency";
+import Select from "@/components/ui/forms/Select";
+import DateSelect from "@/components/ui/forms/DateSelect";
+import Input from "@/components/ui/forms/Input";
+import CustomCurrencyInput from "@/components/ui/forms/CurrencyInput";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface DebtPaymentFormProps {
     debt: Debt;
     onSubmit: (payment: Omit<Payment, "id">) => Promise<void>;
+    onCancel?: () => void;
     isLoading: boolean;
 }
 
-export default function DebtPaymentForm({ debt, onSubmit, isLoading }: DebtPaymentFormProps) {
+export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }: DebtPaymentFormProps) {
     const router = useRouter();
 
     const [bcvRate, setBcvRate] = useState(0);
     const [amountStr, setAmountStr] = useState("");
     const [currency, setCurrency] = useState<"USD" | "VES">("USD");
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState<Date>(new Date());
     const [note, setNote] = useState("");
 
     // Calculate how much is left exactly
@@ -44,104 +50,155 @@ export default function DebtPaymentForm({ debt, onSubmit, isLoading }: DebtPayme
             currency,
             originalAmount: amountVal,
             exchangeRate: bcvRate,
-            date: new Date(`${date}T00:00:00`),
+            date: date,
             note,
         });
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto bg-slate-800/50 backdrop-blur-md p-6 md:p-8 rounded-3xl border border-slate-700/50 shadow-xl">
-            <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 mb-6 flex flex-col items-center">
-                <p className="text-slate-400 text-sm mb-1">
-                    {debt.type === "por_cobrar" ? "Monto restante por cobrar a" : "Monto restante por pagar a"} <span className="text-amber-400 font-medium">{debt.personName}</span>
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-slate-900/40 backdrop-blur-md p-6 rounded-4xl border border-white/5 mb-6 flex flex-col items-center relative overflow-hidden group shadow-2xl"
+            >
+                <div className={`absolute top-0 right-0 w-32 h-32 opacity-10 blur-3xl pointer-events-none -mr-10 -mt-10 ${
+                    debt.type === 'por_cobrar' ? 'bg-emerald-500' : 'bg-red-500'
+                }`} />
+                
+                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-[0.2em] mb-2 relative z-10">
+                    {debt.type === "por_cobrar" ? "Saldo Pendiente" : "Monto a Pagar"}
                 </p>
-                <p className="text-3xl font-bold text-white">${remaining.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</p>
-            </div>
+                <div className="flex items-baseline gap-1 relative z-10">
+                    <span className="text-slate-400 text-xl font-medium">$</span>
+                    <span className="text-4xl font-black text-white tracking-tight">
+                        {remaining.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                    </span>
+                </div>
+                <div className={`mt-4 px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest relative z-10 flex items-center gap-2 ${
+                    debt.type === 'por_cobrar' 
+                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                    : 'bg-red-500/10 border-red-500/20 text-red-400'
+                }`}>
+                    {debt.type === 'por_cobrar' ? <FiTrendingUp /> : <FiTrendingDown />}
+                    {debt.personName}
+                </div>
+            </motion.div>
 
-            <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-slate-400 text-sm font-medium mb-1.5">Monto del Pago <span className="text-red-400">*</span></label>
-                        <input
-                            type="number"
-                            required
-                            min="0.1"
-                            max={currency === "USD" ? remaining : remaining * bcvRate}
-                            step="0.01"
-                            value={amountStr}
-                            onChange={(e) => setAmountStr(e.target.value)}
-                            className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-amber-500/50 transition-colors"
-                            placeholder="Ej: 20.00"
-                            disabled={isLoading}
-                        />
+            <div className="space-y-6">
+                <div className="space-y-4">
+                    <div className="flex gap-4">
+                        <div className="flex-1">
+                            <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-2.5 ml-0.5">
+                                Moneda del Pago
+                            </label>
+                            <div className="flex p-1 bg-slate-950/60 rounded-[1.25rem] border border-slate-800/80 shadow-inner">
+                                {(["USD", "VES"] as const).map((curr) => (
+                                    <button
+                                        key={curr}
+                                        type="button"
+                                        onClick={() => {
+                                            setCurrency(curr);
+                                            setAmountStr("");
+                                        }}
+                                        disabled={isLoading}
+                                        className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all duration-300 ${
+                                            currency === curr
+                                                ? curr === "USD" 
+                                                    ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]" 
+                                                    : "bg-slate-800 text-cyan-400 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+                                                : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 border border-transparent"
+                                        }`}
+                                    >
+                                        {curr === "VES" ? "Bs (VES)" : "USD ($)"}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-slate-400 text-sm font-medium mb-1.5">Moneda del Pago</label>
-                        <select
-                            value={currency}
-                            onChange={(e) => {
-                                setCurrency(e.target.value as "USD" | "VES");
-                                setAmountStr(""); // Reset input to avoid confusion on switch
-                            }}
-                            className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-amber-500/50 transition-colors appearance-none"
-                            disabled={isLoading}
-                        >
-                            <option value="USD">USD ($)</option>
-                            <option value="VES">VES (Bs.)</option>
-                        </select>
+
+                    <div className="relative">
+                        <CustomCurrencyInput
+                            label={currency === "VES" ? "Monto en Bolívares" : "Monto en Dólares"}
+                            placeholder="0.00"
+                            prefix={currency === "VES" ? "Bs. " : "$ "}
+                            decimalsLimit={2}
+                            onValueChange={(value) => setAmountStr(value || "")}
+                            value={amountStr}
+                            required
+                            max={currency === "USD" ? remaining : remaining * bcvRate}
+                        />
+                        
+                        <AnimatePresence>
+                            {currency === "VES" && amountStr && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute top-9 right-4 pointer-events-none"
+                                >
+                                    <span className="text-emerald-400 font-bold text-sm bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
+                                        ≈ ${(parseFloat(amountStr || "0") / (bcvRate || 1)).toLocaleString("es-ES", { maximumFractionDigits: 2 })}
+                                    </span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
 
                 {currency === "VES" && (
-                    <div className="text-xs text-amber-400/80 bg-amber-500/10 p-2 rounded-lg flex items-center gap-2">
-                        <FiInfo />
-                        <span>Monto exacto para saldar: Bs.{(remaining * bcvRate).toLocaleString("es-ES", { maximumFractionDigits: 2 })} (Tasa: {bcvRate})</span>
+                    <div className="text-[11px] font-medium text-amber-400/90 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 flex items-center gap-2">
+                        <FiInfo className="shrink-0" />
+                        <span>Monto exacto para saldar: <span className="font-bold underline tracking-wider">Bs. {(remaining * bcvRate).toLocaleString("es-ES", { maximumFractionDigits: 2 })}</span> (Tasa: {bcvRate})</span>
                     </div>
                 )}
 
-                <div>
-                    <label className="block text-slate-400 text-sm font-medium mb-1.5">Fecha del Pago <span className="text-red-400">*</span></label>
-                    <input
-                        type="date"
-                        required
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-amber-500/50 transition-colors [color-scheme:dark]"
-                        disabled={isLoading}
-                    />
-                </div>
+                <DateSelect
+                    label="Fecha del Pago"
+                    value={date}
+                    onChange={(d) => d && setDate(d)}
+                    required
+                    disabled={isLoading}
+                    clearable={false}
+                    maxDate={new Date()}
+                />
 
-                <div>
-                    <label className="block text-slate-400 text-sm font-medium mb-1.5">Nota o Referencia <span className="text-slate-500 text-xs font-normal">(Opcional)</span></label>
-                    <input
-                        type="text"
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                        className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-amber-500/50 transition-colors"
-                        placeholder="Ej: Transferencia Mercantil #1234..."
-                        disabled={isLoading}
-                    />
-                </div>
+                <Input
+                    label="Nota o Referencia"
+                    placeholder="Ej: Pago móvil, Transferencia #1234..."
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    icon={<FiFileText />}
+                    disabled={isLoading}
+                />
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-6 border-t border-white/5">
                 <button
                     type="button"
-                    onClick={() => router.back()}
+                    onClick={() => onCancel ? onCancel() : router.back()}
                     disabled={isLoading}
-                    className="flex-1 py-3 px-4 rounded-xl font-bold border border-slate-600/50 text-slate-300 hover:bg-slate-700/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                    <FiX />
-                    Cancelar
+                    <FiX size={16} />
+                    CANCELAR
                 </button>
-                <button
+                <motion.button
+                    whileHover={{ scale: 1.02, translateY: -2 }}
+                    whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={isLoading}
-                    className="flex-1 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-900 py-3 px-4 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-2 py-4 px-6 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-2xl text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all border border-white/10"
                 >
-                    <FiSave />
-                    {isLoading ? "Guardando..." : "Abonar Pago"}
-                </button>
+                    {isLoading ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                        <>
+                            <FiSave size={16} />
+                            ABONAR PAGO
+                        </>
+                    )}
+                </motion.button>
             </div>
         </form>
     );
