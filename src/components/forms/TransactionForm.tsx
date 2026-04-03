@@ -18,8 +18,15 @@ import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 import Input from "../ui/forms/Input";
 import CustomCurrencyInput from "../ui/forms/CurrencyInput";
-import Select from "../ui/forms/Select";
+import Select, { SelectOption } from "../ui/forms/Select";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Interfaz tipada para las opciones del selector de cuentas
+interface OpcionCuenta extends SelectOption<string> {
+    moneda: string;
+    saldo: number;
+    banco: string;
+}
 
 registerLocale('es', es);
 
@@ -356,14 +363,14 @@ export default function TransactionForm() {
                         control={control}
                         name="accountId"
                         render={({ field }) => (
-                            <Select
+                            <Select<string>
                                 label="Cuenta"
                                 icon={<FiCreditCard size={14} />}
                                 value={field.value}
                                 onChange={field.onChange}
                                 error={errors.accountId}
                                 placeholder="Seleccionar cuenta..."
-                                options={cuentas.map(c => ({
+                                options={cuentas.map((c): OpcionCuenta => ({
                                     id: c.id,
                                     value: c.id,
                                     name: c.nombre,
@@ -371,35 +378,41 @@ export default function TransactionForm() {
                                     saldo: c.saldo,
                                     banco: c.banco
                                 }))}
-                                renderOption={(opt) => (
-                                    <div className="flex flex-col">
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-bold text-slate-100">{opt.name}</span>
-                                            <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md border border-slate-700/50">
-                                                {opt.moneda}
+                                renderOption={(opt) => {
+                                    const opcionCuenta = opt as OpcionCuenta;
+                                    return (
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-bold text-slate-100">{opcionCuenta.name}</span>
+                                                <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md border border-slate-700/50">
+                                                    {opcionCuenta.moneda}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className="text-xs text-amber-500/80 font-medium">
+                                                    {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                </span>
+                                                <span className="text-[10px] text-slate-500 italic uppercase tracking-tighter">
+                                                    • {opcionCuenta.banco}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                }}
+                                renderValue={(opt) => {
+                                    const opcionCuenta = opt as OpcionCuenta;
+                                    return (
+                                        <div className="flex items-center justify-between w-full pr-2">
+                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                <span className="truncate">{opcionCuenta.name}</span>
+                                                <span className="text-[10px] text-slate-500 shrink-0">({opcionCuenta.banco})</span>
+                                            </div>
+                                            <span className="text-amber-500 font-black text-xs shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg ml-2">
+                                                {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { maximumFractionDigits: 2 })}
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                            <span className="text-xs text-amber-500/80 font-medium">
-                                                {obtenerSimboloMoneda(opt.moneda as any)} {opt.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-                                            </span>
-                                            <span className="text-[10px] text-slate-500 italic uppercase tracking-tighter">
-                                                • {opt.banco}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                                renderValue={(opt) => (
-                                    <div className="flex items-center justify-between w-full pr-2">
-                                        <div className="flex items-center gap-2 overflow-hidden">
-                                            <span className="truncate">{opt.name}</span>
-                                            <span className="text-[10px] text-slate-500 shrink-0">({opt.banco})</span>
-                                        </div>
-                                        <span className="text-amber-500 font-black text-xs shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg ml-2">
-                                            {obtenerSimboloMoneda(opt.moneda as any)} {opt.saldo.toLocaleString("es-ES", { maximumFractionDigits: 2 })}
-                                        </span>
-                                    </div>
-                                )}
+                                    );
+                                }}
                             />
                         )}
                     />

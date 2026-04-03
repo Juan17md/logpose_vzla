@@ -101,62 +101,65 @@ export default function Select<T extends string | number = string>({
 
                         <AnimatePresence>
                             {open && (
-                                <Listbox.Options
-                                    static
-                                    as={motion.ul}
+                                <motion.div
                                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                                     transition={{ duration: 0.2, ease: "easeOut" }}
-                                    className="absolute z-60 mt-3 max-h-72 w-full overflow-auto rounded-3xl bg-slate-900/95 backdrop-blur-2xl border border-slate-700/50 p-2 text-base shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/10 focus:outline-none sm:text-sm custom-scrollbar"
+                                    className="absolute z-60 mt-3 w-full"
                                 >
-                                    {options.length === 0 ? (
-                                        <div className="py-8 px-4 text-center">
-                                            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">No hay opciones</p>
-                                        </div>
-                                    ) : (
-                                        Object.entries(groupedOptions).map(([groupName, groupOptions]) => (
-                                            <Fragment key={groupName}>
-                                                {showGroups && groupName && (
-                                                    <div className="px-4 py-2 mt-2 first:mt-0">
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500/80">
-                                                            {groupName}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {groupOptions.map((option) => (
-                                                    <Listbox.Option
-                                                        key={option.value}
-                                                        className={({ active, selected }) => cn(
-                                                            "relative cursor-pointer select-none py-3.5 pl-12 pr-4 rounded-2xl transition-all duration-200 mb-1 last:mb-0",
-                                                            active ? "bg-amber-500/10 text-amber-400" : "text-slate-300",
-                                                            selected && "bg-amber-500/20 text-white font-bold"
-                                                        )}
-                                                        value={option.value}
-                                                    >
-                                                        {({ selected }) => (
-                                                            <>
-                                                                <span className="block truncate">
-                                                                    {renderOption ? renderOption(option) : option.name}
-                                                                </span>
-                                                                
-                                                                {selected && (
-                                                                    <motion.span 
-                                                                        initial={{ scale: 0 }}
-                                                                        animate={{ scale: 1 }}
-                                                                        className="absolute inset-y-0 left-0 flex items-center pl-4 text-amber-400"
-                                                                    >
-                                                                        <FiCheck className="h-5 w-5" aria-hidden="true" />
-                                                                    </motion.span>
-                                                                )}
-                                                            </>
-                                                        )}
-                                                    </Listbox.Option>
-                                                ))}
-                                            </Fragment>
-                                        ))
-                                    )}
-                                </Listbox.Options>
+                                    <Listbox.Options
+                                        static
+                                        className="max-h-72 w-full overflow-auto rounded-3xl bg-slate-900/95 backdrop-blur-2xl border border-slate-700/50 p-2 text-base shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/10 focus:outline-none sm:text-sm custom-scrollbar"
+                                    >
+                                        {options.length === 0 ? (
+                                            <div className="py-8 px-4 text-center">
+                                                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">No hay opciones</p>
+                                            </div>
+                                        ) : (
+                                            Object.entries(groupedOptions).map(([groupName, groupOptions]) => (
+                                                <Fragment key={groupName}>
+                                                    {showGroups && groupName && (
+                                                        <div className="px-4 py-2 mt-2 first:mt-0">
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500/80">
+                                                                {groupName}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {groupOptions.map((option) => (
+                                                        <Listbox.Option
+                                                            key={String(option.value)}
+                                                            className={({ active, selected }) => cn(
+                                                                "relative cursor-pointer select-none py-3.5 pl-12 pr-4 rounded-2xl transition-all duration-200 mb-1 last:mb-0",
+                                                                active ? "bg-amber-500/10 text-amber-400" : "text-slate-300",
+                                                                selected && "bg-amber-500/20 text-white font-bold"
+                                                            )}
+                                                            value={option.value}
+                                                        >
+                                                            {({ selected }) => (
+                                                                <>
+                                                                    <span className="block truncate">
+                                                                        {renderOption ? renderOption(option) : option.name}
+                                                                    </span>
+                                                                    
+                                                                    {selected && (
+                                                                        <motion.span 
+                                                                            initial={{ scale: 0 }}
+                                                                            animate={{ scale: 1 }}
+                                                                            className="absolute inset-y-0 left-0 flex items-center pl-4 text-amber-400"
+                                                                        >
+                                                                            <FiCheck className="h-5 w-5" aria-hidden="true" />
+                                                                        </motion.span>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </Listbox.Option>
+                                                    ))}
+                                                </Fragment>
+                                            ))
+                                        )}
+                                    </Listbox.Options>
+                                </motion.div>
                             )}
                         </AnimatePresence>
                     </div>

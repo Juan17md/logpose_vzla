@@ -231,7 +231,7 @@ export default function DebtsPage() {
 
                     {/* Mobile Inline Form */}
                     <AnimatePresence mode="wait">
-                        {view !== "none" && (view !== "create" || view === "create") && (view !== "none") && (
+                        {view !== "none" && (
                             <motion.div
                                 key={view + (editingDebt?.id || "")}
                                 initial={{ opacity: 0, height: 0 }}
@@ -265,14 +265,12 @@ export default function DebtsPage() {
                                     />
                                 )}
                                 
-                                {view !== "none" && (
-                                    <button
-                                        onClick={() => { setView("none"); setEditingDebt(null); }}
-                                        className="w-full mt-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors"
-                                    >
-                                        Cerrar Formulario
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => { setView("none"); setEditingDebt(null); }}
+                                    className="w-full mt-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors"
+                                >
+                                    Cerrar Formulario
+                                </button>
                             </motion.div>
                         )}
                     </AnimatePresence>
