@@ -11,10 +11,15 @@ export async function POST(req: Request) {
     const { message, conversationHistory = [], userContext = {} } = await req.json();
 
     // Extraer contexto del usuario
-    const { balance, goals, debts, monthlyExpense, monthlyIncome, averageDailyExpense, lastTransaction, bcvRate, fixedExpenses, shoppingLists, monthlyBudget, monthlySalary, topCategories, previousMonthlyExpense, upcomingFixedExpenses } = userContext;
+    const { balance, goals, debts, monthlyExpense, monthlyIncome, averageDailyExpense, lastTransaction, apiRates, tasasManuales, fixedExpenses, shoppingLists, monthlyBudget, monthlySalary, topCategories, previousMonthlyExpense, upcomingFixedExpenses } = userContext;
 
-    // 🔍 Debug: Ver la tasa BCV recibida
-    console.log('💱 Tasa BCV recibida:', bcvRate, '| Tipo:', typeof bcvRate);
+    // Obtener tasas efectivas (preferir manuales si existen, luego API, luego fallback)
+    const tUSD = tasasManuales?.USD || apiRates?.USD || apiRates?.usd || 56.40;
+    const tEUR = tasasManuales?.EUR || apiRates?.EUR || apiRates?.eur || 61.20;
+    const tUSDT = tasasManuales?.USDT || apiRates?.USDT || apiRates?.usdt || 64.50;
+
+    // 🔍 Debug: Ver las tasas recibidas
+    console.log('💱 Tasas recibidas:', { tUSD, tEUR, tUSDT });
 
     // Construir mensajes con historial de conversación
     const messages: any[] = [
@@ -50,21 +55,21 @@ ${shoppingLists && shoppingLists.length > 0 ? `- Listas de compras: ${shoppingLi
 ${lastTransaction ? `- Última transacción: ${lastTransaction.type} de $${parseFloat(Number(lastTransaction.amount).toFixed(2))} en ${lastTransaction.category}` : ''}
 ` : ''}
 
-💱 TASA OFICIAL BCV
-${bcvRate ? `
-🔢 TASA DE HOY: ${bcvRate.toFixed(2)} Bs por cada 1 USD
+ 💱 TASAS DE CAMBIO (Bolívares por unidad)
+- **USD Oficial (BCV)**: ${tUSD.toFixed(2)} Bs
+- **EUR Oficial**: ${tEUR.toFixed(2)} Bs
+- **USDT / Paralelo**: ${tUSDT.toFixed(2)} Bs
 
-🚨 USA EXACTAMENTE ${bcvRate.toFixed(2)} Bs/USD EN TODAS TUS RESPUESTAS:
+🚨 REGLAS CRÍTICAS DE CONVERSIÓN:
+1. Si el usuario dice "X$ en Bs", usa la tasa USD: **${tUSD.toFixed(2)}**
+2. Si el usuario dice "X€ en Bs", usa la tasa EUR: **${tEUR.toFixed(2)}**
+3. Si el usuario dice "X USDT en Bs" o menciona "paralelo", usa la tasa USDT: **${tUSDT.toFixed(2)}**
 
-Ejemplos con la tasa de hoy:
-✅ "6$ en bs" → "$6 (≈ ${(6 * bcvRate).toFixed(0)} Bs)"
-✅ "100 bs" → "$${(100 / bcvRate).toFixed(2)} (100 Bs)"
-✅ "336 bs" → "$${(336 / bcvRate).toFixed(2)} (336 Bs)"
-
-Fórmulas:
-• USD a Bs: monto_usd × ${bcvRate.toFixed(2)}
-• Bs a USD: monto_bs ÷ ${bcvRate.toFixed(2)}
-` : `⚠️ ERROR: No hay tasa BCV disponible`}
+Ejemplos con las tasas de hoy:
+✅ "5$ en bs" → "$5 (≈ ${(5 * tUSD).toFixed(0)} Bs)"
+✅ "10€ en bs" → "€10 (≈ ${(10 * tEUR).toFixed(0)} Bs)"
+✅ "100 bs a $" → "$${(100 / tUSD).toFixed(2)} (100 Bs)"
+✅ "20 usdt" → "₮20 (≈ ${(20 * tUSDT).toFixed(0)} Bs)"
 
 ═══════════════════════════════════════════════════════════════════
 📋 CATEGORÍAS DISPONIBLES
@@ -120,7 +125,7 @@ Interpreta fechas naturales y convierte a ISO 8601:
 ═══════════════════════════════════════════════════════════════════
 🌎 VARIACIONES REGIONALES Y DE IDIOMA
 ═══════════════════════════════════════════════════════════════════
-• Moneda: "$", "dólares", "USD", "usd" → USD | "Bs", "bolívares", "bolivares", "VES", "ves" → VES
+• Moneda: "$", "dólares", "USD", "usd" → USD | "Bs", "bolívares", "VES", "ves" → VES | "₮", "tether", "usdt" → USDT | "€", "euros", "EUR" → EUR
 • Ingreso: "recibí", "me dieron", "me pagaron", "ingresó", "cobré", "gané"
 • Gasto: "gasté", "pagué", "di", "salió", "compré", "perdí"
 • Deuda: "me debe", "le debo", "presté", "prestado", "fiado"
@@ -145,7 +150,7 @@ Interpreta fechas naturales y convierte a ISO 8601:
   "category": string,
   "description": string,
   "date": string (ISO 8601),
-  "currency": "USD" | "VES",
+  "currency": "USD" | "VES" | "USDT" | "EUR",
   "amountInUSD": number (opcional, cuando dice "X$ pero en Bs")
 }
 
@@ -156,7 +161,7 @@ Interpreta fechas naturales y convierte a ISO 8601:
   "amount": number,
   "type": "por_cobrar" | "por_pagar",
   "description": string,
-  "currency": "USD" | "VES"
+  "currency": "USD" | "VES" | "USDT" | "EUR"
 }
 
 3️⃣ PAGAR DEUDA (pay_debt):
@@ -324,19 +329,18 @@ Entrada: "recibí 50 dólares" o "50$"
 Salida: {"amount": 50, "currency": "USD"}
 (El número EXACTO que dijo, SIN convertir)
 
-**CASO 3: Usuario dice DÓLARES pero los pagó EN BOLÍVARES**
-Entrada: "gasté 5$ en bs" o "pagué 10 dólares en bolívares" o "5$ pero en bs"
+**CASO 3: Usuario dice moneda extranjera pero la pagó EN BOLÍVARES**
+Entrada: "gasté 5$ en bs" | "pagué 10€ en bolívares" | "20 usdt pero en bs"
 Salida: {
-  "amount": <CALCULA: 5 × ${bcvRate ? bcvRate.toFixed(2) : '56.40'}>,
+  "amount": <CALCULA SEGÚN MONEDA: monto × tasa_bs>,
   "currency": "VES",
-  "amountInUSD": 5
+  "amountInUSD": <equivalente en USD si la moneda es USD, sino omitir>
 }
 
-Ejemplo CONCRETO con la tasa actual (${bcvRate ? bcvRate.toFixed(2) : '56.40'} Bs/USD):
-- Usuario: "gasté 5$ en bs"
-- JSON: {"amount": ${bcvRate ? (5 * bcvRate).toFixed(2) : '282'}, "currency": "VES", "amountInUSD": 5}
-- Usuario: "pagué 10 dólares en bolívares"  
-- JSON: {"amount": ${bcvRate ? (10 * bcvRate).toFixed(2) : '564'}, "currency": "VES", "amountInUSD": 10}
+Ejemplo CONCRETO con las tasas actuales:
+- Usuario: "gasté 5$ en bs" → {"amount": ${(5 * tUSD).toFixed(2)}, "currency": "VES", "amountInUSD": 5}
+- Usuario: "pagué 10€ en bs" → {"amount": ${(10 * tEUR).toFixed(2)}, "currency": "VES"}
+- Usuario: "20 usdt en bs" → {"amount": ${(20 * tUSDT).toFixed(2)}, "currency": "VES"}
 
 **CASO 4: Equivalente en dólares**
 Entrada: "equivalente a 20$ en Bs"
@@ -352,10 +356,10 @@ Usuario: "recibí 100 dólares"
 → {"amount": 100, "currency": "USD"} ✅
 
 Usuario: "gasté 5$ en bs" 
-→ {"amount": ${bcvRate ? (5 * bcvRate).toFixed(2) : '280'}, "currency": "VES", "amountInUSD": 5} ✅
+→ {"amount": ${(5 * tUSD).toFixed(2)}, "currency": "VES", "amountInUSD": 5} ✅
 
-Usuario: "pagué 336 bolívares" 
-→ {"amount": 336, "currency": "VES"} ✅
+Usuario: "10€ en bs" 
+→ {"amount": ${(10 * tEUR).toFixed(2)}, "currency": "VES"} ✅
 
 ═══════════════════════════════════════════════════════════════════
 ❌ EJEMPLOS INCORRECTOS (NUNCA HAGAS ESTO):
@@ -448,7 +452,7 @@ Detecta y procesa múltiples operaciones en un solo mensaje:
 
     const completion = await client.chat.completions.create({
       messages,
-      model: "openai/gpt-oss-120b",
+      model: "llama-3.3-70b-versatile",
       temperature: 0,
       stream: false,
     });

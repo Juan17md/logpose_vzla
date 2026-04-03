@@ -49,6 +49,22 @@ service cloud.firestore {
       match /savings_transactions/{transactionId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+
+      // ----------------------------------------
+      // 🏦 CUENTAS BANCARIAS - Cuentas multi-moneda del usuario
+      // ----------------------------------------
+      // Colección: users/{userId}/bank_accounts/{accountId}
+      match /bank_accounts/{accountId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // ----------------------------------------
+      // 📊 TRANSACCIONES DE CUENTA - Movimientos entre cuentas
+      // ----------------------------------------
+      // Colección: users/{userId}/account_transactions/{transId}
+      match /account_transactions/{transId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
 
