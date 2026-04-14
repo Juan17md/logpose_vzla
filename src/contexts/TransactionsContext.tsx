@@ -18,6 +18,11 @@ export interface Transaction {
     originalAmount?: number;
     exchangeRate?: number;
     accountId?: string;
+    // Campos de Ancla Monetaria (Bolívar como fuente de verdad)
+    montoBs?: number;        // Monto en Bs (FUENTE DE VERDAD inmutable)
+    tasaRegistro?: number;   // Tasa BCV congelada al momento del registro
+    montoEnCuenta?: number;  // Monto en la moneda nativa de la cuenta
+    monedaCuenta?: string;   // Moneda de la cuenta asociada (USD, BS, EUR, USDT)
 }
 
 interface TransactionsContextType {
@@ -91,14 +96,16 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                 if (!transDoc.exists()) throw "La transacción no existe";
 
                 const transData = transDoc.data();
-                const { accountId, amount, type } = transData;
+                const { accountId, type } = transData;
+                // Ancla Monetaria: usar montoEnCuenta si existe, fallback a amount para datos históricos
+                const montoParaSaldo = transData.montoEnCuenta ?? transData.amount;
 
                 if (accountId) {
                     const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const currentSaldo = cuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = type === 'ingreso' ? currentSaldo - amount : currentSaldo + amount;
+                        const nuevoSaldo = type === 'ingreso' ? currentSaldo - montoParaSaldo : currentSaldo + montoParaSaldo;
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }
@@ -119,14 +126,16 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         try {
             await runTransaction(db, async (transaction) => {
                 const { id: _, date, ...rest } = transactionToCopy;
-                const { accountId, amount, type } = rest;
+                const { accountId, type } = rest;
+                // Ancla Monetaria: usar montoEnCuenta si existe, fallback a amount
+                const montoParaSaldo = rest.montoEnCuenta ?? rest.amount;
 
                 if (accountId) {
                     const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const currentSaldo = cuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = type === 'ingreso' ? currentSaldo + amount : currentSaldo - amount;
+                        const nuevoSaldo = type === 'ingreso' ? currentSaldo + montoParaSaldo : currentSaldo - montoParaSaldo;
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }
@@ -152,14 +161,16 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         try {
             let newId = "";
             await runTransaction(db, async (transaction) => {
-                const { accountId, amount, type } = transactionData;
+                const { accountId, type } = transactionData;
+                // Ancla Monetaria: usar montoEnCuenta si existe, fallback a amount
+                const montoParaSaldo = transactionData.montoEnCuenta ?? transactionData.amount;
 
                 if (accountId) {
                     const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const currentSaldo = cuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = type === 'ingreso' ? currentSaldo + amount : currentSaldo - amount;
+                        const nuevoSaldo = type === 'ingreso' ? currentSaldo + montoParaSaldo : currentSaldo - montoParaSaldo;
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }
@@ -197,13 +208,17 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     oldData.type !== updates.type;
 
                 if (needsBalanceUpdate) {
+                    // Ancla Monetaria: usar montoEnCuenta si existe, fallback a amount
+                    const oldMontoParaSaldo = oldData.montoEnCuenta ?? oldData.amount;
+                    const newMontoParaSaldo = newData.montoEnCuenta ?? newData.amount;
+
                     // 1. Revertir impacto en la cuenta anterior
                     if (oldData.accountId) {
                         const oldCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", oldData.accountId);
                         const oldCuentaDoc = await transaction.get(oldCuentaRef);
                         if (oldCuentaDoc.exists()) {
                             const currentSaldo = oldCuentaDoc.data().saldo || 0;
-                            const restoredSaldo = oldData.type === 'ingreso' ? currentSaldo - oldData.amount : currentSaldo + oldData.amount;
+                            const restoredSaldo = oldData.type === 'ingreso' ? currentSaldo - oldMontoParaSaldo : currentSaldo + oldMontoParaSaldo;
                             transaction.update(oldCuentaRef, { saldo: restoredSaldo, actualizadoEn: serverTimestamp() });
                         }
                     }
@@ -215,7 +230,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                         const newCuentaDoc = await transaction.get(newCuentaRef);
                         if (newCuentaDoc.exists()) {
                             const currentSaldo = newCuentaDoc.data().saldo || 0;
-                            const appliedSaldo = newData.type === 'ingreso' ? currentSaldo + newData.amount : currentSaldo - newData.amount;
+                            const appliedSaldo = newData.type === 'ingreso' ? currentSaldo + newMontoParaSaldo : currentSaldo - newMontoParaSaldo;
                             transaction.update(newCuentaRef, { saldo: appliedSaldo, actualizadoEn: serverTimestamp() });
                         }
                     }

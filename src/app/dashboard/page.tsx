@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from "react";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { addDoc, collection, Timestamp, doc, runTransaction, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, Timestamp, doc, runTransaction, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 import { useTransactions } from "@/hooks/useTransactions";
 import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2, FiEye, FiEyeOff, FiChevronRight, FiClock, FiAlertCircle, FiSave, FiTag } from "react-icons/fi";
 import Link from "next/link";
@@ -16,6 +16,7 @@ import RecentTransactions from "@/components/ui/RecentTransactions";
 import ExchangeRateWidget from "@/components/ui/ExchangeRateWidget";
 import SavingsGoalsWidget from "@/components/ui/SavingsGoalsWidget";
 import BudgetAlertWidget from "@/components/ui/BudgetAlertWidget";
+import OnePieceQuote from "@/components/ui/OnePieceQuote";
 
 import BankAccountsWidget from "@/components/ui/BankAccountsWidget";
 import PendingDebtsWidget from "@/components/ui/PendingDebtsWidget";
@@ -47,6 +48,55 @@ export default function DashboardPage() {
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);
      const [showAdjustModal, setShowAdjustModal] = useState(false);
     const [adjustingBalances, setAdjustingBalances] = useState<Record<string, string>>({});
+    const [recalibrando, setRecalibrando] = useState<string | null>(null);
+
+    // Función de recalibración: recalcula el saldo de una cuenta BS sumando montoEnCuenta de cada transacción
+    const recalibrarCuenta = async (cuentaId: string) => {
+        if (!user) return;
+        setRecalibrando(cuentaId);
+        try {
+            const q = query(
+                collection(db, "transactions"),
+                where("userId", "==", user.uid),
+                where("accountId", "==", cuentaId)
+            );
+            const snapshot = await getDocs(q);
+            let saldoRecalculado = 0;
+
+            snapshot.docs.forEach(docSnap => {
+                const data = docSnap.data();
+                // Priorizar montoEnCuenta (nuevos), fallback a amount (históricos)
+                const monto = data.montoEnCuenta ?? data.amount ?? 0;
+                if (data.type === 'ingreso') {
+                    saldoRecalculado += monto;
+                } else {
+                    saldoRecalculado -= monto;
+                }
+            });
+
+            // Actualizar saldo en Firestore
+            const cuentaRef = doc(db, "users", user.uid, "bank_accounts", cuentaId);
+            await runTransaction(db, async (transaction) => {
+                transaction.update(cuentaRef, {
+                    saldo: saldoRecalculado,
+                    actualizadoEn: serverTimestamp()
+                });
+            });
+
+            // Actualizar el input del modal
+            setAdjustingBalances(prev => ({
+                ...prev,
+                [cuentaId]: saldoRecalculado.toFixed(2)
+            }));
+
+            toast.success(`Saldo recalibrado: ${saldoRecalculado.toFixed(2)}`);
+        } catch (error) {
+            console.error("Error al recalibrar:", error);
+            toast.error("Error al recalibrar la cuenta");
+        } finally {
+            setRecalibrando(null);
+        }
+    };
 
     // Variantes de animación para Staggered Entrance
     const containerVariants = {
@@ -176,17 +226,25 @@ export default function DashboardPage() {
 
                     // Crear registro de la transacción de ajuste
                     const newTransRef = doc(collection(db, "transactions"));
+                    const absDiff = Math.abs(diff);
+                    // Ancla Monetaria: calcular montoBs según la moneda de la cuenta
+                    const montoBsAjuste = cuenta.moneda === "BS" ? absDiff : absDiff * (tasasEnBs.USD || 1);
                     transaction.set(newTransRef, {
                         userId: user.uid,
                         accountId: id,
-                        amount: Math.abs(diff),
+                        amount: cuenta.moneda === "BS" ? absDiff / (tasasEnBs.USD || 1) : absDiff,
                         type: diff > 0 ? 'ingreso' : 'gasto',
                         category: 'Ajuste',
                         description: `Ajuste manual de saldo`,
                         date: Timestamp.now(),
-                        currency: cuenta.moneda,
-                        originalAmount: Math.abs(diff),
-                        exchangeRate: 1,
+                        currency: cuenta.moneda === "BS" ? "VES" : cuenta.moneda,
+                        originalAmount: absDiff,
+                        exchangeRate: tasasEnBs.USD || 1,
+                        // Campos de Ancla Monetaria
+                        montoBs: montoBsAjuste,
+                        tasaRegistro: tasasEnBs.USD || 1,
+                        montoEnCuenta: absDiff,
+                        monedaCuenta: cuenta.moneda,
                         createdAt: serverTimestamp()
                     });
                 }
@@ -240,6 +298,11 @@ export default function DashboardPage() {
                             {isPrivacyMode ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                         </motion.button>
                     </div>
+                </motion.div>
+                
+                {/* Frase temática One Piece */}
+                <motion.div variants={itemVariants}>
+                    <OnePieceQuote />
                 </motion.div>
 
                 {/* Balance Card Principal - Hero */}
@@ -635,8 +698,13 @@ export default function DashboardPage() {
                                 Bienvenido de nuevo, <span className="text-amber-400 font-semibold">{user?.displayName || "Usuario"}</span>.
                             </p>
                         </div>
-                        <div className="bg-slate-800/40 backdrop-blur-md p-1 px-2 rounded-2xl border border-slate-700/50 shadow-inner flex items-center">
-                            <ExchangeRateWidget />
+                        <div className="flex flex-col items-end gap-3">
+                            <div className="bg-slate-800/40 backdrop-blur-md p-1 px-2 rounded-2xl border border-slate-700/50 shadow-inner flex items-center">
+                                <ExchangeRateWidget />
+                            </div>
+                            <div className="max-w-xs text-right">
+                                <OnePieceQuote />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -900,6 +968,22 @@ export default function DashboardPage() {
                                         placeholder="0.00"
                                     />
                                 </div>
+                                {/* Botón de recalibración para cuentas en BS */}
+                                {cuenta.moneda === 'BS' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => recalibrarCuenta(cuenta.id)}
+                                        disabled={recalibrando === cuenta.id}
+                                        className="mt-2 w-full py-2 text-xs font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {recalibrando === cuenta.id ? (
+                                            <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin"></div>
+                                        ) : (
+                                            <FiActivity size={14} />
+                                        )}
+                                        {recalibrando === cuenta.id ? 'Recalibrando...' : 'Recalibrar saldo automáticamente'}
+                                    </button>
+                                )}
                             </div>
                         ))}
 

@@ -13,6 +13,9 @@ export interface FixedExpense {
     description?: string;
     lastPaidDate?: Date;
     createdAt: Date;
+    // Campos de Ancla Monetaria
+    montoBs?: number;     // Monto en Bs (inmutable)
+    tasaRegistro?: number; // Tasa BCV al momento de registrar
 }
 
 export function useFixedExpenses() {

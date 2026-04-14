@@ -6,6 +6,7 @@ import RecentTransactions from "@/components/ui/RecentTransactions";
 import { FiList, FiPlus, FiArrowLeft } from "react-icons/fi";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import { motion, AnimatePresence } from "framer-motion";
+import OnePieceQuote from "@/components/ui/OnePieceQuote";
 
 export default function MovimientosPage() {
     const { transactionToEdit, clearEditing } = useEditTransaction();
@@ -41,6 +42,8 @@ export default function MovimientosPage() {
                 </div>
             </div>
 
+            <OnePieceQuote category="movimientos" className="hidden md:block" />
+
             {/* Mobile Header */}
             <div className="md:hidden flex items-center justify-between mb-2">
                 <div>
@@ -56,6 +59,8 @@ export default function MovimientosPage() {
                     </button>
                 )}
             </div>
+
+            <OnePieceQuote category="movimientos" className="md:hidden" />
 
             {/* Mobile View Switching */}
             <div className="md:hidden relative">

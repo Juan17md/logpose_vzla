@@ -14,7 +14,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Input from "@/components/ui/forms/Input";
 import Logo from "@/components/layout/Logo";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Outfit, IBM_Plex_Sans } from "next/font/google";
 
 const outfit = Outfit({ variable: "--font-outfit", weight: ["400","500","600","700","800"], subsets: ["latin"] });
@@ -109,6 +109,8 @@ export default function RegisterPage() {
     const router = useRouter();
     const [loading, setLoading]           = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [registeredName, setRegisteredName] = useState("");
 
     const { register, handleSubmit, formState:{errors} } = useForm({
         resolver: zodResolver(z.object({
@@ -127,8 +129,11 @@ export default function RegisterPage() {
                 uid:user.uid, displayName:data.name, email:data.email,
                 plan:"free", createdAt:serverTimestamp(),
             });
-            toast.success("¡Cuenta creada!", { description:"Bienvenido a tu control de gastos." });
-            router.push("/dashboard");
+            setShowOnboarding(true);
+            setRegisteredName(data.name);
+            setTimeout(() => {
+                router.push("/dashboard");
+            }, 4500);
         } catch (error) {
             let msg = "Ocurrió un error al registrarse.";
             if (error instanceof FirebaseError) {
@@ -136,7 +141,8 @@ export default function RegisterPage() {
                 else if (error.code==="auth/weak-password")   msg="La contraseña debe tener al menos 6 caracteres.";
             }
             toast.error("Error", { description:msg });
-        } finally { setLoading(false); }
+            setLoading(false);
+        }
     };
 
     const features = [
@@ -300,6 +306,71 @@ export default function RegisterPage() {
                 </motion.div>
             </div>
         </div>
+
+        {/* ONBOARDING OVERLAY */}
+        <AnimatePresence>
+            {showOnboarding && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-[#06080F]/95 backdrop-blur-3xl"
+                    style={{fontFamily:"var(--font-ibm)"}}
+                >
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div className="absolute top-[20%] left-[20%] w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] animate-pulse" />
+                        <div className="absolute bottom-[20%] right-[20%] w-96 h-96 bg-violet-600/10 rounded-full blur-[100px] animate-pulse delay-1000" />
+                    </div>
+
+                    <div className="text-center px-4 flex flex-col items-center z-10">
+                        <motion.div
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
+                            className="relative mb-8"
+                        >
+                            <div className="absolute inset-0 bg-amber-500/40 blur-[50px] rounded-full animate-pulse scale-125" />
+                            <Logo variant="dark" width={140} height={140} className="relative z-10 drop-shadow-[0_0_20px_rgba(202,138,4,0.6)]" />
+                        </motion.div>
+                        
+                        <motion.h1 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.8, type: "spring" }}
+                            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight"
+                            style={{ fontFamily: "var(--font-outfit)" }}
+                        >
+                            ¡Bienvenido a Bordo,<br className="md:hidden" /> <span className="grad-text inline-block mt-2 md:mt-0">{registeredName}</span>!
+                        </motion.h1>
+
+                        <motion.div 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 1.4 }}
+                            className="bg-slate-900/50 border border-amber-500/30 px-6 py-4 rounded-2xl mb-8 shadow-[0_0_30px_rgba(245,158,11,0.1)]"
+                        >
+                            <p className="text-lg md:text-xl text-amber-100/90 font-medium tracking-wide">
+                                Ajustando el LogPose hacia tu futuro financiero...
+                            </p>
+                        </motion.div>
+                        
+                        <motion.div
+                            className="h-1.5 bg-slate-800 rounded-full w-64 md:w-80 overflow-hidden relative"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 1.8 }}
+                        >
+                            <motion.div
+                                initial={{ width: "0%" }}
+                                animate={{ width: "100%" }}
+                                transition={{ delay: 2, duration: 2.5, ease: "circInOut" }}
+                                className="absolute top-0 left-0 bottom-0 bg-linear-to-r from-amber-600 via-yellow-400 to-amber-500 shadow-[0_0_15px_rgba(250,204,21,0.8)]"
+                            />
+                        </motion.div>
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
         </>
     );
 }

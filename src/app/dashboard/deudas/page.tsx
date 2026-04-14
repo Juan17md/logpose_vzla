@@ -11,6 +11,7 @@ import { getBCVRate } from "@/lib/currency";
 import { motion, AnimatePresence } from "framer-motion";
 import DebtForm from "@/components/forms/DebtForm";
 import DebtPaymentForm from "@/components/forms/DebtPaymentForm";
+import OnePieceQuote from "@/components/ui/OnePieceQuote";
 
 export default function DebtsPage() {
     const router = useRouter();
@@ -170,6 +171,8 @@ export default function DebtsPage() {
                     <h1 className="text-2xl font-bold text-white">Deudas</h1>
                     <p className="text-slate-400 text-sm">Gestiona tus préstamos y cobros</p>
                 </motion.div>
+
+                <OnePieceQuote category="deudas" className="mx-1" />
 
                 {/* Mobile Tabs / Stats Horizontal Scroll */}
                 <motion.div variants={itemVariants} className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
@@ -481,6 +484,8 @@ export default function DebtsPage() {
                                 </div>
                             </div>
                         </div>
+                        
+                        <OnePieceQuote category="deudas" className="mt-4" />
                     </div>
 
                     {/* RIGHT COLUMN: Content (2/3) */}

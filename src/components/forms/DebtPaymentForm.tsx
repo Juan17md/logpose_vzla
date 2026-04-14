@@ -50,6 +50,9 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
             currency,
             originalAmount: amountVal,
             exchangeRate: bcvRate,
+            // Campos de Ancla Monetaria
+            montoBs: currency === "VES" ? amountVal : amountVal * bcvRate,
+            tasaRegistro: bcvRate,
             date: date,
             note,
         });

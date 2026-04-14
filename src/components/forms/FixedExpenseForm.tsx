@@ -168,14 +168,22 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
 
     const handleOnSubmit = async (data: FixedExpenseFormData) => {
         const finalCategory = data.category === "Otros" ? data.customCategory!.trim() : data.category;
+        const montoUSD = parseFloat(data.amount);
+
+        // Ancla Monetaria: calcular montoBs
+        const montoBs = data.currency === "BS"
+            ? parseFloat(data.bsAmount || "0")
+            : montoUSD * rate;
         
         await onSubmit({
             title: data.title,
-            amount: parseFloat(data.amount),
+            amount: montoUSD,
             currency: data.currency,
             category: finalCategory,
             dueDay: parseInt(data.dueDay),
             description: data.description,
+            montoBs,
+            tasaRegistro: rate,
         });
     };
 

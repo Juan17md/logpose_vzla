@@ -7,6 +7,7 @@ import { updateProfile, sendPasswordResetEmail, User } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import OnePieceQuote from "@/components/ui/OnePieceQuote";
 import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut } from "react-icons/fi";
 
 export default function ProfilePage() {
@@ -110,6 +111,8 @@ export default function ProfilePage() {
                     <p className="text-slate-400 text-lg">Gestiona tu información personal y seguridad.</p>
                 </div>
             </div>
+
+            <OnePieceQuote category="perfil" />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Profile Card */}

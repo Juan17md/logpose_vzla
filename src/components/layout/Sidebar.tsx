@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiHome, FiList, FiPieChart, FiUser, FiLogOut, FiX, FiShoppingCart, FiBriefcase, FiCalendar, FiCreditCard } from "react-icons/fi";
+import { FiCompass, FiBook, FiBox, FiShoppingCart, FiTool, FiFlag, FiMap, FiUser, FiLogOut, FiX } from "react-icons/fi";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import Logo from "./Logo";
 import { Outfit } from "next/font/google";
+import OnePieceQuote from "../ui/OnePieceQuote";
 
 const outfit = Outfit({ variable: "--font-outfit", weight: ["400","500","600","700","800"], subsets: ["latin"] });
 
@@ -30,14 +31,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     }, []);
 
     const menuItems = [
-        { name: "Pantalla Principal", icon: <FiHome />, href: "/dashboard" },
-        { name: "Movimientos", icon: <FiList />, href: "/dashboard/movimientos" },
-        { name: "Cuentas", icon: <FiCreditCard />, href: "/dashboard/cuentas" },
-        { name: "Listas", icon: <FiShoppingCart />, href: "/dashboard/listas" },
-        { name: "Gastos Fijos", icon: <FiCalendar />, href: "/dashboard/gastos-fijos" },
-        { name: "Deudas", icon: <FiCreditCard />, href: "/dashboard/deudas" },
-        { name: "Reportes", icon: <FiPieChart />, href: "/dashboard/reportes" },
-        { name: "Perfil", icon: <FiUser />, href: "/dashboard/perfil" },
+        { name: "Log Pose (Inicio)", icon: <FiCompass />, href: "/dashboard" },
+        { name: "Bitácora (Movim.)", icon: <FiBook />, href: "/dashboard/movimientos" },
+        { name: "Tesoros (Cuentas)", icon: <FiBox />, href: "/dashboard/cuentas" },
+        { name: "Provisiones (Listas)", icon: <FiShoppingCart />, href: "/dashboard/listas" },
+        { name: "Mantenimiento (Fijos)", icon: <FiTool />, href: "/dashboard/gastos-fijos" },
+        { name: "Recompensas (Deudas)", icon: <FiFlag />, href: "/dashboard/deudas" },
+        { name: "Navegación (Reportes)", icon: <FiMap />, href: "/dashboard/reportes" },
+        { name: "Tripulante (Perfil)", icon: <FiUser />, href: "/dashboard/perfil" },
     ];
 
     const handleLogout = async () => {
@@ -147,6 +148,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                     {/* Footer / Logout - Fixed at bottom */}
                     <div className="p-4 mt-auto relative z-10 bg-slate-900/80 md:bg-transparent backdrop-blur-lg md:backdrop-blur-none border-t border-slate-800/50 md:border-t-0 pb-12 md:pb-8">
+                        {/* One Piece Quote - Integración temática */}
+                        <div className="px-2 mb-4">
+                            <OnePieceQuote />
+                        </div>
+
                         {/* User Info */}
                         <div className="flex items-center gap-3 px-4 py-3 mb-4 rounded-2xl bg-slate-800/60 border border-slate-700/50">
                             <div className="relative shrink-0">

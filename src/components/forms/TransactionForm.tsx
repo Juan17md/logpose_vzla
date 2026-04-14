@@ -75,7 +75,7 @@ type TransactionFormData = z.infer<typeof transactionSchema>;
 
 export default function TransactionForm() {
     const { transactionToEdit, clearEditing } = useEditTransaction();
-    const { cuentas } = useBankAccounts();
+    const { cuentas, tasasEnBs } = useBankAccounts();
     const [loading, setLoading] = useState(false);
     const [rate, setRate] = useState<number>(0);
 
@@ -111,6 +111,38 @@ export default function TransactionForm() {
             }
         });
     }, [setValue]);
+
+    // Precarga desde query params (flujo de pago de gastos fijos)
+    useEffect(() => {
+        if (transactionToEdit) return; // No precargar si estamos editando
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get('precarga') === 'gasto-fijo') {
+            const precargaAmount = searchParams.get('amount') || '';
+            const precargaCategory = searchParams.get('category') || 'Servicios';
+            const precargaDescription = searchParams.get('description') || '';
+            const rawCurrency = searchParams.get('currency') || 'USD';
+            const precargaMontoBs = searchParams.get('montoBs') || '';
+
+            const isStandardCategory = CATEGORIES.some(c => c.value === precargaCategory);
+
+            reset({
+                amount: precargaAmount,
+                description: precargaDescription,
+                category: isStandardCategory ? precargaCategory : 'Otra',
+                customCategory: isStandardCategory ? '' : precargaCategory,
+                date: createVenezuelaDate(),
+                type: 'gasto',
+                currency: rawCurrency === 'BS' ? 'VES' : rawCurrency as 'USD' | 'VES',
+                exchangeRate: rate > 0 ? rate.toFixed(2) : '',
+                vesAmount: rawCurrency === 'BS' ? precargaMontoBs : '',
+                accountId: '',
+            });
+
+            // Limpiar URL para evitar re-llenado
+            window.history.replaceState({}, '', '/dashboard/movimientos');
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rate]);
 
     // Populate form if editing
     useEffect(() => {
@@ -200,36 +232,61 @@ export default function TransactionForm() {
 
         try {
             const finalCategory = data.category === "Otra" ? data.customCategory!.trim() : data.category;
+            const montoUSD = parseFloat(data.amount);
+            const tasaActual = data.currency === "VES" ? parseFloat(data.exchangeRate || "1") : (rate || tasasEnBs.USD || 1);
+
+            // === ANCLA MONETARIA ===
+            // montoBs: fuente de verdad inmutable en Bolívares
+            const montoBs = data.currency === "VES"
+                ? parseFloat(data.vesAmount || "0")
+                : montoUSD * tasaActual;
+
+            // montoEnCuenta: monto en la moneda nativa de la cuenta destino
+            const cuentaDestino = cuentas.find(c => c.id === data.accountId);
+            let montoEnCuenta = montoUSD; // default USD
+            if (cuentaDestino) {
+                switch (cuentaDestino.moneda) {
+                    case "BS": montoEnCuenta = montoBs; break;
+                    case "USD": montoEnCuenta = montoUSD; break;
+                    case "EUR": montoEnCuenta = tasasEnBs.EUR > 0 ? montoUSD * (tasasEnBs.USD / tasasEnBs.EUR) : montoUSD; break;
+                    case "USDT": montoEnCuenta = tasasEnBs.USDT > 0 ? montoUSD * (tasasEnBs.USD / tasasEnBs.USDT) : montoUSD; break;
+                }
+            }
 
             const transactionData = {
-                amount: parseFloat(data.amount),
+                amount: montoUSD,
                 type: data.type,
                 category: finalCategory,
                 description: data.description || "",
                 date: data.date,
                 currency: data.currency,
-                originalAmount: data.currency === "VES" ? parseFloat(data.vesAmount || "0") : parseFloat(data.amount),
-                exchangeRate: data.currency === "VES" ? parseFloat(data.exchangeRate || "1") : 1,
+                originalAmount: data.currency === "VES" ? parseFloat(data.vesAmount || "0") : montoUSD,
+                exchangeRate: data.currency === "VES" ? tasaActual : 1,
                 accountId: data.accountId,
+                // Campos de Ancla Monetaria
+                montoBs,
+                tasaRegistro: tasaActual,
+                montoEnCuenta,
+                monedaCuenta: cuentaDestino?.moneda || "USD",
             };
-
-            const montoUSD = parseFloat(data.amount);
 
             if (transactionToEdit) {
                 // Al editar, ajustar saldo: revertir el anterior y aplicar el nuevo
                 const cuentaRef = doc(db, "users", auth.currentUser.uid, "bank_accounts", data.accountId);
+                // Ancla Monetaria: usar montoEnCuenta para revertir anterior
+                const oldMontoParaSaldo = transactionToEdit.montoEnCuenta ?? transactionToEdit.amount;
                 await runTransaction(db, async (transaction) => {
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         let saldo = cuentaDoc.data().saldo || 0;
                         // Revertir movimiento anterior si era de la misma cuenta
                         if (transactionToEdit.accountId === data.accountId) {
-                            if (transactionToEdit.type === "ingreso") saldo -= transactionToEdit.amount;
-                            else saldo += transactionToEdit.amount;
+                            if (transactionToEdit.type === "ingreso") saldo -= oldMontoParaSaldo;
+                            else saldo += oldMontoParaSaldo;
                         }
-                        // Aplicar nuevo movimiento
-                        if (data.type === "ingreso") saldo += montoUSD;
-                        else saldo -= montoUSD;
+                        // Aplicar nuevo movimiento con montoEnCuenta
+                        if (data.type === "ingreso") saldo += montoEnCuenta;
+                        else saldo -= montoEnCuenta;
                         transaction.update(cuentaRef, { saldo, actualizadoEn: serverTimestamp() });
                     }
                     transaction.update(doc(db, "transactions", transactionToEdit.id), transactionData);
@@ -237,13 +294,13 @@ export default function TransactionForm() {
                 toast.success("El movimiento ha sido modificado.");
                 clearEditing();
             } else {
-                // Crear transacción y actualizar saldo de la cuenta en una transacción atómica
+                // Crear transacción y actualizar saldo con montoEnCuenta
                 const cuentaRef = doc(db, "users", auth.currentUser.uid, "bank_accounts", data.accountId);
                 await runTransaction(db, async (transaction) => {
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const saldo = cuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = data.type === "ingreso" ? saldo + montoUSD : saldo - montoUSD;
+                        const nuevoSaldo = data.type === "ingreso" ? saldo + montoEnCuenta : saldo - montoEnCuenta;
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                     const newTransRef = doc(collection(db, "transactions"));

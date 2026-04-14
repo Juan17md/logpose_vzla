@@ -11,6 +11,9 @@ export interface Payment {
     currency?: "USD" | "VES";
     originalAmount?: number;
     exchangeRate?: number;
+    // Campos de Ancla Monetaria
+    montoBs?: number;
+    tasaRegistro?: number;
 }
 
 interface FirestorePayment {
@@ -21,6 +24,8 @@ interface FirestorePayment {
     currency?: "USD" | "VES";
     originalAmount?: number;
     exchangeRate?: number;
+    montoBs?: number;
+    tasaRegistro?: number;
 }
 
 export interface Debt {

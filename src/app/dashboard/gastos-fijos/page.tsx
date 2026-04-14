@@ -14,6 +14,7 @@ import { getBCVRate } from "@/lib/currency";
 import FixedExpensesCalendar from "@/components/ui/FixedExpensesCalendar";
 import { motion, AnimatePresence } from "framer-motion";
 import FixedExpenseForm from "@/components/forms/FixedExpenseForm";
+import OnePieceQuote from "@/components/ui/OnePieceQuote";
 
 export default function FixedExpensesPage() {
     const router = useRouter();
@@ -104,11 +105,36 @@ export default function FixedExpensesPage() {
         setAlreadyPaidExpense(null);
     };
 
-    const executePay = async (withTransaction: boolean) => {
+    const executePay = async (mode: 'redirect' | 'direct' | 'mark-only') => {
         if (!payingExpense) return;
 
         try {
-            if (withTransaction && auth.currentUser) {
+            if (mode === 'redirect') {
+                // Redirigir a Movimientos con datos precargados editables
+                const montoBs = payingExpense.montoBs || payingExpense.amount * bcvRate;
+                const params = new URLSearchParams({
+                    precarga: 'gasto-fijo',
+                    amount: payingExpense.amount.toString(),
+                    category: payingExpense.category,
+                    description: `Pago mensual: ${payingExpense.title}`,
+                    currency: payingExpense.currency,
+                    montoBs: montoBs.toString(),
+                });
+
+                // Marcar como pagado antes de redirigir
+                await updateFixedExpense(payingExpense.id, {
+                    lastPaidDate: new Date()
+                });
+
+                setShowPayModal(false);
+                setPayingExpense(null);
+                router.push(`/dashboard/movimientos?${params.toString()}`);
+                return;
+            }
+
+            if (mode === 'direct' && auth.currentUser) {
+                // Registrar transacción directa con campos de Ancla Monetaria
+                const montoBs = payingExpense.montoBs || payingExpense.amount * bcvRate;
                 await addDoc(collection(db, "transactions"), {
                     userId: auth.currentUser.uid,
                     amount: payingExpense.amount,
@@ -116,9 +142,12 @@ export default function FixedExpensesPage() {
                     category: payingExpense.category,
                     description: `Pago mensual: ${payingExpense.title}`,
                     date: Timestamp.now(),
-                    currency: "USD",
-                    originalAmount: payingExpense.amount,
+                    currency: payingExpense.currency === "BS" ? "VES" : "USD",
+                    originalAmount: payingExpense.currency === "BS" ? montoBs : payingExpense.amount,
                     exchangeRate: bcvRate,
+                    // Campos de Ancla Monetaria
+                    montoBs,
+                    tasaRegistro: bcvRate,
                 });
                 toast.success("Pago y Gasto registrados");
             } else {
@@ -225,6 +254,8 @@ export default function FixedExpensesPage() {
                 </div>
             </div>
 
+            <OnePieceQuote category="gastos-fijos" className="hidden md:block mb-6" />
+
             {/* Mobile Header & Summary */}
             <div className="md:hidden space-y-4">
                 <div className="flex justify-between items-center">
@@ -276,6 +307,8 @@ export default function FixedExpensesPage() {
                     </div>
                 )}
             </div>
+
+            <OnePieceQuote category="gastos-fijos" className="md:hidden" />
 
             {/* Layout Grid */}
             <div className="relative">
@@ -460,18 +493,24 @@ export default function FixedExpensesPage() {
                     <div className="space-y-2">
                         <h3 className="text-xl font-bold text-white">¿Cómo deseas registrar este pago?</h3>
                         <p className="text-slate-400 text-sm">
-                            Puedes registrar el pago afectando tu saldo actual o simplemente marcarlo como pagado.
+                            Puedes ir a Movimientos para personalizar el registro, registrar rápidamente o solo marcarlo.
                         </p>
                     </div>
                     <div className="grid grid-cols-1 gap-3 pt-4">
                         <button
-                            onClick={() => executePay(true)}
-                            className="w-full py-4 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+                            onClick={() => executePay('redirect')}
+                            className="w-full py-4 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
                         >
-                            <FiActivity size={18} /> Registrar Gasto y Pago
+                            <FiEdit2 size={18} /> Ir a Movimientos (editable)
                         </button>
                         <button
-                            onClick={() => executePay(false)}
+                            onClick={() => executePay('direct')}
+                            className="w-full py-4 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+                        >
+                            <FiActivity size={18} /> Registro Rápido
+                        </button>
+                        <button
+                            onClick={() => executePay('mark-only')}
                             className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl border border-slate-700 transition-all flex items-center justify-center gap-2"
                         >
                             <FiCheckCircle size={18} /> Solo marcar como pagado

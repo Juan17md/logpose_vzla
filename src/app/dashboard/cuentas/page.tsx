@@ -21,6 +21,7 @@ import { FiPlus, FiCreditCard, FiDollarSign, FiTrendingUp, FiCheck, FiArrowUp } 
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Inter, Bungee } from "next/font/google";
+import OnePieceQuote from "@/components/ui/OnePieceQuote";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 const bungee = Bungee({ subsets: ["latin"], weight: ["400"] });
@@ -202,6 +203,11 @@ export default function CuentasPage() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Quote Contextual */}
+            <div className="hidden md:block">
+                <OnePieceQuote category="cuentas" />
             </div>
 
             {/* Mobile Header (Simplified) */}

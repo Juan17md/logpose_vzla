@@ -3,11 +3,12 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useTransactions } from "@/hooks/useTransactions";
-import { ExpenseCategoryChart, BalanceChart } from "@/components/charts/FinancialCharts";
+import { ExpenseCategoryChart, BalanceChart, ExpenseRadarChart, TrendComposedChart } from "@/components/charts/FinancialCharts";
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiPieChart, FiBriefcase } from "react-icons/fi";
 import { useSavingsTransactions } from "@/hooks/useSavingsTransactions";
 import Select from "@/components/ui/forms/Select";
 import { FiCalendar, FiClock } from "react-icons/fi";
+import OnePieceQuote from "@/components/ui/OnePieceQuote";
 
 export default function ReportsPage() {
     const { transactions, loading } = useTransactions();
@@ -81,6 +82,41 @@ export default function ReportsPage() {
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
+
+    const trendData = useMemo(() => {
+        const data = [];
+        // Calcular los últimos 6 meses (incluyendo el mes seleccionado o actual)
+        const endMonth = selectedMonth;
+        const endYear = selectedYear;
+
+        for (let i = 5; i >= 0; i--) {
+            let m = endMonth - i;
+            let y = endYear;
+            if (m < 0) {
+                m += 12;
+                y -= 1;
+            }
+
+            let inc = 0;
+            let exp = 0;
+
+            transactions.forEach(t => {
+                const d = new Date(t.date);
+                if (d.getMonth() === m && d.getFullYear() === y) {
+                    if (t.type === "ingreso") inc += Number(t.amount);
+                    else exp += Number(t.amount);
+                }
+            });
+
+            data.push({
+                name: MONTHS[m].substring(0, 3) + (y !== endYear ? ` ${y.toString().substring(2)}` : ''),
+                ingresos: Math.round(inc),
+                gastos: Math.round(exp),
+                balance: Math.round(inc - exp)
+            });
+        }
+        return data;
+    }, [transactions, selectedMonth, selectedYear]);
 
     // Animation Variants
     const containerVariants = {
@@ -160,6 +196,8 @@ export default function ReportsPage() {
                     </div>
                 </motion.div>
 
+                <OnePieceQuote category="reportes" />
+
                 {/* KPI Grid 2x2 */}
                 <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
                     <div className="bg-linear-to-br from-emerald-500/10 to-emerald-600/5 p-4 rounded-2xl border border-emerald-500/20 backdrop-blur-sm relative overflow-hidden">
@@ -217,6 +255,24 @@ export default function ReportsPage() {
                             Gastos por Categoría
                         </h3>
                         <ExpenseCategoryChart data={stats.categoryData} />
+                    </motion.div>
+
+                    {/* Expense Radar Card */}
+                    <motion.div variants={itemVariants} className="bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-slate-700/50">
+                        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                            <div className="w-1 h-4 bg-violet-500 rounded-full"></div>
+                            Estadísticas de Tripulante (Radar)
+                        </h3>
+                        <ExpenseRadarChart data={stats.categoryData} />
+                    </motion.div>
+
+                    {/* Trend Composed Chart Card */}
+                    <motion.div variants={itemVariants} className="bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-slate-700/50">
+                        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                            <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
+                            Histórico de Navegación (6 Meses)
+                        </h3>
+                        <TrendComposedChart data={trendData} />
                     </motion.div>
                 </div>
 
@@ -295,6 +351,8 @@ export default function ReportsPage() {
                     </div>
                 </div>
 
+                <OnePieceQuote category="reportes" />
+
                 {/* Summary Cards - Horizontal scroll en móvil */}
                 <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 scrollbar-hide">
                     <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
@@ -344,7 +402,10 @@ export default function ReportsPage() {
                     {/* Balance Chart */}
                     <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 overflow-hidden shadow-lg">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-bold text-white">Balance del Periodo</h3>
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
+                                Balance del Periodo
+                            </h3>
                         </div>
                         <BalanceChart data={balanceData} />
                     </div>
@@ -352,7 +413,10 @@ export default function ReportsPage() {
                     {/* Categories Pie Chart */}
                     <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 overflow-hidden shadow-lg">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-bold text-white">Gastos por Categoría</h3>
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <div className="w-1.5 h-6 bg-red-500 rounded-full"></div>
+                                Gastos por Categoría
+                            </h3>
                         </div>
                         <ExpenseCategoryChart data={stats.categoryData} />
                         {/* Custom Legend */}
@@ -366,6 +430,30 @@ export default function ReportsPage() {
                                     <span className="font-bold text-white">${item.value.toLocaleString()}</span>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+
+                    {/* Expense Radar Chart */}
+                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 overflow-hidden shadow-lg">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <div className="w-1.5 h-6 bg-violet-500 rounded-full"></div>
+                                Estadísticas de Tripulante (Radar)
+                            </h3>
+                        </div>
+                        <ExpenseRadarChart data={stats.categoryData} />
+                    </div>
+
+                    {/* Trend Composed Chart */}
+                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 overflow-hidden shadow-lg lg:col-span-2">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <div className="w-1.5 h-6 bg-amber-500 rounded-full"></div>
+                                Histórico de Navegación (6 Meses)
+                            </h3>
+                        </div>
+                        <div className="h-96">
+                            <TrendComposedChart data={trendData} />
                         </div>
                     </div>
 

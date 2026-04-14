@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { getBCVRate } from "@/lib/currency";
 import { motion, AnimatePresence } from "framer-motion";
+import OnePieceQuote from "@/components/ui/OnePieceQuote";
 
 export default function ShoppingListsPage() {
     const router = useRouter();
@@ -179,6 +180,8 @@ export default function ShoppingListsPage() {
                 </div>
             </div>
 
+            <OnePieceQuote category="listas" className="hidden md:block" />
+
             {/* Mobile Header & Summary */}
             <div className="md:hidden space-y-4">
                 <AnimatePresence mode="wait">
@@ -214,6 +217,7 @@ export default function ShoppingListsPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
+                <OnePieceQuote category="listas" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
