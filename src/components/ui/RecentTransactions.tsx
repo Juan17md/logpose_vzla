@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
-import { FiTrendingUp, FiTrendingDown, FiTrash2, FiClock, FiEdit2, FiSearch, FiCopy } from "react-icons/fi";
+import { FiTrendingUp, FiTrendingDown, FiTrash2, FiClock, FiEdit2, FiSearch, FiCopy, FiRefreshCw } from "react-icons/fi";
 import { toast } from "sonner";
 import ConfirmDialog from "./ConfirmDialog";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
@@ -116,9 +116,9 @@ export default function RecentTransactions() {
                                     <tr key={t.id} className="hover:bg-slate-800/50 transition-colors group">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
-                                                <div className={`p-2 rounded-lg mr-3 ${t.type === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                                                <div className={`p-2 rounded-lg mr-3 ${t.type === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : t.type === 'transferencia' ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'
                                                     }`}>
-                                                    {t.type === 'ingreso' ? <FiTrendingUp /> : <FiTrendingDown />}
+                                                    {t.type === 'ingreso' ? <FiTrendingUp /> : t.type === 'transferencia' ? <FiRefreshCw /> : <FiTrendingDown />}
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-medium text-white">{t.category}</div>
@@ -132,16 +132,16 @@ export default function RecentTransactions() {
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             {t.currency === 'VES' && t.originalAmount ? (
                                                 <div className="flex flex-col items-end">
-                                                    <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                        {t.type === 'ingreso' ? '+' : '-'}Bs. {t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                    <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : t.type === 'transferencia' ? 'text-blue-400' : 'text-red-400'}`}>
+                                                        {t.type === 'ingreso' ? '+' : t.type === 'transferencia' ? '' : '-'}Bs. {t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                     </span>
                                                     <span className="text-xs text-slate-500">
-                                                        ≈ {obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')} {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                        ≈ $ {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                     </span>
                                                 </div>
                                             ) : (
-                                                <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                    {t.type === 'ingreso' ? '+' : '-'}{obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')} {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                <span className={`text-sm font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : t.type === 'transferencia' ? 'text-blue-400' : 'text-red-400'}`}>
+                                                    {t.type === 'ingreso' ? '+' : t.type === 'transferencia' ? '' : '-'}{obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')} {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </span>
                                             )}
                                         </td>
@@ -189,8 +189,8 @@ export default function RecentTransactions() {
                             <div key={t.id} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col gap-3">
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2.5 rounded-xl ${t.type === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                                            {t.type === 'ingreso' ? <FiTrendingUp size={18} /> : <FiTrendingDown size={18} />}
+                                        <div className={`p-2.5 rounded-xl ${t.type === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : t.type === 'transferencia' ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'}`}>
+                                            {t.type === 'ingreso' ? <FiTrendingUp size={18} /> : t.type === 'transferencia' ? <FiRefreshCw size={18} /> : <FiTrendingDown size={18} />}
                                         </div>
                                         <div>
                                             <p className="font-bold text-white text-sm">{t.category}</p>
@@ -203,16 +203,16 @@ export default function RecentTransactions() {
                                     <div className="text-right">
                                         {t.currency === 'VES' && t.originalAmount ? (
                                             <div className="flex flex-col items-end">
-                                                <span className={`text-base font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-white'}`}>
-                                                    {t.type === 'ingreso' ? '+' : '-'}Bs.{t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                <span className={`text-base font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : t.type === 'transferencia' ? 'text-blue-400' : 'text-white'}`}>
+                                                    {t.type === 'ingreso' ? '+' : t.type === 'transferencia' ? '' : '-'}Bs.{t.originalAmount.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </span>
                                                 <span className="text-[10px] text-slate-500">
-                                                    {obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')} {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                    ≈ $ {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
                                         ) : (
-                                            <span className={`text-base font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : 'text-white'}`}>
-                                                {t.type === 'ingreso' ? '+' : '-'}{obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')} {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                            <span className={`text-base font-bold ${t.type === 'ingreso' ? 'text-emerald-400' : t.type === 'transferencia' ? 'text-blue-400' : 'text-white'}`}>
+                                                {t.type === 'ingreso' ? '+' : t.type === 'transferencia' ? '' : '-'}{obtenerSimboloMoneda(t.accountId ? obtenerCuenta(t.accountId)?.moneda || 'USD' : 'USD')} {t.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                             </span>
                                         )}
                                     </div>

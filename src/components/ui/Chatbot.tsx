@@ -73,6 +73,7 @@ export default function Chatbot() {
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const silenceTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
     const inputRef = useRef("");
+    const isListeningRef = useRef(false);
 
     const pendingOperationsRef = useRef(false); // Track if operations are in progress
     const isMountedRef = useRef(true);
@@ -258,6 +259,7 @@ export default function Chatbot() {
     // Detener reconocimiento al cerrar el modal
     useEffect(() => {
         if (!isOpen && recognitionRef.current) {
+            isListeningRef.current = false;
             recognitionRef.current.stop();
             setIsListening(false);
             setInterimTranscript("");
@@ -742,15 +744,21 @@ export default function Chatbot() {
 
     const toggleListening = () => {
         // Si ya está escuchando, detener Y enviar
-        if (isListening && recognitionRef.current) {
-            recognitionRef.current.stop();
+        if (isListeningRef.current && recognitionRef.current) {
+            isListeningRef.current = false;
             setIsListening(false);
-            setInterimTranscript("");
-            if (silenceTimeoutRef.current) {
-                clearTimeout(silenceTimeoutRef.current);
-            }
-            // Enviar el mensaje acumulado
-            setTimeout(() => handleSend(), 100);
+            recognitionRef.current.stop();
+            
+            // Enviar el mensaje acumulado después de un breve delay
+            // para permitir que el 'onresult' final sea procesado por el navegador
+            setTimeout(() => {
+                const textToSend = inputRef.current || interimTranscript;
+                if (textToSend.trim()) {
+                    handleSend(textToSend.trim());
+                } else {
+                    setInterimTranscript("");
+                }
+            }, 400);
             return;
         }
 
@@ -794,6 +802,7 @@ export default function Chatbot() {
         recognition.interimResults = true;
         recognition.maxAlternatives = 1;
 
+        isListeningRef.current = true;
         setIsListening(true);
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -837,16 +846,24 @@ export default function Chatbot() {
                 toast.error(`Error de voz: ${event.error}`);
             }
 
+            isListeningRef.current = false;
             setIsListening(false);
             setInterimTranscript("");
         };
 
         recognition.onend = () => {
-            // Solo desactivar si no se reinicia automáticamente (lógica de continuous loop si fuese necesario)
-            setIsListening(false);
-            setInterimTranscript("");
-            if (silenceTimeoutRef.current) {
-                clearTimeout(silenceTimeoutRef.current);
+            if (isListeningRef.current) {
+                // Si el usuario no lo detuvo manualmente, reiniciar (muy común en móviles)
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error("No se pudo reiniciar el micrófono:", error);
+                    isListeningRef.current = false;
+                    setIsListening(false);
+                    setInterimTranscript("");
+                }
+            } else {
+                setInterimTranscript("");
             }
         };
 
@@ -855,6 +872,7 @@ export default function Chatbot() {
             toast.info("Escuchando... 🎙️");
         } catch (error) {
             console.error("Error al iniciar reconocimiento:", error);
+            isListeningRef.current = false;
             setIsListening(false);
             toast.error("No se pudo iniciar el micrófono.");
         }
@@ -866,8 +884,8 @@ export default function Chatbot() {
             <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setIsOpen(true)}
-                className="fixed bottom-[110px] right-4 md:bottom-8 md:right-8 bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-indigo-600 dark:to-purple-700 text-white p-4 rounded-full shadow-[0_8px_30px_rgb(139,92,246,0.3)] z-[60] border border-violet-400/30 flex items-center justify-center transition-all duration-300"
+                onClick={() => setIsOpen(!isOpen)}
+                className={`fixed bottom-[110px] right-4 md:bottom-8 md:right-8 bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-indigo-600 dark:to-purple-700 text-white p-4 rounded-full shadow-[0_8px_30px_rgb(139,92,246,0.3)] z-[60] border border-violet-400/30 items-center justify-center transition-all duration-300 ${isOpen ? 'hidden md:flex' : 'flex'}`}
             >
                 <FiCpu size={26} />
             </motion.button>

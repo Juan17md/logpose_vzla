@@ -9,7 +9,7 @@ import { createVenezuelaDate } from "@/lib/timezone";
 export interface Transaction {
     id: string;
     amount: number;
-    type: "ingreso" | "gasto";
+    type: "ingreso" | "gasto" | "transferencia";
     category: string;
     description: string;
     date: Date;
@@ -18,6 +18,7 @@ export interface Transaction {
     originalAmount?: number;
     exchangeRate?: number;
     accountId?: string;
+    targetAccountId?: string;
 }
 
 interface TransactionsContextType {
@@ -98,8 +99,21 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const currentSaldo = cuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = type === 'ingreso' ? currentSaldo - amount : currentSaldo + amount;
+                        let nuevoSaldo = currentSaldo;
+                        if (type === 'ingreso') nuevoSaldo -= amount;
+                        else if (type === 'gasto') nuevoSaldo += amount;
+                        else if (type === 'transferencia') nuevoSaldo += amount;
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
+                    }
+                }
+
+                if (type === 'transferencia' && transData.targetAccountId) {
+                    const targetCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", transData.targetAccountId);
+                    const targetCuentaDoc = await transaction.get(targetCuentaRef);
+                    if (targetCuentaDoc.exists()) {
+                        const currentSaldo = targetCuentaDoc.data().saldo || 0;
+                        const nuevoSaldo = currentSaldo - amount;
+                        transaction.update(targetCuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }
 
@@ -126,8 +140,21 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const currentSaldo = cuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = type === 'ingreso' ? currentSaldo + amount : currentSaldo - amount;
+                        let nuevoSaldo = currentSaldo;
+                        if (type === 'ingreso') nuevoSaldo += amount;
+                        else if (type === 'gasto') nuevoSaldo -= amount;
+                        else if (type === 'transferencia') nuevoSaldo -= amount;
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
+                    }
+                }
+
+                if (type === 'transferencia' && rest.targetAccountId) {
+                    const targetCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", rest.targetAccountId);
+                    const targetCuentaDoc = await transaction.get(targetCuentaRef);
+                    if (targetCuentaDoc.exists()) {
+                        const currentSaldo = targetCuentaDoc.data().saldo || 0;
+                        const nuevoSaldo = currentSaldo + amount;
+                        transaction.update(targetCuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }
 
@@ -159,8 +186,21 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const currentSaldo = cuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = type === 'ingreso' ? currentSaldo + amount : currentSaldo - amount;
+                        let nuevoSaldo = currentSaldo;
+                        if (type === 'ingreso') nuevoSaldo += amount;
+                        else if (type === 'gasto') nuevoSaldo -= amount;
+                        else if (type === 'transferencia') nuevoSaldo -= amount;
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
+                    }
+                }
+
+                if (type === 'transferencia' && transactionData.targetAccountId) {
+                    const targetCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", transactionData.targetAccountId);
+                    const targetCuentaDoc = await transaction.get(targetCuentaRef);
+                    if (targetCuentaDoc.exists()) {
+                        const currentSaldo = targetCuentaDoc.data().saldo || 0;
+                        const nuevoSaldo = currentSaldo + amount;
+                        transaction.update(targetCuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }
 
@@ -190,33 +230,57 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                 const oldData = transDoc.data() as Transaction;
                 const newData = { ...oldData, ...updates };
 
-                // Si ha cambiado la cuenta, el monto o el tipo, necesitamos recalcular saldos
+                // Si ha cambiado la cuenta, el destino, el monto o el tipo, necesitamos recalcular saldos
                 const needsBalanceUpdate = 
                     oldData.accountId !== updates.accountId || 
+                    oldData.targetAccountId !== updates.targetAccountId ||
                     oldData.amount !== updates.amount || 
                     oldData.type !== updates.type;
 
                 if (needsBalanceUpdate) {
-                    // 1. Revertir impacto en la cuenta anterior
+                    // 1. Revertir impacto anterior
                     if (oldData.accountId) {
                         const oldCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", oldData.accountId);
                         const oldCuentaDoc = await transaction.get(oldCuentaRef);
                         if (oldCuentaDoc.exists()) {
                             const currentSaldo = oldCuentaDoc.data().saldo || 0;
-                            const restoredSaldo = oldData.type === 'ingreso' ? currentSaldo - oldData.amount : currentSaldo + oldData.amount;
+                            let restoredSaldo = currentSaldo;
+                            if (oldData.type === 'ingreso') restoredSaldo -= oldData.amount;
+                            else if (oldData.type === 'gasto') restoredSaldo += oldData.amount;
+                            else if (oldData.type === 'transferencia') restoredSaldo += oldData.amount;
                             transaction.update(oldCuentaRef, { saldo: restoredSaldo, actualizadoEn: serverTimestamp() });
                         }
                     }
+                    if (oldData.type === 'transferencia' && oldData.targetAccountId) {
+                        const oldTargetRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", oldData.targetAccountId);
+                        const oldTargetDoc = await transaction.get(oldTargetRef);
+                        if (oldTargetDoc.exists()) {
+                            const currentSaldo = oldTargetDoc.data().saldo || 0;
+                            const restoredSaldo = currentSaldo - oldData.amount;
+                            transaction.update(oldTargetRef, { saldo: restoredSaldo, actualizadoEn: serverTimestamp() });
+                        }
+                    }
 
-                    // 2. Aplicar impacto en la cuenta nueva (o misma cuenta con nuevos datos)
+                    // 2. Aplicar impacto nuevo
                     if (newData.accountId) {
-                        // Importante: Si es la misma cuenta, debemos obtener el saldo actualizado (ya revertido arriba)
                         const newCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", newData.accountId);
                         const newCuentaDoc = await transaction.get(newCuentaRef);
                         if (newCuentaDoc.exists()) {
                             const currentSaldo = newCuentaDoc.data().saldo || 0;
-                            const appliedSaldo = newData.type === 'ingreso' ? currentSaldo + newData.amount : currentSaldo - newData.amount;
+                            let appliedSaldo = currentSaldo;
+                            if (newData.type === 'ingreso') appliedSaldo += newData.amount;
+                            else if (newData.type === 'gasto') appliedSaldo -= newData.amount;
+                            else if (newData.type === 'transferencia') appliedSaldo -= newData.amount;
                             transaction.update(newCuentaRef, { saldo: appliedSaldo, actualizadoEn: serverTimestamp() });
+                        }
+                    }
+                    if (newData.type === 'transferencia' && newData.targetAccountId) {
+                        const newTargetRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", newData.targetAccountId);
+                        const newTargetDoc = await transaction.get(newTargetRef);
+                        if (newTargetDoc.exists()) {
+                            const currentSaldo = newTargetDoc.data().saldo || 0;
+                            const appliedSaldo = currentSaldo + newData.amount;
+                            transaction.update(newTargetRef, { saldo: appliedSaldo, actualizadoEn: serverTimestamp() });
                         }
                     }
                 }

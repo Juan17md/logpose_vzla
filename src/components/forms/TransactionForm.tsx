@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { addDoc, collection, serverTimestamp, doc, updateDoc, runTransaction } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { toast } from "sonner";
-import { FiDollarSign, FiCalendar, FiTag, FiFileText, FiSave, FiTrendingUp, FiTrendingDown, FiX, FiCreditCard } from "react-icons/fi";
+import { FiDollarSign, FiCalendar, FiTag, FiFileText, FiSave, FiTrendingUp, FiTrendingDown, FiX, FiCreditCard, FiRefreshCw } from "react-icons/fi";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from 'date-fns/locale/es';
@@ -56,11 +56,31 @@ const transactionSchema = z.object({
     category: z.string().min(1, "La categoría es obligatoria"),
     customCategory: z.string().optional(),
     date: z.date(),
-    type: z.enum(["ingreso", "gasto"]),
+    type: z.enum(["ingreso", "gasto", "transferencia"]),
     currency: z.enum(["USD", "VES"]),
     exchangeRate: z.string().optional(),
     vesAmount: z.string().optional(),
     accountId: z.string().min(1, "Debes seleccionar una cuenta"),
+    targetAccountId: z.string().optional(),
+    hasCommission: z.boolean().optional(),
+    commissionAmount: z.string().optional(),
+    vesCommissionAmount: z.string().optional(),
+}).refine(data => {
+    if (data.type === "transferencia" && !data.targetAccountId) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Debes seleccionar una cuenta destino",
+    path: ["targetAccountId"],
+}).refine(data => {
+    if (data.type === "transferencia" && data.accountId === data.targetAccountId) {
+        return false;
+    }
+    return true;
+}, {
+    message: "La cuenta origen y destino deben ser distintas",
+    path: ["targetAccountId"],
 }).refine(data => {
     if (data.category === "Otra" && (!data.customCategory || data.customCategory.trim() === "")) {
         return false;
@@ -69,6 +89,17 @@ const transactionSchema = z.object({
 }, {
     message: "Especifica la categoría",
     path: ["customCategory"],
+}).refine(data => {
+    if (data.hasCommission && data.currency === "USD" && (!data.commissionAmount || parseFloat(data.commissionAmount) <= 0)) {
+        return false;
+    }
+    if (data.hasCommission && data.currency === "VES" && (!data.vesCommissionAmount || parseFloat(data.vesCommissionAmount) <= 0)) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Monto requerido",
+    path: ["commissionAmount"],
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
@@ -92,14 +123,23 @@ export default function TransactionForm() {
             exchangeRate: "",
             vesAmount: "",
             accountId: "",
+            targetAccountId: "",
+            hasCommission: false,
+            commissionAmount: "",
+            vesCommissionAmount: "",
         }
     });
 
+    const type = watch("type");
     const currency = watch("currency");
     const amount = watch("amount");
     const vesAmount = watch("vesAmount");
     const exchangeRate = watch("exchangeRate");
     const category = watch("category");
+    const hasCommission = watch("hasCommission");
+    const commissionAmount = watch("commissionAmount");
+    const vesCommissionAmount = watch("vesCommissionAmount");
+    const currentAccountId = watch("accountId");
 
     // Fetch Rate on Mount
     useEffect(() => {
@@ -129,6 +169,10 @@ export default function TransactionForm() {
                 vesAmount: transactionToEdit.currency === "VES" && transactionToEdit.originalAmount
                     ? parseFloat(transactionToEdit.originalAmount.toFixed(2)).toString()
                     : "",
+                hasCommission: false,
+                commissionAmount: "",
+                vesCommissionAmount: "",
+                targetAccountId: "",
             });
         }
     }, [transactionToEdit, reset, rate]);
@@ -185,6 +229,17 @@ export default function TransactionForm() {
         }
     }, [currency, vesAmount, exchangeRate, setValue]);
 
+    // Calculate USD from VES for commission
+    useEffect(() => {
+        if (currency === "VES" && vesCommissionAmount && exchangeRate) {
+            const v = parseFloat(vesCommissionAmount);
+            const r = parseFloat(exchangeRate);
+            if (!isNaN(v) && !isNaN(r) && r > 0) {
+                setValue("commissionAmount", (v / r).toFixed(2));
+            }
+        }
+    }, [currency, vesCommissionAmount, exchangeRate, setValue]);
+
     const onSubmit = async (data: TransactionFormData) => {
         if (cuentas.length === 0) {
             toast.error("Debes crear una cuenta bancaria antes de registrar movimientos.");
@@ -215,7 +270,78 @@ export default function TransactionForm() {
 
             const montoUSD = parseFloat(data.amount);
 
-            if (transactionToEdit) {
+            if (data.type === "transferencia") {
+                if (!data.targetAccountId) {
+                    toast.error("Debes seleccionar una cuenta destino.");
+                    setLoading(false);
+                    return;
+                }
+                const cuentaOrigen = cuentas.find(c => c.id === data.accountId);
+                const cuentaDestino = cuentas.find(c => c.id === data.targetAccountId);
+                if (!cuentaOrigen || !cuentaDestino) {
+                    toast.error("Cuentas inválidas.");
+                    setLoading(false);
+                    return;
+                }
+
+                const comisionUSD = data.hasCommission && data.commissionAmount ? parseFloat(data.commissionAmount) : 0;
+                const comisionVES = data.hasCommission && data.vesCommissionAmount ? parseFloat(data.vesCommissionAmount) : 0;
+
+                await runTransaction(db, async (transaction) => {
+                    const cuentaOrigenRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", data.accountId);
+                    const cuentaDestinoRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", data.targetAccountId!);
+                    
+                    const cuentaOrigenDoc = await transaction.get(cuentaOrigenRef);
+                    const cuentaDestinoDoc = await transaction.get(cuentaDestinoRef);
+
+                    if (cuentaOrigenDoc.exists() && cuentaDestinoDoc.exists()) {
+                        const saldoOrigen = cuentaOrigenDoc.data().saldo || 0;
+                        const saldoDestino = cuentaDestinoDoc.data().saldo || 0;
+
+                        transaction.update(cuentaOrigenRef, { saldo: saldoOrigen - montoUSD - comisionUSD, actualizadoEn: serverTimestamp() });
+                        transaction.update(cuentaDestinoRef, { saldo: saldoDestino + montoUSD, actualizadoEn: serverTimestamp() });
+                    }
+
+                    // Unica transaccion de transferencia
+                    const newTransRef = doc(collection(db, "transactions"));
+                    transaction.set(newTransRef, {
+                        ...transactionData,
+                        userId: auth.currentUser!.uid,
+                        type: "transferencia",
+                        category: "Transferencias",
+                        description: data.description || `Transferencia a ${cuentaDestino.nombre}`,
+                        targetAccountId: data.targetAccountId,
+                        period: "mensual",
+                        createdAt: serverTimestamp(),
+                    });
+
+                    // Comision (origen)
+                    if (comisionUSD > 0) {
+                        const comisionRef = doc(collection(db, "transactions"));
+                        transaction.set(comisionRef, {
+                            userId: auth.currentUser!.uid,
+                            amount: comisionUSD,
+                            type: "gasto",
+                            category: "Comisiones",
+                            description: `Comisión de transferencia`,
+                            date: data.date,
+                            currency: data.currency,
+                            originalAmount: data.currency === "VES" ? comisionVES : comisionUSD,
+                            exchangeRate: data.currency === "VES" ? parseFloat(data.exchangeRate || "1") : 1,
+                            accountId: data.accountId,
+                            period: "mensual",
+                            createdAt: serverTimestamp(),
+                        });
+                    }
+                });
+                toast.success("Transferencia registrada exitosamente.");
+                reset({
+                    amount: "", description: "", category: "Comida", customCategory: "",
+                    date: createVenezuelaDate(), type: "gasto", currency: "USD",
+                    exchangeRate: rate.toFixed(2), vesAmount: "", accountId: data.accountId,
+                    targetAccountId: "", hasCommission: false, commissionAmount: "", vesCommissionAmount: "",
+                });
+            } else if (transactionToEdit) {
                 // Al editar, ajustar saldo: revertir el anterior y aplicar el nuevo
                 const cuentaRef = doc(db, "users", auth.currentUser.uid, "bank_accounts", data.accountId);
                 await runTransaction(db, async (transaction) => {
@@ -239,13 +365,20 @@ export default function TransactionForm() {
             } else {
                 // Crear transacción y actualizar saldo de la cuenta en una transacción atómica
                 const cuentaRef = doc(db, "users", auth.currentUser.uid, "bank_accounts", data.accountId);
+                
+                const comisionUSD = data.hasCommission && data.commissionAmount ? parseFloat(data.commissionAmount) : 0;
+                const comisionVES = data.hasCommission && data.vesCommissionAmount ? parseFloat(data.vesCommissionAmount) : 0;
+
                 await runTransaction(db, async (transaction) => {
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const saldo = cuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = data.type === "ingreso" ? saldo + montoUSD : saldo - montoUSD;
+                        const nuevoSaldo = data.type === "ingreso" 
+                            ? saldo + montoUSD - comisionUSD 
+                            : saldo - montoUSD - comisionUSD;
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
+                    
                     const newTransRef = doc(collection(db, "transactions"));
                     transaction.set(newTransRef, {
                         userId: auth.currentUser!.uid,
@@ -253,6 +386,24 @@ export default function TransactionForm() {
                         period: "mensual",
                         createdAt: serverTimestamp(),
                     });
+
+                    if (comisionUSD > 0) {
+                        const comisionRef = doc(collection(db, "transactions"));
+                        transaction.set(comisionRef, {
+                            userId: auth.currentUser!.uid,
+                            amount: comisionUSD,
+                            type: "gasto",
+                            category: "Comisiones",
+                            description: `Comisión de: ${data.description || data.category}`,
+                            date: data.date,
+                            currency: data.currency,
+                            originalAmount: data.currency === "VES" ? comisionVES : comisionUSD,
+                            exchangeRate: data.currency === "VES" ? parseFloat(data.exchangeRate || "1") : 1,
+                            accountId: data.accountId,
+                            period: "mensual",
+                            createdAt: serverTimestamp(),
+                        });
+                    }
                 });
                 toast.success("El movimiento se ha registrado correctamente.");
 
@@ -261,6 +412,7 @@ export default function TransactionForm() {
                     amount: "", description: "", category: "Comida", customCategory: "",
                     date: createVenezuelaDate(), type: "gasto", currency: "USD",
                     exchangeRate: rate.toFixed(2), vesAmount: "", accountId: data.accountId,
+                    targetAccountId: "", hasCommission: false, commissionAmount: "", vesCommissionAmount: "",
                 });
             }
         } catch (error) {
@@ -307,7 +459,7 @@ export default function TransactionForm() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 relative z-10">
 
                 {/* Type Toggle */}
-                <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-950/60 rounded-[1.25rem] border border-slate-800/80 text-sm shadow-inner relative z-10">
+                <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-950/60 rounded-[1.25rem] border border-slate-800/80 text-sm shadow-inner relative z-10">
                     <Controller
                         control={control}
                         name="type"
@@ -316,7 +468,7 @@ export default function TransactionForm() {
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("ingreso")}
-                                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all duration-300 ${field.value === "ingreso"
+                                    className={`flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${field.value === "ingreso"
                                         ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                                         : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border border-transparent"
                                         }`}
@@ -326,12 +478,22 @@ export default function TransactionForm() {
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("gasto")}
-                                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all duration-300 ${field.value === "gasto"
+                                    className={`flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${field.value === "gasto"
                                         ? "bg-red-500/15 text-red-400 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
                                         : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border border-transparent"
                                         }`}
                                 >
                                     <FiTrendingDown /> Gasto
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => field.onChange("transferencia")}
+                                    className={`flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${field.value === "transferencia"
+                                        ? "bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border border-transparent"
+                                        }`}
+                                >
+                                    <FiRefreshCw /> Transferencia
                                 </button>
                             </>
                         )}
@@ -358,13 +520,13 @@ export default function TransactionForm() {
                 )}
 
                 {/* Cuenta Bancaria - OBLIGATORIO */}
-                <div className="z-20 relative">
+                <div className="z-30 relative grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Controller
                         control={control}
                         name="accountId"
                         render={({ field }) => (
                             <Select<string>
-                                label="Cuenta"
+                                label={type === "transferencia" ? "Cuenta Origen" : "Cuenta"}
                                 icon={<FiCreditCard size={14} />}
                                 value={field.value}
                                 onChange={field.onChange}
@@ -416,6 +578,66 @@ export default function TransactionForm() {
                             />
                         )}
                     />
+
+                    {type === "transferencia" && (
+                        <Controller
+                            control={control}
+                            name="targetAccountId"
+                            render={({ field }) => (
+                                <Select<string>
+                                    label="Cuenta Destino"
+                                    icon={<FiCreditCard size={14} />}
+                                    value={field.value || ""}
+                                    onChange={field.onChange}
+                                    error={errors.targetAccountId}
+                                    placeholder="Seleccionar destino..."
+                                    options={cuentas.filter(c => c.id !== currentAccountId).map((c): OpcionCuenta => ({
+                                        id: c.id,
+                                        value: c.id,
+                                        name: c.nombre,
+                                        moneda: c.moneda,
+                                        saldo: c.saldo,
+                                        banco: c.banco
+                                    }))}
+                                    renderOption={(opt) => {
+                                        const opcionCuenta = opt as OpcionCuenta;
+                                        return (
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-bold text-slate-100">{opcionCuenta.name}</span>
+                                                    <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md border border-slate-700/50">
+                                                        {opcionCuenta.moneda}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-xs text-amber-500/80 font-medium">
+                                                        {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-500 italic uppercase tracking-tighter">
+                                                        • {opcionCuenta.banco}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    }}
+                                    renderValue={(opt) => {
+                                        const opcionCuenta = opt as OpcionCuenta;
+                                        return (
+                                            <div className="flex items-center justify-between w-full pr-2">
+                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                    <span className="truncate">{opcionCuenta.name}</span>
+                                                    <span className="text-[10px] text-slate-500 shrink-0">({opcionCuenta.banco})</span>
+                                                </div>
+                                                <span className="text-amber-500 font-black text-xs shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg ml-2">
+                                                    {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { maximumFractionDigits: 2 })}
+                                                </span>
+                                            </div>
+                                        );
+                                    }}
+                                />
+                            )}
+                        />
+                    )}
                 </div>
 
                 {/* Amount Section */}
@@ -513,44 +735,46 @@ export default function TransactionForm() {
 
                 <div className="space-y-6">
                     {/* Category */}
-                    <div>
-                        <Controller
-                            control={control}
-                            name="category"
-                            render={({ field }) => (
-                                <Select
-                                    label="Categoría"
-                                    options={CATEGORIES}
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    error={errors.category}
-                                    icon={<FiTag />}
-                                />
-                            )}
-                        />
-                        <AnimatePresence>
-                            {category === "Otra" && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                    animate={{ opacity: 1, height: "auto", marginTop: 12 }}
-                                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                >
-                                    <Controller
-                                        control={control}
-                                        name="customCategory"
-                                        render={({ field }) => (
-                                            <Input
-                                                placeholder="Especifica la categoría..."
-                                                icon={<FiTag className="text-violet-400" />}
-                                                {...field}
-                                                error={errors.customCategory}
-                                            />
-                                        )}
+                    {type !== "transferencia" && (
+                        <div>
+                            <Controller
+                                control={control}
+                                name="category"
+                                render={({ field }) => (
+                                    <Select
+                                        label="Categoría"
+                                        options={CATEGORIES}
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        error={errors.category}
+                                        icon={<FiTag />}
                                     />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                                )}
+                            />
+                            <AnimatePresence>
+                                {category === "Otra" && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                        animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+                                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                    >
+                                        <Controller
+                                            control={control}
+                                            name="customCategory"
+                                            render={({ field }) => (
+                                                <Input
+                                                    placeholder="Especifica la categoría..."
+                                                    icon={<FiTag className="text-violet-400" />}
+                                                    {...field}
+                                                    error={errors.customCategory}
+                                                />
+                                            )}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
 
                     {/* Date */}
                     <div>
@@ -602,6 +826,76 @@ export default function TransactionForm() {
                         />
                     </div>
                 </div>
+
+                {/* Commission Section */}
+                {!transactionToEdit && (
+                    <div className="space-y-4 pt-2">
+                        <label className="flex items-center gap-3 cursor-pointer group w-fit ml-1">
+                            <div className="relative flex items-center">
+                                <Controller
+                                    control={control}
+                                    name="hasCommission"
+                                    render={({ field }) => (
+                                        <input
+                                            type="checkbox"
+                                            className="peer sr-only"
+                                            checked={field.value}
+                                            onChange={(e) => {
+                                                field.onChange(e.target.checked);
+                                                if (!e.target.checked) {
+                                                    setValue("commissionAmount", "");
+                                                    setValue("vesCommissionAmount", "");
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-violet-500 border border-slate-600/50"></div>
+                            </div>
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-300 transition-colors">¿Incluye comisión?</span>
+                        </label>
+
+                        <AnimatePresence>
+                            {hasCommission && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                    animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="relative">
+                                        <Controller
+                                            control={control}
+                                            name={currency === "VES" ? "vesCommissionAmount" : "commissionAmount"}
+                                            render={({ field }) => (
+                                                <CustomCurrencyInput
+                                                    label={`Comisión ${currency === "VES" ? "(Bolívares)" : "(Dólares)"}`}
+                                                    placeholder="0.00"
+                                                    prefix={currency === "VES" ? "Bs. " : "$ "}
+                                                    decimalsLimit={2}
+                                                    onValueChange={(value) => field.onChange(value || "")}
+                                                    value={field.value}
+                                                    error={currency === "VES" ? errors.vesCommissionAmount : errors.commissionAmount}
+                                                />
+                                            )}
+                                        />
+                                        {currency === "VES" && commissionAmount && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="absolute top-9 right-4 pointer-events-none"
+                                            >
+                                                <span className="text-red-400 font-bold text-sm bg-red-500/10 px-2 py-1 rounded-lg border border-red-500/20">
+                                                    ≈ ${commissionAmount}
+                                                </span>
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                )}
 
                 {/* Action Button */}
                 <motion.button
