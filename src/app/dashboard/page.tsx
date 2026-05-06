@@ -137,7 +137,8 @@ export default function DashboardPage() {
 
         const initialBalances: Record<string, string> = {};
         cuentas.forEach(c => {
-            initialBalances[c.id] = c.saldo.toString();
+            const roundedSaldo = Math.round(c.saldo * 100) / 100;
+            initialBalances[c.id] = roundedSaldo.toString();
         });
         setAdjustingBalances(initialBalances);
         setShowAdjustModal(true);

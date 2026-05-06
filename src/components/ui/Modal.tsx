@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX } from "react-icons/fi";
 
@@ -19,8 +20,17 @@ export default function Modal({
     children,
     maxWidth = "md",
 }: ModalProps) {
+    const [mounted, setMounted] = useState(false);
+
+    // Solo ejecutar createPortal en el lado del cliente
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // Evitar que el fondo haga scroll cuando el modal está abierto
     useEffect(() => {
+        if (!mounted) return;
+        
         if (isOpen) {
             document.body.style.overflow = "hidden";
         } else {
@@ -29,7 +39,7 @@ export default function Modal({
         return () => {
             document.body.style.overflow = "unset";
         };
-    }, [isOpen]);
+    }, [isOpen, mounted]);
 
     const maxWidthClasses = {
         sm: "max-w-sm",
@@ -39,17 +49,19 @@ export default function Modal({
         "2xl": "max-w-2xl",
     };
 
-    return (
+    if (!mounted) return null;
+
+    const modalContent = (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+                        className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
                     />
 
                     {/* Modal Content */}
@@ -58,13 +70,13 @@ export default function Modal({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-                        className={`relative w-full ${maxWidthClasses[maxWidth]} bg-slate-900 border border-slate-700/50 shadow-2xl shadow-violet-900/20 rounded-2xl overflow-hidden`}
+                        className={`relative w-full ${maxWidthClasses[maxWidth]} bg-slate-900 border border-slate-700 shadow-2xl shadow-violet-900/20 rounded-2xl overflow-hidden max-h-[90vh] flex flex-col`}
                     >
                         {/* Brillo superior decorativo */}
                         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
 
                         {/* Cabecera */}
-                        <div className="flex items-center justify-between p-5 md:p-6 border-b border-slate-800">
+                        <div className="flex items-center justify-between p-5 md:p-6 border-b border-slate-800 shrink-0">
                             <h3 className="text-xl font-bold tracking-tight text-white">
                                 {title}
                             </h3>
@@ -76,8 +88,8 @@ export default function Modal({
                             </button>
                         </div>
 
-                        {/* Cuerpo */}
-                        <div className="p-5 md:p-6 text-slate-300">
+                        {/* Cuerpo (con scroll si es muy alto) */}
+                        <div className="p-5 md:p-6 text-slate-300 overflow-y-auto">
                             {children}
                         </div>
                     </motion.div>
@@ -85,4 +97,6 @@ export default function Modal({
             )}
         </AnimatePresence>
     );
+
+    return createPortal(modalContent, document.body);
 }

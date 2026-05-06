@@ -37,8 +37,18 @@ function getFirebaseAuth() {
 export const auth = getFirebaseAuth();
 
 // Initialize Firestore with Offline Persistence (Only on client)
-export const db = typeof window !== "undefined" 
-  ? initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-    })
-  : getFirestore(app);
+function getFirebaseFirestore() {
+  if (typeof window === "undefined") return getFirestore(app);
+  
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      experimentalAutoDetectLongPolling: true // Ayuda si websockets están bloqueados en tu red/dev
+    });
+  } catch {
+    // Si ya fue inicializado por Hot Reload
+    return getFirestore(app);
+  }
+}
+
+export const db = getFirebaseFirestore();
