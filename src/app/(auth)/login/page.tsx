@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInWithRedirect, getRedirectResult, User } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
@@ -146,12 +146,9 @@ export default function LoginPage() {
         } finally { setLoading(false); }
     };
 
-    const handleGoogle = async () => {
-        setLoading(true);
+    // Lógica centralizada para procesar el usuario después del login (Popup o Redirect)
+    const procesarLoginUsuario = useCallback(async (usuario: User) => {
         try {
-            const resultado = await signInWithPopup(auth, new GoogleAuthProvider());
-            const usuario = resultado.user;
-
             // Asegurar que el documento de usuario existe en Firestore
             const docRef = doc(db, "users", usuario.uid);
             const docSnap = await getDoc(docRef);
@@ -169,20 +166,76 @@ export default function LoginPage() {
             const tienePassword = usuario.providerData.some(p => p.providerId === "password");
 
             if (!tienePassword) {
-                toast.info("¡Un paso más!", { description: "Crea una contraseña para acceder también con tu correo." });
+                toast.info("¡Un paso más!", { 
+                    description: "Crea una contraseña para acceder también con tu correo.",
+                    duration: 5000
+                });
                 router.push("/crear-contrasena");
             } else {
-                toast.success("¡Bienvenido!", { description: "Sesión iniciada con Google." });
+                toast.success("¡Bienvenido!", { description: "Sesión iniciada correctamente." });
                 router.push("/dashboard");
             }
         } catch (error) {
+            console.error("Error al procesar login:", error);
+            toast.error("Error", { description: "Error al sincronizar tu perfil." });
+        }
+    }, [router]);
+
+    // Manejar el resultado del redirect al cargar la página
+    useEffect(() => {
+        const checkRedirect = async () => {
+            try {
+                const resultado = await getRedirectResult(auth);
+                if (resultado?.user) {
+                    setLoading(true);
+                    await procesarLoginUsuario(resultado.user);
+                }
+            } catch (error) {
+                console.error("Error en Google Redirect:", error);
+                if (error instanceof FirebaseError) {
+                    toast.error("Error de Autenticación", { 
+                        description: `Código: ${error.code}. Intenta con el formulario.` 
+                    });
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+        checkRedirect();
+    }, [procesarLoginUsuario]);
+
+    const handleGoogle = async () => {
+        setLoading(true);
+        try {
+            const provider = new GoogleAuthProvider();
+            // Forzar selección de cuenta para evitar logins automáticos fallidos
+            provider.setCustomParameters({ prompt: 'select_account' });
+
+            // Detectar si estamos en un entorno PWA/Móvil para usar Redirect
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isStandalone || isMobile) {
+                await signInWithRedirect(auth, provider);
+                // La página se recargará, el useEffect manejará el resultado
+            } else {
+                const resultado = await signInWithPopup(auth, provider);
+                await procesarLoginUsuario(resultado.user);
+                setLoading(false);
+            }
+        } catch (error) {
+            setLoading(false);
+            console.error("Error completo de Google Auth:", error);
+            
             let msg = "Ocurrió un error al iniciar sesión con Google.";
             if (error instanceof FirebaseError) {
-                if (error.code==="auth/popup-closed-by-user") msg="Inicio de sesión cancelado.";
-                else if (error.code==="auth/account-exists-with-different-credential") msg="Ya existe una cuenta con este correo.";
+                if (error.code === "auth/popup-closed-by-user") msg = "Inicio de sesión cancelado.";
+                else if (error.code === "auth/account-exists-with-different-credential") msg = "Ya existe una cuenta con este correo vinculada a otro método.";
+                else if (error.code === "auth/popup-blocked") msg = "El navegador bloqueó la ventana emergente. Intenta de nuevo.";
+                else msg = `Error de Firebase: ${error.code}`;
             }
-            toast.error("Error", { description:msg });
-        } finally { setLoading(false); }
+            toast.error("Error", { description: msg });
+        }
     };
 
     const features = [

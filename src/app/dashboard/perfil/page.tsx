@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { auth, db } from "@/lib/firebase";
 import { updateProfile, sendPasswordResetEmail, User } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, getDocs, query, where, writeBatch, serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut } from "react-icons/fi";
+import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut, FiAlertOctagon, FiTrash2 } from "react-icons/fi";
 
 export default function ProfilePage() {
     const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -16,6 +16,8 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [newName, setNewName] = useState("");
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -83,6 +85,61 @@ export default function ProfilePage() {
             toast.error("No se pudo enviar el correo");
         } finally {
             setShowResetConfirm(false);
+        }
+    };
+
+    const handleResetData = async () => {
+        if (!user) return;
+        setIsDeleting(true);
+
+        try {
+            const uid = user.uid;
+            const batch = writeBatch(db);
+
+            // 1. Colecciones Raíz filtradas por userId
+            const transQ = query(collection(db, "transactions"), where("userId", "==", uid));
+            const listsQ = query(collection(db, "shopping_lists"), where("userId", "==", uid));
+
+            const [transSnap, listsSnap] = await Promise.all([
+                getDocs(transQ),
+                getDocs(listsQ)
+            ]);
+
+            // 2. Subcolecciones bajo users/{uid}/
+            const subCollections = [
+                "debts",
+                "fixed_expenses",
+                "saving_goals",
+                "savings_transactions",
+                "account_transactions"
+            ];
+
+            const subSnaps = await Promise.all(
+                subCollections.map(col => getDocs(collection(db, "users", uid, col)))
+            );
+
+            // Añadir eliminaciones al batch
+            transSnap.forEach(d => batch.delete(d.ref));
+            listsSnap.forEach(d => batch.delete(d.ref));
+            subSnaps.forEach(snap => snap.forEach(d => batch.delete(d.ref)));
+
+            // 3. Resetear saldos de cuentas bancarias (Mantener las cuentas)
+            const accountsSnap = await getDocs(collection(db, "users", uid, "bank_accounts"));
+            accountsSnap.forEach(d => {
+                batch.update(d.ref, { 
+                    saldo: 0, 
+                    actualizadoEn: serverTimestamp() 
+                });
+            });
+
+            await batch.commit();
+            toast.success("Todos los datos han sido reiniciados correctamente");
+            setShowDeleteConfirm(false);
+        } catch (error) {
+            console.error("Error al reiniciar datos:", error);
+            toast.error("Error crítico al intentar borrar los datos");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -210,6 +267,25 @@ export default function ProfilePage() {
                             <FiLogOut className="opacity-70 group-hover:opacity-100 transition-colors" />
                         </button>
                     </div>
+
+                    {/* Danger Zone */}
+                    <div className="bg-red-500/5 backdrop-blur-md border border-red-500/20 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-red-600"></div>
+                        <h3 className="text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
+                            <FiAlertOctagon className="text-red-500" />
+                            Zona de Peligro
+                        </h3>
+                        <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+                            Esta acción eliminará permanentemente todos tus movimientos, deudas, metas y listas. <span className="text-red-400 font-bold">Las cuentas se mantendrán pero con saldo en 0.</span>
+                        </p>
+                        <button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl transition-all shadow-lg shadow-red-900/20 active:scale-95 font-bold text-sm"
+                        >
+                            <FiTrash2 />
+                            Reiniciar Todos los Datos
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -221,6 +297,18 @@ export default function ProfilePage() {
                 message={`Se enviará un enlace temporal a ${user?.email}`}
                 confirmText="Enviar Correo"
                 type="info"
+            />
+
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleResetData}
+                title="¿Estás absolutamente seguro?"
+                message="Esta acción no se puede deshacer. Se borrarán todas las transacciones, deudas, metas y gastos fijos. Tus cuentas bancarias se conservarán con saldo cero."
+                confirmText="Sí, Reiniciar Todo"
+                cancelText="Cancelar"
+                type="danger"
+                isLoading={isDeleting}
             />
         </div>
     );
