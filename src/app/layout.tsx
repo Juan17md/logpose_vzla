@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description: "Tu sistema financiero personal premium.",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "LogPose Vzla",
   },
 };
