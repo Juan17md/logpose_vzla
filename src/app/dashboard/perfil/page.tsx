@@ -121,7 +121,7 @@ export default function ProfilePage() {
     };
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+        const unsubscribe = auth.onAuthStateChanged(async (currentUser: User | null) => {
             if (currentUser) {
                 setUser(currentUser);
                 setNewName(currentUser.displayName || "");

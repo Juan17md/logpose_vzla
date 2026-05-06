@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, runTransaction, increment, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
+import { User } from "firebase/auth";
 
 export interface Goal {
     id: string;
@@ -20,7 +21,7 @@ export const useGoals = () => {
     useEffect(() => {
         let unsubscribeSnapshot: (() => void) | null = null;
 
-        const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+        const unsubscribeAuth = auth.onAuthStateChanged((user: User | null) => {
             if (unsubscribeSnapshot) {
                 unsubscribeSnapshot();
                 unsubscribeSnapshot = null;
