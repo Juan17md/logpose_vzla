@@ -123,28 +123,21 @@ export default function DebtsPage() {
         }
     };
 
-    // Animation Variants
+    // Variantes tween — más livianas que spring en CPU de gama baja
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
+            transition: { staggerChildren: 0.07, delayChildren: 0.05 }
         }
     };
 
     const itemVariants = {
-        hidden: { y: 20, opacity: 0, scale: 0.95 },
+        hidden: { y: 12, opacity: 0 },
         visible: {
             y: 0,
             opacity: 1,
-            scale: 1,
-            transition: {
-                type: "spring",
-                stiffness: 100,
-                damping: 10
-            } as const
+            transition: { type: "tween", duration: 0.25, ease: "easeOut" } as const
         }
     };
 
@@ -487,8 +480,7 @@ export default function DebtsPage() {
                     <div className="flex-1 space-y-8 w-full">
                         {/* Header Modern / Urban Premium */}
                         <div className="relative overflow-hidden bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem] group min-h-[160px] flex items-center">
-                            <div className="absolute top-0 right-0 w-80 h-80 bg-violet-600/10 rounded-full blur-[100px] -mr-40 -mt-40 animate-pulse" />
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-600/5 rounded-full blur-[80px] -ml-32 -mb-32" />
+                        {/* blur decorativo eliminado — radio 100px/80px costoso en GPU móvil */}
                             
                             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between w-full gap-6">
                                 <div>

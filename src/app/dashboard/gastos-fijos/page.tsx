@@ -11,9 +11,20 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { getBCVRate } from "@/lib/currency";
-import FixedExpensesCalendar from "@/components/ui/FixedExpensesCalendar";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import FixedExpenseForm from "@/components/forms/FixedExpenseForm";
+
+// FixedExpensesCalendar se carga solo cuando el usuario activa la vista calendario
+const FixedExpensesCalendar = dynamic(
+    () => import("@/components/ui/FixedExpensesCalendar"),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="bg-slate-800/30 rounded-3xl animate-pulse h-96 w-full" aria-hidden="true" />
+        ),
+    }
+);
 
 export default function FixedExpensesPage() {
     const router = useRouter();

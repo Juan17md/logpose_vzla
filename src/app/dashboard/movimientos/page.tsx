@@ -32,7 +32,7 @@ export default function MovimientosPage() {
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiList className="text-7xl md:text-9xl text-violet-400" />
                 </div>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                {/* blur-3xl eliminado — decorativo, sin valor perceptual en este header */}
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-violet-500/10 to-transparent pointer-events-none"></div>
 
                 <div className="relative z-10">

@@ -2,12 +2,23 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { useTransactions } from "@/hooks/useTransactions";
-import { ExpenseCategoryChart, BalanceChart } from "@/components/charts/FinancialCharts";
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiPieChart, FiBriefcase } from "react-icons/fi";
 import { useSavingsTransactions } from "@/hooks/useSavingsTransactions";
 import Select from "@/components/ui/forms/Select";
 import { FiCalendar, FiClock } from "react-icons/fi";
+
+// Recharts (~40KB) cargado de forma diferida — solo se descarga al navegar a /reportes
+const SkeletonChart = () => <div className="h-80 w-full bg-slate-800/40 rounded-2xl animate-pulse" aria-hidden="true" />;
+const ExpenseCategoryChart = dynamic(
+    () => import("@/components/charts/FinancialCharts").then(m => ({ default: m.ExpenseCategoryChart })),
+    { ssr: false, loading: () => <SkeletonChart /> }
+);
+const BalanceChart = dynamic(
+    () => import("@/components/charts/FinancialCharts").then(m => ({ default: m.BalanceChart })),
+    { ssr: false, loading: () => <SkeletonChart /> }
+);
 
 export default function ReportsPage() {
     const { transactions, loading } = useTransactions();
@@ -82,28 +93,21 @@ export default function ReportsPage() {
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
 
-    // Animation Variants
+    // Variantes tween — más livianas que spring en CPU de gama baja
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
+            transition: { staggerChildren: 0.07, delayChildren: 0.05 }
         }
     };
 
     const itemVariants = {
-        hidden: { y: 20, opacity: 0, scale: 0.95 },
+        hidden: { y: 12, opacity: 0 },
         visible: {
             y: 0,
             opacity: 1,
-            scale: 1,
-            transition: {
-                type: "spring",
-                stiffness: 100,
-                damping: 10
-            } as const
+            transition: { type: "tween", duration: 0.25, ease: "easeOut" } as const
         }
     };
 
@@ -296,43 +300,40 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Summary Cards - Horizontal scroll en móvil */}
+                {/* blur-3xl eliminado de las tarjetas — 4 capas GPU simultáneas en escritorio */}
                 <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 scrollbar-hide">
-                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-all"></div>
-                        <div className="flex items-center space-x-3 text-emerald-400 mb-3 relative z-10">
+                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-emerald-500/20">
+                        <div className="flex items-center space-x-3 text-emerald-400 mb-3">
                             <div className="p-2 md:p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20"><FiTrendingUp size={18} /></div>
                             <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Ingresos</span>
                         </div>
-                        <p className="text-2xl md:text-4xl font-bold text-white relative z-10">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                        <p className="text-2xl md:text-4xl font-bold text-white">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
-                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-red-500/20 transition-all"></div>
-                        <div className="flex items-center space-x-3 text-red-400 mb-3 relative z-10">
+                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-red-500/20">
+                        <div className="flex items-center space-x-3 text-red-400 mb-3">
                             <div className="p-2 md:p-2.5 bg-red-500/10 rounded-xl border border-red-500/20"><FiTrendingDown size={18} /></div>
                             <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Gastos</span>
                         </div>
-                        <p className="text-2xl md:text-4xl font-bold text-white relative z-10">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                        <p className="text-2xl md:text-4xl font-bold text-white">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
-                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/20 transition-all"></div>
-                        <div className="flex items-center space-x-3 text-amber-400 mb-3 relative z-10">
+                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-amber-500/20">
+                        <div className="flex items-center space-x-3 text-amber-400 mb-3">
                             <div className="p-2 md:p-2.5 bg-amber-500/10 rounded-xl border border-amber-500/20"><FiDollarSign size={18} /></div>
                             <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Balance</span>
                         </div>
-                        <p className={`text-2xl md:text-4xl font-bold relative z-10 ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
+                        <p className={`text-2xl md:text-4xl font-bold ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
                             $ {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
 
-                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-700/50 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-all"></div>
-                        <div className="flex items-center space-x-3 text-violet-400 mb-3 relative z-10">
+                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-violet-500/20">
+                        <div className="flex items-center space-x-3 text-violet-400 mb-3">
                             <div className="p-2 md:p-2.5 bg-violet-500/10 rounded-xl border border-violet-500/20"><FiBriefcase size={18} /></div>
                             <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Ahorro</span>
                         </div>
-                        <p className={`text-2xl md:text-4xl font-bold relative z-10 ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
+                        <p className={`text-2xl md:text-4xl font-bold ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
                             $ {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
