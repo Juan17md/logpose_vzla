@@ -9,9 +9,6 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   /* config options here */
   turbopack: {},
-  experimental: {
-    allowedDevOrigins: ["http://192.168.5.223:3000"],
-  },
   async rewrites() {
     return [
       {
