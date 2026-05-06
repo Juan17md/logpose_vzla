@@ -133,7 +133,7 @@ export default function CrearContrasenaPage() {
         }
 
         // Verificar si ya tiene proveedor de contraseña
-        const tienePassword = usuario.providerData.some(p => p.providerId === "password");
+        const tienePassword = usuario.providerData.some((p: { providerId: string }) => p.providerId === "password");
         if (tienePassword) {
             router.push("/dashboard");
             return;
