@@ -9,21 +9,63 @@ import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut, FiAlertOctagon, FiTrash2 } from "react-icons/fi";
 
+import { isBiometricSupported, registerBiometric } from "@/lib/biometrics";
+
+const FaceIdIcon = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+        <path d="M8 7v2m8-2v2" />
+        <path d="M9 14s1 1 3 1 3-1 3-1" />
+        <path d="M12 11v2" />
+    </svg>
+);
+
 export default function ProfilePage() {
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [user, setUser] = useState<User | null>(null);
-    const [userData, setUserData] = useState<{ createdAt?: { toDate: () => Date } } | null>(null);
+    const [userData, setUserData] = useState<{ createdAt?: { toDate: () => Date }, biometricEnabled?: boolean } | null>(null);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [newName, setNewName] = useState("");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [biometricSupported, setBiometricSupported] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        const checkBiometric = async () => {
+            const supported = await isBiometricSupported();
+            setBiometricSupported(supported);
+        };
+        checkBiometric();
+    }, []);
+
+    const handleEnrollBiometric = async () => {
+        if (!user) return;
+        try {
+            const credential = await registerBiometric(user.email!);
+            if (credential) {
+                const userRef = doc(db, "users", user.uid);
+                await updateDoc(userRef, { 
+                    biometricEnabled: true,
+                    lastDeviceEnrollment: serverTimestamp()
+                });
+                localStorage.setItem("last_user_email", user.email!);
+                toast.success("¡Face ID Activado!", { description: "Ahora puedes iniciar sesión con biometría en este dispositivo." });
+                // Refresh data
+                const docSnap = await getDoc(userRef);
+                if (docSnap.exists()) setUserData(docSnap.data());
+            }
+        } catch (error) {
+            console.error("Error al enrolar:", error);
+            toast.error("Error", { description: "No se pudo activar Face ID." });
+        }
+    };
 
     const handleLogout = async () => {
         try {
             await auth.signOut();
-            router.push("/login"); // Asumiendo que /login es la ruta de inicio de sesión
+            router.push("/login");
         } catch (error) {
             console.error("Error al cerrar sesión:", error);
         }
@@ -258,6 +300,24 @@ export default function ProfilePage() {
                             <span className="font-medium text-sm">Cambiar Contraseña</span>
                             <FiLock className="opacity-50 group-hover:opacity-100 group-hover:text-red-400 transition-colors" />
                         </button>
+
+                        {biometricSupported && (
+                            <button
+                                onClick={handleEnrollBiometric}
+                                className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all group border mb-3 ${userData?.biometricEnabled
+                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-200"
+                                    : "bg-violet-500/10 border-violet-500/20 text-violet-200 hover:bg-violet-500/20"
+                                    }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <FaceIdIcon className={`w-5 h-5 ${userData?.biometricEnabled ? "text-emerald-400" : "text-violet-400"}`} />
+                                    <span className="font-medium text-sm">
+                                        {userData?.biometricEnabled ? "Face ID Activado" : "Activar Face ID"}
+                                    </span>
+                                </div>
+                                {userData?.biometricEnabled && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
+                            </button>
+                        )}
 
                         <button
                             onClick={handleLogout}

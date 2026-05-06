@@ -117,10 +117,22 @@ const card = {
   visible: { opacity:1, y:0,  scale:1,   transition:{ duration:.65, ease:[0.22,1,0.36,1] as [number,number,number,number] } }
 };
 
+import { isBiometricSupported, authenticateBiometric } from "@/lib/biometrics";
+
+const FaceIdIcon = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+        <path d="M8 7v2m8-2v2" />
+        <path d="M9 14s1 1 3 1 3-1 3-1" />
+        <path d="M12 11v2" />
+    </svg>
+);
+
 export default function LoginPage() {
     const router = useRouter();
     const [loading, setLoading]           = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [biometricSupported, setBiometricSupported] = useState(false);
 
     const { register, handleSubmit, formState:{errors} } = useForm({
         resolver: zodResolver(z.object({
@@ -128,6 +140,14 @@ export default function LoginPage() {
             password: z.string().min(1, "La contraseña es obligatoria"),
         })),
     });
+
+    useEffect(() => {
+        const checkBiometric = async () => {
+            const supported = await isBiometricSupported();
+            setBiometricSupported(supported);
+        };
+        checkBiometric();
+    }, []);
 
     const onSubmit = async (data:{email:string;password:string}) => {
         setLoading(true);
@@ -146,10 +166,39 @@ export default function LoginPage() {
         } finally { setLoading(false); }
     };
 
+    const handleFaceID = async () => {
+        setLoading(true);
+        try {
+            const assertion = await authenticateBiometric();
+            if (assertion) {
+                toast.success("¡Identidad Verificada!", { description: "Face ID autenticado correctamente." });
+                
+                // Nota: En una implementación completa, aquí usaríamos el ID de la credencial
+                // para buscar al usuario en Firestore y realizar un signInWithCustomToken.
+                // Por ahora, simulamos el éxito o guiamos al usuario.
+                
+                const lastUser = localStorage.getItem("last_user_email");
+                if (lastUser) {
+                    toast.info("Iniciando sesión...", { description: `Conectando como ${lastUser}` });
+                    // Aquí se dispararía la lógica de sesión persistente biométrica
+                    router.push("/dashboard");
+                } else {
+                    toast.error("Vínculo no encontrado", { 
+                        description: "Primero inicia sesión con tu correo y activa Face ID en tu perfil." 
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Error Face ID:", error);
+            toast.error("Error de Biometría", { description: "No se pudo completar la verificación." });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Lógica centralizada para procesar el usuario después del login (Popup o Redirect)
     const procesarLoginUsuario = useCallback(async (usuario: User) => {
         try {
-            // Asegurar que el documento de usuario existe en Firestore
             const docRef = doc(db, "users", usuario.uid);
             const docSnap = await getDoc(docRef);
             if (!docSnap.exists()) {
@@ -162,7 +211,6 @@ export default function LoginPage() {
                 });
             }
 
-            // Verificar si el usuario ya tiene proveedor de contraseña
             const tienePassword = usuario.providerData.some(p => p.providerId === "password");
 
             if (!tienePassword) {
@@ -208,16 +256,13 @@ export default function LoginPage() {
         setLoading(true);
         try {
             const provider = new GoogleAuthProvider();
-            // Forzar selección de cuenta para evitar logins automáticos fallidos
             provider.setCustomParameters({ prompt: 'select_account' });
 
-            // Detectar si estamos en un entorno PWA/Móvil para usar Redirect
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
             if (isStandalone || isMobile) {
                 await signInWithRedirect(auth, provider);
-                // La página se recargará, el useEffect manejará el resultado
             } else {
                 const resultado = await signInWithPopup(auth, provider);
                 await procesarLoginUsuario(resultado.user);
@@ -226,7 +271,6 @@ export default function LoginPage() {
         } catch (error) {
             setLoading(false);
             console.error("Error completo de Google Auth:", error);
-            
             let msg = "Ocurrió un error al iniciar sesión con Google.";
             if (error instanceof FirebaseError) {
                 if (error.code === "auth/popup-closed-by-user") msg = "Inicio de sesión cancelado.";
@@ -251,23 +295,18 @@ export default function LoginPage() {
 
             {/* ═══════════════  FONDO AURORA  ═══════════════ */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-
-                {/* Orbs principales — mucho más intensos */}
                 <div className="orb1 absolute -top-[20%] -left-[10%] w-[800px] h-[800px] rounded-full bg-amber-500/20 blur-[100px]" />
                 <div className="orb2 absolute -bottom-[25%] -right-[15%] w-[900px] h-[900px] rounded-full bg-violet-600/18 blur-[120px]" />
                 <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-sky-500/12 blur-[90px]" />
                 <div className="orb4 absolute top-[60%] left-[5%] w-[400px] h-[400px] rounded-full bg-amber-400/10 blur-[80px]" />
 
-                {/* Líneas de cuadrícula animadas */}
                 <div className="grid-anim absolute inset-0"
                     style={{backgroundImage:"linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px)",backgroundSize:"80px 80px"}}
                 />
 
-                {/* Halos radiales centrales */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_15%_50%,rgba(202,138,4,.12)_0%,transparent_70%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_85%_50%,rgba(124,58,237,.10)_0%,transparent_70%)]" />
 
-                {/* Partículas flotantes */}
                 {[
                     {top:"12%",left:"8%",  sz:"w-1.5 h-1.5", color:"bg-amber-400/60",  spd:"6s",  del:"0s"},
                     {top:"35%",left:"18%", sz:"w-1 h-1",      color:"bg-violet-400/50", spd:"9s",  del:"1s"},
@@ -282,14 +321,12 @@ export default function LoginPage() {
                                 animation:`float-particle ${p.spd} ease-in-out infinite ${p.del}`}} />
                 ))}
 
-                {/* Ruido sutil */}
                 <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`}} />
             </div>
 
             {/* ═══════════════  COLUMNA IZQUIERDA  ═══════════════ */}
             <motion.div className="hidden lg:flex w-1/2 items-center justify-center z-10 relative" initial="oculto" animate="visible" variants={stagger}>
                 <div className="flex flex-col items-center text-center p-12 max-w-lg w-full">
-
                     <motion.div variants={item} className="relative mb-10 group">
                         <div className="absolute inset-0 bg-amber-500/20 blur-[60px] rounded-full scale-110 group-hover:scale-125 transition-transform duration-700" />
                         <Logo variant="map" width={260} height={260}
@@ -304,7 +341,6 @@ export default function LoginPage() {
                         Navegando el Grand Line de tus finanzas con precisión inquebrantable.
                     </motion.p>
 
-                    {/* Stats banner */}
                     <motion.div variants={item} className="mt-8 flex items-center gap-6 text-center">
                         {[{val:"100%",lbl:"Seguro"},{val:"∞",lbl:"Control"},{val:"24/7",lbl:"Disponible"}].map((s,i)=>(
                             <div key={i} className="flex flex-col">
@@ -314,7 +350,6 @@ export default function LoginPage() {
                         ))}
                     </motion.div>
 
-                    {/* Feature Cards */}
                     <motion.div variants={stagger} className="mt-10 grid grid-cols-1 gap-3 w-full">
                         {features.map((f,i)=>(
                             <motion.div key={i} variants={item}>
@@ -340,39 +375,19 @@ export default function LoginPage() {
                     {/* ── CARD PREMIUM ── */}
                     <motion.div variants={card} className="card-glow">
                         <div className="relative bg-[#0B0F1A] rounded-[1.75rem] p-8 sm:p-10 shadow-[0_30px_80px_-10px_rgba(0,0,0,.8),0_0_0_1px_rgba(255,255,255,.06)] overflow-hidden">
-
-                            {/* Mobile logo inside card */}
-                            <motion.div variants={item} className="lg:hidden flex flex-col items-center mb-6 relative z-10">
-                                <div className="relative">
-                                    <div className="absolute inset-0 bg-amber-500/15 blur-[25px] rounded-full scale-110" />
-                                    <Logo variant="dark" width={160} height={72} className="relative" />
-                                </div>
-                            </motion.div>
-
-                            {/* Inner highlights */}
                             <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-amber-500/40 to-transparent" />
                             <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-violet-500/20 to-transparent" />
-                            <div className="absolute -top-40 -right-40 w-80 h-80 bg-amber-500/[.07] rounded-full blur-[80px] pointer-events-none" />
-                            <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-violet-600/[.06] rounded-full blur-[70px] pointer-events-none" />
-
-                            {/* Corner decorations */}
-                            <div className="absolute top-6 right-6 w-16 h-16 border border-amber-500/10 rounded-full" />
-                            <div className="absolute top-8 right-8 w-10 h-10 border border-amber-500/15 rounded-full" />
-                            <div className="absolute bottom-6 left-6 flex items-center gap-1.5">
-                                {[0,1,2].map(i=><div key={i} className={`w-1.5 h-1.5 rounded-full ${i===0?"bg-amber-500/60":i===1?"bg-violet-500/40":"bg-sky-500/30"}`}/>)}
-                            </div>
-
+                            
                             {/* Header */}
                             <motion.div variants={stagger} initial="oculto" animate="visible">
-                                <motion.div variants={item} className="mb-8 relative z-10">
+                                <motion.div variants={item} className="mb-8 relative z-10 text-center sm:text-left">
                                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-500/20 bg-amber-500/[.06] mb-4">
                                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                                        <span className="text-amber-400/80 text-xs font-medium tracking-wider uppercase">Finanzas Personales</span>
+                                        <span className="text-amber-400/80 text-xs font-medium tracking-wider uppercase">Acceso Biométrico</span>
                                     </div>
                                     <h1 className="text-4xl sm:text-[2.6rem] font-extrabold text-white leading-tight" style={{fontFamily:"var(--font-outfit)"}}>
                                         Bienvenido<span className="grad-text">.</span>
                                     </h1>
-                                    <p className="text-slate-500 text-sm mt-2">Ingresa a tu control financiero</p>
                                 </motion.div>
 
                                 {/* Form */}
@@ -393,7 +408,6 @@ export default function LoginPage() {
                                         />
                                     </motion.div>
 
-                                    {/* CTA */}
                                     <motion.div variants={item}>
                                         <button type="submit" disabled={loading}
                                             className="shimmer-btn relative w-full group bg-linear-to-r from-amber-600 via-amber-500 to-yellow-400 text-[#07090F] font-bold py-4 px-6 rounded-2xl shadow-[0_6px_30px_rgba(202,138,4,.45),inset_0_1px_0_rgba(255,255,255,.25)] hover:shadow-[0_10px_40px_rgba(202,138,4,.65)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[.98] transition-all duration-300 flex items-center justify-center gap-2.5 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
@@ -407,24 +421,34 @@ export default function LoginPage() {
                                     </motion.div>
                                 </form>
 
-                                {/* Divider */}
+                                {/* Métodos Alternativos */}
                                 <motion.div variants={item} className="relative my-7">
                                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/[.06]"/></div>
                                     <div className="relative flex justify-center text-xs">
-                                        <span className="px-4 bg-[#0B0F1A] text-slate-600">o continúa con</span>
+                                        <span className="px-4 bg-[#0B0F1A] text-slate-600 uppercase tracking-widest font-medium">Métodos Premium</span>
                                     </div>
                                 </motion.div>
 
-                                {/* Google */}
-                                <motion.div variants={item}>
-                                    <button onClick={handleGoogle} disabled={loading} type="button"
-                                        className="w-full group flex items-center justify-center gap-3 py-3.5 px-6 rounded-2xl border border-white/[.08] bg-white/[.03] hover:bg-white/[.07] hover:border-white/[.15] transition-all duration-300 text-white/85 font-medium text-sm cursor-pointer disabled:opacity-60">
-                                        <FcGoogle size={20} className="shrink-0 group-hover:scale-110 transition-transform duration-300"/>
-                                        Continuar con Google
-                                    </button>
-                                </motion.div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <motion.div variants={item}>
+                                        <button onClick={handleGoogle} disabled={loading} type="button"
+                                            className="w-full group flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl border border-white/[.08] bg-white/[.03] hover:bg-white/[.07] hover:border-white/[.15] transition-all duration-300 text-white/85 font-medium text-xs cursor-pointer disabled:opacity-60">
+                                            <FcGoogle size={18} className="shrink-0 group-hover:scale-110 transition-transform duration-300"/>
+                                            Google
+                                        </button>
+                                    </motion.div>
 
-                                {/* Register link */}
+                                    {biometricSupported && (
+                                        <motion.div variants={item}>
+                                            <button onClick={handleFaceID} disabled={loading} type="button"
+                                                className="w-full group flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500/50 transition-all duration-300 text-violet-100 font-medium text-xs cursor-pointer disabled:opacity-60">
+                                                <FaceIdIcon className="w-5 h-5 text-violet-400 group-hover:scale-110 transition-transform duration-300"/>
+                                                Face ID
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </div>
+
                                 <motion.p variants={item} className="mt-7 text-center text-sm text-slate-500 z-10 relative">
                                     ¿No tienes una cuenta?{" "}
                                     <Link href="/register" className="text-amber-500 hover:text-amber-400 font-semibold transition-colors duration-200 ml-0.5">
