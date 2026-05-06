@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Bungee } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
@@ -6,9 +6,18 @@ import { Toaster } from "sonner";
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const bungee = Bungee({ variable: "--font-bungee", weight: "400", subsets: ["latin"] });
 
+export const viewport: Viewport = {
+  themeColor: "#0f172a",
+};
+
 export const metadata: Metadata = {
   title: "LogPose Vzla",
   description: "Tu sistema financiero personal premium.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "LogPose Vzla",
+  },
 };
 
 export default function RootLayout({
