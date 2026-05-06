@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInWithRedirect, getRedirectResult, User } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, User } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
@@ -241,7 +241,7 @@ export default function LoginPage() {
             
             checkRedirectEjecutado.current = true;
             try {
-                const resultado = await getRedirectResult(auth);
+                const resultado = await getRedirectResult(auth, browserPopupRedirectResolver);
                 if (resultado?.user) {
                     setLoading(true);
                     await procesarLoginUsuario(resultado.user);
@@ -274,9 +274,9 @@ export default function LoginPage() {
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
             if (isStandalone || isMobile) {
-                await signInWithRedirect(auth, provider);
+                await signInWithRedirect(auth, provider, browserPopupRedirectResolver);
             } else {
-                const resultado = await signInWithPopup(auth, provider);
+                const resultado = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
                 await procesarLoginUsuario(resultado.user);
                 setLoading(false);
             }
