@@ -130,7 +130,7 @@ export default function Select<T extends string | number = string>({
                                                         <Listbox.Option
                                                             key={String(option.value)}
                                                             className={({ active, selected }) => cn(
-                                                                "relative cursor-pointer select-none py-3.5 pl-12 pr-4 rounded-2xl transition-all duration-200 mb-1 last:mb-0",
+                                                                "relative cursor-pointer select-none py-3.5 pl-5 pr-12 rounded-2xl transition-all duration-200 mb-1 last:mb-0",
                                                                 active ? "bg-amber-500/10 text-amber-400" : "text-slate-300",
                                                                 selected && "bg-amber-500/20 text-white font-bold"
                                                             )}
@@ -138,7 +138,7 @@ export default function Select<T extends string | number = string>({
                                                         >
                                                             {({ selected }) => (
                                                                 <>
-                                                                    <span className="block truncate">
+                                                                    <span className="block whitespace-normal leading-tight">
                                                                         {renderOption ? renderOption(option) : option.name}
                                                                     </span>
                                                                     
@@ -146,7 +146,7 @@ export default function Select<T extends string | number = string>({
                                                                         <motion.span 
                                                                             initial={{ scale: 0 }}
                                                                             animate={{ scale: 1 }}
-                                                                            className="absolute inset-y-0 left-0 flex items-center pl-4 text-amber-400"
+                                                                            className="absolute inset-y-0 right-0 flex items-center pr-4 text-amber-400"
                                                                         >
                                                                             <FiCheck className="h-5 w-5" aria-hidden="true" />
                                                                         </motion.span>
