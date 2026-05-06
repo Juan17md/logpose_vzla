@@ -272,21 +272,7 @@ export default function DashboardPage() {
                 animate="visible"
             >
 
-                {/* Saludo compacto + Privacidad */}
-                <motion.div variants={itemVariants} className="flex items-center justify-between">
-                    <div>
-                        <p className="text-slate-400 text-sm">¡Hola de nuevo!</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setIsPrivacyMode(!isPrivacyMode)}
-                            className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/50 text-slate-400 transition-colors"
-                        >
-                            {isPrivacyMode ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-                        </motion.button>
-                    </div>
-                </motion.div>
+                {/* Privacidad - Removido saludo y botón externo */}
 
                 {/* Balance Card Principal - Hero */}
                 <motion.div variants={itemVariants} className="relative bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-500/30 p-5 rounded-3xl shadow-2xl overflow-hidden">
@@ -310,12 +296,21 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        <h2 className={cn(
-                            "text-3xl font-black text-white tracking-tight mb-1",
-                            isPrivacyMode && "blur-sm"
-                        )}>
-                            {isPrivacyMode ? `${obtenerSimboloMoneda(monedaBase)} ••••••` : `${obtenerSimboloMoneda(monedaBase)} ${stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                        </h2>
+                        <div className="flex items-center gap-3 mb-1">
+                            <h2 className={cn(
+                                "text-3xl font-black text-white tracking-tight",
+                                isPrivacyMode && "blur-sm"
+                            )}>
+                                {isPrivacyMode ? `${obtenerSimboloMoneda(monedaBase)} ••••••` : `${obtenerSimboloMoneda(monedaBase)} ${stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            </h2>
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => setIsPrivacyMode(!isPrivacyMode)}
+                                className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 transition-colors"
+                            >
+                                {isPrivacyMode ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                            </motion.button>
+                        </div>
 
                         <p className="text-slate-500 text-sm font-medium">
                             {monedaBase === "BS" 
@@ -684,7 +679,7 @@ export default function DashboardPage() {
                                 </button>
                             </div>
                             <p className="text-slate-400 text-sm md:text-lg">
-                                Bienvenido de nuevo, <span className="text-amber-400 font-semibold">{user?.displayName || "Usuario"}</span>.
+                                Resumen financiero consolidado de tu ecosistema.
                             </p>
                         </div>
                         <div className="bg-slate-800/40 backdrop-blur-md p-1 px-2 rounded-2xl border border-slate-700/50 shadow-inner flex items-center">
