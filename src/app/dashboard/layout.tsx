@@ -47,7 +47,7 @@ export default function DashboardLayout({
               {/* Page Content */}
               <div className="md:pl-72 flex flex-col w-full">
                 {/* Mobile Header / Top Bar */}
-                <header className="md:hidden sticky top-0 z-30 bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 p-4 flex items-center justify-center shadow-lg">
+                <header className="md:hidden sticky top-0 z-30 bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 p-4 pt-safe flex items-center justify-center shadow-lg">
                   <Link href="/dashboard" className="flex items-center gap-2">
                     <Logo variant="icon" width={32} height={32} />
                     <h1 className="font-bold text-lg bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
