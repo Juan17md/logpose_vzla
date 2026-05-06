@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut, FiAlertOctagon, FiTrash2 } from "react-icons/fi";
 
-import { isBiometricSupported, registerBiometric } from "@/lib/biometrics";
+import { isBiometricSupported, registerBiometric, guardarCredenciales, limpiarCredenciales } from "@/lib/biometrics";
+import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
 const FaceIdIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -30,6 +31,8 @@ export default function ProfilePage() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [biometricSupported, setBiometricSupported] = useState(false);
+    const [showBioPasswordModal, setShowBioPasswordModal] = useState(false);
+    const [bioPassword, setBioPassword] = useState("");
     const router = useRouter();
 
     useEffect(() => {
@@ -42,23 +45,66 @@ export default function ProfilePage() {
 
     const handleEnrollBiometric = async () => {
         if (!user) return;
+        // Si ya tiene Face ID activo, desactivarlo
+        if (userData?.biometricEnabled) {
+            try {
+                limpiarCredenciales();
+                const userRef = doc(db, "users", user.uid);
+                await updateDoc(userRef, { biometricEnabled: false });
+                const docSnap = await getDoc(userRef);
+                if (docSnap.exists()) setUserData(docSnap.data());
+                toast.success("Face ID Desactivado", { description: "Se ha removido la biometría de este dispositivo." });
+            } catch (error) {
+                console.error("Error al desactivar:", error);
+                toast.error("Error", { description: "No se pudo desactivar Face ID." });
+            }
+            return;
+        }
+        // Si no tiene, pedir contraseña para vincular
+        setShowBioPasswordModal(true);
+    };
+
+    const confirmarEnrolamiento = async () => {
+        if (!user || !bioPassword) return;
         try {
+            // 1. Verificar que la contraseña es correcta
+            const credencial = EmailAuthProvider.credential(user.email!, bioPassword);
+            await reauthenticateWithCredential(user, credencial);
+
+            // 2. Registrar biometría del dispositivo
             const credential = await registerBiometric(user.email!);
             if (credential) {
+                // 3. Guardar credenciales protegidas por biometría
+                guardarCredenciales(user.email!, bioPassword);
+
+                // 4. Marcar en Firestore
                 const userRef = doc(db, "users", user.uid);
                 await updateDoc(userRef, { 
                     biometricEnabled: true,
                     lastDeviceEnrollment: serverTimestamp()
                 });
-                localStorage.setItem("last_user_email", user.email!);
-                toast.success("¡Face ID Activado!", { description: "Ahora puedes iniciar sesión con biometría en este dispositivo." });
-                // Refresh data
                 const docSnap = await getDoc(userRef);
                 if (docSnap.exists()) setUserData(docSnap.data());
+
+                toast.success("¡Face ID Activado!", { 
+                    description: "Ahora puedes iniciar sesión con biometría." 
+                });
             }
         } catch (error) {
             console.error("Error al enrolar:", error);
-            toast.error("Error", { description: "No se pudo activar Face ID." });
+            if (error instanceof Error && 'code' in error) {
+                const fireError = error as { code: string };
+                if (fireError.code === "auth/wrong-password" || fireError.code === "auth/invalid-credential") {
+                    toast.error("Contraseña incorrecta", { description: "Verifica tu contraseña e intenta de nuevo." });
+                } else {
+                    toast.error("Error", { description: "No se pudo activar Face ID." });
+                }
+            } else {
+                toast.error("Error", { description: "No se pudo activar Face ID." });
+            }
+        } finally {
+            setBioPassword("");
+            setShowBioPasswordModal(false);
         }
     };
 
@@ -370,6 +416,51 @@ export default function ProfilePage() {
                 type="danger"
                 isLoading={isDeleting}
             />
+
+            {/* Modal para ingresar contraseña al activar Face ID */}
+            {showBioPasswordModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-slate-900 border border-slate-700/50 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-violet-500/20 rounded-xl flex items-center justify-center">
+                                <FaceIdIcon className="w-5 h-5 text-violet-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-bold">Activar Face ID</h3>
+                                <p className="text-slate-500 text-xs">Confirma tu contraseña</p>
+                            </div>
+                        </div>
+                        <p className="text-slate-400 text-sm mb-4">
+                            Ingresa tu contraseña para vincular Face ID con tu cuenta. Solo necesitas hacerlo una vez.
+                        </p>
+                        <input
+                            type="password"
+                            placeholder="Tu contraseña"
+                            value={bioPassword}
+                            onChange={(e) => setBioPassword(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && confirmarEnrolamiento()}
+                            className="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-xl py-3 px-4 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all text-base mb-4"
+                            autoFocus
+                        />
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => { setShowBioPasswordModal(false); setBioPassword(""); }}
+                                className="flex-1 py-3 rounded-xl border border-slate-700/50 text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-sm font-medium"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={confirmarEnrolamiento}
+                                disabled={!bioPassword}
+                                className="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                <FaceIdIcon className="w-4 h-4" />
+                                Activar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

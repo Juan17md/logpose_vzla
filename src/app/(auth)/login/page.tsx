@@ -117,7 +117,7 @@ const card = {
   visible: { opacity:1, y:0,  scale:1,   transition:{ duration:.65, ease:[0.22,1,0.36,1] as [number,number,number,number] } }
 };
 
-import { isBiometricSupported, authenticateBiometric } from "@/lib/biometrics";
+import { isBiometricSupported, authenticateBiometric, obtenerCredenciales, tieneCredencialesGuardadas } from "@/lib/biometrics";
 
 const FaceIdIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -169,28 +169,38 @@ export default function LoginPage() {
     const handleFaceID = async () => {
         setLoading(true);
         try {
+            // Verificar que hay credenciales guardadas antes de pedir biometría
+            const credenciales = obtenerCredenciales();
+            if (!credenciales) {
+                toast.error("Face ID no configurado", { 
+                    description: "Primero inicia sesión con tu correo y activa Face ID en tu perfil." 
+                });
+                setLoading(false);
+                return;
+            }
+
+            // Verificar identidad biométrica
             const assertion = await authenticateBiometric();
             if (assertion) {
-                toast.success("¡Identidad Verificada!", { description: "Face ID autenticado correctamente." });
-                
-                // Nota: En una implementación completa, aquí usaríamos el ID de la credencial
-                // para buscar al usuario en Firestore y realizar un signInWithCustomToken.
-                // Por ahora, simulamos el éxito o guiamos al usuario.
-                
-                const lastUser = localStorage.getItem("last_user_email");
-                if (lastUser) {
-                    toast.info("Iniciando sesión...", { description: `Conectando como ${lastUser}` });
-                    // Aquí se dispararía la lógica de sesión persistente biométrica
-                    router.push("/dashboard");
-                } else {
-                    toast.error("Vínculo no encontrado", { 
-                        description: "Primero inicia sesión con tu correo y activa Face ID en tu perfil." 
-                    });
-                }
+                // Biometría verificada → iniciar sesión real con Firebase
+                toast.info("Verificado ✓", { description: "Iniciando sesión..." });
+                await signInWithEmailAndPassword(auth, credenciales.email, credenciales.password);
+                toast.success("¡Bienvenido!", { description: "Sesión iniciada con Face ID." });
+                router.push("/dashboard");
             }
         } catch (error) {
             console.error("Error Face ID:", error);
-            toast.error("Error de Biometría", { description: "No se pudo completar la verificación." });
+            if (error instanceof FirebaseError) {
+                if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password") {
+                    toast.error("Credenciales caducadas", { 
+                        description: "Tu contraseña cambió. Inicia sesión manualmente y reactiva Face ID." 
+                    });
+                } else {
+                    toast.error("Error de sesión", { description: `Código: ${error.code}` });
+                }
+            } else {
+                toast.error("Error de Biometría", { description: "No se pudo completar la verificación." });
+            }
         } finally {
             setLoading(false);
         }
