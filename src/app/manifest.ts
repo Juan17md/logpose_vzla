@@ -7,8 +7,10 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Tu sistema financiero personal premium.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#0f172a',
+    background_color: '#020617',
     theme_color: '#0f172a',
+    lang: 'es',
+    orientation: 'portrait',
     icons: [
       {
         src: '/icon',

@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "LogPose Vzla",
   },
+  icons: {
+    apple: "/apple-icon",
+  },
 };
 
 export default function RootLayout({

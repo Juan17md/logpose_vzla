@@ -129,14 +129,14 @@ export default function ReportsPage() {
                 animate="visible"
             >
                 {/* Mobile Header & Filters */}
-                <motion.div variants={itemVariants} className="flex flex-col gap-4">
+                <motion.div variants={itemVariants} className="flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-white">Reportes</h1>
-                            <p className="text-slate-400 text-xs">Resumen financiero mensual</p>
+                            <h1 className="text-3xl font-bungee text-white leading-none">Reportes</h1>
+                            <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mt-2">Resumen financiero mensual</p>
                         </div>
-                        <div className="p-2 bg-slate-800/50 rounded-xl border border-slate-700/50 text-amber-400">
-                            <FiPieChart size={20} />
+                        <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-500 shadow-lg shadow-amber-500/5">
+                            <FiPieChart size={24} />
                         </div>
                     </div>
 
@@ -165,39 +165,43 @@ export default function ReportsPage() {
                 </motion.div>
 
                 {/* KPI Grid 2x2 */}
-                <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
-                    <div className="bg-linear-to-br from-emerald-500/10 to-emerald-600/5 p-4 rounded-2xl border border-emerald-500/20 backdrop-blur-sm relative overflow-hidden">
-                        <div className="mb-2 w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                            <FiTrendingUp size={16} />
+                <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-emerald-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+                        <div className="mb-4 w-10 h-10 rounded-xl bg-emerald-500 text-slate-900 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                            <FiTrendingUp size={20} />
                         </div>
-                        <p className="text-xs text-emerald-200/70 font-medium uppercase tracking-wider mb-0.5">Ingresos</p>
-                        <p className="text-lg font-bold text-white tracking-tight">${stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                        <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-1">Ingresos</p>
+                        <p className="text-2xl font-black text-white tracking-tight">${stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
-                    <div className="bg-linear-to-br from-red-500/10 to-red-600/5 p-4 rounded-2xl border border-red-500/20 backdrop-blur-sm relative overflow-hidden">
-                        <div className="mb-2 w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400">
-                            <FiTrendingDown size={16} />
+                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-red-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
+                        <div className="mb-4 w-10 h-10 rounded-xl bg-red-500 text-slate-900 flex items-center justify-center shadow-lg shadow-red-500/20">
+                            <FiTrendingDown size={20} />
                         </div>
-                        <p className="text-xs text-red-200/70 font-medium uppercase tracking-wider mb-0.5">Gastos</p>
-                        <p className="text-lg font-bold text-white tracking-tight">${stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                        <p className="text-[10px] text-red-500 font-black uppercase tracking-widest mb-1">Gastos</p>
+                        <p className="text-2xl font-black text-white tracking-tight">${stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
-                    <div className="bg-linear-to-br from-amber-500/10 to-amber-600/5 p-4 rounded-2xl border border-amber-500/20 backdrop-blur-sm relative overflow-hidden">
-                        <div className="mb-2 w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400">
-                            <FiDollarSign size={16} />
+                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-amber-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
+                        <div className="mb-4 w-10 h-10 rounded-xl bg-amber-500 text-slate-900 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                            <FiDollarSign size={20} />
                         </div>
-                        <p className="text-xs text-amber-200/70 font-medium uppercase tracking-wider mb-0.5">Balance</p>
-                        <p className={`text-lg font-bold tracking-tight ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
+                        <p className="text-[10px] text-amber-500 font-black uppercase tracking-widest mb-1">Balance</p>
+                        <p className={`text-2xl font-black tracking-tight ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
                             ${stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
                     </div>
 
-                    <div className="bg-linear-to-br from-violet-500/10 to-violet-600/5 p-4 rounded-2xl border border-violet-500/20 backdrop-blur-sm relative overflow-hidden">
-                        <div className="mb-2 w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center text-violet-400">
-                            <FiBriefcase size={16} />
+                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-violet-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-all"></div>
+                        <div className="mb-4 w-10 h-10 rounded-xl bg-violet-500 text-white flex items-center justify-center shadow-lg shadow-violet-500/20">
+                            <FiBriefcase size={20} />
                         </div>
-                        <p className="text-xs text-violet-200/70 font-medium uppercase tracking-wider mb-0.5">Ahorro</p>
-                        <p className={`text-lg font-bold tracking-tight ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
+                        <p className="text-[10px] text-violet-500 font-black uppercase tracking-widest mb-1">Ahorro</p>
+                        <p className={`text-2xl font-black tracking-tight ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
                             ${savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
                     </div>
@@ -265,15 +269,14 @@ export default function ReportsPage() {
             <div className="hidden md:block space-y-8">
                 {/* Header & Filter */}
                 <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
-                    <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
-                        <FiPieChart className="text-7xl md:text-9xl text-amber-400" />
+                    <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-10 -translate-y-10 group-hover:translate-x-5 group-hover:-translate-y-5 transition-transform duration-700">
+                        <FiPieChart className="text-7xl md:text-9xl text-amber-500" />
                     </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    <div className="absolute top-0 left-0 w-full h-full bg-linear-to-r from-amber-500/10 to-transparent pointer-events-none"></div>
+                    <div className="absolute -top-24 -left-24 w-64 h-64 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
                     <div className="relative z-10">
-                        <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Reportes Financieros</h1>
-                        <p className="text-slate-400 text-sm md:text-lg">Analiza tus finanzas por periodos.</p>
+                        <h1 className="text-3xl md:text-5xl font-bungee text-white mb-2 tracking-tight">Reportes Financieros</h1>
+                        <p className="text-slate-400 text-sm md:text-lg max-w-lg font-medium">Analiza tus finanzas con precisión y claridad estratégica.</p>
                     </div>
                     <div className="relative z-10 flex gap-3 min-w-[300px]">
                         <div className="flex-1">
@@ -302,38 +305,42 @@ export default function ReportsPage() {
                 {/* Summary Cards - Horizontal scroll en móvil */}
                 {/* blur-3xl eliminado de las tarjetas — 4 capas GPU simultáneas en escritorio */}
                 <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 scrollbar-hide">
-                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-emerald-500/20">
-                        <div className="flex items-center space-x-3 text-emerald-400 mb-3">
-                            <div className="p-2 md:p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20"><FiTrendingUp size={18} /></div>
-                            <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Ingresos</span>
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-emerald-500/30 relative overflow-hidden group active:scale-95 transition-all">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all"></div>
+                        <div className="flex items-center space-x-3 text-emerald-400 mb-4">
+                            <div className="p-3 bg-emerald-500 text-slate-900 rounded-xl shadow-lg shadow-emerald-500/20"><FiTrendingUp size={20} /></div>
+                            <span className="font-black uppercase tracking-[0.2em] text-[10px] text-emerald-500">Ingresos</span>
                         </div>
-                        <p className="text-2xl md:text-4xl font-bold text-white">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-black text-white">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
-                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-red-500/20">
-                        <div className="flex items-center space-x-3 text-red-400 mb-3">
-                            <div className="p-2 md:p-2.5 bg-red-500/10 rounded-xl border border-red-500/20"><FiTrendingDown size={18} /></div>
-                            <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Gastos</span>
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-red-500/30 relative overflow-hidden group active:scale-95 transition-all">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-all"></div>
+                        <div className="flex items-center space-x-3 text-red-400 mb-4">
+                            <div className="p-3 bg-red-500 text-slate-900 rounded-xl shadow-lg shadow-red-500/20"><FiTrendingDown size={20} /></div>
+                            <span className="font-black uppercase tracking-[0.2em] text-[10px] text-red-500">Gastos</span>
                         </div>
-                        <p className="text-2xl md:text-4xl font-bold text-white">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-black text-white">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
-                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-amber-500/20">
-                        <div className="flex items-center space-x-3 text-amber-400 mb-3">
-                            <div className="p-2 md:p-2.5 bg-amber-500/10 rounded-xl border border-amber-500/20"><FiDollarSign size={18} /></div>
-                            <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Balance</span>
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-amber-500/30 relative overflow-hidden group active:scale-95 transition-all">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all"></div>
+                        <div className="flex items-center space-x-3 text-amber-400 mb-4">
+                            <div className="p-3 bg-amber-500 text-slate-900 rounded-xl shadow-lg shadow-amber-500/20"><FiDollarSign size={20} /></div>
+                            <span className="font-black uppercase tracking-[0.2em] text-[10px] text-amber-500">Balance</span>
                         </div>
-                        <p className={`text-2xl md:text-4xl font-bold ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
+                        <p className={`text-3xl font-black ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
                             $ {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
 
-                    <div className="flex-none w-56 md:w-auto bg-slate-900/50 backdrop-blur-md p-5 md:p-6 rounded-2xl md:rounded-3xl border border-violet-500/20">
-                        <div className="flex items-center space-x-3 text-violet-400 mb-3">
-                            <div className="p-2 md:p-2.5 bg-violet-500/10 rounded-xl border border-violet-500/20"><FiBriefcase size={18} /></div>
-                            <span className="font-bold uppercase tracking-wider text-[10px] md:text-xs text-slate-400">Ahorro</span>
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-violet-500/30 relative overflow-hidden group active:scale-95 transition-all">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-all"></div>
+                        <div className="flex items-center space-x-3 text-violet-400 mb-4">
+                            <div className="p-3 bg-violet-500 text-white rounded-xl shadow-lg shadow-violet-500/20"><FiBriefcase size={20} /></div>
+                            <span className="font-black uppercase tracking-[0.2em] text-[10px] text-violet-500">Ahorro</span>
                         </div>
-                        <p className={`text-2xl md:text-4xl font-bold ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
+                        <p className={`text-3xl font-black ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
                             $ {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
