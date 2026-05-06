@@ -10,24 +10,33 @@ export default function UpcomingPaymentsWidget() {
     const hoy = now.getDate();
     const diasEnMes = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
+    // Determinar si un gasto fue pagado en el mes actual
+    // La interfaz FixedExpense usa lastPaidDate (Date) — no existe isPaid
+    const esPagadoEsteMes = (lastPaidDate?: Date): boolean => {
+        if (!lastPaidDate) return false;
+        const fecha = new Date(lastPaidDate);
+        return fecha.getMonth() === now.getMonth() && fecha.getFullYear() === now.getFullYear();
+    };
+
     // Calcular días hasta vencimiento y ordenar
     const pagosOrdenados = fixedExpenses
         .map(e => {
             let diasHasta = e.dueDay - hoy;
             if (diasHasta < 0) diasHasta += diasEnMes;
+            const pagado = esPagadoEsteMes(e.lastPaidDate);
             return {
                 ...e,
                 nombre: e.title || e.description,
                 diasHasta,
-                vencido: e.dueDay < hoy && !e.isPaid,
-                pagado: e.isPaid || false,
+                vencido: e.dueDay < hoy && !pagado,
+                pagado,
             };
         })
         .sort((a, b) => a.diasHasta - b.diasHasta)
         .slice(0, 5);
 
     const totalFijos = fixedExpenses.reduce((s, e) => s + e.amount, 0);
-    const totalPagados = fixedExpenses.filter(e => e.isPaid).reduce((s, e) => s + e.amount, 0);
+    const totalPagados = fixedExpenses.filter(e => esPagadoEsteMes(e.lastPaidDate)).reduce((s, e) => s + e.amount, 0);
     const progreso = totalFijos > 0 ? (totalPagados / totalFijos) * 100 : 0;
 
     return (
