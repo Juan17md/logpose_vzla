@@ -292,21 +292,18 @@ export default function LoginPage() {
     }, [procesarLoginUsuario]);
 
     const handleGoogle = async () => {
+        // Ejecutar signInWithPopup INMEDIATAMENTE para evitar "auth/popup-blocked" en Safari/iOS PWA
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        
+        // Iniciamos la promesa sincrónicamente en el click handler
+        const popupPromise = signInWithPopup(auth, provider, browserPopupRedirectResolver);
+        
         setLoading(true);
         try {
-            const provider = new GoogleAuthProvider();
-            provider.setCustomParameters({ prompt: 'select_account' });
-
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-            if (isStandalone || isMobile) {
-                await signInWithRedirect(auth, provider, browserPopupRedirectResolver);
-            } else {
-                const resultado = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
-                await procesarLoginUsuario(resultado.user);
-                setLoading(false);
-            }
+            const resultado = await popupPromise;
+            await procesarLoginUsuario(resultado.user);
+            setLoading(false);
         } catch (error) {
             setLoading(false);
             console.error("Error completo de Google Auth:", error);

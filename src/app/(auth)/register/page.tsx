@@ -211,21 +211,16 @@ export default function RegisterPage() {
     }, [procesarLoginUsuario]);
 
     const handleGoogle = async () => {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+
+        const popupPromise = signInWithPopup(auth, provider, browserPopupRedirectResolver);
+
         setLoading(true);
         try {
-            const provider = new GoogleAuthProvider();
-            provider.setCustomParameters({ prompt: 'select_account' });
-
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-            if (isStandalone || isMobile) {
-                await signInWithRedirect(auth, provider, browserPopupRedirectResolver);
-            } else {
-                const resultado = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
-                await procesarLoginUsuario(resultado.user);
-                setLoading(false);
-            }
+            const resultado = await popupPromise;
+            await procesarLoginUsuario(resultado.user);
+            setLoading(false);
         } catch (error) {
             setLoading(false);
             console.error("Error Google Auth:", error);
