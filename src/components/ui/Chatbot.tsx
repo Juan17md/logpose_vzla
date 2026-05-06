@@ -265,17 +265,8 @@ export default function Chatbot() {
         };
     }, [transactions, userData, goals, debts, fixedExpenses, lists, cuentas]);
 
-    // 🔍 Debug: Log cuando el contexto cambia
-    useEffect(() => {
-        console.log('📊 UserContext actualizado:', {
-            balance: userContext.balance,
-            monthlyExpense: userContext.monthlyExpense,
-            lastTransaction: userContext.lastTransaction,
-            transactionsCount: transactions.length,
-            goalsCount: goals.length,
-            debtsCount: debts.length
-        });
-    }, [userContext, transactions.length, goals.length, debts.length]);
+    // Debug eliminado: el console.log del userContext generaba overhead
+    // de serialización en cada actualización de transacciones/metas/deudas.
 
     // 🕐 Saludo contextual por hora del día
     const saludoHora = useMemo(() => {
