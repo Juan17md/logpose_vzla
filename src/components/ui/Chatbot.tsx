@@ -15,7 +15,16 @@ import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import ExpensePieChart from "./ExpensePieChart";
+import dynamic from "next/dynamic";
+
+// ExpensePieChart usa Recharts (~40KB). Lo cargamos de forma diferida dentro del Chatbot
+// para que no arrastre ese bundle cuando el componente se monta por primera vez.
+const ExpensePieChart = dynamic(() => import("./ExpensePieChart"), {
+    ssr: false,
+    loading: () => (
+        <div className="bg-slate-800/40 rounded-2xl animate-pulse h-48 w-full" aria-hidden="true" />
+    ),
+});
 
 // Types for Chat
 interface SpeechRecognitionResult {

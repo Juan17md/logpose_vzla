@@ -14,6 +14,7 @@ import {
     query,
     where,
     orderBy,
+    limit,
     onSnapshot,
     doc,
     runTransaction,
@@ -217,10 +218,13 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
                     setLoading(false);
                 });
 
-                // Escuchar transacciones de cuenta (últimas 100)
+                // Historial de operaciones bancarias: limitamos a 100 registros
+                // para no saturar la memoria en dispositivos de bajos recursos.
+                // La UI de cuentas nunca muestra más de ~20 entradas a la vez.
                 const qTrans = query(
                     collection(db, "users", user.uid, "account_transactions"),
-                    orderBy("fecha", "desc")
+                    orderBy("fecha", "desc"),
+                    limit(100)
                 );
 
                 unsubTransacciones = onSnapshot(qTrans, (snapshot) => {

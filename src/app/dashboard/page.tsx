@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -12,21 +13,63 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Modal from "@/components/ui/Modal";
-import RecentTransactions from "@/components/ui/RecentTransactions";
-import ExchangeRateWidget from "@/components/ui/ExchangeRateWidget";
-import SavingsGoalsWidget from "@/components/ui/SavingsGoalsWidget";
-import BudgetAlertWidget from "@/components/ui/BudgetAlertWidget";
-
-import BankAccountsWidget from "@/components/ui/BankAccountsWidget";
-import PendingDebtsWidget from "@/components/ui/PendingDebtsWidget";
-import SalaryPlanningWidget from "@/components/ui/SalaryPlanningWidget";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { obtenerSimboloMoneda, MONEDAS_SOPORTADAS } from "@/lib/bankAccounts";
 import CurrencySelector from "@/components/ui/CurrencySelector";
-import ExpensePieChart from "@/components/ui/ExpensePieChart";
-import CashFlowChart from "@/components/ui/CashFlowChart";
-import UpcomingPaymentsWidget from "@/components/ui/UpcomingPaymentsWidget";
-import FinancialHealthWidget from "@/components/ui/FinancialHealthWidget";
+
+// ─── Placeholder ligero para widgets durante carga ────────────────────────────
+const SkeletonWidget = () => (
+    <div className="bg-slate-800/40 rounded-3xl animate-pulse h-36 w-full" aria-hidden="true" />
+);
+
+// ─── Imports diferidos — solo se descargan cuando el DOM los necesita ─────────
+// Recharts es la dependencia más pesada (~40KB), cargamos sus componentes lazy
+const CashFlowChart = dynamic(() => import("@/components/ui/CashFlowChart"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
+const ExpensePieChart = dynamic(() => import("@/components/ui/ExpensePieChart"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
+
+// Widgets secundarios — importantes pero no críticos para el LCP
+const RecentTransactions = dynamic(() => import("@/components/ui/RecentTransactions"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
+const SavingsGoalsWidget = dynamic(() => import("@/components/ui/SavingsGoalsWidget"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
+const BudgetAlertWidget = dynamic(() => import("@/components/ui/BudgetAlertWidget"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
+const BankAccountsWidget = dynamic(() => import("@/components/ui/BankAccountsWidget"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
+const PendingDebtsWidget = dynamic(() => import("@/components/ui/PendingDebtsWidget"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
+const SalaryPlanningWidget = dynamic(() => import("@/components/ui/SalaryPlanningWidget"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
+const ExchangeRateWidget = dynamic(() => import("@/components/ui/ExchangeRateWidget"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
+const UpcomingPaymentsWidget = dynamic(() => import("@/components/ui/UpcomingPaymentsWidget"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
+const FinancialHealthWidget = dynamic(() => import("@/components/ui/FinancialHealthWidget"), {
+    ssr: false,
+    loading: () => <SkeletonWidget />,
+});
 
 // MotionLink creado fuera del componente para evitar recrearlo en cada render
 const MotionLink = motion.create(Link);
@@ -50,28 +93,28 @@ export default function DashboardPage() {
      const [showAdjustModal, setShowAdjustModal] = useState(false);
     const [adjustingBalances, setAdjustingBalances] = useState<Record<string, string>>({});
 
-    // Variantes de animación para Staggered Entrance
+    // Variantes de animación simplificadas — tween es más ligero que spring physics
+    // Spring requiere múltiples frames de cálculo; tween es una curva predefinida
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.1
+                staggerChildren: 0.07,
+                delayChildren: 0.05
             }
         }
     };
 
     const itemVariants = {
-        hidden: { y: 20, opacity: 0, scale: 0.95 },
+        hidden: { y: 12, opacity: 0 },
         visible: {
             y: 0,
             opacity: 1,
-            scale: 1,
             transition: {
-                type: "spring",
-                stiffness: 100,
-                damping: 10
+                type: "tween",
+                duration: 0.25,
+                ease: "easeOut"
             } as const
         }
     };

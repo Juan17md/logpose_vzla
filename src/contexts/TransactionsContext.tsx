@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from "react";
-import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp, updateDoc, runTransaction } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp, updateDoc, runTransaction } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { createVenezuelaDate } from "@/lib/timezone";
@@ -47,10 +47,14 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
             }
 
             if (user) {
+                // Limitamos a 500 transacciones recientes para proteger la memoria
+                // en dispositivos de bajos recursos. Los cálculos del dashboard
+                // operan sobre el mes/trimestre actual, por lo que 500 es más que suficiente.
                 const q = query(
                     collection(db, "transactions"),
                     where("userId", "==", user.uid),
-                    orderBy("date", "desc")
+                    orderBy("date", "desc"),
+                    limit(500)
                 );
 
                 unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
@@ -124,7 +128,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
             console.error("Error deleting transaction:", error);
             return false;
         }
-    }, [db]);
+    }, []);
 
     const duplicateTransaction = useCallback(async (id: string) => {
         const transactionToCopy = transactions.find(t => t.id === id);
@@ -171,7 +175,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
             console.error("Error duplicating transaction:", error);
             return false;
         }
-    }, [transactions, db]);
+    }, [transactions]);
 
     const addTransaction = useCallback(async (transactionData: Omit<Transaction, 'id'>) => {
         if (!auth.currentUser) return null;
@@ -217,7 +221,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
             console.error("Error adding transaction:", error);
             return null;
         }
-    }, [db]);
+    }, []);
 
     const updateTransaction = useCallback(async (id: string, updates: Partial<Transaction>) => {
         if (!auth.currentUser) return false;
@@ -292,7 +296,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
             console.error("Error updating transaction:", error);
             return false;
         }
-    }, [db]);
+    }, []);
 
     const value = useMemo(() => ({
         transactions,

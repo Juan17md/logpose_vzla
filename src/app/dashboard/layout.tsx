@@ -15,7 +15,14 @@ import MigracionCuentas from "@/components/cuentas/MigracionCuentas";
 import AvisoCuentasFaltantes from "@/components/cuentas/AvisoCuentasFaltantes";
 
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
-import Chatbot from "@/components/ui/Chatbot";
+import dynamic from "next/dynamic";
+
+// Chatbot cargado de forma diferida — 59KB que solo se necesitan cuando el usuario lo abre
+// El layout es visible y funcional sin esperar a que este bundle descargue
+const Chatbot = dynamic(() => import("@/components/ui/Chatbot"), {
+  ssr: false,
+  loading: () => null, // El FAB del chatbot no necesita placeholder visible
+});
 
 export default function DashboardLayout({
   children,
