@@ -44,8 +44,8 @@ export default function MobileBottomNav({ onMenuClick, onNavigate }: MobileBotto
 
     return (
         <div
-            className="md:hidden fixed left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] rounded-full px-2 py-3 z-50 flex justify-between items-center transition-all duration-300"
-            style={{ bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}
+            className="md:hidden fixed left-1/2 -translate-x-1/2 w-[85%] max-w-[360px] bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] rounded-full px-2 py-2.5 z-50 flex justify-between items-center transition-all duration-300"
+            style={{ bottom: 'calc(4px + env(safe-area-inset-bottom, 0px))' }}
         >
             <div className="flex justify-evenly flex-1">
                 {leftItems.map((item) => (
