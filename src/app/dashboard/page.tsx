@@ -266,7 +266,7 @@ export default function DashboardPage() {
         <>
             {/* ===== MOBILE-FIRST LAYOUT ===== */}
             <motion.div
-                className="md:hidden flex flex-col gap-4 pb-6"
+                className="md:hidden flex flex-col gap-4 pb-32"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -637,7 +637,7 @@ export default function DashboardPage() {
                 </motion.div>
 
                 {/* Widgets: Salud Financiera + Próximos Pagos */}
-                <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
+                <motion.div variants={itemVariants} className="flex flex-col gap-4">
                     <FinancialHealthWidget />
                     <UpcomingPaymentsWidget />
                 </motion.div>
