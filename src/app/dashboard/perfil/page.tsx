@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut, FiAlertOctagon, FiTrash2 } from "react-icons/fi";
 
-import { isBiometricSupported, registerBiometric, guardarCredenciales, limpiarCredenciales } from "@/lib/biometrics";
+import { isBiometricSupported, registerBiometric, guardarCredenciales, limpiarCredenciales, tieneCredencialesGuardadas } from "@/lib/biometrics";
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
 const FaceIdIcon = ({ className }: { className?: string }) => (
@@ -31,6 +31,7 @@ export default function ProfilePage() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [biometricSupported, setBiometricSupported] = useState(false);
+    const [isDeviceLinked, setIsDeviceLinked] = useState(false);
     const [showBioPasswordModal, setShowBioPasswordModal] = useState(false);
     const [bioPassword, setBioPassword] = useState("");
     const router = useRouter();
@@ -39,6 +40,7 @@ export default function ProfilePage() {
         const checkBiometric = async () => {
             const supported = await isBiometricSupported();
             setBiometricSupported(supported);
+            setIsDeviceLinked(tieneCredencialesGuardadas());
         };
         checkBiometric();
     }, []);
@@ -89,6 +91,7 @@ export default function ProfilePage() {
                 toast.success("¡Face ID Activado!", { 
                     description: "Ahora puedes iniciar sesión con biometría." 
                 });
+                setIsDeviceLinked(true);
             }
         } catch (error) {
             console.error("Error al enrolar:", error);
@@ -351,17 +354,25 @@ export default function ProfilePage() {
                             <button
                                 onClick={handleEnrollBiometric}
                                 className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all group border mb-3 ${userData?.biometricEnabled
-                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-200"
+                                    ? (isDeviceLinked ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-200" : "bg-amber-500/10 border-amber-500/20 text-amber-200 hover:bg-amber-500/20")
                                     : "bg-violet-500/10 border-violet-500/20 text-violet-200 hover:bg-violet-500/20"
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <FaceIdIcon className={`w-5 h-5 ${userData?.biometricEnabled ? "text-emerald-400" : "text-violet-400"}`} />
-                                    <span className="font-medium text-sm">
-                                        {userData?.biometricEnabled ? "Face ID Activado" : "Activar Face ID"}
-                                    </span>
+                                    <FaceIdIcon className={`w-5 h-5 ${userData?.biometricEnabled ? (isDeviceLinked ? "text-emerald-400" : "text-amber-400") : "text-violet-400"}`} />
+                                    <div className="text-left">
+                                        <p className="font-medium text-sm">
+                                            {userData?.biometricEnabled 
+                                                ? (isDeviceLinked ? "Face ID Activado" : "Vincular este dispositivo") 
+                                                : "Activar Face ID"}
+                                        </p>
+                                        {userData?.biometricEnabled && !isDeviceLinked && (
+                                            <p className="text-[10px] opacity-70">Necesario para este iPhone</p>
+                                        )}
+                                    </div>
                                 </div>
-                                {userData?.biometricEnabled && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
+                                {userData?.biometricEnabled && isDeviceLinked && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
+                                {userData?.biometricEnabled && !isDeviceLinked && <div className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" />}
                             </button>
                         )}
 

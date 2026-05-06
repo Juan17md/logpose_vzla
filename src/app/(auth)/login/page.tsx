@@ -245,24 +245,41 @@ export default function LoginPage() {
     // Manejar el resultado del redirect al cargar la página
     useEffect(() => {
         if (typeof window === "undefined" || checkRedirectEjecutado.current) return;
-
+        
         const checkRedirect = async () => {
-            if (!auth) return; // Chequeo defensivo
+            if (!auth) return;
             
+            // Ver si hay un hash o query de auth en la URL para dar feedback temprano
+            const hasAuthRedirect = window.location.hash.includes("access_token") || 
+                                  window.location.search.includes("code=") ||
+                                  window.location.search.includes("state=");
+
             checkRedirectEjecutado.current = true;
+            
             try {
+                // Si parece haber un redirect, mostrar feedback visual
+                let toastId: string | number | undefined;
+                if (hasAuthRedirect) {
+                    toastId = toast.loading("Procesando acceso con Google...");
+                }
+
                 const resultado = await getRedirectResult(auth, browserPopupRedirectResolver);
+                
                 if (resultado?.user) {
                     setLoading(true);
+                    if (toastId) toast.dismiss(toastId);
                     await procesarLoginUsuario(resultado.user);
+                } else if (hasAuthRedirect) {
+                    // Si había indicios de redirect pero no hay usuario, algo falló o se canceló
+                    if (toastId) toast.dismiss(toastId);
+                    console.log("Redirect detectado pero sin resultado de usuario.");
                 }
             } catch (error) {
                 console.error("Error en Google Redirect:", error);
                 if (error instanceof FirebaseError) {
-                    // Solo mostrar error si no es un error de operación cancelada o similar
                     if (error.code !== "auth/redirect-cancelled-by-user") {
                         toast.error("Error de Autenticación", { 
-                            description: `Código: ${error.code}. Intenta con el formulario.` 
+                            description: `Error: ${error.code}. Por favor, intenta de nuevo.` 
                         });
                     }
                 }

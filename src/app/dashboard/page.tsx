@@ -120,13 +120,20 @@ export default function DashboardPage() {
     };
 
     useEffect(() => {
+        // En PWA, el estado puede tardar unos milisegundos extra en restaurarse
         const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
             if (!currentUser) {
-                router.push("/login");
+                // Pequeño delay de cortesía para evitar parpadeos o falsos negativos en PWA
+                const timer = setTimeout(() => {
+                    if (!auth.currentUser) {
+                        router.push("/login");
+                    }
+                }, 500);
+                return () => clearTimeout(timer);
             } else {
                 setUser(currentUser);
+                setAuthLoading(false);
             }
-            setAuthLoading(false);
         });
 
         return () => unsubscribeAuth();

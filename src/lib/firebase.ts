@@ -19,18 +19,22 @@ const firebaseConfig = {
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 // Initialize Authentication with persistent session (PWA-safe)
-// indexedDBLocalPersistence resiste el purge agresivo de Safari/iOS en PWAs
-// browserLocalPersistence como fallback, y sessionPersistence como último recurso
+let authInstance: any = null;
+
 function getFirebaseAuth() {
   if (typeof window === "undefined") return getAuth(app);
   
+  if (authInstance) return authInstance;
+
   try {
-    return initializeAuth(app, {
+    authInstance = initializeAuth(app, {
       persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence]
     });
-  } catch {
-    // initializeAuth lanza error si ya fue llamado (hot-reload en dev)
-    return getAuth(app);
+    return authInstance;
+  } catch (error) {
+    // Si falla la inicialización (ej. ya inicializado), intentar obtener el existente
+    authInstance = getAuth(app);
+    return authInstance;
   }
 }
 

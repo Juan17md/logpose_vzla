@@ -110,6 +110,7 @@ export default function RegisterPage() {
     const router = useRouter();
     const [loading, setLoading]           = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const checkRedirectEjecutado = useRef(false);
 
     const { register, handleSubmit, formState:{errors} } = useForm({
         resolver: zodResolver(z.object({
@@ -171,15 +172,37 @@ export default function RegisterPage() {
     }, [router]);
 
     useEffect(() => {
+        if (typeof window === "undefined" || checkRedirectEjecutado.current) return;
+        
         const checkRedirect = async () => {
+            if (!auth) return;
+            
+            const hasAuthRedirect = window.location.hash.includes("access_token") || 
+                                  window.location.search.includes("code=") ||
+                                  window.location.search.includes("state=");
+
+            checkRedirectEjecutado.current = true;
+            
             try {
+                let toastId: string | number | undefined;
+                if (hasAuthRedirect) {
+                    toastId = toast.loading("Procesando registro con Google...");
+                }
+
                 const resultado = await getRedirectResult(auth, browserPopupRedirectResolver);
+                
                 if (resultado?.user) {
                     setLoading(true);
+                    if (toastId) toast.dismiss(toastId);
                     await procesarLoginUsuario(resultado.user);
+                } else if (hasAuthRedirect) {
+                    if (toastId) toast.dismiss(toastId);
                 }
             } catch (error) {
-                console.error("Error redirect:", error);
+                console.error("Error redirect registro:", error);
+                if (error instanceof FirebaseError && error.code !== "auth/redirect-cancelled-by-user") {
+                    toast.error("Error", { description: `Error: ${error.code}` });
+                }
             } finally {
                 setLoading(false);
             }
