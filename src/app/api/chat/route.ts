@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const { message, conversationHistory = [], userContext = {} } = await req.json();
 
     // Extraer contexto del usuario
-    const { balance, goals, debts, monthlyExpense, monthlyIncome, averageDailyExpense, lastTransaction, apiRates, tasasManuales, fixedExpenses, shoppingLists, monthlyBudget, monthlySalary, topCategories, previousMonthlyExpense, upcomingFixedExpenses } = userContext;
+    const { balance, goals, debts, monthlyExpense, monthlyIncome, averageDailyExpense, lastTransaction, apiRates, tasasManuales, fixedExpenses, shoppingLists, monthlyBudget, monthlySalary, topCategories, previousMonthlyExpense, upcomingFixedExpenses, bankAccounts } = userContext;
 
     // Obtener tasas efectivas (preferir manuales si existen, luego API, luego fallback)
     const tUSD = tasasManuales?.USD || apiRates?.USD || apiRates?.usd || 56.40;
@@ -54,6 +54,16 @@ ${fixedExpenses && fixedExpenses.length > 0 ? `- Gastos fijos del mes: ${fixedEx
 ${shoppingLists && shoppingLists.length > 0 ? `- Listas de compras: ${shoppingLists.map((l: any) => `${l.name} (${l.pendingItems}/${l.totalItems} pendientes)`).join(', ')}` : ''}
 ${lastTransaction ? `- Última transacción: ${lastTransaction.type} de $${parseFloat(Number(lastTransaction.amount).toFixed(2))} en ${lastTransaction.category}` : ''}
 ` : ''}
+
+${bankAccounts && bankAccounts.length > 0 ? `🏦 CUENTAS BANCARIAS DEL USUARIO (Obligatorio para transacciones)
+${bankAccounts.map((c: any) => `- ID: "${c.id}" | Nombre: "${c.nombre}" | Banco: ${c.banco} | Moneda: ${c.moneda} | Saldo: ${c.saldo}`).join('\n')}
+
+🚨 REGLA VITAL SOBRE CUENTAS: 
+TODO gasto, ingreso o transferencia DEBE estar asociado a las cuentas anteriores mediante su "ID". 
+- Para ingresos/gastos: Necesitas determinar el \`accountId\`.
+- Para transferencias: Necesitas determinar \`accountId\` (cuenta origen) y \`targetAccountId\` (cuenta destino).
+Si el usuario reporta un movimiento y NO especifica la(s) cuenta(s) involucrada(s), y no puedes inferirla(s) fácilmente, NO generes la operación de transaction. En su lugar, pregúntale amablemente qué cuenta o cuentas utilizar usando el campo \`message\`.
+Ejemplo: "¡Claro! Pero necesito saber de qué cuenta salieron esos $10 para la comida. ¿Fue de Banesco, Efectivo, Binance...?"` : ''}
 
  💱 TASAS DE CAMBIO (Bolívares por unidad)
 - **USD Oficial (BCV)**: ${tUSD.toFixed(2)} Bs
@@ -146,12 +156,14 @@ Interpreta fechas naturales y convierte a ISO 8601:
 {
   "intent": "transaction",
   "amount": number,
-  "type": "ingreso" | "gasto",
+  "type": "ingreso" | "gasto" | "transferencia",
   "category": string,
   "description": string,
   "date": string (ISO 8601),
   "currency": "USD" | "VES" | "USDT" | "EUR",
-  "amountInUSD": number (opcional, cuando dice "X$ pero en Bs")
+  "amountInUSD": number (opcional, cuando dice "X$ pero en Bs"),
+  "accountId": string (OBLIGATORIO: ID de la cuenta origen. Si falta, NO generes operación y pregunta),
+  "targetAccountId": string (OBLIGATORIO SOLO PARA TRANSFERENCIAS: ID de la cuenta destino. Si falta en una transferencia, pregunta)
 }
 
 2️⃣ NUEVA DEUDA (new_debt):
@@ -431,6 +443,7 @@ Detecta y procesa múltiples operaciones en un solo mensaje:
 ✓ Fecha default: hoy (ISO 8601)
 ✓ Siempre categoriza automáticamente usando las palabras clave
 ✓ Siempre incluye el campo "message" con respuesta natural
+✓ TODO gasto o ingreso REQUIERE la cuenta. Si no se menciona, pregúntala y NO generes la transacción aún.
 ✓ Sé CONCISA: confirma la acción y pregunta si puede ayudar en algo más
 ✓ Responde en español de forma natural y conversacional
 `

@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 
 // TODO: Replace the following with your app's Firebase project configuration
@@ -18,8 +18,23 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Initialize Authentication
-export const auth = getAuth(app);
+// Initialize Authentication with persistent session (PWA-safe)
+// indexedDBLocalPersistence resiste el purge agresivo de Safari/iOS en PWAs
+// browserLocalPersistence como fallback, y sessionPersistence como último recurso
+function getFirebaseAuth() {
+  if (typeof window === "undefined") return getAuth(app);
+  
+  try {
+    return initializeAuth(app, {
+      persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence]
+    });
+  } catch {
+    // initializeAuth lanza error si ya fue llamado (hot-reload en dev)
+    return getAuth(app);
+  }
+}
+
+export const auth = getFirebaseAuth();
 
 // Initialize Firestore with Offline Persistence (Only on client)
 export const db = typeof window !== "undefined" 

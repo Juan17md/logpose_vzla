@@ -98,7 +98,7 @@ export default function Chatbot() {
     const { lists, deleteList, updateListName } = useShoppingLists();
     const { fixedExpenses, addFixedExpense, deleteFixedExpense, updateFixedExpense } = useFixedExpenses();
     const { userData, updateUserData } = useUserData();
-    const { apiRates, tasasManuales, tasasEnBs } = useBankAccounts();
+    const { apiRates, tasasManuales, tasasEnBs, cuentas } = useBankAccounts();
 
     // Calcular contexto financiero del usuario
     const userContext = useMemo(() => {
@@ -216,9 +216,17 @@ export default function Chatbot() {
                     name: e.title || e.description,
                     amount: e.amount,
                     dueDay: e.dueDay
-                }))
+                })),
+            // 🆕 Cuentas Bancarias
+            bankAccounts: cuentas.map(c => ({
+                id: c.id,
+                nombre: c.nombre,
+                banco: c.banco,
+                moneda: c.moneda,
+                saldo: c.saldo
+            }))
         };
-    }, [transactions, userData, goals, debts, fixedExpenses, lists]);
+    }, [transactions, userData, goals, debts, fixedExpenses, lists, cuentas]);
 
     // 🔍 Debug: Log cuando el contexto cambia
     useEffect(() => {
@@ -231,6 +239,37 @@ export default function Chatbot() {
             debtsCount: debts.length
         });
     }, [userContext, transactions.length, goals.length, debts.length]);
+
+    // 🤖 Mensaje Proactivo de Bienvenida
+    useEffect(() => {
+        if (isOpen && messages.length === 0) {
+            let welcomeMessage = "¡Hola! Soy Nami. ¿En qué puedo ayudarte hoy?";
+            
+            const warnings = [];
+            
+            // 1. Advertencia de presupuesto
+            if (userContext.monthlyBudget > 0) {
+                const percentage = (userContext.monthlyExpense / userContext.monthlyBudget) * 100;
+                if (percentage >= 80) {
+                    warnings.push(`⚠️ Has consumido el **${percentage.toFixed(0)}%** de tu presupuesto mensual.`);
+                }
+            }
+            
+            // 2. Advertencia de pagos fijos próximos
+            if (userContext.upcomingFixedExpenses && userContext.upcomingFixedExpenses.length > 0) {
+                const upcoming = userContext.upcomingFixedExpenses;
+                const nextExpense = upcoming[0];
+                warnings.push(`📅 Tienes un pago próximo: **${nextExpense.name}** ($${nextExpense.amount}) para el día ${nextExpense.dueDay}.`);
+            }
+
+            if (warnings.length > 0) {
+                welcomeMessage = `¡Hola! Aquí Nami al reporte. \n\n${warnings.join('\n')}\n\n¿Te ayudo a registrar algo o revisar tus números?`;
+            }
+
+            setMessages([{ role: "ai", content: welcomeMessage }]);
+        }
+    }, [isOpen, messages.length, userContext.monthlyBudget, userContext.monthlyExpense, userContext.upcomingFixedExpenses]);
+
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -340,13 +379,15 @@ export default function Chatbot() {
 
                 const transactionId = await addTransaction({
                     amount: amountUSD,
-                    type: (data.type as "ingreso" | "gasto") || "gasto",
-                    category: data.category,
+                    type: (data.type as "ingreso" | "gasto" | "transferencia") || "gasto",
+                    category: data.category || "Transferencia",
                     description: data.description || "Transacción rápida con IA",
                     date: transactionDate, // ✅ Usar fecha validada
                     currency: data.currency as "USD" | "VES" || "USD",
                     originalAmount: originalAmount,
-                    exchangeRate: exchangeRate
+                    exchangeRate: exchangeRate,
+                    accountId: data.accountId, // Pasamos el ID de la cuenta inferido o solicitado por Nami
+                    targetAccountId: data.targetAccountId
                 } as any);
 
                 success = !!transactionId;
@@ -920,32 +961,7 @@ export default function Chatbot() {
 
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/50">
-                            {messages.length === 0 && (
-                                <div className="text-center text-slate-500 mt-10 px-6">
-                                    <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-violet-500">
-                                        <FiCpu size={32} />
-                                    </div>
-                                    <p className="text-white font-medium mb-2">¡Hola! Soy Nami.</p>
-                                    <p className="text-sm mb-6">¿En qué puedo ayudarte hoy?</p>
 
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {[
-                                            "📊 ¿Cuánto he gastado este mes?",
-                                            "💰 Registrar gasto en comida",
-                                            "🎯 Ver estado de mis metas",
-                                            "💵 Agregar ingreso de salario"
-                                        ].map((suggestion, index) => (
-                                            <button
-                                                key={index}
-                                                onClick={() => handleSend(suggestion)}
-                                                className="text-xs bg-slate-800 hover:bg-slate-700 text-violet-300 py-3 px-4 rounded-xl border border-slate-700/50 transition-all text-left flex items-center gap-2"
-                                            >
-                                                {suggestion}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
                             <AnimatePresence mode="popLayout">
                                 {messages.map((msg, i) => (
                                     <motion.div
