@@ -95,15 +95,14 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="space-y-8">
-            {/* Header */}
-            {/* Header */}
-            <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+        <div className="space-y-6 pb-32 md:pb-10">
+            {/* Desktop Header */}
+            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiUser className="text-9xl text-violet-400" />
                 </div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-violet-500/10 to-transparent pointer-events-none"></div>
+                <div className="absolute top-0 left-0 w-full h-full bg-linear-to-r from-violet-500/10 to-transparent pointer-events-none"></div>
 
                 <div className="relative z-10">
                     <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Mi Perfil</h1>
@@ -111,12 +110,23 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Mobile Header */}
+            <div className="md:hidden flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-white tracking-tight">Mi Perfil</h1>
+                    <p className="text-slate-500 text-xs">Información y seguridad</p>
+                </div>
+                <div className="p-3 bg-violet-500/10 rounded-2xl border border-violet-500/20">
+                    <FiUser className="text-violet-400 text-xl" />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                 {/* Profile Card */}
-                <div className="md:col-span-2 bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-3xl p-8 shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-indigo-400"></div>
+                <div className="md:col-span-2 bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-violet-500 to-indigo-400"></div>
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
                             <FiUser className="text-violet-400" />
                             Información Personal
                         </h2>
@@ -125,7 +135,7 @@ export default function ProfilePage() {
                                 if (editing) handleUpdateProfile();
                                 else setEditing(true);
                             }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg ${editing
+                            className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all shadow-lg ${editing
                                 ? "bg-violet-500 text-white hover:bg-violet-600 shadow-violet-500/20"
                                 : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/50"
                                 }`}
@@ -134,7 +144,7 @@ export default function ProfilePage() {
                         </button>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-5 md:space-y-6">
                         <div className="group">
                             <label className="block text-sm font-medium text-slate-400 mb-1">Nombre Completo</label>
                             <div className="relative">
@@ -143,7 +153,7 @@ export default function ProfilePage() {
                                     disabled={!editing}
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value)}
-                                    className={`w-full bg-slate-800/50 border text-white rounded-xl py-3 px-4 outline-none transition-all ${editing
+                                    className={`w-full bg-slate-800/50 border text-white rounded-xl py-3 px-4 outline-none transition-all text-base ${editing
                                         ? "border-violet-500 focus:ring-2 focus:ring-violet-500/20"
                                         : "border-slate-700/50 text-slate-400 cursor-not-allowed"
                                         }`}
@@ -151,19 +161,19 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-1">Correo Electrónico</label>
-                                <div className="flex items-center gap-3 bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 text-slate-400">
-                                    <FiMail className="text-violet-500" />
-                                    <span>{user?.email}</span>
+                                <div className="flex items-center gap-3 bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 text-slate-400 text-sm md:text-base">
+                                    <FiMail className="text-violet-500 shrink-0" />
+                                    <span className="truncate">{user?.email}</span>
                                 </div>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-1">Miembro Desde</label>
-                                <div className="flex items-center gap-3 bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 text-slate-400">
-                                    <FiCalendar className="text-violet-500" />
+                                <div className="flex items-center gap-3 bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 text-slate-400 text-sm md:text-base">
+                                    <FiCalendar className="text-violet-500 shrink-0" />
                                     <span>
                                         {userData?.createdAt?.toDate
                                             ? userData.createdAt.toDate().toLocaleDateString()
@@ -177,13 +187,10 @@ export default function ProfilePage() {
 
                 {/* Plan & Security Sidebar */}
                 <div className="space-y-6">
-                    {/* Plan Info */}
-
-
                     {/* Security Actions */}
-                    <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-3xl p-8 shadow-lg relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-400"></div>
-                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                    <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-red-500 to-orange-400"></div>
+                        <h3 className="text-lg font-bold text-white mb-4 md:mb-6 flex items-center gap-2">
                             <FiShield className="text-red-400" />
                             Seguridad
                         </h3>
@@ -191,7 +198,7 @@ export default function ProfilePage() {
                             onClick={handlePasswordReset}
                             className="w-full flex items-center justify-between px-4 py-3.5 bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl transition-all group border border-slate-700/50 hover:border-red-500/30 mb-3"
                         >
-                            <span className="font-medium">Cambiar Contraseña</span>
+                            <span className="font-medium text-sm">Cambiar Contraseña</span>
                             <FiLock className="opacity-50 group-hover:opacity-100 group-hover:text-red-400 transition-colors" />
                         </button>
 
@@ -199,7 +206,7 @@ export default function ProfilePage() {
                             onClick={handleLogout}
                             className="w-full flex items-center justify-between px-4 py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-200 hover:text-red-100 rounded-xl transition-all group border border-red-500/20 hover:border-red-500/40"
                         >
-                            <span className="font-medium">Cerrar Sesión</span>
+                            <span className="font-medium text-sm">Cerrar Sesión</span>
                             <FiLogOut className="opacity-70 group-hover:opacity-100 transition-colors" />
                         </button>
                     </div>

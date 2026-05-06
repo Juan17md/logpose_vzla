@@ -69,6 +69,7 @@ export default function Chatbot() {
     const [isListening, setIsListening] = useState(false);
     const [interimTranscript, setInterimTranscript] = useState("");
     const [lastTransactionId, setLastTransactionId] = useState<string | null>(null);
+    const [indicadorTexto, setIndicadorTexto] = useState("Analizando...");
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const silenceTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -224,7 +225,34 @@ export default function Chatbot() {
                 banco: c.banco,
                 moneda: c.moneda,
                 saldo: c.saldo
-            }))
+            })),
+            // 🆕 Análisis Avanzado: Tendencias por categoría (mes anterior)
+            previousTopCategories: (() => {
+                const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+                return Object.entries(
+                    transactions
+                        .filter(t => {
+                            const tDate = t.date instanceof Date ? t.date : new Date(t.date);
+                            return t.type === 'gasto' && tDate >= prevMonthStart && tDate <= prevMonthEnd;
+                        })
+                        .reduce((acc: Record<string, number>, t) => {
+                            acc[t.category] = (acc[t.category] || 0) + t.amount;
+                            return acc;
+                        }, {})
+                )
+                    .sort((a, b) => (b[1] as number) - (a[1] as number))
+                    .slice(0, 5)
+                    .map(([category, amount]) => ({ category, amount: parseFloat((amount as number).toFixed(2)) }));
+            })(),
+            // 🆕 Ratio de ahorro (ingreso - gasto / ingreso)
+            savingsRatio: monthlyIncome > 0
+                ? parseFloat(((monthlyIncome - monthlyExpenses) / monthlyIncome * 100).toFixed(1))
+                : 0,
+            // 🆕 Proyección de gasto a fin de mes
+            projectedMonthlyExpense: daysInMonth > 0
+                ? parseFloat(((monthlyExpenses / daysInMonth) * new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()).toFixed(2))
+                : 0
         };
     }, [transactions, userData, goals, debts, fixedExpenses, lists, cuentas]);
 
@@ -240,35 +268,136 @@ export default function Chatbot() {
         });
     }, [userContext, transactions.length, goals.length, debts.length]);
 
+    // 🕐 Saludo contextual por hora del día
+    const saludoHora = useMemo(() => {
+        const hora = new Date().getHours();
+        if (hora >= 5 && hora < 12) return "☀️ Buenos días";
+        if (hora >= 12 && hora < 18) return "🌤️ Buenas tardes";
+        return "🌙 Buenas noches";
+    }, []);
+
+    // 🔔 Alertas proactivas para badge y bienvenida
+    const alertasProactivas = useMemo(() => {
+        const alertas: { tipo: "warning" | "info" | "success"; mensaje: string }[] = [];
+
+        // 1. Presupuesto al límite
+        if (userContext.monthlyBudget > 0) {
+            const porcentaje = (userContext.monthlyExpense / userContext.monthlyBudget) * 100;
+            if (porcentaje >= 100) {
+                alertas.push({ tipo: "warning", mensaje: `🚨 Has **superado** tu presupuesto mensual (${porcentaje.toFixed(0)}%).` });
+            } else if (porcentaje >= 80) {
+                alertas.push({ tipo: "warning", mensaje: `⚠️ Has consumido el **${porcentaje.toFixed(0)}%** de tu presupuesto mensual.` });
+            }
+        }
+
+        // 2. Pagos fijos próximos
+        if (userContext.upcomingFixedExpenses && userContext.upcomingFixedExpenses.length > 0) {
+            const cantidad = userContext.upcomingFixedExpenses.length;
+            const proximo = userContext.upcomingFixedExpenses[0];
+            if (cantidad === 1) {
+                alertas.push({ tipo: "info", mensaje: `📅 Tienes un pago próximo: **${proximo.name}** ($${proximo.amount}) para el día ${proximo.dueDay}.` });
+            } else {
+                alertas.push({ tipo: "info", mensaje: `📅 Tienes **${cantidad} pagos** próximos. El más cercano: **${proximo.name}** ($${proximo.amount}) el día ${proximo.dueDay}.` });
+            }
+        }
+
+        // 3. Metas cerca de completarse (90%+)
+        const metasCercanas = userContext.goals.filter(g => g.target > 0 && (g.current / g.target) >= 0.9 && (g.current / g.target) < 1);
+        if (metasCercanas.length > 0) {
+            const meta = metasCercanas[0];
+            const pct = ((meta.current / meta.target) * 100).toFixed(0);
+            alertas.push({ tipo: "success", mensaje: `🎯 ¡Tu meta "**${meta.name}**" está al **${pct}%**! Falta poco para completarla.` });
+        }
+
+        // 4. Metas completadas
+        const metasCompletadas = userContext.goals.filter(g => g.target > 0 && g.current >= g.target);
+        if (metasCompletadas.length > 0) {
+            alertas.push({ tipo: "success", mensaje: `🏆 ¡Felicidades! Completaste la meta "**${metasCompletadas[0].name}**".` });
+        }
+
+        // 5. Comparación mes anterior
+        if (userContext.previousMonthlyExpense > 0 && userContext.monthlyExpense > 0) {
+            const diff = ((userContext.monthlyExpense - userContext.previousMonthlyExpense) / userContext.previousMonthlyExpense) * 100;
+            if (diff > 20) {
+                alertas.push({ tipo: "warning", mensaje: `📈 Llevas un **${diff.toFixed(0)}% más** de gasto que el mes pasado.` });
+            } else if (diff < -10) {
+                alertas.push({ tipo: "success", mensaje: `📉 ¡Bien! Llevas **${Math.abs(diff).toFixed(0)}% menos** gasto que el mes pasado.` });
+            }
+        }
+
+        return alertas;
+    }, [userContext]);
+
     // 🤖 Mensaje Proactivo de Bienvenida
     useEffect(() => {
         if (isOpen && messages.length === 0) {
-            let welcomeMessage = "¡Hola! Soy Nami. ¿En qué puedo ayudarte hoy?";
-            
-            const warnings = [];
-            
-            // 1. Advertencia de presupuesto
-            if (userContext.monthlyBudget > 0) {
-                const percentage = (userContext.monthlyExpense / userContext.monthlyBudget) * 100;
-                if (percentage >= 80) {
-                    warnings.push(`⚠️ Has consumido el **${percentage.toFixed(0)}%** de tu presupuesto mensual.`);
-                }
-            }
-            
-            // 2. Advertencia de pagos fijos próximos
-            if (userContext.upcomingFixedExpenses && userContext.upcomingFixedExpenses.length > 0) {
-                const upcoming = userContext.upcomingFixedExpenses;
-                const nextExpense = upcoming[0];
-                warnings.push(`📅 Tienes un pago próximo: **${nextExpense.name}** ($${nextExpense.amount}) para el día ${nextExpense.dueDay}.`);
+            let bienvenida: string;
+
+            if (alertasProactivas.length > 0) {
+                const listaAlertas = alertasProactivas.map(a => a.mensaje).join('\n\n');
+                bienvenida = `${saludoHora}, aquí Nami al reporte. 🧭\n\n${listaAlertas}\n\n¿Te ayudo a registrar algo o revisar tus números?`;
+            } else {
+                bienvenida = `${saludoHora}! Soy Nami, tu asistente financiero. 🧭\n\nTodo parece en orden por ahora. ¿En qué puedo ayudarte?`;
             }
 
-            if (warnings.length > 0) {
-                welcomeMessage = `¡Hola! Aquí Nami al reporte. \n\n${warnings.join('\n')}\n\n¿Te ayudo a registrar algo o revisar tus números?`;
-            }
-
-            setMessages([{ role: "ai", content: welcomeMessage }]);
+            setMessages([{ role: "ai", content: bienvenida }]);
         }
-    }, [isOpen, messages.length, userContext.monthlyBudget, userContext.monthlyExpense, userContext.upcomingFixedExpenses]);
+    }, [isOpen, messages.length, alertasProactivas, saludoHora]);
+
+    // ⏳ Mensajes rotativos del indicador de escritura
+    useEffect(() => {
+        if (!isLoading) return;
+        const frases = [
+            "Analizando tus datos...",
+            "Consultando el LogPose...",
+            "Preparando respuesta...",
+            "Nami está pensando...",
+            "Revisando tus finanzas...",
+        ];
+        let idx = 0;
+        setIndicadorTexto(frases[0]);
+        const interval = setInterval(() => {
+            idx = (idx + 1) % frases.length;
+            setIndicadorTexto(frases[idx]);
+        }, 2200);
+        return () => clearInterval(interval);
+    }, [isLoading]);
+
+    // 📱 Quick Actions contextuales
+    const accionesRapidas = useMemo(() => {
+        const acciones: { icon: string; text: string; query: string }[] = [];
+
+        // Siempre disponibles
+        acciones.push({ icon: "💰", text: "Balance", query: "¿Cuál es mi saldo actual?" });
+        acciones.push({ icon: "📊", text: "Gastos", query: "¿Cuánto he gastado este mes y en qué?" });
+
+        // Contextuales
+        if (userContext.upcomingFixedExpenses && userContext.upcomingFixedExpenses.length > 0) {
+            acciones.push({ icon: "📅", text: "Pagos", query: "¿Qué pagos tengo próximos?" });
+        }
+
+        if (userContext.debts.length > 0) {
+            acciones.push({ icon: "🤝", text: "Deudas", query: "¿Cómo están mis deudas?" });
+        }
+
+        if (userContext.goals.length > 0) {
+            acciones.push({ icon: "🎯", text: "Metas", query: "¿Cómo van mis metas de ahorro?" });
+        }
+
+        if (userContext.monthlyBudget > 0) {
+            acciones.push({ icon: "📋", text: "Presupuesto", query: "¿Cómo va mi presupuesto este mes?" });
+        }
+
+        // Si hay poco contexto, agregar genéricos
+        if (acciones.length < 5) {
+            acciones.push({ icon: "📈", text: "Análisis", query: "Analiza mis finanzas este mes" });
+        }
+        if (acciones.length < 5) {
+            acciones.push({ icon: "💡", text: "Tips", query: "Dame un consejo financiero breve" });
+        }
+
+        return acciones.slice(0, 6); // Máximo 6
+    }, [userContext]);
 
 
     const scrollToBottom = () => {
@@ -692,7 +821,7 @@ export default function Chatbot() {
 
         try {
             // Preparar historial de conversación para contexto (excluir mensaje actual)
-            const conversationHistory = messages.slice(-6).map(msg => ({
+            const conversationHistory = messages.slice(-10).map(msg => ({
                 role: msg.role === 'ai' ? 'assistant' : msg.role,  // Mapear 'ai' a 'assistant' para Groq
                 content: msg.content
             }));
@@ -929,6 +1058,12 @@ export default function Chatbot() {
                 className={`fixed bottom-[110px] right-4 md:bottom-8 md:right-8 bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-indigo-600 dark:to-purple-700 text-white p-4 rounded-full shadow-[0_8px_30px_rgb(139,92,246,0.3)] z-[60] border border-violet-400/30 items-center justify-center transition-all duration-300 ${isOpen ? 'hidden md:flex' : 'flex'}`}
             >
                 <FiCpu size={26} />
+                {/* Badge de alertas */}
+                {alertasProactivas.length > 0 && !isOpen && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-slate-900 animate-pulse">
+                        {alertasProactivas.length}
+                    </span>
+                )}
             </motion.button>
 
             {/* Chat Window */}
@@ -1006,30 +1141,37 @@ export default function Chatbot() {
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     className="flex justify-start"
                                 >
-                                    <div className="bg-slate-800 p-4 rounded-2xl rounded-tl-sm border border-slate-700/50 flex gap-1.5 items-center">
-                                        <span className="text-xs text-slate-400 mr-2">Pensando...</span>
-                                        <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                                        <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                                        <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                    <div className="bg-slate-800 p-4 rounded-2xl rounded-tl-sm border border-slate-700/50 flex gap-2 items-center">
+                                        <div className="p-1.5 bg-violet-500/20 rounded-lg">
+                                            <FiCpu size={14} className="text-violet-400 animate-spin" style={{ animationDuration: '3s' }} />
+                                        </div>
+                                        <motion.span
+                                            key={indicadorTexto}
+                                            initial={{ opacity: 0, y: 4 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="text-xs text-slate-400"
+                                        >
+                                            {indicadorTexto}
+                                        </motion.span>
+                                        <span className="flex gap-1 ml-1">
+                                            <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                            <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                            <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                        </span>
                                     </div>
                                 </motion.div>
                             )}
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Quick Actions */}
+                        {/* Quick Actions — Contextuales */}
                         <div className="px-4 py-2 bg-slate-800/50 border-t border-slate-700/30 flex gap-2 overflow-x-auto no-scrollbar mask-grad-right">
-                            {[
-                                { icon: "💰", text: "Balance", query: "¿Cuál es mi saldo actual?" },
-                                { icon: "📊", text: "Gastos", query: "¿Cuánto he gastado este mes y en qué?" },
-                                { icon: "📅", text: "Pagos", query: "¿Tengo pagos próximos?" },
-                                { icon: "💡", text: "Tips", query: "Dame un consejo financiero breve" },
-                                { icon: "📈", text: "Análisis", query: "Analiza mis finanzas este mes" }
-                            ].map((action, i) => (
+                            {accionesRapidas.map((action, i) => (
                                 <button
-                                    key={i}
+                                    key={`${action.text}-${i}`}
                                     onClick={() => handleSend(action.query)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-full text-xs text-slate-300 hover:bg-violet-600/20 hover:text-violet-300 hover:border-violet-500/30 transition-all whitespace-nowrap"
+                                    disabled={isLoading}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-full text-xs text-slate-300 hover:bg-violet-600/20 hover:text-violet-300 hover:border-violet-500/30 transition-all whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none"
                                 >
                                     <span>{action.icon}</span>
                                     <span>{action.text}</span>

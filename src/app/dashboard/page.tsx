@@ -25,6 +25,8 @@ import { obtenerSimboloMoneda, MONEDAS_SOPORTADAS } from "@/lib/bankAccounts";
 import CurrencySelector from "@/components/ui/CurrencySelector";
 import ExpensePieChart from "@/components/ui/ExpensePieChart";
 import CashFlowChart from "@/components/ui/CashFlowChart";
+import UpcomingPaymentsWidget from "@/components/ui/UpcomingPaymentsWidget";
+import FinancialHealthWidget from "@/components/ui/FinancialHealthWidget";
 
 // MotionLink creado fuera del componente para evitar recrearlo en cada render
 const MotionLink = motion.create(Link);
@@ -591,6 +593,12 @@ export default function DashboardPage() {
                     </motion.div>
                 </motion.div>
 
+                {/* Widgets: Salud Financiera + Próximos Pagos */}
+                <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
+                    <FinancialHealthWidget />
+                    <UpcomingPaymentsWidget />
+                </motion.div>
+
                 {/* CTA Ajustar Saldo */}
                 <motion.button
                     variants={itemVariants}
@@ -832,7 +840,9 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Widgets Section: Savings, Budget & Salary */}
-                <div className="order-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="order-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <FinancialHealthWidget />
+                    <UpcomingPaymentsWidget />
                     <SavingsGoalsWidget />
 
                     <BankAccountsWidget />

@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const { message, conversationHistory = [], userContext = {} } = await req.json();
 
     // Extraer contexto del usuario
-    const { balance, goals, debts, monthlyExpense, monthlyIncome, averageDailyExpense, lastTransaction, apiRates, tasasManuales, fixedExpenses, shoppingLists, monthlyBudget, monthlySalary, topCategories, previousMonthlyExpense, upcomingFixedExpenses, bankAccounts } = userContext;
+    const { balance, goals, debts, monthlyExpense, monthlyIncome, averageDailyExpense, lastTransaction, apiRates, tasasManuales, fixedExpenses, shoppingLists, monthlyBudget, monthlySalary, topCategories, previousMonthlyExpense, upcomingFixedExpenses, bankAccounts, previousTopCategories, savingsRatio, projectedMonthlyExpense } = userContext;
 
     // Obtener tasas efectivas (preferir manuales si existen, luego API, luego fallback)
     const tUSD = tasasManuales?.USD || apiRates?.USD || apiRates?.usd || 56.40;
@@ -53,7 +53,13 @@ ${debts && debts.length > 0 ? `- Deudas pendientes: ${debts.map((d: any) => `${d
 ${fixedExpenses && fixedExpenses.length > 0 ? `- Gastos fijos del mes: ${fixedExpenses.map((e: any) => `${e.name} ($${parseFloat(Number(e.amount).toFixed(2))}, día ${e.dueDay})`).join(', ')}` : ''}
 ${shoppingLists && shoppingLists.length > 0 ? `- Listas de compras: ${shoppingLists.map((l: any) => `${l.name} (${l.pendingItems}/${l.totalItems} pendientes)`).join(', ')}` : ''}
 ${lastTransaction ? `- Última transacción: ${lastTransaction.type} de $${parseFloat(Number(lastTransaction.amount).toFixed(2))} en ${lastTransaction.category}` : ''}
+${savingsRatio !== undefined ? `- Ratio de ahorro este mes: ${savingsRatio}% (ingreso - gasto / ingreso)` : ''}
+${projectedMonthlyExpense ? `- Proyección de gasto a fin de mes: $${projectedMonthlyExpense}` : ''}
 ` : ''}
+
+${previousTopCategories && previousTopCategories.length > 0 ? `📊 TENDENCIAS: Top categorías del MES ANTERIOR
+${previousTopCategories.map((c: any) => `- ${c.category}: $${c.amount}`).join('\n')}
+(Usa esto para comparar con las categorías actuales cuando el usuario pida análisis o tendencias)` : ''}
 
 ${bankAccounts && bankAccounts.length > 0 ? `🏦 CUENTAS BANCARIAS DEL USUARIO (Obligatorio para transacciones)
 ${bankAccounts.map((c: any) => `- ID: "${c.id}" | Nombre: "${c.nombre}" | Banco: ${c.banco} | Moneda: ${c.moneda} | Saldo: ${c.saldo}`).join('\n')}
@@ -446,16 +452,38 @@ Detecta y procesa múltiples operaciones en un solo mensaje:
 ✓ TODO gasto o ingreso REQUIERE la cuenta. Si no se menciona, pregúntala y NO generes la transacción aún.
 ✓ Sé CONCISA: confirma la acción y pregunta si puede ayudar en algo más
 ✓ Responde en español de forma natural y conversacional
+
+═════════════════════════════════════════════════════════════════
+📊 ANÁLISIS AVANZADO Y TENDENCIAS
+═════════════════════════════════════════════════════════════════
+Cuando el usuario pida análisis, tendencias o comparaciones, usa los datos disponibles para:
+
+1. **Comparación Mensual**: Compara gasto actual vs mes anterior. Calcula el porcentaje de cambio.
+2. **Tendencias por Categoría**: Compara top categorías actuales con las del mes pasado. Identifica:
+   - Categorías que crecieron significativamente (+20%)
+   - Categorías que disminuyeron (-20%)
+   - Categorías nuevas (aparecen este mes pero no el anterior)
+3. **Proyecciones**: Usa el gasto promedio diario para proyectar el gasto a fin de mes.
+4. **Salud Financiera**: Evalúa usando ratio de ahorro:
+   - >30%: Excelente 🟢
+   - 15-30%: Bueno 🟡
+   - 0-15%: Ajustado 🟠
+   - <0%: Crítico 🔴
+5. **Formato de Análisis**: Cuando hagas análisis, usa formato markdown con secciones claras:
+   - Usa emojis para indicadores (🟢 🟡 🔴)
+   - Usa **negritas** para cantidades
+   - Usa listas para desglosar categorías
+   - Sé específica con porcentajes y montos
 `
       },
       // Filtrar y validar el historial de conversación para evitar roles inválidos
       ...conversationHistory
-        .slice(-6) // Últimos 3 intercambios (6 mensajes)
-        .filter((msg: any) => msg && msg.role && msg.content) // Filtrar mensajes válidos
-        .filter((msg: any) => ['user', 'assistant', 'system'].includes(msg.role)) // Solo roles válidos
+        .slice(-10) // Últimos 5 intercambios (10 mensajes)
+        .filter((msg: any) => msg && msg.role && msg.content) 
+        .filter((msg: any) => ['user', 'assistant', 'system'].includes(msg.role)) 
         .map((msg: any) => ({
           role: msg.role,
-          content: String(msg.content) // Asegurar que content sea string
+          content: String(msg.content)
         })),
       {
         role: "user",

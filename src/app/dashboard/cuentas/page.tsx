@@ -17,7 +17,7 @@ import CuentaDetalleModal from "@/components/cuentas/CuentaDetalleModal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import CurrencySelector from "@/components/ui/CurrencySelector";
 import { toast } from "sonner";
-import { FiPlus, FiCreditCard, FiDollarSign, FiTrendingUp, FiCheck, FiArrowUp } from "react-icons/fi";
+import { FiPlus, FiCreditCard, FiDollarSign, FiTrendingUp, FiCheck, FiArrowUp, FiArrowLeft } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Inter, Bungee } from "next/font/google";
@@ -50,6 +50,7 @@ export default function CuentasPage() {
     const [cuentaDetalle, setCuentaDetalle] = useState<CuentaBancaria | null>(null);
     const [cuentaEliminar, setCuentaEliminar] = useState<CuentaBancaria | null>(null);
     const [cuentaOperacion, setCuentaOperacion] = useState<CuentaBancaria | undefined>(undefined);
+    const [vistaMobile, setVistaMobile] = useState<"list" | "form">("list");
 
     // Actualizar tempTasa cuando cambie la moneda a modificar o las tasas
     useEffect(() => {
@@ -211,24 +212,67 @@ export default function CuentasPage() {
                         <h1 className="text-2xl font-black text-white tracking-tight">Mis Cuentas</h1>
                         <p className="text-slate-500 text-xs">Gestión Premium</p>
                     </div>
+                    <div className="p-3 bg-violet-500/10 rounded-2xl border border-violet-500/20">
+                        <FiCreditCard className="text-violet-400 text-xl" />
+                    </div>
                 </div>
-                {/* Mobile Total Balance */}
-                <div className="bg-slate-900 shadow-xl border border-white/5 p-5 rounded-3xl">
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-[2px] mb-1">Saldo Total</p>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-slate-500 font-bold">{obtenerSimboloMoneda(monedaBase)}</span>
-                        <span className="text-3xl font-black text-white tabular-nums">
-                            {saldoTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-                        </span>
+                {/* Mobile Total Balance + Tasas */}
+                <div className="bg-slate-900 shadow-xl border border-white/5 p-5 rounded-3xl space-y-4">
+                    <div>
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-[2px] mb-1">Saldo Total</p>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-slate-500 font-bold">{obtenerSimboloMoneda(monedaBase)}</span>
+                            <span className="text-3xl font-black text-white tabular-nums">
+                                {saldoTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                            </span>
+                        </div>
+                    </div>
+                    {/* Mobile Tasas Quick Control */}
+                    <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                        <div className="flex gap-1.5">
+                            {(["USD", "EUR", "USDT"] as const).map(m => (
+                                <button
+                                    key={m}
+                                    onClick={() => setTasaAModificar(m)}
+                                    className={cn(
+                                        "px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all",
+                                        tasaAModificar === m
+                                            ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
+                                            : "text-slate-500 hover:text-slate-300 border border-transparent"
+                                    )}
+                                >
+                                    {m}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                value={tempTasa}
+                                onChange={(e) => setTempTasa(e.target.value)}
+                                className="w-16 bg-transparent text-violet-400 text-right font-black outline-none text-xs"
+                            />
+                            <button onClick={handleAplicarTasa} className="text-slate-500 hover:text-violet-400 transition-colors">
+                                <FiCheck size={14} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            {/* Desktop Layout Grid - Matches Gastos Fijos */}
+            {/* Layout Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                {/* Left Column: Form (1/3) */}
-                <div className="lg:col-span-1 space-y-6">
+                {/* Left Column: Form (1/3) — hidden on mobile unless vistaMobile === form */}
+                <div className={`lg:col-span-1 space-y-6 ${vistaMobile === "form" ? "block" : "hidden"} lg:block`}>
+                    {/* Back button mobile */}
+                    <button
+                        onClick={() => { setVistaMobile("list"); setCuentaEditando(null); }}
+                        className="lg:hidden flex items-center gap-2 text-slate-500 font-black text-xs uppercase tracking-widest hover:text-white transition-colors w-fit"
+                    >
+                        <FiArrowLeft size={18} /> Volver a Cuentas
+                    </button>
+
                     <div className="sticky top-6">
                         <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-6 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
                             <div className="flex justify-between items-center mb-6">
@@ -254,8 +298,16 @@ export default function CuentasPage() {
                                 onClose={() => {
                                     setMostrarFormCuenta(false);
                                     setCuentaEditando(null);
+                                    setVistaMobile("list");
                                 }} 
-                                onSubmit={cuentaEditando ? handleEditarCuenta : handleCrearCuenta}
+                                onSubmit={async (data: any) => {
+                                    if (cuentaEditando) {
+                                        await handleEditarCuenta(data);
+                                    } else {
+                                        await handleCrearCuenta(data);
+                                    }
+                                    setVistaMobile("list");
+                                }}
                                 datosIniciales={cuentaEditando || undefined}
                                 modoEdicion={!!cuentaEditando}
                             />
@@ -263,8 +315,8 @@ export default function CuentasPage() {
                     </div>
                 </div>
 
-                {/* Right Column: Cards & History (2/3) */}
-                <div className="lg:col-span-2 space-y-8">
+                {/* Right Column: Cards & History (2/3) — hidden on mobile when form is active */}
+                <div className={`lg:col-span-2 space-y-8 ${vistaMobile === "form" ? "hidden lg:block" : "block"}`}>
                     
                     {/* Controls & New Operation Action */}
                     <div className="flex justify-between items-center bg-slate-900/40 p-4 rounded-3xl border border-white/5 backdrop-blur-md">
@@ -330,6 +382,17 @@ export default function CuentasPage() {
                     )}
                 </div>
             </div>
+
+            {/* FAB for Mobile */}
+            <motion.button
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => { setCuentaEditando(null); setVistaMobile("form"); }}
+                className={`md:hidden fixed bottom-32 right-6 w-16 h-16 bg-violet-500 text-white rounded-3xl shadow-2xl shadow-violet-500/40 flex items-center justify-center z-50 border-4 border-slate-900 transition-all ${vistaMobile === "form" ? "hidden" : ""}`}
+            >
+                <FiPlus size={32} />
+            </motion.button>
 
             {/* Global Modals & Dialogs */}
             <OperacionForm

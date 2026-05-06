@@ -8,6 +8,7 @@ const bungee = Bungee({ variable: "--font-bungee", weight: "400", subsets: ["lat
 
 export const viewport: Viewport = {
   themeColor: "#0f172a",
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {

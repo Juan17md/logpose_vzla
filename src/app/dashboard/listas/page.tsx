@@ -163,7 +163,7 @@ export default function ShoppingListsPage() {
     }
 
     return (
-        <div className="space-y-8 pb-10">
+        <div className="space-y-8 pb-32 md:pb-10">
             {/* Desktop Header */}
             <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
@@ -556,7 +556,7 @@ export default function ShoppingListsPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={selectedList ? handleAddItemClick : handleAddListClick}
-                className="md:hidden fixed bottom-44 right-6 w-16 h-16 bg-amber-500 text-slate-900 rounded-3xl shadow-2xl shadow-amber-500/40 flex items-center justify-center z-50 border-4 border-slate-900 transition-colors"
+                className="md:hidden fixed bottom-32 right-6 w-16 h-16 bg-amber-500 text-slate-900 rounded-3xl shadow-2xl shadow-amber-500/40 flex items-center justify-center z-50 border-4 border-slate-900 transition-colors"
             >
                 <FiPlus size={32} />
             </motion.button>
