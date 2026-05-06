@@ -85,6 +85,16 @@ body {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+/* Posición bottom que respeta la safe area del home indicator en iOS PWA */
+.bottom-safe-fab {
+  bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .bottom-safe-fab {
+    bottom: 2rem; /* md:bottom-8 equivalente */
+  }
+}
+
 /* Smooth scroll behavior for touch devices */
 @media (pointer: coarse) {
   .overflow-x-auto {

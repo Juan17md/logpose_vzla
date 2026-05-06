@@ -1055,7 +1055,7 @@ export default function Chatbot() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-[110px] right-4 md:bottom-8 md:right-8 bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-indigo-600 dark:to-purple-700 text-white p-4 rounded-full shadow-[0_8px_30px_rgb(139,92,246,0.3)] z-[60] border border-violet-400/30 items-center justify-center transition-all duration-300 ${isOpen ? 'hidden md:flex' : 'flex'}`}
+                className={`fixed right-4 md:right-8 bottom-safe-fab bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-indigo-600 dark:to-purple-700 text-white p-4 rounded-full shadow-[0_8px_30px_rgb(139,92,246,0.3)] z-[60] border border-violet-400/30 items-center justify-center transition-all duration-300 ${isOpen ? 'hidden md:flex' : 'flex'}`}
             >
                 <FiCpu size={26} />
                 {/* Badge de alertas */}
@@ -1073,7 +1073,7 @@ export default function Chatbot() {
                         initial={{ opacity: 0, y: 100, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 100, scale: 0.9 }}
-                        className="fixed bottom-0 right-0 md:bottom-24 md:right-8 w-full md:w-96 h-[80vh] md:h-[600px] bg-slate-900 border border-slate-700/50 rounded-t-3xl md:rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden backdrop-blur-xl"
+                        className="fixed bottom-0 right-0 md:bottom-24 md:right-8 w-full md:w-96 h-[80vh] md:h-[600px] bg-slate-900 border border-slate-700/50 rounded-t-3xl md:rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden backdrop-blur-xl pb-safe"
                     >
                         {/* Header */}
                         <div className="p-4 bg-slate-800/80 border-b border-slate-700 flex justify-between items-center backdrop-blur-md">

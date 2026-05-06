@@ -146,7 +146,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     </div>
 
                     {/* Footer / Logout - Fixed at bottom */}
-                    <div className="p-4 mt-auto relative z-10 bg-slate-900/80 md:bg-transparent backdrop-blur-lg md:backdrop-blur-none border-t border-slate-800/50 md:border-t-0 pb-12 md:pb-8">
+                    <div className="p-4 mt-auto relative z-10 bg-slate-900/80 md:bg-transparent backdrop-blur-lg md:backdrop-blur-none border-t border-slate-800/50 md:border-t-0 pb-safe md:pb-8">
                         {/* User Info */}
                         <div className="flex items-center gap-3 px-4 py-3 mb-4 rounded-2xl bg-slate-800/60 border border-slate-700/50">
                             <div className="relative shrink-0">
