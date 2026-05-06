@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -229,9 +229,17 @@ export default function LoginPage() {
         }
     }, [router]);
 
+    // Ref para asegurar que checkRedirect solo se ejecute una vez (evita problemas en Strict Mode)
+    const checkRedirectEjecutado = useRef(false);
+
     // Manejar el resultado del redirect al cargar la página
     useEffect(() => {
+        if (typeof window === "undefined" || checkRedirectEjecutado.current) return;
+
         const checkRedirect = async () => {
+            if (!auth) return; // Chequeo defensivo
+            
+            checkRedirectEjecutado.current = true;
             try {
                 const resultado = await getRedirectResult(auth);
                 if (resultado?.user) {
@@ -241,14 +249,18 @@ export default function LoginPage() {
             } catch (error) {
                 console.error("Error en Google Redirect:", error);
                 if (error instanceof FirebaseError) {
-                    toast.error("Error de Autenticación", { 
-                        description: `Código: ${error.code}. Intenta con el formulario.` 
-                    });
+                    // Solo mostrar error si no es un error de operación cancelada o similar
+                    if (error.code !== "auth/redirect-cancelled-by-user") {
+                        toast.error("Error de Autenticación", { 
+                            description: `Código: ${error.code}. Intenta con el formulario.` 
+                        });
+                    }
                 }
             } finally {
                 setLoading(false);
             }
         };
+        
         checkRedirect();
     }, [procesarLoginUsuario]);
 
