@@ -68,14 +68,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             {/* Overlay for mobile */}
             <div
-                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity md:hidden ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity md:hidden ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
                     }`}
                 onClick={onClose}
             />
 
             {/* Sidebar Container */}
             <aside
-                className={`fixed z-50 transition-transform duration-300 ease-in-out
+                className={`fixed z-[70] transition-transform duration-300 ease-in-out
                 /* Mobile: Full Screen Bottom Sheet */
                 bottom-0 left-0 w-full h-dvh rounded-t-[2.5rem] border-t border-slate-700/50 
                 bg-slate-900/95 backdrop-blur-xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)]
