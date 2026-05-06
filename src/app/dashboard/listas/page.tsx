@@ -199,7 +199,7 @@ export default function ShoppingListsPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-[2rem] p-6 shadow-2xl flex justify-between items-center relative overflow-hidden">
+                            <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 shadow-2xl flex justify-between items-center relative overflow-hidden">
                                 <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-amber-500/5 to-transparent pointer-events-none"></div>
                                 <div className="relative z-10">
                                     <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">Items Totales</p>
@@ -280,7 +280,7 @@ export default function ShoppingListsPage() {
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: index * 0.05 }}
                                         onClick={() => setSelectedList(list)}
-                                        className={`group relative p-6 rounded-[2.2rem] border-2 cursor-pointer transition-all flex justify-between items-center overflow-hidden active:scale-[0.98] ${selectedList?.id === list.id
+                                        className={`group relative p-4 md:p-6 rounded-3xl border-2 cursor-pointer transition-all flex justify-between items-center overflow-hidden active:scale-[0.98] ${selectedList?.id === list.id
                                             ? "bg-slate-800/80 border-amber-500 shadow-[0_20px_50px_-12px_rgba(245,158,11,0.15)]"
                                             : "bg-slate-900/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/60 shadow-lg"
                                             }`}
@@ -352,7 +352,7 @@ export default function ShoppingListsPage() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
-                                className="bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] border-2 border-slate-800 shadow-2xl p-6 md:p-10 min-h-[600px] flex flex-col relative overflow-hidden"
+                                className="bg-slate-900/50 backdrop-blur-xl rounded-3xl md:rounded-[2.5rem] border-2 border-slate-800 shadow-2xl p-5 md:p-10 min-h-[600px] flex flex-col relative overflow-hidden"
                             >
                                 <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -454,11 +454,12 @@ export default function ShoppingListsPage() {
 
                                                         return displayedItems.map((item, idx) => (
                                                             <motion.div
+                                                                layout
                                                                 key={item.id}
                                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                                 animate={{ opacity: 1, scale: 1 }}
                                                                 transition={{ delay: idx * 0.03 }}
-                                                                className={`group flex flex-col p-4 md:p-6 rounded-[2rem] md:rounded-[2.2rem] border-2 transition-all relative overflow-hidden ${item.completed
+                                                                className={`group flex flex-col p-3.5 md:p-6 rounded-2xl md:rounded-[2rem] border-2 transition-all relative overflow-hidden ${item.completed
                                                                     ? "bg-slate-900/40 border-slate-800/50 opacity-60"
                                                                     : "bg-slate-800/40 border-slate-800/80 hover:border-amber-500/30 active:scale-[0.98] shadow-lg"
                                                                     }`}
@@ -558,9 +559,9 @@ export default function ShoppingListsPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={selectedList ? handleAddItemClick : handleAddListClick}
-                className="md:hidden fixed bottom-[180px] right-6 w-16 h-16 bg-amber-500 text-slate-900 rounded-3xl shadow-2xl shadow-amber-500/40 flex items-center justify-center z-50 border-4 border-slate-900 transition-colors"
+                className="md:hidden fixed bottom-[160px] right-6 w-14 h-14 bg-amber-500 text-slate-900 rounded-2xl shadow-2xl shadow-amber-500/40 flex items-center justify-center z-50 border-2 border-slate-900 transition-all"
             >
-                <FiPlus size={32} />
+                <FiPlus size={28} />
             </motion.button>
         </div>
     );

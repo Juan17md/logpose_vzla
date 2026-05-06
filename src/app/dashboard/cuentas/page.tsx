@@ -401,9 +401,9 @@ export default function CuentasPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => { setCuentaEditando(null); setVistaMobile("form"); }}
-                className={`md:hidden fixed bottom-[180px] right-6 w-16 h-16 bg-violet-500 text-white rounded-3xl shadow-2xl shadow-violet-500/40 flex items-center justify-center z-50 border-4 border-slate-900 transition-all ${vistaMobile === "form" ? "hidden" : ""}`}
+                className={`md:hidden fixed bottom-[160px] right-6 w-14 h-14 bg-violet-500 text-white rounded-2xl shadow-2xl shadow-violet-500/40 flex items-center justify-center z-50 border-2 border-slate-900 transition-all ${vistaMobile === "form" ? "hidden" : ""}`}
             >
-                <FiPlus size={32} />
+                <FiPlus size={28} />
             </motion.button>
 
             {/* Global Modals & Dialogs */}
