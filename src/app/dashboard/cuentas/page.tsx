@@ -9,11 +9,10 @@ import {
     type MonedaSoportada,
     MONEDAS_SOPORTADAS,
 } from "@/lib/bankAccounts";
+import dynamic from "next/dynamic";
 import CuentaCard from "@/components/cuentas/CuentaCard";
 import CuentaForm from "@/components/cuentas/CuentaForm";
 import OperacionForm from "@/components/cuentas/OperacionForm";
-import HistorialCuenta from "@/components/cuentas/HistorialCuenta";
-import CuentaDetalleModal from "@/components/cuentas/CuentaDetalleModal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import CurrencySelector from "@/components/ui/CurrencySelector";
 import { toast } from "sonner";
@@ -21,6 +20,19 @@ import { FiPlus, FiCreditCard, FiDollarSign, FiTrendingUp, FiCheck, FiArrowUp, F
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Inter, Bungee } from "next/font/google";
+
+// HistorialCuenta se muestra debajo del fold — cargarlo lazy no afecta el LCP
+const HistorialCuenta = dynamic(() => import("@/components/cuentas/HistorialCuenta"), {
+    ssr: false,
+    loading: () => (
+        <div className="bg-slate-800/30 rounded-3xl animate-pulse h-48 w-full" aria-hidden="true" />
+    ),
+});
+// CuentaDetalleModal solo se necesita cuando el usuario hace clic en una tarjeta
+const CuentaDetalleModal = dynamic(() => import("@/components/cuentas/CuentaDetalleModal"), {
+    ssr: false,
+    loading: () => null,
+});
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 const bungee = Bungee({ subsets: ["latin"], weight: ["400"] });
