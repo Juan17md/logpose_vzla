@@ -87,7 +87,7 @@ body {
 
 /* Posición bottom que respeta la safe area del home indicator en iOS PWA */
 .bottom-safe-fab {
-  bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(98px + env(safe-area-inset-bottom, 0px));
 }
 @media (min-width: 768px) {
   .bottom-safe-fab {
