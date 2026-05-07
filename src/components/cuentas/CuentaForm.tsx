@@ -9,6 +9,7 @@ import {
     obtenerColorAleatorio,
     type MonedaSoportada,
 } from "@/lib/bankAccounts";
+import { parseNumeroFlexible } from "@/lib/number";
 import Select from "@/components/ui/forms/Select";
 import { FiSave, FiX, FiBriefcase, FiHash } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -90,7 +91,7 @@ export default function CuentaForm({
                 nombre: data.nombre || `${nombreBanco} (${data.moneda})`,
                 banco: nombreBanco,
                 moneda: data.moneda,
-                saldoInicial: parseFloat(data.saldoInicial) || 0,
+                saldoInicial: parseNumeroFlexible(data.saldoInicial) || 0,
                 color: data.color,
             });
 
@@ -241,9 +242,8 @@ export default function CuentaForm({
                                                 render={({ field }) => (
                                                     <input
                                                         {...field}
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0"
+                                                        type="text"
+                                                        inputMode="decimal"
                                                         placeholder="0.00"
                                                         className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-5 text-white text-2xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-700"
                                                     />

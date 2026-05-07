@@ -4,6 +4,7 @@ import { createVenezuelaDate } from "@/lib/timezone";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { useUserData } from "@/contexts/UserDataContext";
+import { parseNumeroFlexible } from "@/lib/number";
 import { useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -32,7 +33,7 @@ export default function CryptoCashWalletWidget({ userId }: { userId: string | un
         const { field, value } = editConfig;
         if (!userId || !field) return;
 
-        const amount = parseFloat(value);
+        const amount = parseNumeroFlexible(value);
         if (isNaN(amount) || amount < 0) {
             toast.error("Ingresa un monto válido");
             return;
@@ -138,9 +139,8 @@ export default function CryptoCashWalletWidget({ userId }: { userId: string | un
                     <div>
                         <label className="block text-sm font-medium text-slate-400 mb-1">Nuevo monto total ($)</label>
                         <input
-                            type="number"
-                            step="0.01"
-                            min="0"
+                            type="text"
+                            inputMode="decimal"
                             required
                             value={editConfig.value}
                             onChange={(e) => setEditConfig({ ...editConfig, value: e.target.value })}

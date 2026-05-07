@@ -11,12 +11,12 @@ export async function POST(req: Request) {
     const { message, conversationHistory = [], userContext = {} } = await req.json();
 
     // Extraer contexto del usuario
-    const { balance, goals, debts, monthlyExpense, monthlyIncome, averageDailyExpense, lastTransaction, apiRates, tasasManuales, fixedExpenses, shoppingLists, monthlyBudget, monthlySalary, topCategories, previousMonthlyExpense, upcomingFixedExpenses, bankAccounts, previousTopCategories, savingsRatio, projectedMonthlyExpense } = userContext;
+    const { balance, goals, debts, monthlyExpense, monthlyIncome, averageDailyExpense, lastTransaction, apiRates, fixedExpenses, shoppingLists, monthlyBudget, monthlySalary, topCategories, previousMonthlyExpense, upcomingFixedExpenses, bankAccounts, previousTopCategories, savingsRatio, projectedMonthlyExpense } = userContext;
 
-    // Obtener tasas efectivas (preferir manuales si existen, luego API, luego fallback)
-    const tUSD = tasasManuales?.USD || apiRates?.USD || apiRates?.usd || 56.40;
-    const tEUR = tasasManuales?.EUR || apiRates?.EUR || apiRates?.eur || 61.20;
-    const tUSDT = tasasManuales?.USDT || apiRates?.USDT || apiRates?.usdt || 64.50;
+    // Obtener tasas oficiales desde API (sin soporte de tasas manuales)
+    const tUSD = apiRates?.USD || apiRates?.usd || 56.40;
+    const tEUR = apiRates?.EUR || apiRates?.eur || 61.20;
+    const tUSDT = apiRates?.USDT || apiRates?.usdt || 64.50;
 
     // 🔍 Debug: Ver las tasas recibidas
     console.log('💱 Tasas recibidas:', { tUSD, tEUR, tUSDT });

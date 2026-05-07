@@ -5,6 +5,7 @@ import { FiSave, FiX, FiInfo, FiUser, FiFileText } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { Debt } from "@/hooks/useDebts";
 import { getBCVRate } from "@/lib/currency";
+import { parseNumeroFlexible } from "@/lib/number";
 import Select from "@/components/ui/forms/Select";
 import DateSelect from "@/components/ui/forms/DateSelect";
 import Input from "@/components/ui/forms/Input";
@@ -39,7 +40,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        const amountVal = parseFloat(amountStr);
+        const amountVal = parseNumeroFlexible(amountStr);
         let finalAmount = amountVal;
         
         if (currency === "BS" && bcvRate > 0) {
@@ -160,7 +161,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                                         className="absolute top-9 right-4 pointer-events-none"
                                     >
                                         <span className="text-emerald-400 font-bold text-sm bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
-                                            ≈ ${(parseFloat(amountStr || "0") / (bcvRate || 1)).toLocaleString("es-ES", { maximumFractionDigits: 2 })}
+                                            ≈ ${(parseNumeroFlexible(amountStr || "0") / (bcvRate || 1)).toLocaleString("es-ES", { maximumFractionDigits: 2 })}
                                         </span>
                                     </motion.div>
                                 )}

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
-import { getBCVRate } from "@/lib/currency";
 import {
     obtenerSimboloMoneda,
     type CuentaBancaria,
@@ -16,7 +15,7 @@ import OperacionForm from "@/components/cuentas/OperacionForm";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import CurrencySelector from "@/components/ui/CurrencySelector";
 import { toast } from "sonner";
-import { FiPlus, FiCreditCard, FiDollarSign, FiTrendingUp, FiCheck, FiArrowUp, FiArrowLeft } from "react-icons/fi";
+import { FiPlus, FiCreditCard, FiDollarSign, FiTrendingUp, FiArrowLeft } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Inter, Bungee } from "next/font/google";
@@ -45,8 +44,6 @@ export default function CuentasPage() {
         actualizarMonedaBase, 
         calcularSaldoTotal, 
         apiRates, 
-        tasasManuales,
-        actualizarTasaManual,
         crearCuenta,
         editarCuenta,
         eliminarCuenta,
@@ -64,33 +61,13 @@ export default function CuentasPage() {
     const [cuentaOperacion, setCuentaOperacion] = useState<CuentaBancaria | undefined>(undefined);
     const [vistaMobile, setVistaMobile] = useState<"list" | "form">("list");
 
-    // Actualizar tempTasa cuando cambie la moneda a modificar o las tasas
+    // Mostrar en UI la tasa oficial actual según moneda seleccionada
     useEffect(() => {
-        const manual = tasasManuales[tasaAModificar];
-        if (manual) setTempTasa(manual.toFixed(2));
-        else {
-            const api = tasaAModificar === "USD" ? apiRates.usd : tasaAModificar === "EUR" ? apiRates.eur : apiRates.usdt;
-            setTempTasa(api > 0 ? api.toFixed(2) : "");
-        }
-    }, [tasaAModificar, tasasManuales, apiRates]);
+        const api = tasaAModificar === "USD" ? apiRates.usd : tasaAModificar === "EUR" ? apiRates.eur : apiRates.usdt;
+        setTempTasa(api > 0 ? api.toFixed(2) : "");
+    }, [tasaAModificar, apiRates]);
 
-    const handleAplicarTasa = () => {
-        const val = parseFloat(tempTasa.replace(",", "."));
-        if (isNaN(val) || val <= 0) {
-            toast.error("Ingresa una tasa válida");
-            return;
-        }
-        actualizarTasaManual(tasaAModificar, val);
-        toast.success(`Tasa ${tasaAModificar} actualizada correctamente`);
-    };
-
-    const handleResetearTasa = () => {
-        actualizarTasaManual(tasaAModificar, null);
-        toast.info(`Usando tasa ${tasaAModificar} oficial`);
-    };
-
-    const saldoTotal = useMemo(() => calcularSaldoTotal(), [calcularSaldoTotal, apiRates, tasasManuales, monedaBase]);
-    const hasManual = !!tasasManuales[tasaAModificar];
+    const saldoTotal = useMemo(() => calcularSaldoTotal(), [calcularSaldoTotal, apiRates, monedaBase]);
 
     const handleCrearCuenta = async (data: any) => {
         const id = await crearCuenta(data);
@@ -205,12 +182,9 @@ export default function CuentasPage() {
                                 <input
                                     type="text"
                                     value={tempTasa}
-                                    onChange={(e) => setTempTasa(e.target.value)}
-                                    className="w-16 bg-transparent text-violet-400 text-right font-black outline-none text-[10px]"
+                                    readOnly
+                                    className="w-16 bg-transparent text-violet-400 text-right font-black outline-none text-[10px] cursor-default"
                                 />
-                                <button onClick={handleAplicarTasa} className="text-slate-500 hover:text-violet-400 transition-colors">
-                                    <FiCheck size={14} />
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -261,12 +235,9 @@ export default function CuentasPage() {
                             <input
                                 type="text"
                                 value={tempTasa}
-                                onChange={(e) => setTempTasa(e.target.value)}
-                                className="w-16 bg-transparent text-violet-400 text-right font-black outline-none text-xs"
+                                readOnly
+                                className="w-16 bg-transparent text-violet-400 text-right font-black outline-none text-xs cursor-default"
                             />
-                            <button onClick={handleAplicarTasa} className="text-slate-500 hover:text-violet-400 transition-colors">
-                                <FiCheck size={14} />
-                            </button>
                         </div>
                     </div>
                 </div>

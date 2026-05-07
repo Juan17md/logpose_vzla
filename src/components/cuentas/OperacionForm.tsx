@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { FiArrowUpRight, FiArrowDownLeft, FiRepeat, FiSave, FiCreditCard, FiInfo } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { parseNumeroFlexible } from "@/lib/number";
 
 interface OperacionFormValues {
     tipo: TipoOperacion;
@@ -96,7 +97,7 @@ export default function OperacionForm({
     }, [monedasDiferentes, cuentaOrigen, cuentaDestino, tasasEnBs, setValue]);
 
     const onFormSubmit = async (data: OperacionFormValues) => {
-        const montoNum = parseFloat(data.monto);
+        const montoNum = parseNumeroFlexible(data.monto);
         if (!montoNum || montoNum <= 0) {
             toast.error("El monto debe ser mayor a 0");
             return;
@@ -124,8 +125,8 @@ export default function OperacionForm({
                 monto: montoNum,
                 descripcion: data.descripcion || undefined,
                 cuentaDestinoId: data.tipo === "transferencia" ? data.cuentaDestinoId : undefined,
-                comision: parseFloat(data.comision) || undefined,
-                tasaCambio: parseFloat(data.tasaCambio) || undefined,
+                comision: parseNumeroFlexible(data.comision) || undefined,
+                tasaCambio: parseNumeroFlexible(data.tasaCambio) || undefined,
             });
 
             const etiquetas: Record<TipoOperacion, string> = {
@@ -288,9 +289,8 @@ export default function OperacionForm({
                                     render={({ field }) => (
                                         <input
                                             {...field}
-                                            type="number"
-                                            step="0.01"
-                                            min="0.01"
+                                            type="text"
+                                            inputMode="decimal"
                                             placeholder="0.00"
                                             className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-700"
                                         />
@@ -322,9 +322,8 @@ export default function OperacionForm({
                                         render={({ field }) => (
                                             <input
                                                 {...field}
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
+                                                type="text"
+                                                inputMode="decimal"
                                                 placeholder="0.00"
                                                 className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-lg font-bold outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-700"
                                             />
@@ -353,9 +352,8 @@ export default function OperacionForm({
                                     render={({ field }) => (
                                         <input
                                             {...field}
-                                            type="number"
-                                            step="0.000001"
-                                            min="0.000001"
+                                            type="text"
+                                            inputMode="decimal"
                                             placeholder="0.0000"
                                             className="w-full bg-slate-950/40 border border-emerald-500/10 rounded-2xl px-5 py-4 text-white text-lg font-black outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-all"
                                         />
@@ -365,7 +363,7 @@ export default function OperacionForm({
                                     <div className="text-[10px] text-emerald-400 mt-2 bg-emerald-500/10 px-4 py-3 rounded-xl border border-emerald-500/20 flex justify-between items-center">
                                         <span className="font-black uppercase tracking-wider">Recibirá:</span>
                                         <span className="text-sm font-black tabular-nums">
-                                            {obtenerSimboloMoneda(cuentaDestino!.moneda)} {(parseFloat(monto) * parseFloat(tasaCambio)).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                            {obtenerSimboloMoneda(cuentaDestino!.moneda)} {(parseNumeroFlexible(monto) * parseNumeroFlexible(tasaCambio)).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                                         </span>
                                     </div>
                                 )}

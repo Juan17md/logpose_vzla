@@ -84,7 +84,6 @@ export default function DashboardPage() {
         obtenerCuenta, 
         calcularSaldoTotal, 
         apiRates, 
-        tasasManuales, 
         tasasEnBs,
         monedaBase, 
         actualizarMonedaBase 
@@ -150,9 +149,38 @@ export default function DashboardPage() {
         const expensesByCategory: Record<string, number> = {};
 
         const totalBalance = calcularSaldoTotal();
+        const tasaBaseEnBs = tasasEnBs[monedaBase] || 1;
+        const convertirDesdeBs = (montoEnBs: number): number => {
+            if (monedaBase === "BS") return montoEnBs;
+            if (!tasaBaseEnBs || tasaBaseEnBs <= 0) return 0;
+            return montoEnBs / tasaBaseEnBs;
+        };
+        const convertirTransaccionAMonedaBase = (t: typeof transactions[number]): number => {
+            const amount = Number(t.amount) || 0;
+            const currency = String(t.currency || "USD").toUpperCase();
+            const exchangeRate = Number(t.exchangeRate) || 0;
+            const originalAmount = Number(t.originalAmount) || 0;
+
+            let montoEnBs = 0;
+            if (currency === "VES" || currency === "BS") {
+                // Para VES/BS priorizamos el monto original; si no existe, inferimos por tasa.
+                if (originalAmount > 0) montoEnBs = originalAmount;
+                else if (exchangeRate > 0 && exchangeRate !== 1) montoEnBs = amount * exchangeRate;
+                else montoEnBs = amount;
+            } else if (currency === "USDT") {
+                montoEnBs = amount * (tasasEnBs.USDT || 0);
+            } else if (currency === "EUR") {
+                montoEnBs = amount * (tasasEnBs.EUR || 0);
+            } else {
+                // USD por defecto
+                montoEnBs = amount * (tasasEnBs.USD || 0);
+            }
+
+            return convertirDesdeBs(montoEnBs);
+        };
 
         transactions.forEach(t => {
-            const amount = Number(t.amount);
+            const amount = convertirTransaccionAMonedaBase(t);
             const tDate = new Date(t.date);
             if (tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear) {
                 if (t.type === "ingreso") {
@@ -182,7 +210,7 @@ export default function DashboardPage() {
         const balanceFinal = Object.is(balanceRedondeado, -0) ? 0 : balanceRedondeado;
 
         return { totalBalance: balanceFinal, monthlyIncome, monthlyExpense, topCategoryName, topCategoryAmount, dailyAverage };
-    }, [transactions, calcularSaldoTotal]);
+    }, [transactions, calcularSaldoTotal, tasasEnBs, monedaBase]);
 
     const handleUpdateBalanceClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -294,7 +322,7 @@ export default function DashboardPage() {
                                 <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-full border border-amber-500/20">
                                     <span className="text-xs">🇻🇪</span>
                                     <span className="text-[10px] text-amber-500 font-bold uppercase tracking-tighter">
-                                        {(tasasManuales.USD || apiRates.usd).toFixed(2)}
+                                        {apiRates.usd.toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="flex items-center bg-white/5 px-2 py-0.5 rounded-lg border border-white/10">
@@ -321,8 +349,8 @@ export default function DashboardPage() {
 
                         <p className="text-slate-500 text-sm font-medium">
                             {monedaBase === "BS" 
-                                ? `≈ $ ${isPrivacyMode ? "••••" : (stats.totalBalance / (tasasManuales.USD || apiRates.usd)).toLocaleString("es-ES", { minimumFractionDigits: 2 })} USD`
-                                : `≈ Bs. ${isPrivacyMode ? "••••" : (stats.totalBalance * (tasasManuales.USD || apiRates.usd)).toLocaleString("es-VE", { minimumFractionDigits: 2 })}`
+                                ? `≈ $ ${isPrivacyMode ? "••••" : (stats.totalBalance / apiRates.usd).toLocaleString("es-ES", { minimumFractionDigits: 2 })} USD`
+                                : `≈ Bs. ${isPrivacyMode ? "••••" : (stats.totalBalance * apiRates.usd).toLocaleString("es-VE", { minimumFractionDigits: 2 })}`
                             }
                         </p>
 
@@ -336,7 +364,7 @@ export default function DashboardPage() {
                                     <span className="text-emerald-200 text-xs font-medium">Ingresos</span>
                                 </div>
                                 <p className="text-emerald-300 font-bold text-lg">
-                                    {isPrivacyMode ? "••••" : `$${stats.monthlyIncome.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    {isPrivacyMode ? "••••" : `${obtenerSimboloMoneda(monedaBase)}${stats.monthlyIncome.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </p>
                             </div>
                             <div className="flex-1 bg-red-500/20 rounded-xl p-3">
@@ -347,7 +375,7 @@ export default function DashboardPage() {
                                     <span className="text-red-200 text-xs font-medium">Gastos</span>
                                 </div>
                                 <p className="text-red-300 font-bold text-lg">
-                                    {isPrivacyMode ? "••••" : `$${stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 0 })}`}
+                                    {isPrivacyMode ? "••••" : `${obtenerSimboloMoneda(monedaBase)}${stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 0 })}`}
                                 </p>
                             </div>
                         </div>
@@ -512,7 +540,7 @@ export default function DashboardPage() {
                                     {stats.topCategoryName}
                                 </h4>
                                 <p className="text-red-400 font-semibold text-sm">
-                                    {isPrivacyMode ? "••••" : `$${stats.topCategoryAmount.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    {isPrivacyMode ? "••••" : `${obtenerSimboloMoneda(monedaBase)}${stats.topCategoryAmount.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </p>
                             </div>
                         </motion.div>
@@ -536,7 +564,7 @@ export default function DashboardPage() {
                                     Diario
                                 </h4>
                                 <p className="text-violet-400 font-semibold text-sm">
-                                    {isPrivacyMode ? "••••" : `$${stats.dailyAverage.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`} <span className="text-slate-600 text-xs text-normal">/día</span>
+                                    {isPrivacyMode ? "••••" : `${obtenerSimboloMoneda(monedaBase)}${stats.dailyAverage.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`} <span className="text-slate-600 text-xs text-normal">/día</span>
                                 </p>
                             </div>
                         </motion.div>
@@ -806,7 +834,7 @@ export default function DashboardPage() {
                             <div>
                                 <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Ingresos (Mes)</p>
                                 <h3 className="text-3xl font-bold text-emerald-400">
-                                    {isPrivacyMode ? "****" : `$ ${stats.monthlyIncome.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    {isPrivacyMode ? "****" : `${obtenerSimboloMoneda(monedaBase)} ${stats.monthlyIncome.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </h3>
                                 <p className="text-sm text-emerald-500/60 font-medium mt-1 pl-1 border-l-2 border-emerald-500/30">
                                     {monedaBase === "BS"
@@ -835,7 +863,7 @@ export default function DashboardPage() {
                             <div>
                                 <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Gastos (Mes)</p>
                                 <h3 className="text-3xl font-bold text-red-400">
-                                    {isPrivacyMode ? "****" : `$ ${stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    {isPrivacyMode ? "****" : `${obtenerSimboloMoneda(monedaBase)} ${stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </h3>
                                 <p className="text-sm text-red-500/60 font-medium mt-1 pl-1 border-l-2 border-red-500/30">
                                     {monedaBase === "BS"

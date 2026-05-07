@@ -7,7 +7,36 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { addDoc, collection, serverTimestamp, doc, updateDoc, runTransaction } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { toast } from "sonner";
-import { FiDollarSign, FiCalendar, FiTag, FiFileText, FiSave, FiTrendingUp, FiTrendingDown, FiX, FiCreditCard, FiRefreshCw } from "react-icons/fi";
+import { IconType } from "react-icons";
+import {
+    FiDollarSign,
+    FiCalendar,
+    FiTag,
+    FiFileText,
+    FiSave,
+    FiTrendingUp,
+    FiTrendingDown,
+    FiX,
+    FiCreditCard,
+    FiRefreshCw,
+    FiBookOpen,
+    FiCoffee,
+    FiFilm,
+    FiBriefcase,
+    FiHome,
+    FiGift,
+    FiShoppingBag,
+    FiHeart,
+    FiTool,
+    FiMonitor,
+    FiRepeat,
+    FiTruck,
+    FiCircle,
+    FiPieChart,
+    FiAward,
+    FiShield,
+    FiScissors
+} from "react-icons/fi";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from 'date-fns/locale/es';
@@ -16,6 +45,7 @@ import { createVenezuelaDate } from "@/lib/timezone";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
+import { parseNumeroFlexible } from "@/lib/number";
 import Input from "../ui/forms/Input";
 import CustomCurrencyInput from "../ui/forms/CurrencyInput";
 import Select, { SelectOption } from "../ui/forms/Select";
@@ -30,24 +60,34 @@ interface OpcionCuenta extends SelectOption<string> {
 
 registerLocale('es', es);
 
-const CATEGORIES = [
-    { id: "Comida", name: "🍕 Comida", value: "Comida" },
-    { id: "Deudas", name: "💳 Deudas", value: "Deudas" },
-    { id: "Educación", name: "📚 Educación", value: "Educación" },
-    { id: "Entretenimiento", name: "🎮 Entretenimiento", value: "Entretenimiento" },
-    { id: "Freelance", name: "💼 Trabajo Informal", value: "Trabajo Informal" },
-    { id: "Hogar", name: "🏠 Hogar", value: "Hogar" },
-    { id: "Inversiones", name: "📈 Inversiones", value: "Inversiones" },
-    { id: "Mascotas", name: "🐾 Mascotas", value: "Mascotas" },
-    { id: "Regalos", name: "🎁 Regalos", value: "Regalos" },
-    { id: "Ropa", name: "👕 Ropa", value: "Ropa" },
-    { id: "Salario", name: "💰 Salario", value: "Salario" },
-    { id: "Salud", name: "💊 Salud", value: "Salud" },
-    { id: "Servicios", name: "🔧 Servicios", value: "Servicios" },
-    { id: "Tecnología", name: "💻 Tecnología", value: "Tecnología" },
-    { id: "Transferencias", name: "💸 Transferencias", value: "Transferencias" },
-    { id: "Transporte", name: "🚗 Transporte", value: "Transporte" },
-    { id: "Otra", name: "📌 Otra", value: "Otra" }
+interface CategoriaOpcion {
+    id: string;
+    name: string;
+    value: string;
+    icono: IconType;
+    [key: string]: any;
+}
+
+const CATEGORIES: CategoriaOpcion[] = [
+    { id: "Comida", name: "Comida", value: "Comida", icono: FiCoffee },
+    { id: "Deudas", name: "Deudas", value: "Deudas", icono: FiCreditCard },
+    { id: "Educación", name: "Educación", value: "Educación", icono: FiBookOpen },
+    { id: "Entretenimiento", name: "Entretenimiento", value: "Entretenimiento", icono: FiFilm },
+    { id: "Freelance", name: "Trabajo Informal", value: "Trabajo Informal", icono: FiBriefcase },
+    { id: "Hogar", name: "Hogar", value: "Hogar", icono: FiHome },
+    { id: "Inversiones", name: "Inversiones", value: "Inversiones", icono: FiPieChart },
+    { id: "Mascotas", name: "Mascotas", value: "Mascotas", icono: FiHeart },
+    { id: "Regalos", name: "Regalos", value: "Regalos", icono: FiGift },
+    { id: "Ropa", name: "Ropa", value: "Ropa", icono: FiShoppingBag },
+    { id: "Salario", name: "Salario", value: "Salario", icono: FiAward },
+    { id: "Salud", name: "Salud", value: "Salud", icono: FiHeart },
+    { id: "Servicios", name: "Servicios", value: "Servicios", icono: FiTool },
+    { id: "Tecnología", name: "Tecnología", value: "Tecnología", icono: FiMonitor },
+    { id: "Transferencias", name: "Transferencias", value: "Transferencias", icono: FiRepeat },
+    { id: "Transporte", name: "Transporte", value: "Transporte", icono: FiTruck },
+    { id: "Seguros", name: "Seguros", value: "Seguros", icono: FiShield },
+    { id: "Belleza", name: "Belleza", value: "Belleza", icono: FiScissors },
+    { id: "Otra", name: "Otra", value: "Otra", icono: FiCircle }
 ];
 
 const transactionSchema = z.object({
@@ -90,10 +130,10 @@ const transactionSchema = z.object({
     message: "Especifica la categoría",
     path: ["customCategory"],
 }).refine(data => {
-    if (data.hasCommission && data.currency === "USD" && (!data.commissionAmount || parseFloat(data.commissionAmount) <= 0)) {
+    if (data.hasCommission && data.currency === "USD" && (!data.commissionAmount || parseNumeroFlexible(data.commissionAmount) <= 0)) {
         return false;
     }
-    if (data.hasCommission && data.currency === "VES" && (!data.vesCommissionAmount || parseFloat(data.vesCommissionAmount) <= 0)) {
+    if (data.hasCommission && data.currency === "VES" && (!data.vesCommissionAmount || parseNumeroFlexible(data.vesCommissionAmount) <= 0)) {
         return false;
     }
     return true;
@@ -119,7 +159,7 @@ export default function TransactionForm() {
             customCategory: "",
             date: createVenezuelaDate(),
             type: "gasto",
-            currency: "USD",
+            currency: "VES",
             exchangeRate: "",
             vesAmount: "",
             accountId: "",
@@ -221,8 +261,8 @@ export default function TransactionForm() {
     // Calculate USD from VES
     useEffect(() => {
         if (currency === "VES" && vesAmount && exchangeRate) {
-            const v = parseFloat(vesAmount);
-            const r = parseFloat(exchangeRate);
+            const v = parseNumeroFlexible(vesAmount);
+            const r = parseNumeroFlexible(exchangeRate);
             if (!isNaN(v) && !isNaN(r) && r > 0) {
                 setValue("amount", (v / r).toFixed(2));
             }
@@ -232,8 +272,8 @@ export default function TransactionForm() {
     // Calculate USD from VES for commission
     useEffect(() => {
         if (currency === "VES" && vesCommissionAmount && exchangeRate) {
-            const v = parseFloat(vesCommissionAmount);
-            const r = parseFloat(exchangeRate);
+            const v = parseNumeroFlexible(vesCommissionAmount);
+            const r = parseNumeroFlexible(exchangeRate);
             if (!isNaN(v) && !isNaN(r) && r > 0) {
                 setValue("commissionAmount", (v / r).toFixed(2));
             }
@@ -257,18 +297,18 @@ export default function TransactionForm() {
             const finalCategory = data.category === "Otra" ? data.customCategory!.trim() : data.category;
 
             const transactionData = {
-                amount: parseFloat(data.amount),
+                amount: parseNumeroFlexible(data.amount),
                 type: data.type,
                 category: finalCategory,
                 description: data.description || "",
                 date: data.date,
                 currency: data.currency,
-                originalAmount: data.currency === "VES" ? parseFloat(data.vesAmount || "0") : parseFloat(data.amount),
-                exchangeRate: data.currency === "VES" ? parseFloat(data.exchangeRate || "1") : 1,
+                originalAmount: data.currency === "VES" ? parseNumeroFlexible(data.vesAmount || "0") : parseNumeroFlexible(data.amount),
+                exchangeRate: data.currency === "VES" ? parseNumeroFlexible(data.exchangeRate || "1") : 1,
                 accountId: data.accountId,
             };
 
-            const montoUSD = parseFloat(data.amount);
+            const montoUSD = parseNumeroFlexible(data.amount);
 
             if (data.type === "transferencia") {
                 if (!data.targetAccountId) {
@@ -284,8 +324,8 @@ export default function TransactionForm() {
                     return;
                 }
 
-                const comisionUSD = data.hasCommission && data.commissionAmount ? parseFloat(data.commissionAmount) : 0;
-                const comisionVES = data.hasCommission && data.vesCommissionAmount ? parseFloat(data.vesCommissionAmount) : 0;
+                const comisionUSD = data.hasCommission && data.commissionAmount ? parseNumeroFlexible(data.commissionAmount) : 0;
+                const comisionVES = data.hasCommission && data.vesCommissionAmount ? parseNumeroFlexible(data.vesCommissionAmount) : 0;
 
                 await runTransaction(db, async (transaction) => {
                     const cuentaOrigenRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", data.accountId);
@@ -327,7 +367,7 @@ export default function TransactionForm() {
                             date: data.date,
                             currency: data.currency,
                             originalAmount: data.currency === "VES" ? comisionVES : comisionUSD,
-                            exchangeRate: data.currency === "VES" ? parseFloat(data.exchangeRate || "1") : 1,
+                            exchangeRate: data.currency === "VES" ? parseNumeroFlexible(data.exchangeRate || "1") : 1,
                             accountId: data.accountId,
                             period: "mensual",
                             createdAt: serverTimestamp(),
@@ -337,7 +377,7 @@ export default function TransactionForm() {
                 toast.success("Transferencia registrada exitosamente.");
                 reset({
                     amount: "", description: "", category: "Comida", customCategory: "",
-                    date: createVenezuelaDate(), type: "gasto", currency: "USD",
+                    date: createVenezuelaDate(), type: "gasto", currency: "VES",
                     exchangeRate: rate.toFixed(2), vesAmount: "", accountId: data.accountId,
                     targetAccountId: "", hasCommission: false, commissionAmount: "", vesCommissionAmount: "",
                 });
@@ -366,8 +406,8 @@ export default function TransactionForm() {
                 // Crear transacción y actualizar saldo de la cuenta en una transacción atómica
                 const cuentaRef = doc(db, "users", auth.currentUser.uid, "bank_accounts", data.accountId);
                 
-                const comisionUSD = data.hasCommission && data.commissionAmount ? parseFloat(data.commissionAmount) : 0;
-                const comisionVES = data.hasCommission && data.vesCommissionAmount ? parseFloat(data.vesCommissionAmount) : 0;
+                const comisionUSD = data.hasCommission && data.commissionAmount ? parseNumeroFlexible(data.commissionAmount) : 0;
+                const comisionVES = data.hasCommission && data.vesCommissionAmount ? parseNumeroFlexible(data.vesCommissionAmount) : 0;
 
                 await runTransaction(db, async (transaction) => {
                     const cuentaDoc = await transaction.get(cuentaRef);
@@ -398,7 +438,7 @@ export default function TransactionForm() {
                             date: data.date,
                             currency: data.currency,
                             originalAmount: data.currency === "VES" ? comisionVES : comisionUSD,
-                            exchangeRate: data.currency === "VES" ? parseFloat(data.exchangeRate || "1") : 1,
+                            exchangeRate: data.currency === "VES" ? parseNumeroFlexible(data.exchangeRate || "1") : 1,
                             accountId: data.accountId,
                             period: "mensual",
                             createdAt: serverTimestamp(),
@@ -410,7 +450,7 @@ export default function TransactionForm() {
                 // Reset form but keep some defaults
                 reset({
                     amount: "", description: "", category: "Comida", customCategory: "",
-                    date: createVenezuelaDate(), type: "gasto", currency: "USD",
+                    date: createVenezuelaDate(), type: "gasto", currency: "VES",
                     exchangeRate: rate.toFixed(2), vesAmount: "", accountId: data.accountId,
                     targetAccountId: "", hasCommission: false, commissionAmount: "", vesCommissionAmount: "",
                 });
@@ -445,7 +485,7 @@ export default function TransactionForm() {
                             clearEditing();
                             reset({
                                 amount: "", description: "", category: "Comida", customCategory: "",
-                                date: createVenezuelaDate(), type: "gasto", currency: "USD",
+                                date: createVenezuelaDate(), type: "gasto", currency: "VES",
                                 exchangeRate: rate.toFixed(2), vesAmount: "", accountId: "",
                             });
                         }}
@@ -465,35 +505,49 @@ export default function TransactionForm() {
                         name="type"
                         render={({ field }) => (
                             <>
+                                <motion.div
+                                    layout
+                                    className={`absolute top-1.5 h-[calc(100%-12px)] rounded-xl border shadow-[0_0_15px_rgba(0,0,0,0.25)] ${
+                                        field.value === "ingreso"
+                                            ? "left-[6px] w-[calc(33.333%-8px)] bg-emerald-500/15 border-emerald-500/30"
+                                            : field.value === "gasto"
+                                            ? "left-[calc(33.333%+2px)] w-[calc(33.333%-8px)] bg-red-500/15 border-red-500/30"
+                                            : "left-[calc(66.666%+0px)] w-[calc(33.333%-8px)] bg-blue-500/15 border-blue-500/30"
+                                    }`}
+                                    transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                                />
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("ingreso")}
-                                    className={`flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${field.value === "ingreso"
-                                        ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
-                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border border-transparent"
-                                        }`}
+                                    className={`relative z-10 flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                        field.value === "ingreso"
+                                            ? "text-emerald-300"
+                                            : "text-slate-500 hover:text-slate-300"
+                                    }`}
                                 >
-                                    <FiTrendingUp /> Ingreso
+                                    <FiTrendingUp className={field.value === "ingreso" ? "text-emerald-300" : ""} /> Ingreso
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("gasto")}
-                                    className={`flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${field.value === "gasto"
-                                        ? "bg-red-500/15 text-red-400 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
-                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border border-transparent"
-                                        }`}
+                                    className={`relative z-10 flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                        field.value === "gasto"
+                                            ? "text-red-300"
+                                            : "text-slate-500 hover:text-slate-300"
+                                    }`}
                                 >
-                                    <FiTrendingDown /> Gasto
+                                    <FiTrendingDown className={field.value === "gasto" ? "text-red-300" : ""} /> Gasto
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("transferencia")}
-                                    className={`flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${field.value === "transferencia"
-                                        ? "bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
-                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border border-transparent"
-                                        }`}
+                                    className={`relative z-10 flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                        field.value === "transferencia"
+                                            ? "text-blue-300"
+                                            : "text-slate-500 hover:text-slate-300"
+                                    }`}
                                 >
-                                    <FiRefreshCw /> Transferencia
+                                    <FiRefreshCw className={field.value === "transferencia" ? "text-blue-300" : ""} /> Transferencia
                                 </button>
                             </>
                         )}
@@ -748,6 +802,30 @@ export default function TransactionForm() {
                                         onChange={field.onChange}
                                         error={errors.category}
                                         icon={<FiTag />}
+                                        renderOption={(opt) => {
+                                            const categoria = opt as CategoriaOpcion;
+                                            const IconoCategoria = categoria.icono;
+                                            return (
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                                        <IconoCategoria size={14} />
+                                                    </span>
+                                                    <span className="font-semibold text-slate-100">{categoria.name}</span>
+                                                </div>
+                                            );
+                                        }}
+                                        renderValue={(opt) => {
+                                            const categoria = opt as CategoriaOpcion;
+                                            const IconoCategoria = categoria.icono;
+                                            return (
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                                        <IconoCategoria size={14} />
+                                                    </span>
+                                                    <span className="font-semibold text-slate-100">{categoria.name}</span>
+                                                </div>
+                                            );
+                                        }}
                                     />
                                 )}
                             />

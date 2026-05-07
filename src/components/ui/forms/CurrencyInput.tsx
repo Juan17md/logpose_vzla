@@ -22,6 +22,9 @@ const CustomCurrencyInput = ({ className, label, error, ...props }: CustomCurren
             )}
             <div className="relative group">
                 <CurrencyInput
+                    decimalSeparator=","
+                    groupSeparator="."
+                    intlConfig={{ locale: "es-VE" }}
                     className={cn(
                         "w-full bg-slate-800/50 border border-slate-700/50 text-white text-lg font-semibold rounded-2xl py-4 pl-4 pr-4 outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-all placeholder:text-slate-600 hover:border-slate-600 hover:bg-slate-800",
                         error && "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20",

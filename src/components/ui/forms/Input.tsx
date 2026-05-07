@@ -14,7 +14,8 @@ interface InputProps extends Omit<HTMLMotionProps<"input">, "ref"> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ className, label, error, icon, rightElement, ...props }, ref) => {
+    ({ className, label, error, icon, rightElement, type, inputMode, ...props }, ref) => {
+        const esNumerico = type === "number";
         return (
             <div className="w-full">
                 {label && (
@@ -30,6 +31,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                     )}
                     <motion.input
                         ref={ref}
+                        type={esNumerico ? "text" : type}
+                        inputMode={esNumerico ? "decimal" : inputMode}
                         whileFocus={{ scale: 1.005 }}
                         transition={{ duration: 0.2 }}
                         className={cn(

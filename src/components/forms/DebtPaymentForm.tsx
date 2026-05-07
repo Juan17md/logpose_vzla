@@ -5,6 +5,7 @@ import { FiSave, FiX, FiInfo, FiFileText, FiTrendingUp, FiTrendingDown } from "r
 import { useRouter } from "next/navigation";
 import { Debt, Payment } from "@/hooks/useDebts";
 import { getBCVRate } from "@/lib/currency";
+import { parseNumeroFlexible } from "@/lib/number";
 import Select from "@/components/ui/forms/Select";
 import DateSelect from "@/components/ui/forms/DateSelect";
 import Input from "@/components/ui/forms/Input";
@@ -23,7 +24,7 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
 
     const [bcvRate, setBcvRate] = useState(0);
     const [amountStr, setAmountStr] = useState("");
-    const [currency, setCurrency] = useState<"USD" | "VES">("USD");
+    const [currency, setCurrency] = useState<"USD" | "VES">("VES");
     const [date, setDate] = useState<Date>(new Date());
     const [note, setNote] = useState("");
 
@@ -38,7 +39,7 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        const amountVal = parseFloat(amountStr);
+        const amountVal = parseNumeroFlexible(amountStr);
         let finalAmount = amountVal;
         
         if (currency === "VES" && bcvRate > 0) {
@@ -138,7 +139,7 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
                                     className="absolute top-9 right-4 pointer-events-none"
                                 >
                                     <span className="text-emerald-400 font-bold text-sm bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
-                                        ≈ ${(parseFloat(amountStr || "0") / (bcvRate || 1)).toLocaleString("es-ES", { maximumFractionDigits: 2 })}
+                                        ≈ ${(parseNumeroFlexible(amountStr || "0") / (bcvRate || 1)).toLocaleString("es-ES", { maximumFractionDigits: 2 })}
                                     </span>
                                 </motion.div>
                             )}

@@ -8,6 +8,7 @@ import { FiSave, FiX, FiCalendar, FiTag, FiFileText, FiDollarSign, FiLayers, FiA
 import { motion, AnimatePresence } from "framer-motion";
 import { getBCVRate } from "@/lib/currency";
 import { FixedExpense } from "@/hooks/useFixedExpenses";
+import { parseNumeroFlexible } from "@/lib/number";
 import Input from "../ui/forms/Input";
 import CustomCurrencyInput from "../ui/forms/CurrencyInput";
 import Select from "../ui/forms/Select";
@@ -65,7 +66,7 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
         defaultValues: {
             title: "",
             amount: "",
-            currency: "USD",
+            currency: "BS",
             category: "Servicios",
             customCategory: "",
             dueDay: "1",
@@ -120,7 +121,7 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
             reset({
                 title: "",
                 amount: "",
-                currency: "USD",
+                currency: "BS",
                 category: "Servicios",
                 customCategory: "",
                 dueDay: "1",
@@ -158,8 +159,8 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
     // Calculate USD from BS
     useEffect(() => {
         if (currency === "BS" && bsAmount && exchangeRate) {
-            const v = parseFloat(bsAmount);
-            const r = parseFloat(exchangeRate);
+            const v = parseNumeroFlexible(bsAmount);
+            const r = parseNumeroFlexible(exchangeRate);
             if (!isNaN(v) && !isNaN(r) && r > 0) {
                 setValue("amount", (v / r).toFixed(2));
             }
@@ -171,7 +172,7 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
         
         await onSubmit({
             title: data.title,
-            amount: parseFloat(data.amount),
+            amount: parseNumeroFlexible(data.amount),
             currency: data.currency,
             category: finalCategory,
             dueDay: parseInt(data.dueDay),

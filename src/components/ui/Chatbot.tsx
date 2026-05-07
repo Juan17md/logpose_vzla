@@ -12,6 +12,7 @@ import { useUserData } from "@/contexts/UserDataContext";
 import { createVenezuelaDate } from "@/lib/timezone";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
+import { parseNumeroFlexible } from "@/lib/number";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -108,7 +109,7 @@ export default function Chatbot() {
     const { lists, deleteList, updateListName } = useShoppingLists();
     const { fixedExpenses, addFixedExpense, deleteFixedExpense, updateFixedExpense } = useFixedExpenses();
     const { userData, updateUserData } = useUserData();
-    const { apiRates, tasasManuales, tasasEnBs, cuentas } = useBankAccounts();
+    const { apiRates, tasasEnBs, cuentas } = useBankAccounts();
 
     // Calcular contexto financiero del usuario
     const userContext = useMemo(() => {
@@ -440,7 +441,7 @@ export default function Chatbot() {
 
         switch (data.intent) {
             case "transaction":
-                let amountUSD = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+                let amountUSD = typeof data.amount === 'string' ? parseNumeroFlexible(data.amount) : data.amount;
                 let exchangeRate = 1;
                 let originalAmount = undefined;
 
@@ -460,7 +461,7 @@ export default function Chatbot() {
                     // La IA ya calculó el equivalente en Bs y lo envió en 'amount'
                     const rate = tasasEnBs.USD;
                     exchangeRate = rate;
-                    const usdAmount = parseFloat(data.amountInUSD);
+                    const usdAmount = parseNumeroFlexible(data.amountInUSD);
 
                     // Usar el monto en Bs que ya calculó la IA
                     originalAmount = amountUSD; // Este es el monto en Bs calculado por la IA
@@ -534,12 +535,12 @@ export default function Chatbot() {
             case "new_debt":
                 let debtOriginalAmount = undefined;
                 let debtExchangeRate = 1;
-                let debtAmount = parseFloat(data.amount);
+                let debtAmount = parseNumeroFlexible(data.amount);
 
                 if (data.currency === "VES") {
                     const rate = tasasEnBs.USD;
                     debtExchangeRate = rate;
-                    debtOriginalAmount = parseFloat(data.amount); // Monto en Bs
+                    debtOriginalAmount = parseNumeroFlexible(data.amount); // Monto en Bs
                     debtAmount = parseFloat((debtOriginalAmount / rate).toFixed(2)); // Guardar en USD
                 }
 
@@ -563,7 +564,7 @@ export default function Chatbot() {
             case "new_fixed_expense":
                 success = (await addFixedExpense({
                     title: data.name,
-                    amount: parseFloat(data.amount),
+                    amount: parseNumeroFlexible(data.amount),
                     dueDay: parseInt(data.dueDay),
                     category: data.category || "Servicios",
                     description: data.description || "Gasto fijo registrado por Nami"
@@ -620,7 +621,7 @@ export default function Chatbot() {
                     if (target) {
                         // Construir updates
                         const updates: any = {};
-                        if (data.field === 'amount') updates.amount = parseFloat(data.value);
+                        if (data.field === 'amount') updates.amount = parseNumeroFlexible(data.value);
                         if (data.field === 'name') updates.personName = data.value;
                         if (data.field === 'description') updates.description = data.value;
                         if (data.field === 'date') updates.dueDate = new Date(data.value);
@@ -634,7 +635,7 @@ export default function Chatbot() {
                     const target = goals.find(g => g.name.toLowerCase().includes(data.name.toLowerCase()));
                     if (target) {
                         const updates: any = {};
-                        if (data.field === 'amount') updates.targetAmount = parseFloat(data.value);
+                        if (data.field === 'amount') updates.targetAmount = parseNumeroFlexible(data.value);
                         if (data.field === 'name') updates.name = data.value;
                         await updateGoal(target.id, updates);
                         aiResponse = `Actualicé la meta "${target.name}".`;
@@ -644,7 +645,7 @@ export default function Chatbot() {
                     const target = fixedExpenses.find(f => (f.title || f.description || "").toLowerCase().includes(data.name.toLowerCase()));
                     if (target) {
                         const updates: any = {};
-                        if (data.field === 'amount') updates.amount = parseFloat(data.value);
+                        if (data.field === 'amount') updates.amount = parseNumeroFlexible(data.value);
                         if (data.field === 'day') updates.dueDay = parseInt(data.value);
                         if (data.field === 'name') updates.title = data.value;
                         if (data.field === 'category') updates.category = data.value;
@@ -673,13 +674,13 @@ export default function Chatbot() {
                 let confirmMsg = "";
 
                 if (data.type === 'physical') {
-                    updates.savingsPhysical = parseFloat(data.amount);
+                    updates.savingsPhysical = parseNumeroFlexible(data.amount);
                     confirmMsg = `Actualicé tus ahorros físicos a $${parseFloat(Number(data.amount).toFixed(2))}.`;
                 } else if (data.type === 'digital') {
-                    updates.savingsUSDT = parseFloat(data.amount);
+                    updates.savingsUSDT = parseNumeroFlexible(data.amount);
                     confirmMsg = `Actualicé tus ahorros digitales a $${parseFloat(Number(data.amount).toFixed(2))}.`;
                 } else if (data.type === 'budget') {
-                    updates.monthlyBudget = parseFloat(data.amount);
+                    updates.monthlyBudget = parseNumeroFlexible(data.amount);
                     confirmMsg = `Fijé tu presupuesto mensual en $${parseFloat(Number(data.amount).toFixed(2))}.`;
                 }
 
@@ -742,7 +743,7 @@ export default function Chatbot() {
                     success = true;
                 } else if (data.newValue) {
                     const updates: any = {};
-                    if (data.action === 'update_amount') updates.amount = parseFloat(data.newValue);
+                    if (data.action === 'update_amount') updates.amount = parseNumeroFlexible(data.newValue);
                     if (data.action === 'update_category') updates.category = data.newValue;
                     if (data.action === 'update_description') updates.description = data.newValue;
 
@@ -768,7 +769,7 @@ export default function Chatbot() {
                 // Fallback legacy support
                 if (data.amount && data.category) {
                     const legacyTransactionId = await addTransaction({
-                        amount: typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount,
+                        amount: typeof data.amount === 'string' ? parseNumeroFlexible(data.amount) : data.amount,
                         type: (data.type as "ingreso" | "gasto") || "gasto",
                         category: data.category,
                         description: data.description || "Transacción rápida con IA",
@@ -834,8 +835,7 @@ export default function Chatbot() {
                     conversationHistory,
                     userContext: {
                         ...userContext,
-                        apiRates,
-                        tasasManuales
+                        apiRates
                     }
                 }),
             });

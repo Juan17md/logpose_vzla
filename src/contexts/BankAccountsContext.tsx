@@ -87,22 +87,17 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [loadingTransacciones, setLoadingTransacciones] = useState(true);
     const [apiRates, setApiRates] = useState<TasasCambio>({ usd: 0, eur: 0, usdt: 0, lastUpdated: "" });
-    const [tasasManuales, setTasasManuales] = useState<Record<string, number | null>>({});
-    const [monedaBase, setMonedaBase] = useState<MonedaSoportada>("USD");
+    const [tasasManuales] = useState<Record<string, number | null>>({});
+    const [monedaBase, setMonedaBase] = useState<MonedaSoportada>("BS");
 
     // Cargar preferencias de sesión
     useEffect(() => {
         const savedMoneda = localStorage.getItem("logpose_moneda_base") as MonedaSoportada;
         if (savedMoneda) setMonedaBase(savedMoneda);
+        else localStorage.setItem("logpose_moneda_base", "BS");
 
-        const savedTasas = localStorage.getItem("logpose_tasas_manuales");
-        if (savedTasas) {
-            try {
-                setTasasManuales(JSON.parse(savedTasas));
-            } catch (e) {
-                console.error("Error parsing saved rates", e);
-            }
-        }
+        // Las tasas manuales fueron deshabilitadas: limpiamos cualquier valor legado.
+        localStorage.removeItem("logpose_tasas_manuales");
         
         // Obtener tasas iniciales
         getRates().then(setApiRates);
@@ -123,22 +118,18 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const actualizarTasaManual = useCallback((moneda: string, tasa: number | null) => {
-        setTasasManuales(prev => {
-            const next = { ...prev, [moneda]: tasa };
-            localStorage.setItem("logpose_tasas_manuales", JSON.stringify(next));
-            return next;
-        });
+    const actualizarTasaManual = useCallback((_moneda: string, _tasa: number | null) => {
+        // Intencionalmente sin efecto: solo se permiten tasas desde API.
     }, []);
 
     const tasasEnBs = useMemo(() => {
         return {
-            USD: tasasManuales.USD || apiRates.usd,
-            EUR: tasasManuales.EUR || apiRates.eur,
-            USDT: tasasManuales.USDT || apiRates.usdt,
+            USD: apiRates.usd,
+            EUR: apiRates.eur,
+            USDT: apiRates.usdt,
             BS: 1
         };
-    }, [apiRates, tasasManuales]);
+    }, [apiRates]);
 
     const tasas = useMemo(() => {
         // Tasas efectivas en Bolívares (BS)

@@ -8,13 +8,10 @@ import { useState } from "react";
 import type { MonedaSoportada } from "@/lib/bankAccounts";
 
 export default function ExchangeRateWidget() {
-    const { 
-        apiRates, 
-        tasasManuales, 
-        loading, 
-        refreshRates, 
-        monedaBase, 
-        actualizarMonedaBase 
+    const {
+        apiRates,
+        loading,
+        refreshRates
     } = useBankAccounts();
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -31,29 +28,22 @@ export default function ExchangeRateWidget() {
     ];
 
 
-    const renderRateSlot = (label: string, value: number, manual: number | null, symbol: string) => {
-        const effectiveValue = manual || value;
-        const isManual = !!manual;
+    const renderRateSlot = (label: string, value: number, symbol: string) => {
 
         return (
             <div className="flex flex-col px-4 md:px-6 first:pl-0 last:pr-0 border-r border-white/5 last:border-0 group/slot">
                 <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-[8px] md:text-[9px] text-slate-500 font-bold uppercase tracking-widest">{label}</span>
-                    {isManual && (
-                        <div className="relative group/manual">
-                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse" />
-                        </div>
-                    )}
                 </div>
                 <div className="flex items-baseline gap-1 overflow-hidden">
                     <motion.span 
-                        key={effectiveValue}
+                        key={value}
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="text-base md:text-lg font-black text-white tracking-tighter"
                     >
-                        {effectiveValue > 0 
-                            ? effectiveValue.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        {value > 0
+                            ? value.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                             : "---"
                         }
                     </motion.span>
@@ -68,9 +58,9 @@ export default function ExchangeRateWidget() {
             <div className="relative z-10 flex items-center h-full">
                 {/* Tasas de Cambio */}
                 <div className="flex-1 flex items-center justify-around pl-4">
-                    {renderRateSlot("Oficial USD", apiRates.usd, tasasManuales.USD, "USD")}
-                    {renderRateSlot("Oficial EUR", apiRates.eur, tasasManuales.EUR, "EUR")}
-                    {renderRateSlot("USDT / BS", apiRates.usdt, tasasManuales.USDT, "USDT")}
+                    {renderRateSlot("Oficial USD", apiRates.usd, "USD")}
+                    {renderRateSlot("Oficial EUR", apiRates.eur, "EUR")}
+                    {renderRateSlot("USDT / BS", apiRates.usdt, "USDT")}
                 </div>
 
                 {/* Status & Refresh */}
