@@ -10,7 +10,41 @@
  *    las credenciales y se hace signInWithEmailAndPassword real.
  */
 
+type TipoBiometria = "faceid" | "huella" | "biometria";
+
 // ─── Soporte ───────────────────────────────────────────────────────────────────
+
+const BIOMETRIC_CREDENTIAL_ID_KEY = "logpose_bio_credential_id";
+
+const codificarBase64Url = (bytes: Uint8Array): string => {
+  const base64 = btoa(String.fromCharCode(...bytes));
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+};
+
+const decodificarBase64Url = (base64url: string): Uint8Array => {
+  const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+  const bin = atob(padded);
+  return Uint8Array.from(bin, (char) => char.charCodeAt(0));
+};
+
+export const obtenerTipoBiometria = (): TipoBiometria => {
+  if (typeof window === "undefined") return "biometria";
+  const ua = window.navigator.userAgent;
+  const esIOS = /iPhone|iPad|iPod/i.test(ua);
+  const esAndroid = /Android/i.test(ua);
+
+  if (esIOS) return "faceid";
+  if (esAndroid) return "huella";
+  return "biometria";
+};
+
+export const obtenerEtiquetaBiometria = (): string => {
+  const tipo = obtenerTipoBiometria();
+  if (tipo === "faceid") return "Face ID";
+  if (tipo === "huella") return "Huella";
+  return "Biometría";
+};
 
 export const isBiometricSupported = async (): Promise<boolean> => {
   if (typeof window === "undefined") return false;
@@ -40,18 +74,28 @@ export const registerBiometric = async (userEmail: string) => {
       name: userEmail,
       displayName: userEmail,
     },
-    pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+    pubKeyCredParams: [
+      { alg: -7, type: "public-key" },   // ES256
+      { alg: -257, type: "public-key" }, // RS256 (compatibilidad Android)
+    ],
     authenticatorSelection: {
       authenticatorAttachment: "platform",
+      residentKey: "required",
+      requireResidentKey: true,
       userVerification: "required",
     },
     timeout: 60000,
-    attestation: "direct",
+    attestation: "none",
   };
 
   const credential = await navigator.credentials.create({
     publicKey: publicKeyCredentialCreationOptions,
   });
+
+  if (credential instanceof PublicKeyCredential) {
+    const credentialId = codificarBase64Url(new Uint8Array(credential.rawId));
+    localStorage.setItem(BIOMETRIC_CREDENTIAL_ID_KEY, credentialId);
+  }
 
   return credential;
 };
@@ -62,9 +106,17 @@ export const authenticateBiometric = async () => {
   const challenge = new Uint8Array(32);
   window.crypto.getRandomValues(challenge);
 
+  const credIdGuardado = localStorage.getItem(BIOMETRIC_CREDENTIAL_ID_KEY);
+  const allowCredentials = credIdGuardado
+    ? [{
+      id: decodificarBase64Url(credIdGuardado).buffer as ArrayBuffer,
+      type: "public-key" as const,
+    }]
+    : undefined;
+
   const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
     challenge,
-    allowCredentials: [],
+    allowCredentials,
     userVerification: "required",
     timeout: 60000,
   };
@@ -108,6 +160,7 @@ export const obtenerCredenciales = (): { email: string; password: string } | nul
 export const limpiarCredenciales = () => {
   localStorage.removeItem(CREDENTIALS_KEY);
   localStorage.removeItem("last_user_email");
+  localStorage.removeItem(BIOMETRIC_CREDENTIAL_ID_KEY);
 };
 
 export const tieneCredencialesGuardadas = (): boolean => {

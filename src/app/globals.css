@@ -89,6 +89,11 @@ body {
 .bottom-safe-fab {
   bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }
+
+/* FAB secundario en móvil: se separa del FAB principal (Nami) */
+.right-safe-fab-secondary {
+  right: calc(1rem + 3.5rem + 1.25rem);
+}
 @media (min-width: 768px) {
   .bottom-safe-fab {
     bottom: 2rem; /* md:bottom-8 equivalente */

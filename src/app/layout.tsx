@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Bungee } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import AvisosPWA from "@/components/pwa/AvisosPWA";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const bungee = Bungee({ variable: "--font-bungee", weight: "400", subsets: ["latin"] });
@@ -14,10 +15,14 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "LogPose Vzla",
   description: "Tu sistema financiero personal premium.",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "LogPose Vzla",
+  },
+  formatDetection: {
+    telephone: false,
   },
   icons: {
     apple: "/apple-icon",
@@ -37,6 +42,7 @@ export default function RootLayout({
       >
         {children}
         <Toaster position="top-right" richColors mobileOffset={{ top: 52 }} />
+        <AvisosPWA />
       </body>
     </html>
   );

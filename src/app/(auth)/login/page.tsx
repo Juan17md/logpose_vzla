@@ -117,7 +117,7 @@ const card = {
   visible: { opacity:1, y:0,  scale:1,   transition:{ duration:.65, ease:[0.22,1,0.36,1] as [number,number,number,number] } }
 };
 
-import { isBiometricSupported, authenticateBiometric, obtenerCredenciales, tieneCredencialesGuardadas } from "@/lib/biometrics";
+import { isBiometricSupported, authenticateBiometric, obtenerCredenciales, obtenerEtiquetaBiometria } from "@/lib/biometrics";
 
 const FaceIdIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -133,6 +133,7 @@ export default function LoginPage() {
     const [loading, setLoading]           = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [biometricSupported, setBiometricSupported] = useState(false);
+    const [etiquetaBiometria, setEtiquetaBiometria] = useState("Biometría");
 
     const { register, handleSubmit, formState:{errors} } = useForm({
         resolver: zodResolver(z.object({
@@ -145,6 +146,7 @@ export default function LoginPage() {
         const checkBiometric = async () => {
             const supported = await isBiometricSupported();
             setBiometricSupported(supported);
+            setEtiquetaBiometria(obtenerEtiquetaBiometria());
         };
         checkBiometric();
     }, []);
@@ -166,14 +168,14 @@ export default function LoginPage() {
         } finally { setLoading(false); }
     };
 
-    const handleFaceID = async () => {
+    const handleBiometria = async () => {
         setLoading(true);
         try {
             // Verificar que hay credenciales guardadas antes de pedir biometría
             const credenciales = obtenerCredenciales();
             if (!credenciales) {
-                toast.error("Face ID no configurado", { 
-                    description: "Primero inicia sesión con tu correo y activa Face ID en tu perfil." 
+                toast.error(`${etiquetaBiometria} no configurada`, { 
+                    description: `Primero inicia sesión con tu correo y activa ${etiquetaBiometria} en tu perfil.` 
                 });
                 setLoading(false);
                 return;
@@ -185,15 +187,15 @@ export default function LoginPage() {
                 // Biometría verificada → iniciar sesión real con Firebase
                 toast.info("Verificado ✓", { description: "Iniciando sesión..." });
                 await signInWithEmailAndPassword(auth, credenciales.email, credenciales.password);
-                toast.success("¡Bienvenido!", { description: "Sesión iniciada con Face ID." });
+                toast.success("¡Bienvenido!", { description: `Sesión iniciada con ${etiquetaBiometria}.` });
                 router.push("/dashboard");
             }
         } catch (error) {
-            console.error("Error Face ID:", error);
+            console.error("Error de biometría:", error);
             if (error instanceof FirebaseError) {
                 if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password") {
                     toast.error("Credenciales caducadas", { 
-                        description: "Tu contraseña cambió. Inicia sesión manualmente y reactiva Face ID." 
+                        description: `Tu contraseña cambió. Inicia sesión manualmente y reactiva ${etiquetaBiometria}.` 
                     });
                 } else {
                     toast.error("Error de sesión", { description: `Código: ${error.code}` });
@@ -476,10 +478,10 @@ export default function LoginPage() {
 
                                     {biometricSupported && (
                                         <motion.div variants={item}>
-                                            <button onClick={handleFaceID} disabled={loading} type="button"
+                                            <button onClick={handleBiometria} disabled={loading} type="button"
                                                 className="w-full group flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500/50 transition-all duration-300 text-violet-100 font-medium text-xs cursor-pointer disabled:opacity-60">
                                                 <FaceIdIcon className="w-5 h-5 text-violet-400 group-hover:scale-110 transition-transform duration-300"/>
-                                                Face ID
+                                                {etiquetaBiometria}
                                             </button>
                                         </motion.div>
                                     )}

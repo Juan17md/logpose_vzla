@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut, FiAlertOctagon, FiTrash2 } from "react-icons/fi";
 
-import { isBiometricSupported, registerBiometric, guardarCredenciales, limpiarCredenciales, tieneCredencialesGuardadas } from "@/lib/biometrics";
+import { isBiometricSupported, registerBiometric, guardarCredenciales, limpiarCredenciales, tieneCredencialesGuardadas, obtenerEtiquetaBiometria } from "@/lib/biometrics";
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
 const FaceIdIcon = ({ className }: { className?: string }) => (
@@ -32,6 +32,7 @@ export default function ProfilePage() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [biometricSupported, setBiometricSupported] = useState(false);
     const [isDeviceLinked, setIsDeviceLinked] = useState(false);
+    const [etiquetaBiometria, setEtiquetaBiometria] = useState("Biometría");
     const [showBioPasswordModal, setShowBioPasswordModal] = useState(false);
     const [bioPassword, setBioPassword] = useState("");
     const router = useRouter();
@@ -41,6 +42,7 @@ export default function ProfilePage() {
             const supported = await isBiometricSupported();
             setBiometricSupported(supported);
             setIsDeviceLinked(tieneCredencialesGuardadas());
+            setEtiquetaBiometria(obtenerEtiquetaBiometria());
         };
         checkBiometric();
     }, []);
@@ -55,10 +57,10 @@ export default function ProfilePage() {
                 await updateDoc(userRef, { biometricEnabled: false });
                 const docSnap = await getDoc(userRef);
                 if (docSnap.exists()) setUserData(docSnap.data());
-                toast.success("Face ID Desactivado", { description: "Se ha removido la biometría de este dispositivo." });
+                toast.success(`${etiquetaBiometria} desactivada`, { description: "Se ha removido la biometría de este dispositivo." });
             } catch (error) {
                 console.error("Error al desactivar:", error);
-                toast.error("Error", { description: "No se pudo desactivar Face ID." });
+                toast.error("Error", { description: `No se pudo desactivar ${etiquetaBiometria}.` });
             }
             return;
         }
@@ -88,7 +90,7 @@ export default function ProfilePage() {
                 const docSnap = await getDoc(userRef);
                 if (docSnap.exists()) setUserData(docSnap.data());
 
-                toast.success("¡Face ID Activado!", { 
+                toast.success(`¡${etiquetaBiometria} activada!`, { 
                     description: "Ahora puedes iniciar sesión con biometría." 
                 });
                 setIsDeviceLinked(true);
@@ -100,10 +102,10 @@ export default function ProfilePage() {
                 if (fireError.code === "auth/wrong-password" || fireError.code === "auth/invalid-credential") {
                     toast.error("Contraseña incorrecta", { description: "Verifica tu contraseña e intenta de nuevo." });
                 } else {
-                    toast.error("Error", { description: "No se pudo activar Face ID." });
+                    toast.error("Error", { description: `No se pudo activar ${etiquetaBiometria}.` });
                 }
             } else {
-                toast.error("Error", { description: "No se pudo activar Face ID." });
+                toast.error("Error", { description: `No se pudo activar ${etiquetaBiometria}.` });
             }
         } finally {
             setBioPassword("");
@@ -363,11 +365,11 @@ export default function ProfilePage() {
                                     <div className="text-left">
                                         <p className="font-medium text-sm">
                                             {userData?.biometricEnabled 
-                                                ? (isDeviceLinked ? "Face ID Activado" : "Vincular este dispositivo") 
-                                                : "Activar Face ID"}
+                                                ? (isDeviceLinked ? `${etiquetaBiometria} activada` : "Vincular este dispositivo") 
+                                                : `Activar ${etiquetaBiometria}`}
                                         </p>
                                         {userData?.biometricEnabled && !isDeviceLinked && (
-                                            <p className="text-[10px] opacity-70">Necesario para este iPhone</p>
+                                            <p className="text-[10px] opacity-70">Necesario para este dispositivo</p>
                                         )}
                                     </div>
                                 </div>
@@ -428,7 +430,7 @@ export default function ProfilePage() {
                 isLoading={isDeleting}
             />
 
-            {/* Modal para ingresar contraseña al activar Face ID */}
+            {/* Modal para ingresar contraseña al activar biometría */}
             {showBioPasswordModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-slate-900 border border-slate-700/50 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl">
@@ -437,12 +439,12 @@ export default function ProfilePage() {
                                 <FaceIdIcon className="w-5 h-5 text-violet-400" />
                             </div>
                             <div>
-                                <h3 className="text-white font-bold">Activar Face ID</h3>
+                                <h3 className="text-white font-bold">{`Activar ${etiquetaBiometria}`}</h3>
                                 <p className="text-slate-500 text-xs">Confirma tu contraseña</p>
                             </div>
                         </div>
                         <p className="text-slate-400 text-sm mb-4">
-                            Ingresa tu contraseña para vincular Face ID con tu cuenta. Solo necesitas hacerlo una vez.
+                            {`Ingresa tu contraseña para vincular ${etiquetaBiometria} con tu cuenta. Solo necesitas hacerlo una vez.`}
                         </p>
                         <input
                             type="password"
