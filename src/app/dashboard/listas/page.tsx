@@ -559,7 +559,7 @@ export default function ShoppingListsPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={selectedList ? handleAddItemClick : handleAddListClick}
-                className="md:hidden fixed bottom-safe-fab right-safe-fab-secondary w-14 h-14 bg-amber-500 text-slate-900 rounded-2xl shadow-2xl shadow-amber-500/40 flex items-center justify-center z-50 border-2 border-slate-900 transition-all"
+                className="md:hidden fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-amber-500 text-slate-900 rounded-2xl shadow-2xl shadow-amber-500/40 flex items-center justify-center z-50 border-2 border-slate-900 transition-all"
             >
                 <FiPlus size={28} />
             </motion.button>

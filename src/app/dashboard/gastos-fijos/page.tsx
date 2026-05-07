@@ -338,7 +338,7 @@ export default function FixedExpensesPage() {
                                     animate={{ scale: 1 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={() => setMobileView('form')}
-                                    className="fixed bottom-[160px] right-6 w-14 h-14 bg-linear-to-r from-violet-600 to-indigo-600 border border-violet-400/30 text-white rounded-2xl shadow-xl flex items-center justify-center z-50"
+                                    className="fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-linear-to-r from-violet-600 to-indigo-600 border border-violet-400/30 text-white rounded-2xl shadow-xl flex items-center justify-center z-50"
                                 >
                                     <FiPlus size={28} />
                                 </motion.button>

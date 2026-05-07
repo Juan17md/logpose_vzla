@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebts, Debt } from "@/hooks/useDebts";
-import { FiPlus, FiTrash2, FiCheckCircle, FiDollarSign, FiUser, FiInfo, FiArrowUpRight, FiArrowDownLeft, FiClock, FiSearch, FiEdit2 } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiCheckCircle, FiDollarSign, FiUser, FiInfo, FiArrowUpRight, FiArrowDownLeft, FiClock, FiSearch, FiEdit2, FiArrowLeft } from "react-icons/fi";
 import PaginationControls from "@/components/ui/PaginationControls";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -25,6 +25,7 @@ export default function DebtsPage() {
     const [view, setView] = useState<"create" | "edit" | "payment" | "none">("create");
     const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [mobileView, setMobileView] = useState<"list" | "form">("list");
 
     // Confirm Delete
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -58,16 +59,19 @@ export default function DebtsPage() {
     const handleAddDebtClick = () => {
         setView("create");
         setEditingDebt(null);
+        setMobileView("form");
     };
 
     const handleEditDebtClick = (debt: Debt) => {
         setEditingDebt(debt);
         setView("edit");
+        setMobileView("form");
     };
 
     const handleAddPaymentClick = (debt: Debt) => {
         setEditingDebt(debt);
         setView("payment");
+        setMobileView("form");
     };
 
     const handleFormSubmit = async (data: any) => {
@@ -79,6 +83,11 @@ export default function DebtsPage() {
             } else if (view === "edit" && editingDebt) {
                 await updateDebt(editingDebt.id, data);
                 toast.success("Deuda actualizada correctamente");
+            }
+            setMobileView("list");
+            if (window.innerWidth < 768) {
+                setView("none");
+            } else {
                 setView("create");
                 setEditingDebt(null);
             }
@@ -96,8 +105,13 @@ export default function DebtsPage() {
             const success = await addPayment(editingDebt.id, paymentData);
             if (success) {
                 toast.success("Pago registrado correctamente");
-                setView("create");
-                setEditingDebt(null);
+                setMobileView("list");
+                if (window.innerWidth < 768) {
+                    setView("none");
+                } else {
+                    setView("create");
+                    setEditingDebt(null);
+                }
             }
         } catch (error) {
             toast.error("Error al registrar el pago");
@@ -153,247 +167,272 @@ export default function DebtsPage() {
         <>
             {/* MOBILE VIEW */}
             <motion.div
-                className="md:hidden flex flex-col gap-6 pb-20"
+                className="md:hidden flex flex-col gap-6 pb-32"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
             >
-                {/* Mobile Header */}
-                <motion.div variants={itemVariants} className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-bold text-white">Deudas</h1>
-                    <p className="text-slate-400 text-sm">Gestiona tus préstamos y cobros</p>
-                </motion.div>
-
-                {/* Mobile Tabs / Stats Horizontal Scroll */}
-                <motion.div variants={itemVariants} className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
-                    {/* Card: Por Cobrar */}
-                    <motion.div
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setActiveTab('por_cobrar')}
-                        className={`flex-none w-40 p-4 rounded-2xl border transition-all relative overflow-hidden ${activeTab === 'por_cobrar'
-                            ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10'
-                            : 'bg-slate-900/50 border-slate-700/50'
-                            }`}
-                    >
-                        <div className="flex flex-col h-full justify-between relative z-10">
-                            <div className={`p-2 rounded-full w-fit ${activeTab === 'por_cobrar' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
-                                <FiArrowUpRight size={18} />
+                <AnimatePresence mode="wait">
+                    {mobileView === 'list' ? (
+                        <motion.div
+                            key="mobile-list"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ duration: 0.3 }}
+                            className="space-y-6"
+                        >
+                            {/* Mobile Header */}
+                            <div className="flex flex-col gap-1 px-1">
+                                <h1 className="text-2xl font-bold text-white tracking-tight">Deudas</h1>
+                                <p className="text-slate-400 text-sm">Gestiona tus préstamos y cobros</p>
                             </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-white mt-2">${totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
-                                <p className="text-xs text-slate-400">Por Cobrar</p>
-                            </div>
-                        </div>
-                    </motion.div>
 
-                    {/* Card: Por Pagar */}
-                    <motion.div
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setActiveTab('por_pagar')}
-                        className={`flex-none w-40 p-4 rounded-2xl border transition-all relative overflow-hidden ${activeTab === 'por_pagar'
-                            ? 'bg-red-500/10 border-red-500/50 shadow-lg shadow-red-500/10'
-                            : 'bg-slate-900/50 border-slate-700/50'
-                            }`}
-                    >
-                        <div className="flex flex-col h-full justify-between relative z-10">
-                            <div className={`p-2 rounded-full w-fit ${activeTab === 'por_pagar' ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}>
-                                <FiArrowDownLeft size={18} />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-white mt-2">${totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</h3>
-                                <p className="text-xs text-slate-400">Por Pagar</p>
-                            </div>
-                        </div>
-                    </motion.div>
-                </motion.div>
+                            {/* Mobile Stats Horizontal Scroll */}
+                            <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+                                {/* Card: Por Cobrar */}
+                                <motion.div
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setActiveTab('por_cobrar')}
+                                    className={`flex-none w-44 p-5 rounded-3xl border transition-all relative overflow-hidden ${activeTab === 'por_cobrar'
+                                        ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10'
+                                        : 'bg-slate-900/50 border-slate-700/30'
+                                        }`}
+                                >
+                                    <div className="flex flex-col h-full justify-between relative z-10">
+                                        <div className={`p-2.5 rounded-2xl w-fit ${activeTab === 'por_cobrar' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
+                                            <FiArrowUpRight size={20} />
+                                        </div>
+                                        <div className="mt-4">
+                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Por Cobrar</p>
+                                            <h3 className="text-xl font-black text-white">${totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</h3>
+                                        </div>
+                                    </div>
+                                </motion.div>
 
-                {/* Mobile Actions: Add Button */}
-                <motion.div variants={itemVariants} className="px-1 space-y-6">
-                    <motion.button
-                        whileHover={{ scale: 1.01, translateY: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleAddDebtClick}
-                        className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold transition-all relative overflow-hidden group ${view === 'create' ? 'bg-amber-500 text-slate-950 border border-amber-400' : 'bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30'}`}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                        {view === 'create' ? <FiPlus className="text-xl relative z-10 rotate-45" /> : <FiPlus className="text-xl relative z-10" />}
-                        <span className="relative z-10 tracking-wide text-shadow-sm">
-                            {view === 'create' ? 'Cancelar / Cerrar' : 'Nuevo Registro'}
-                        </span>
-                    </motion.button>
+                                {/* Card: Por Pagar */}
+                                <motion.div
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setActiveTab('por_pagar')}
+                                    className={`flex-none w-44 p-5 rounded-3xl border transition-all relative overflow-hidden ${activeTab === 'por_pagar'
+                                        ? 'bg-red-500/10 border-red-500/50 shadow-lg shadow-red-500/10'
+                                        : 'bg-slate-900/50 border-slate-700/30'
+                                        }`}
+                                >
+                                    <div className="flex flex-col h-full justify-between relative z-10">
+                                        <div className={`p-2.5 rounded-2xl w-fit ${activeTab === 'por_pagar' ? 'bg-red-500 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
+                                            <FiArrowDownLeft size={20} />
+                                        </div>
+                                        <div className="mt-4">
+                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Por Pagar</p>
+                                            <h3 className="text-xl font-black text-white">${totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</h3>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </div>
 
-                    {/* Mobile Inline Form */}
-                    <AnimatePresence mode="wait">
-                        {view !== "none" && (
-                            <motion.div
-                                key={view + (editingDebt?.id || "")}
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 overflow-hidden"
-                            >
-                                <div className="mb-4">
-                                    <h2 className="text-lg font-black text-white uppercase italic">
-                                        {view === "create" ? "Nueva Deuda" : view === "edit" ? "Editar Deuda" : "Registrar Pago"}
+                            {/* Search Bar Mobile */}
+                            <div className="relative group px-1">
+                                <FiSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por nombre..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full bg-slate-900/50 border border-slate-700/30 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-violet-500/50 transition-all placeholder-slate-600"
+                                />
+                            </div>
+
+                            {/* Mobile List Items */}
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center px-2">
+                                    <h2 className="text-sm font-black text-slate-500 uppercase tracking-widest">
+                                        {activeTab === 'por_cobrar' ? 'Pendientes de Cobro' : 'Pendientes de Pago'}
                                     </h2>
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                                        {view === "payment" ? "Abono al saldo" : "Detalles del registro"}
-                                    </p>
+                                    <span className="text-[10px] font-bold bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">
+                                        {filteredDebts.length} reg.
+                                    </span>
                                 </div>
 
-                                {view === "payment" && editingDebt ? (
-                                    <DebtPaymentForm 
-                                        debt={editingDebt} 
-                                        onSubmit={handlePaymentSubmit} 
-                                        onCancel={() => { setView("none"); setEditingDebt(null); }}
-                                        isLoading={isSubmitting} 
-                                    />
+                                {paginatedDebts.length === 0 ? (
+                                    <div className="text-center py-16 bg-slate-900/30 rounded-[2rem] border border-dashed border-slate-800">
+                                        <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600 italic font-black text-xl">
+                                            !
+                                        </div>
+                                        <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">No hay registros</p>
+                                    </div>
                                 ) : (
-                                    <DebtForm 
-                                        initialData={editingDebt} 
-                                        onSubmit={handleFormSubmit} 
-                                        onCancel={() => { setView("none"); setEditingDebt(null); }}
-                                        isLoading={isSubmitting}
-                                        defaultType={activeTab}
-                                    />
-                                )}
-                                
-                                <button
-                                    onClick={() => { setView("none"); setEditingDebt(null); }}
-                                    className="w-full mt-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors"
-                                >
-                                    Cerrar Formulario
-                                </button>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </motion.div>
+                                    <div className="space-y-3">
+                                        {paginatedDebts.map((debt) => {
+                                            const totalPaid = debt.payments.reduce((a, b) => a + b.amount, 0);
+                                            const remaining = debt.amount - totalPaid;
+                                            const progress = (totalPaid / debt.amount) * 100;
+                                            const isFullyPaid = remaining <= 0.01;
 
-                {/* Mobile List */}
-                <motion.div variants={itemVariants} className="flex flex-col gap-3">
-                    <div className="flex justify-between items-center px-1">
-                        <h2 className="text-lg font-bold text-white">
-                            {activeTab === 'por_cobrar' ? 'Pendientes de Cobro' : 'Pendientes de Pago'}
-                        </h2>
-                        <span className="text-xs text-slate-500 bg-slate-800/50 px-2 py-1 rounded-lg">
-                            {paginatedDebts.length} reg.
-                        </span>
-                    </div>
+                                            return (
+                                                <motion.div
+                                                    key={debt.id}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    className="bg-slate-900/60 backdrop-blur-md border border-white/5 rounded-3xl p-5 relative overflow-hidden"
+                                                >
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${debt.type === 'por_cobrar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                                                <FiUser />
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="font-bold text-white text-base leading-tight">{debt.personName}</h3>
+                                                                <p className="text-xs text-slate-500 line-clamp-1">{debt.description || "Sin descripción"}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className={`block text-lg font-black ${remaining > 0 ? (debt.type === 'por_cobrar' ? 'text-emerald-400' : 'text-red-400') : 'text-slate-500'}`}>
+                                                                ${remaining.toLocaleString("es-ES", { minimumFractionDigits: 0 })}
+                                                            </span>
+                                                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">
+                                                                de ${debt.amount.toLocaleString("es-ES", { minimumFractionDigits: 0 })}
+                                                            </span>
+                                                        </div>
+                                                    </div>
 
-                    <div className="space-y-3">
-                        {paginatedDebts.length === 0 ? (
-                            <div className="text-center py-10 bg-slate-900/30 rounded-2xl border border-dashed border-slate-700">
-                                <p className="text-slate-500 text-sm">No hay deudas registradas aquí.</p>
-                            </div>
-                        ) : (
-                            paginatedDebts.map((debt) => {
-                                const totalPaid = debt.payments.reduce((a, b) => a + b.amount, 0);
-                                const remaining = debt.amount - totalPaid;
-                                const progress = (totalPaid / debt.amount) * 100;
-                                const isFullyPaid = remaining <= 0.01;
+                                                    {/* Mini Progress */}
+                                                    <div className="flex items-center gap-3 mb-5">
+                                                        <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={`h-full rounded-full transition-all duration-1000 ${isFullyPaid ? 'bg-emerald-500' : (debt.type === 'por_cobrar' ? 'bg-emerald-500' : 'bg-red-500')}`}
+                                                                style={{ width: `${Math.min(progress, 100)}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-[10px] font-black text-slate-600 italic">{progress.toFixed(0)}%</span>
+                                                    </div>
 
-                                return (
-                                    <motion.div
-                                        key={debt.id}
-                                        variants={itemVariants}
-                                        className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 relative overflow-hidden"
-                                    >
-                                        {/* Status Badge */}
-                                        {isFullyPaid && (
-                                            <div className="absolute top-0 right-0 p-2">
-                                                <div className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-bl-xl rounded-tr-xl flex items-center gap-1">
-                                                    <FiCheckCircle /> PAGADO
-                                                </div>
-                                            </div>
-                                        )}
+                                                    {/* Mobile Card Actions */}
+                                                    <div className="flex gap-2">
+                                                        {!isFullyPaid && (
+                                                            <button
+                                                                onClick={() => handleAddPaymentClick(debt)}
+                                                                className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+                                                            >
+                                                                <FiDollarSign size={14} /> Abonar
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleEditDebtClick(debt)}
+                                                            className="p-2.5 text-slate-400 bg-slate-800/50 rounded-xl hover:text-white"
+                                                        >
+                                                            <FiEdit2 size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteClick(debt.id)}
+                                                            className="p-2.5 text-slate-400 bg-slate-800/50 rounded-xl hover:text-red-500"
+                                                        >
+                                                            <FiTrash2 size={16} />
+                                                        </button>
+                                                    </div>
 
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${debt.type === 'por_cobrar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                                                    <FiUser />
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-bold text-white text-base leading-tight">{debt.personName}</h3>
-                                                    <p className="text-xs text-slate-400 truncate max-w-[150px]">{debt.description || "Sin descripción"}</p>
                                                     {debt.dueDate && (
-                                                        <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5">
-                                                            <FiClock size={10} />
-                                                            <span>Vence: {new Date(debt.dueDate).toLocaleDateString()}</span>
+                                                        <div className="mt-4 pt-3 border-t border-white/5 flex items-center gap-2 text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                                                            <FiClock size={12} className={new Date(debt.dueDate) < new Date() && !isFullyPaid ? 'text-red-500/50' : ''} />
+                                                            Vence: {new Date(debt.dueDate).toLocaleDateString()}
                                                         </div>
                                                     )}
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className={`block text-lg font-bold ${remaining > 0 ? (debt.type === 'por_cobrar' ? 'text-emerald-400' : 'text-red-400') : 'text-slate-400'}`}>
-                                                    ${remaining.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                                </span>
-                                                <span className="text-[10px] text-slate-500">
-                                                    de ${debt.amount.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                                </span>
-                                            </div>
-                                        </div>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
 
-                                        {/* Progress Bar Compact */}
-                                        <div className="h-1.5 w-full bg-slate-700/50 rounded-full mb-3 overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full ${isFullyPaid ? 'bg-emerald-500' : (debt.type === 'por_cobrar' ? 'bg-emerald-500' : 'bg-red-500')}`}
-                                                style={{ width: `${Math.min(progress, 100)}%` }}
-                                            />
+                                {/* Mobile Pagination */}
+                                {totalPages > 1 && (
+                                    <div className="flex justify-center gap-4 pt-4 pb-10">
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="px-4 py-2 bg-slate-900/50 text-slate-400 text-xs font-bold rounded-xl disabled:opacity-20"
+                                        >
+                                            Anterior
+                                        </button>
+                                        <div className="flex items-center text-xs font-black text-slate-500 uppercase tracking-tighter">
+                                            {currentPage} / {totalPages}
                                         </div>
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="px-4 py-2 bg-slate-900/50 text-slate-400 text-xs font-bold rounded-xl disabled:opacity-20"
+                                        >
+                                            Siguiente
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
 
-                                        {/* Actions Bar */}
-                                        <div className="flex items-center gap-2 mt-2">
-                                            {!isFullyPaid && (
-                                                <motion.button
-                                                    whileTap={{ scale: 0.95 }}
-                                                    onClick={() => handleAddPaymentClick(debt)}
-                                                    className="flex-1 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1"
-                                                >
-                                                    <FiDollarSign /> Abonar
-                                                </motion.button>
-                                            )}
-                                            <motion.button
-                                                whileTap={{ scale: 0.95 }}
-                                                onClick={() => handleEditDebtClick(debt)}
-                                                className="p-1.5 text-slate-400 bg-slate-800 rounded-lg hover:text-white"
-                                            >
-                                                <FiEdit2 size={14} />
-                                            </motion.button>
-                                            <motion.button
-                                                whileTap={{ scale: 0.95 }}
-                                                onClick={() => handleDeleteClick(debt.id)}
-                                                className="p-1.5 text-slate-400 bg-slate-800 rounded-lg hover:text-red-400"
-                                            >
-                                                <FiTrash2 size={14} />
-                                            </motion.button>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })
-                        )}
-                    </div>
-
-                    {/* Compact Pagination for Mobile */}
-                    <div className="flex justify-center gap-4 mt-2">
-                        <button
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                            className="text-xs text-slate-400 disabled:opacity-30"
+                            {/* FAB Button Fixed */}
+                            <motion.button
+                                initial={{ scale: 0, rotate: -180 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={handleAddDebtClick}
+                                className="fixed right-4 z-40 bottom-safe-fab-above w-14 h-14 bg-linear-to-br from-violet-600 to-indigo-700 text-white rounded-2xl shadow-2xl shadow-violet-900/50 flex items-center justify-center border border-white/20 active:from-violet-700"
+                            >
+                                <FiPlus size={28} />
+                            </motion.button>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="mobile-form"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 20 }}
+                            className="space-y-6"
                         >
-                            Anterior
-                        </button>
-                        <span className="text-xs text-slate-500">
-                            Página {currentPage} de {totalPages || 1}
-                        </span>
-                        <button
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages || totalPages === 0}
-                            className="text-xs text-slate-400 disabled:opacity-30"
-                        >
-                            Siguiente
-                        </button>
-                    </div>
-                </motion.div>
+                            {/* Form Header Mobile */}
+                            <div className="flex items-center gap-4 mb-2">
+                                <button
+                                    onClick={() => setMobileView('list')}
+                                    className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-slate-400"
+                                >
+                                    <FiArrowLeft size={20} />
+                                </button>
+                                <div>
+                                    <h2 className="text-xl font-bold text-white leading-none">
+                                        {view === "create" ? "Nuevo Registro" : view === "edit" ? "Editar Deuda" : "Registrar Pago"}
+                                    </h2>
+                                    <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-bold">Sección Deudas</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden">
+                                <div className="absolute -top-24 -left-24 w-48 h-48 bg-violet-500/10 rounded-full blur-[80px]" />
+                                
+                                <div className="relative z-10">
+                                    {view === "payment" && editingDebt ? (
+                                        <DebtPaymentForm 
+                                            debt={editingDebt} 
+                                            onSubmit={handlePaymentSubmit} 
+                                            onCancel={() => setMobileView('list')}
+                                            isLoading={isSubmitting} 
+                                        />
+                                    ) : (
+                                        <DebtForm 
+                                            initialData={editingDebt} 
+                                            onSubmit={handleFormSubmit} 
+                                            onCancel={() => setMobileView('list')}
+                                            isLoading={isSubmitting}
+                                            defaultType={activeTab}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setMobileView('list')}
+                                className="w-full py-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] hover:text-white transition-colors"
+                            >
+                                Volver al Listado
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </motion.div>
 
 
