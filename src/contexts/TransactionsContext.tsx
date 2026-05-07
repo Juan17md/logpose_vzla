@@ -190,10 +190,18 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const currentSaldo = cuentaDoc.data().saldo || 0;
+                        const cuentaMoneda = cuentaDoc.data().moneda || "USD";
+                        
+                        // Determinar el monto en la moneda de la cuenta
+                        const montoParaCuenta = cuentaMoneda === "BS" 
+                            ? (transactionData.currency === "VES" ? (transactionData.originalAmount || 0) : amount * (transactionData.exchangeRate || 1))
+                            : amount;
+
                         let nuevoSaldo = currentSaldo;
-                        if (type === 'ingreso') nuevoSaldo += amount;
-                        else if (type === 'gasto') nuevoSaldo -= amount;
-                        else if (type === 'transferencia') nuevoSaldo -= amount;
+                        if (type === 'ingreso') nuevoSaldo += montoParaCuenta;
+                        else if (type === 'gasto') nuevoSaldo -= montoParaCuenta;
+                        else if (type === 'transferencia') nuevoSaldo -= montoParaCuenta;
+                        
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }
@@ -203,7 +211,13 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     const targetCuentaDoc = await transaction.get(targetCuentaRef);
                     if (targetCuentaDoc.exists()) {
                         const currentSaldo = targetCuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = currentSaldo + amount;
+                        const targetCuentaMoneda = targetCuentaDoc.data().moneda || "USD";
+                        
+                        const montoParaTargetCuenta = targetCuentaMoneda === "BS"
+                            ? (transactionData.currency === "VES" ? (transactionData.originalAmount || 0) : amount * (transactionData.exchangeRate || 1))
+                            : amount;
+
+                        const nuevoSaldo = currentSaldo + montoParaTargetCuenta;
                         transaction.update(targetCuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }
@@ -240,6 +254,10 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     oldData.targetAccountId !== updates.targetAccountId ||
                     oldData.amount !== updates.amount || 
                     oldData.type !== updates.type;
+                    oldData.type !== updates.type ||
+                    oldData.currency !== updates.currency ||
+                    oldData.exchangeRate !== updates.exchangeRate ||
+                    oldData.originalAmount !== updates.originalAmount;
 
                 if (needsBalanceUpdate) {
                     // 1. Revertir impacto anterior
@@ -248,11 +266,15 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                         const oldCuentaDoc = await transaction.get(oldCuentaRef);
                         if (oldCuentaDoc.exists()) {
                             const currentSaldo = oldCuentaDoc.data().saldo || 0;
-                            let restoredSaldo = currentSaldo;
-                            if (oldData.type === 'ingreso') restoredSaldo -= oldData.amount;
-                            else if (oldData.type === 'gasto') restoredSaldo += oldData.amount;
-                            else if (oldData.type === 'transferencia') restoredSaldo += oldData.amount;
-                            transaction.update(oldCuentaRef, { saldo: restoredSaldo, actualizadoEn: serverTimestamp() });
+                            const oldCuentaMoneda = oldCuentaDoc.data().moneda || "USD";
+                            const montoParaOldCuenta = oldCuentaMoneda === "BS"
+                                ? (oldData.currency === "VES" ? (oldData.originalAmount || 0) : oldData.amount * (oldData.exchangeRate || 1))
+                                : oldData.amount;
+
+                            let revertedSaldo = currentSaldo;
+                            if (oldData.type === 'ingreso') revertedSaldo -= montoParaOldCuenta;
+                            else revertedSaldo += montoParaOldCuenta;
+                            transaction.update(oldCuentaRef, { saldo: revertedSaldo, actualizadoEn: serverTimestamp() });
                         }
                     }
                     if (oldData.type === 'transferencia' && oldData.targetAccountId) {
@@ -260,21 +282,29 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                         const oldTargetDoc = await transaction.get(oldTargetRef);
                         if (oldTargetDoc.exists()) {
                             const currentSaldo = oldTargetDoc.data().saldo || 0;
-                            const restoredSaldo = currentSaldo - oldData.amount;
-                            transaction.update(oldTargetRef, { saldo: restoredSaldo, actualizadoEn: serverTimestamp() });
+                            const oldTargetMoneda = oldTargetDoc.data().moneda || "USD";
+                            const montoParaOldTarget = oldTargetMoneda === "BS"
+                                ? (oldData.currency === "VES" ? (oldData.originalAmount || 0) : oldData.amount * (oldData.exchangeRate || 1))
+                                : oldData.amount;
+
+                            transaction.update(oldTargetRef, { saldo: currentSaldo - montoParaOldTarget, actualizadoEn: serverTimestamp() });
                         }
                     }
 
-                    // 2. Aplicar impacto nuevo
+                    // 2. Aplicar nuevo impacto
                     if (newData.accountId) {
                         const newCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", newData.accountId);
                         const newCuentaDoc = await transaction.get(newCuentaRef);
                         if (newCuentaDoc.exists()) {
                             const currentSaldo = newCuentaDoc.data().saldo || 0;
+                            const newCuentaMoneda = newCuentaDoc.data().moneda || "USD";
+                            const montoParaNewCuenta = newCuentaMoneda === "BS"
+                                ? (newData.currency === "VES" ? (newData.originalAmount || 0) : newData.amount * (newData.exchangeRate || 1))
+                                : newData.amount;
+
                             let appliedSaldo = currentSaldo;
-                            if (newData.type === 'ingreso') appliedSaldo += newData.amount;
-                            else if (newData.type === 'gasto') appliedSaldo -= newData.amount;
-                            else if (newData.type === 'transferencia') appliedSaldo -= newData.amount;
+                            if (newData.type === 'ingreso') appliedSaldo += montoParaNewCuenta;
+                            else appliedSaldo -= montoParaNewCuenta;
                             transaction.update(newCuentaRef, { saldo: appliedSaldo, actualizadoEn: serverTimestamp() });
                         }
                     }
@@ -283,8 +313,12 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                         const newTargetDoc = await transaction.get(newTargetRef);
                         if (newTargetDoc.exists()) {
                             const currentSaldo = newTargetDoc.data().saldo || 0;
-                            const appliedSaldo = currentSaldo + newData.amount;
-                            transaction.update(newTargetRef, { saldo: appliedSaldo, actualizadoEn: serverTimestamp() });
+                            const newTargetMoneda = newTargetDoc.data().moneda || "USD";
+                            const montoParaNewTarget = newTargetMoneda === "BS"
+                                ? (newData.currency === "VES" ? (newData.originalAmount || 0) : newData.amount * (newData.exchangeRate || 1))
+                                : newData.amount;
+
+                            transaction.update(newTargetRef, { saldo: currentSaldo + montoParaNewTarget, actualizadoEn: serverTimestamp() });
                         }
                     }
                 }

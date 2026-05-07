@@ -334,13 +334,22 @@ export default function TransactionForm() {
                     const cuentaOrigenDoc = await transaction.get(cuentaOrigenRef);
                     const cuentaDestinoDoc = await transaction.get(cuentaDestinoRef);
 
-                    if (cuentaOrigenDoc.exists() && cuentaDestinoDoc.exists()) {
-                        const saldoOrigen = cuentaOrigenDoc.data().saldo || 0;
-                        const saldoDestino = cuentaDestinoDoc.data().saldo || 0;
+                        const cuentaOrigenMoneda = cuentaOrigenDoc.data().moneda || "USD";
+                        const cuentaDestinoMoneda = cuentaDestinoDoc.data().moneda || "USD";
 
-                        transaction.update(cuentaOrigenRef, { saldo: saldoOrigen - montoUSD - comisionUSD, actualizadoEn: serverTimestamp() });
-                        transaction.update(cuentaDestinoRef, { saldo: saldoDestino + montoUSD, actualizadoEn: serverTimestamp() });
-                    }
+                        // Determinar montos según la moneda de la cuenta
+                        const montoOrigen = cuentaOrigenMoneda === "BS" 
+                            ? (data.currency === "VES" ? parseNumeroFlexible(data.vesAmount) : montoUSD * parseNumeroFlexible(data.exchangeRate))
+                            : montoUSD;
+                        
+                        const montoDestino = cuentaDestinoMoneda === "BS"
+                            ? (data.currency === "VES" ? parseNumeroFlexible(data.vesAmount) : montoUSD * parseNumeroFlexible(data.exchangeRate))
+                            : montoUSD;
+
+                        const comisionParaOrigen = cuentaOrigenMoneda === "BS" ? comisionVES : comisionUSD;
+
+                        transaction.update(cuentaOrigenRef, { saldo: saldoOrigen - montoOrigen - comisionParaOrigen, actualizadoEn: serverTimestamp() });
+                        transaction.update(cuentaDestinoRef, { saldo: saldoDestino + montoDestino, actualizadoEn: serverTimestamp() });
 
                     // Unica transaccion de transferencia
                     const newTransRef = doc(collection(db, "transactions"));
@@ -388,14 +397,35 @@ export default function TransactionForm() {
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         let saldo = cuentaDoc.data().saldo || 0;
+                        const cuentaMoneda = cuentaDoc.data().moneda || "USD";
+                        const tasa = parseNumeroFlexible(data.exchangeRate || "1");
+
+                        // Determinar montos actuales
+                        const montoActualParaCuenta = cuentaMoneda === "BS"
+                            ? (data.currency === "VES" ? parseNumeroFlexible(data.vesAmount) : montoUSD * tasa)
+                            : montoUSD;
+
                         // Revertir movimiento anterior si era de la misma cuenta
                         if (transactionToEdit.accountId === data.accountId) {
-                            if (transactionToEdit.type === "ingreso") saldo -= transactionToEdit.amount;
-                            else saldo += transactionToEdit.amount;
+                            const montoAnteriorParaCuenta = cuentaMoneda === "BS"
+                                ? transactionToEdit.originalAmount // Ya que originalAmount guarda el valor en BS si la trans era VES
+                                : transactionToEdit.amount;
+                            
+                            // Pero espera, si la transaccion anterior era USD pero la cuenta era BS, originalAmount es USD.
+                            // Necesitamos ser más precisos aquí.
+                            const transAnteriorEraVES = transactionToEdit.currency === "VES";
+                            const realMontoAnteriorParaCuenta = cuentaMoneda === "BS"
+                                ? (transAnteriorEraVES ? transactionToEdit.originalAmount : transactionToEdit.amount * (transactionToEdit.exchangeRate || 1))
+                                : transactionToEdit.amount;
+
+                            if (transactionToEdit.type === "ingreso") saldo -= realMontoAnteriorParaCuenta;
+                            else saldo += realMontoAnteriorParaCuenta;
                         }
+
                         // Aplicar nuevo movimiento
-                        if (data.type === "ingreso") saldo += montoUSD;
-                        else saldo -= montoUSD;
+                        if (data.type === "ingreso") saldo += montoActualParaCuenta;
+                        else saldo -= montoActualParaCuenta;
+                        
                         transaction.update(cuentaRef, { saldo, actualizadoEn: serverTimestamp() });
                     }
                     transaction.update(doc(db, "transactions", transactionToEdit.id), transactionData);
@@ -413,9 +443,19 @@ export default function TransactionForm() {
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const saldo = cuentaDoc.data().saldo || 0;
+                        const cuentaMoneda = cuentaDoc.data().moneda || "USD";
+                        const tasa = parseNumeroFlexible(data.exchangeRate || "1");
+
+                        const montoParaCuenta = cuentaMoneda === "BS"
+                            ? (data.currency === "VES" ? parseNumeroFlexible(data.vesAmount) : montoUSD * tasa)
+                            : montoUSD;
+                        
+                        const comisionParaCuenta = cuentaMoneda === "BS" ? comisionVES : comisionUSD;
+
                         const nuevoSaldo = data.type === "ingreso" 
-                            ? saldo + montoUSD - comisionUSD 
-                            : saldo - montoUSD - comisionUSD;
+                            ? saldo + montoParaCuenta - comisionParaCuenta 
+                            : saldo - montoParaCuenta - comisionParaCuenta;
+                        
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                     
