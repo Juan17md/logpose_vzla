@@ -334,8 +334,14 @@ export default function TransactionForm() {
                     const cuentaOrigenDoc = await transaction.get(cuentaOrigenRef);
                     const cuentaDestinoDoc = await transaction.get(cuentaDestinoRef);
 
-                        const cuentaOrigenMoneda = cuentaOrigenDoc.data().moneda || "USD";
-                        const cuentaDestinoMoneda = cuentaDestinoDoc.data().moneda || "USD";
+                    if (cuentaOrigenDoc.exists() && cuentaDestinoDoc.exists()) {
+                        const origenData = cuentaOrigenDoc.data();
+                        const destinoData = cuentaDestinoDoc.data();
+
+                        const saldoOrigen = origenData?.saldo || 0;
+                        const saldoDestino = destinoData?.saldo || 0;
+                        const cuentaOrigenMoneda = origenData?.moneda || "USD";
+                        const cuentaDestinoMoneda = destinoData?.moneda || "USD";
 
                         // Determinar montos según la moneda de la cuenta
                         const montoOrigen = cuentaOrigenMoneda === "BS" 
@@ -350,6 +356,7 @@ export default function TransactionForm() {
 
                         transaction.update(cuentaOrigenRef, { saldo: saldoOrigen - montoOrigen - comisionParaOrigen, actualizadoEn: serverTimestamp() });
                         transaction.update(cuentaDestinoRef, { saldo: saldoDestino + montoDestino, actualizadoEn: serverTimestamp() });
+                    }
 
                     // Unica transaccion de transferencia
                     const newTransRef = doc(collection(db, "transactions"));
@@ -415,7 +422,7 @@ export default function TransactionForm() {
                             // Necesitamos ser más precisos aquí.
                             const transAnteriorEraVES = transactionToEdit.currency === "VES";
                             const realMontoAnteriorParaCuenta = cuentaMoneda === "BS"
-                                ? (transAnteriorEraVES ? transactionToEdit.originalAmount : transactionToEdit.amount * (transactionToEdit.exchangeRate || 1))
+                                ? (transAnteriorEraVES ? (transactionToEdit.originalAmount || 0) : transactionToEdit.amount * (transactionToEdit.exchangeRate || 1))
                                 : transactionToEdit.amount;
 
                             if (transactionToEdit.type === "ingreso") saldo -= realMontoAnteriorParaCuenta;
