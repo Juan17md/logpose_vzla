@@ -338,9 +338,11 @@ export default function DashboardPage() {
                                         {apiRates.usd.toFixed(2)}
                                     </span>
                                 </div>
-                                <div className="flex items-center bg-white/5 px-2 py-0.5 rounded-lg border border-white/10">
-                                    <span className="text-[10px] font-black text-amber-500 tracking-tighter">{monedaBase}</span>
-                                </div>
+                                <CurrencySelector 
+                                    value={monedaBase} 
+                                    onChange={actualizarMonedaBase} 
+                                    compact 
+                                />
                             </div>
                         </div>
 
