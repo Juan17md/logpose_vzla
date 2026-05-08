@@ -10,20 +10,26 @@ interface MobileBottomNavProps {
     onNavigate: () => void;
 }
 
+interface ElementoNav {
+    name: string;
+    icon: React.ReactNode;
+    href: string;
+}
+
 export default function MobileBottomNav({ onMenuClick, onNavigate }: MobileBottomNavProps) {
     const pathname = usePathname();
 
-    const leftItems = [
+    const leftItems: ElementoNav[] = [
         { name: "Inicio", icon: <FiHome className="w-[22px] h-[22px]" />, href: "/dashboard" },
         { name: "Movs", icon: <FiList className="w-[22px] h-[22px]" />, href: "/dashboard/movimientos" },
     ];
 
-    const rightItems = [
+    const rightItems: ElementoNav[] = [
         { name: "Reportes", icon: <FiPieChart className="w-[22px] h-[22px]" />, href: "/dashboard/reportes" },
         { name: "Listas", icon: <FiShoppingCart className="w-[22px] h-[22px]" />, href: "/dashboard/listas" },
     ];
 
-    const NavItem = ({ item }: { item: any }) => {
+    const NavItem = ({ item }: { item: ElementoNav }) => {
         const isActive = pathname === item.href;
         return (
             <Link

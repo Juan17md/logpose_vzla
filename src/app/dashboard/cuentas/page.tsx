@@ -372,6 +372,7 @@ export default function CuentasPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => { setCuentaEditando(null); setVistaMobile("form"); }}
+                aria-label="Nueva cuenta"
                 className={`md:hidden fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-violet-500 text-white rounded-2xl shadow-2xl shadow-violet-500/40 flex items-center justify-center z-50 border-2 border-slate-900 transition-all ${vistaMobile === "form" ? "hidden" : ""}`}
             >
                 <FiPlus size={28} />

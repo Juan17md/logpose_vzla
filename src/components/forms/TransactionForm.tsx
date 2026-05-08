@@ -44,7 +44,7 @@ import { getBCVRate } from "@/lib/currency";
 import { createVenezuelaDate } from "@/lib/timezone";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
-import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
+import { obtenerSimboloMoneda, convertirMontoParaCuenta } from "@/lib/bankAccounts";
 import { parseNumeroFlexible } from "@/lib/number";
 import Input from "../ui/forms/Input";
 import CustomCurrencyInput from "../ui/forms/CurrencyInput";
@@ -344,13 +344,9 @@ export default function TransactionForm() {
                         const cuentaDestinoMoneda = destinoData?.moneda || "USD";
 
                         // Determinar montos según la moneda de la cuenta
-                        const montoOrigen = cuentaOrigenMoneda === "BS" 
-                            ? (data.currency === "VES" ? parseNumeroFlexible(data.vesAmount) : montoUSD * parseNumeroFlexible(data.exchangeRate))
-                            : montoUSD;
+                        const montoOrigen = convertirMontoParaCuenta(montoUSD, data.currency, cuentaOrigenMoneda, parseNumeroFlexible(data.exchangeRate), parseNumeroFlexible(data.vesAmount));
                         
-                        const montoDestino = cuentaDestinoMoneda === "BS"
-                            ? (data.currency === "VES" ? parseNumeroFlexible(data.vesAmount) : montoUSD * parseNumeroFlexible(data.exchangeRate))
-                            : montoUSD;
+                        const montoDestino = convertirMontoParaCuenta(montoUSD, data.currency, cuentaDestinoMoneda, parseNumeroFlexible(data.exchangeRate), parseNumeroFlexible(data.vesAmount));
 
                         const comisionParaOrigen = cuentaOrigenMoneda === "BS" ? comisionVES : comisionUSD;
 
@@ -408,22 +404,11 @@ export default function TransactionForm() {
                         const tasa = parseNumeroFlexible(data.exchangeRate || "1");
 
                         // Determinar montos actuales
-                        const montoActualParaCuenta = cuentaMoneda === "BS"
-                            ? (data.currency === "VES" ? parseNumeroFlexible(data.vesAmount) : montoUSD * tasa)
-                            : montoUSD;
+                        const montoActualParaCuenta = convertirMontoParaCuenta(montoUSD, data.currency, cuentaMoneda, tasa, parseNumeroFlexible(data.vesAmount));
 
                         // Revertir movimiento anterior si era de la misma cuenta
                         if (transactionToEdit.accountId === data.accountId) {
-                            const montoAnteriorParaCuenta = cuentaMoneda === "BS"
-                                ? transactionToEdit.originalAmount // Ya que originalAmount guarda el valor en BS si la trans era VES
-                                : transactionToEdit.amount;
-                            
-                            // Pero espera, si la transaccion anterior era USD pero la cuenta era BS, originalAmount es USD.
-                            // Necesitamos ser más precisos aquí.
-                            const transAnteriorEraVES = transactionToEdit.currency === "VES";
-                            const realMontoAnteriorParaCuenta = cuentaMoneda === "BS"
-                                ? (transAnteriorEraVES ? (transactionToEdit.originalAmount || 0) : transactionToEdit.amount * (transactionToEdit.exchangeRate || 1))
-                                : transactionToEdit.amount;
+                            const realMontoAnteriorParaCuenta = convertirMontoParaCuenta(transactionToEdit.amount, transactionToEdit.currency || 'USD', cuentaMoneda, transactionToEdit.exchangeRate, transactionToEdit.originalAmount);
 
                             if (transactionToEdit.type === "ingreso") saldo -= realMontoAnteriorParaCuenta;
                             else saldo += realMontoAnteriorParaCuenta;
@@ -453,9 +438,7 @@ export default function TransactionForm() {
                         const cuentaMoneda = cuentaDoc.data().moneda || "USD";
                         const tasa = parseNumeroFlexible(data.exchangeRate || "1");
 
-                        const montoParaCuenta = cuentaMoneda === "BS"
-                            ? (data.currency === "VES" ? parseNumeroFlexible(data.vesAmount) : montoUSD * tasa)
-                            : montoUSD;
+                        const montoParaCuenta = convertirMontoParaCuenta(montoUSD, data.currency, cuentaMoneda, tasa, parseNumeroFlexible(data.vesAmount));
                         
                         const comisionParaCuenta = cuentaMoneda === "BS" ? comisionVES : comisionUSD;
 

@@ -1,9 +1,6 @@
-import Link from "next/link";
+"use client";
 
-export const metadata = {
-  title: "Sin conexion | LogPose Vzla",
-  description: "Vista offline de LogPose Vzla",
-};
+import Link from "next/link";
 
 export default function PaginaOffline() {
   return (
@@ -16,14 +13,14 @@ export default function PaginaOffline() {
           las funciones de LogPose.
         </p>
         <div className="mt-5 flex gap-3">
-          <Link
-            href="/offline"
+          <button
+            onClick={() => window.location.reload()}
             className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
           >
             Reintentar
-          </Link>
+          </button>
           <Link
-            href="/"
+            href="/dashboard"
             className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-slate-800"
           >
             Ir al inicio

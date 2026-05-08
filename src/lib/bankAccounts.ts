@@ -182,6 +182,25 @@ export function obtenerEtiquetaOperacion(tipo: TipoOperacion): {
 }
 
 /**
+ * Convierte un monto a la moneda de una cuenta bancaria.
+ * Si la cuenta es "BS", transforma el monto usando exchangeRate/originalAmount.
+ * Si la cuenta está en USD/USDT/EUR, devuelve el monto tal cual.
+ */
+export function convertirMontoParaCuenta(
+    monto: number,
+    monedaTransaccion: string,
+    monedaCuenta: MonedaSoportada,
+    exchangeRate?: number,
+    originalAmount?: number
+): number {
+    if (monedaCuenta === "BS") {
+        if (monedaTransaccion === "VES") return originalAmount || monto;
+        return monto * (exchangeRate || 1);
+    }
+    return monto;
+}
+
+/**
  * Genera un color aleatorio de la paleta para una nueva cuenta
  */
 export function obtenerColorAleatorio(): string {

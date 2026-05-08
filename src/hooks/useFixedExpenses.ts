@@ -92,11 +92,8 @@ export function useFixedExpenses() {
     const updateFixedExpense = async (id: string, updates: Partial<FixedExpense>) => {
         if (!auth.currentUser) return;
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id: _, createdAt, ...validUpdates } = updates; // Exclude non-updatable fields
-            // Convert Date objects to Firestore Timestamps
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const processedUpdates: any = { ...validUpdates };
+            const { id: _, createdAt, ...validUpdates } = updates;
+            const processedUpdates: Record<string, unknown> = { ...validUpdates };
             if (validUpdates.lastPaidDate instanceof Date) {
                 processedUpdates.lastPaidDate = Timestamp.fromDate(validUpdates.lastPaidDate);
             }

@@ -1,6 +1,27 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- API endpoint handles dynamic AI data */
 import { Groq } from 'groq-sdk';
 import { NextResponse } from 'next/server';
+
+interface MensajeChat {
+    role: "system" | "user" | "assistant";
+    content: string;
+}
+
+const RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 60_000;
+
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
 
 const client = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -8,6 +29,11 @@ const client = new Groq({
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }, { status: 429 });
+    }
+
     const { message, conversationHistory = [], userContext = {} } = await req.json();
 
     // Extraer contexto del usuario
@@ -22,7 +48,7 @@ export async function POST(req: Request) {
     console.log('💱 Tasas recibidas:', { tUSD, tEUR, tUSDT });
 
     // Construir mensajes con historial de conversación
-    const messages: any[] = [
+    const messages: MensajeChat[] = [
       {
         role: "system",
         content: `Eres Nami, una experta asistente financiera personal, amigable y conversacional.
@@ -36,7 +62,7 @@ Tu objetivo es ayudar al usuario a gestionar sus finanzas de manera inteligente 
 
 ${upcomingFixedExpenses && upcomingFixedExpenses.length > 0 ? `🚨 RECORDATORIOS URGENTES
 Tienes los siguientes gastos fijos próximos a vencer (en los próximos 7 días):
-${upcomingFixedExpenses.map((e: any) => `- ${e.name}: $${parseFloat(Number(e.amount).toFixed(2))} (vence día ${e.dueDay})`).join('\n')}
+${(upcomingFixedExpenses as Record<string, unknown>[]).map((e) => `- ${e.name}: $${parseFloat(Number(e.amount).toFixed(2))} (vence día ${e.dueDay})`).join('\n')}
 ¡Avísale al usuario sobre esto si no lo ha mencionado!` : ''}
 
 ${balance !== undefined ? `💰 CONTEXTO FINANCIERO DEL USUARIO
@@ -47,22 +73,20 @@ ${balance !== undefined ? `💰 CONTEXTO FINANCIERO DEL USUARIO
 - Total gastado el mes ANTERIOR: $${previousMonthlyExpense || 0} ${previousMonthlyExpense ? `(El usuario ha gastado ${Math.round(((monthlyExpense - previousMonthlyExpense) / previousMonthlyExpense) * 100)}% ${monthlyExpense > previousMonthlyExpense ? 'más' : 'menos'} que el mes pasado)` : ''}
 - Total ingresado este mes: $${monthlyIncome || 0}
 - Gasto promedio diario: $${averageDailyExpense || 0}
-${topCategories && topCategories.length > 0 ? `- Top categorías de gasto este mes: ${topCategories.map((c: any) => `${c.category} ($${parseFloat(Number(c.amount).toFixed(2))})`).join(', ')}` : ''}
-${goals && goals.length > 0 ? `- Metas activas: ${goals.map((g: any) => `${g.name} ($${g.current}/$${g.target})`).join(', ')}` : ''}
-${debts && debts.length > 0 ? `- Deudas pendientes: ${debts.map((d: any) => `${d.person} ($${parseFloat(Number(d.amount).toFixed(2))})`).join(', ')}` : ''}
-${fixedExpenses && fixedExpenses.length > 0 ? `- Gastos fijos del mes: ${fixedExpenses.map((e: any) => `${e.name} ($${parseFloat(Number(e.amount).toFixed(2))}, día ${e.dueDay})`).join(', ')}` : ''}
-${shoppingLists && shoppingLists.length > 0 ? `- Listas de compras: ${shoppingLists.map((l: any) => `${l.name} (${l.pendingItems}/${l.totalItems} pendientes)`).join(', ')}` : ''}
+${topCategories && topCategories.length > 0 ? `- Top categorías de gasto este mes: ${(topCategories as Record<string, unknown>[]).map((c) => `${c.category} ($${parseFloat(Number(c.amount).toFixed(2))})`).join(', ')}` : ''}
+${goals && goals.length > 0 ? `- Metas activas: ${(goals as Record<string, unknown>[]).map((g) => `${g.name} ($${g.current}/$${g.target})`).join(', ')}` : ''}
+${debts && debts.length > 0 ? `- Deudas pendientes: ${(debts as Record<string, unknown>[]).map((d) => `${d.person} ($${parseFloat(Number(d.amount).toFixed(2))})`).join(', ')}` : ''}
+${fixedExpenses && fixedExpenses.length > 0 ? `- Gastos fijos del mes: ${(fixedExpenses as Record<string, unknown>[]).map((e) => `${e.name} ($${parseFloat(Number(e.amount).toFixed(2))}, día ${e.dueDay})`).join(', ')}` : ''}
+${shoppingLists && shoppingLists.length > 0 ? `- Listas de compras: ${(shoppingLists as Record<string, unknown>[]).map((l) => `${l.name} (${l.pendingItems}/${l.totalItems} pendientes)`).join(', ')}` : ''}
 ${lastTransaction ? `- Última transacción: ${lastTransaction.type} de $${parseFloat(Number(lastTransaction.amount).toFixed(2))} en ${lastTransaction.category}` : ''}
 ${savingsRatio !== undefined ? `- Ratio de ahorro este mes: ${savingsRatio}% (ingreso - gasto / ingreso)` : ''}
 ${projectedMonthlyExpense ? `- Proyección de gasto a fin de mes: $${projectedMonthlyExpense}` : ''}
 ` : ''}
 
 ${previousTopCategories && previousTopCategories.length > 0 ? `📊 TENDENCIAS: Top categorías del MES ANTERIOR
-${previousTopCategories.map((c: any) => `- ${c.category}: $${c.amount}`).join('\n')}
-(Usa esto para comparar con las categorías actuales cuando el usuario pida análisis o tendencias)` : ''}
+${previousTopCategories.map((c: Record<string, unknown>) => `- ${c.category}: $${c.amount}`).join('\n')}
 
-${bankAccounts && bankAccounts.length > 0 ? `🏦 CUENTAS BANCARIAS DEL USUARIO (Obligatorio para transacciones)
-${bankAccounts.map((c: any) => `- ID: "${c.id}" | Nombre: "${c.nombre}" | Banco: ${c.banco} | Moneda: ${c.moneda} | Saldo: ${c.saldo}`).join('\n')}
+  ${bankAccounts.map((c: Record<string, unknown>) => `- ID: "${c.id}" | Nombre: "${c.nombre}" | Banco: ${c.banco} | Moneda: ${c.moneda} | Saldo: ${c.saldo}`).join('\n')}
 
 🚨 REGLA VITAL SOBRE CUENTAS: 
 TODO gasto, ingreso o transferencia DEBE estar asociado a las cuentas anteriores mediante su "ID". 
@@ -332,6 +356,28 @@ Ejemplos:
 - "Registra el pago de netflix" → createTransaction: true
 
 
+1️⃣7️⃣ OPERACIÓN BANCARIA (account_operation):
+{
+  "intent": "account_operation",
+  "operation": "deposito" | "retiro" | "transferencia" | "pago",
+  "accountId": string (OBLIGATORIO: ID de la cuenta origen),
+  "targetAccountId": string (OBLIGATORIO SOLO PARA TRANSFERENCIAS: ID de la cuenta destino),
+  "amount": number,
+  "description": string (opcional),
+  "commission": number (opcional, solo para transferencias),
+  "exchangeRate": number (opcional, tasa de cambio cuando las monedas difieren)
+}
+
+Usa esta operación cuando el usuario quiera DEPOSITAR, RETIRAR o TRANSFERIR entre cuentas bancarias SIN registrar un movimiento en categorías de gasto/ingreso.
+Ejemplos:
+- "Deposita 500 en Banesco" → intent: "account_operation", operation: "deposito", accountId: "<id_banesco>", amount: 500
+- "Retira 200 de Efectivo" → intent: "account_operation", operation: "retiro", accountId: "<id_efectivo>", amount: 200
+- "Transfiere 1000 de Banesco a Binance" → intent: "account_operation", operation: "transferencia", accountId: "<id_banesco>", targetAccountId: "<id_binance>", amount: 1000
+- "Pagué 50 con Zinli" → intent: "account_operation", operation: "pago", accountId: "<id_zinli>", amount: 50
+
+NO uses account_operation para registrar gastos con categoría (comida, transporte, etc.). Para eso usa "transaction".
+
+
 ═══════════════════════════════════════════════════════════════════
 💱 REGLAS DE CONVERSIÓN DE MONEDA
 ═══════════════════════════════════════════════════════════════════
@@ -477,12 +523,12 @@ Cuando el usuario pida análisis, tendencias o comparaciones, usa los datos disp
 `
       },
       // Filtrar y validar el historial de conversación para evitar roles inválidos
-      ...conversationHistory
-        .slice(-10) // Últimos 5 intercambios (10 mensajes)
-        .filter((msg: any) => msg && msg.role && msg.content) 
-        .filter((msg: any) => ['user', 'assistant', 'system'].includes(msg.role)) 
-        .map((msg: any) => ({
-          role: msg.role,
+      ...(conversationHistory as unknown[])
+        .slice(-10)
+        .filter((msg): msg is Record<string, unknown> => msg !== null && typeof msg === "object" && "role" in msg && "content" in msg)
+        .filter((msg) => ['user', 'assistant', 'system'].includes(msg.role as string))
+        .map((msg): MensajeChat => ({
+          role: msg.role as MensajeChat["role"],
           content: String(msg.content)
         })),
       {

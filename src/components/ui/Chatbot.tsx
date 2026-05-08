@@ -109,7 +109,7 @@ export default function Chatbot() {
     const { lists, deleteList, updateListName } = useShoppingLists();
     const { fixedExpenses, addFixedExpense, deleteFixedExpense, updateFixedExpense } = useFixedExpenses();
     const { userData, updateUserData } = useUserData();
-    const { apiRates, tasasEnBs, cuentas } = useBankAccounts();
+    const { apiRates, tasasEnBs, cuentas, realizarOperacion } = useBankAccounts();
 
     // Calcular contexto financiero del usuario
     const userContext = useMemo(() => {
@@ -441,6 +441,12 @@ export default function Chatbot() {
 
         switch (data.intent) {
             case "transaction":
+                if (!data.accountId) {
+                    aiResponse = "Necesito saber de qué cuenta salió o entró el dinero. ¿De qué cuenta fue?";
+                    success = false;
+                    break;
+                }
+
                 let amountUSD = typeof data.amount === 'string' ? parseNumeroFlexible(data.amount) : data.amount;
                 let exchangeRate = 1;
                 let originalAmount = undefined;
@@ -571,6 +577,47 @@ export default function Chatbot() {
                 } as any)) || false;
 
                 aiResponse = `He programado el gasto fijo "${data.name}" por $${parseFloat(Number(data.amount).toFixed(2))} para el día ${data.dueDay} de cada mes.`;
+                break;
+
+            case "account_operation":
+                if (!data.accountId) {
+                    aiResponse = "Necesito saber en qué cuenta realizar la operación. ¿Cuál es?";
+                    success = false;
+                    break;
+                }
+                if (data.operation === "transferencia" && !data.targetAccountId) {
+                    aiResponse = "Para una transferencia necesito saber la cuenta destino. ¿A qué cuenta va?";
+                    success = false;
+                    break;
+                }
+                try {
+                    const montoOperacion = parseNumeroFlexible(data.amount);
+                    await realizarOperacion({
+                        cuentaOrigenId: data.accountId,
+                        tipo: data.operation,
+                        monto: montoOperacion,
+                        descripcion: data.description || "Operación desde Nami",
+                        cuentaDestinoId: data.targetAccountId,
+                        comision: data.commission ? parseNumeroFlexible(data.commission) : undefined,
+                        tasaCambio: data.exchangeRate ? parseNumeroFlexible(data.exchangeRate) : undefined,
+                    });
+                    const cuenta = cuentas.find(c => c.id === data.accountId);
+                    const nombreCuenta = cuenta?.nombre || data.accountId;
+                    const etiquetas: Record<string, string> = {
+                        deposito: "Depósito",
+                        retiro: "Retiro",
+                        transferencia: "Transferencia",
+                        pago: "Pago",
+                    };
+                    const etiqueta = etiquetas[data.operation] || "Operación";
+                    const simbolo = cuenta ? obtenerSimboloMoneda(cuenta.moneda) : "$";
+                    aiResponse = `✅ ${etiqueta} de ${simbolo}${montoOperacion} registrado en ${nombreCuenta}.`;
+                    success = true;
+                } catch (error: unknown) {
+                    const mensaje = error instanceof Error ? error.message : "Error en la operación";
+                    aiResponse = `No pude completar la operación: ${mensaje}`;
+                    success = false;
+                }
                 break;
 
             case "delete_item":
@@ -1055,6 +1102,7 @@ export default function Chatbot() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setIsOpen(!isOpen)}
+                aria-label={isOpen ? "Cerrar asistente Nami" : "Abrir asistente Nami"}
                 className={`fixed right-4 md:right-8 bottom-safe-fab bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-indigo-600 dark:to-purple-700 text-white p-4 rounded-full shadow-[0_8px_30px_rgb(139,92,246,0.3)] z-[60] border border-violet-400/30 items-center justify-center transition-all duration-300 ${isOpen ? 'hidden md:flex' : 'flex'}`}
             >
                 <FiCpu size={26} />

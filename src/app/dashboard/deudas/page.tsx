@@ -372,6 +372,7 @@ export default function DebtsPage() {
                                 animate={{ scale: 1, rotate: 0 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={handleAddDebtClick}
+                                aria-label="Nueva deuda"
                                 className="fixed right-4 z-40 bottom-safe-fab-above w-14 h-14 bg-linear-to-br from-violet-600 to-indigo-700 text-white rounded-2xl shadow-2xl shadow-violet-900/50 flex items-center justify-center border border-white/20 active:from-violet-700"
                             >
                                 <FiPlus size={28} />

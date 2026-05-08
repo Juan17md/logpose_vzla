@@ -26,7 +26,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
     const [bcvRate, setBcvRate] = useState(0);
     const [personName, setPersonName] = useState(initialData?.personName || "");
     const [amountStr, setAmountStr] = useState(initialData?.amount?.toString() || "");
-    const [currency, setCurrency] = useState<"USD" | "BS">("USD");
+    const [currency, setCurrency] = useState<"USD" | "VES">("USD");
     const [dueDate, setDueDate] = useState<Date | null>(
         initialData?.dueDate ? new Date(initialData.dueDate) : null
     );
@@ -42,9 +42,13 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
         
         const amountVal = parseNumeroFlexible(amountStr);
         let finalAmount = amountVal;
+        let originalAmount = undefined;
+        let exchangeRateValue = 1;
         
-        if (currency === "BS" && bcvRate > 0) {
-            finalAmount = amountVal / bcvRate;
+        if (currency === "VES" && bcvRate > 0) {
+            finalAmount = parseFloat((amountVal / bcvRate).toFixed(2));
+            originalAmount = amountVal;
+            exchangeRateValue = bcvRate;
         }
 
         await onSubmit({
@@ -53,6 +57,9 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
             type,
             description,
             dueDate: dueDate ?? undefined,
+            currency,
+            originalAmount: originalAmount ?? finalAmount,
+            exchangeRate: exchangeRateValue,
         });
     };
 
@@ -120,7 +127,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                                     Moneda
                                 </label>
                                 <div className="flex p-1 bg-slate-950/60 rounded-[1.25rem] border border-slate-800/80 shadow-inner">
-                                    {(["USD", "BS"] as const).map((curr) => (
+                                    {(["USD", "VES"] as const).map((curr) => (
                                         <button
                                             key={curr}
                                             type="button"
@@ -134,7 +141,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                                                     : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 border border-transparent"
                                             }`}
                                         >
-                                            {curr === "BS" ? "Bs." : "USD ($)"}
+                                            {curr === "VES" ? "Bs." : "USD ($)"}
                                         </button>
                                     ))}
                                 </div>
@@ -143,9 +150,9 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
 
                         <div className="relative">
                             <CustomCurrencyInput
-                                label={currency === "BS" ? "Monto en Bolívares" : "Monto en Dólares"}
-                                placeholder="0.00"
-                                prefix={currency === "BS" ? "Bs. " : "$ "}
+                                    label={currency === "VES" ? "Monto en Bolívares" : "Monto en Dólares"}
+                                    placeholder="0.00"
+                                    prefix={currency === "VES" ? "Bs. " : "$ "}
                                 decimalsLimit={2}
                                 onValueChange={(value) => setAmountStr(value || "")}
                                 value={amountStr}
@@ -153,7 +160,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                             />
                             
                             <AnimatePresence>
-                                {currency === "BS" && amountStr && (
+                                {currency === "VES" && amountStr && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}

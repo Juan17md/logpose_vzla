@@ -61,7 +61,6 @@ interface BankAccountsContextType {
     loading: boolean;
     loadingTransacciones: boolean;
     apiRates: TasasCambio;
-    tasasManuales: Record<string, number | null>;
     monedaBase: MonedaSoportada;
     tasas: Record<MonedaSoportada, number>;
     tasasEnBs: Record<string, number>;
@@ -70,7 +69,6 @@ interface BankAccountsContextType {
     eliminarCuenta: (id: string) => Promise<boolean>;
     realizarOperacion: (input: OperacionInput) => Promise<boolean>;
     obtenerCuenta: (id: string) => CuentaBancaria | undefined;
-    actualizarTasaManual: (moneda: string, tasa: number | null) => void;
     actualizarMonedaBase: (moneda: MonedaSoportada) => void;
     calcularSaldoTotal: (customTasas?: Record<MonedaSoportada, number>) => number;
     toggleExclusionCuenta: (id: string, excluir: boolean) => Promise<boolean>;
@@ -87,7 +85,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [loadingTransacciones, setLoadingTransacciones] = useState(true);
     const [apiRates, setApiRates] = useState<TasasCambio>({ usd: 0, eur: 0, usdt: 0, lastUpdated: "" });
-    const [tasasManuales] = useState<Record<string, number | null>>({});
     const [monedaBase, setMonedaBase] = useState<MonedaSoportada>("USD");
 
     // Cargar preferencias de sesión
@@ -116,10 +113,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    }, []);
-
-    const actualizarTasaManual = useCallback((_moneda: string, _tasa: number | null) => {
-        // Intencionalmente sin efecto: solo se permiten tasas desde API.
     }, []);
 
     const tasasEnBs = useMemo(() => {
@@ -452,7 +445,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         loading,
         loadingTransacciones,
         apiRates,
-        tasasManuales,
         monedaBase,
         tasas,
         crearCuenta,
@@ -460,7 +452,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         eliminarCuenta,
         realizarOperacion,
         obtenerCuenta,
-        actualizarTasaManual,
         actualizarMonedaBase,
         calcularSaldoTotal,
         toggleExclusionCuenta,
@@ -472,7 +463,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         loading,
         loadingTransacciones,
         apiRates,
-        tasasManuales,
         monedaBase,
         tasas,
         crearCuenta,
@@ -480,7 +470,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         eliminarCuenta,
         realizarOperacion,
         obtenerCuenta,
-        actualizarTasaManual,
         actualizarMonedaBase,
         calcularSaldoTotal,
         toggleExclusionCuenta,

@@ -89,7 +89,7 @@ export default function DashboardPage() {
         actualizarMonedaBase 
     } = useBankAccounts();
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);
-     const [showAdjustModal, setShowAdjustModal] = useState(false);
+    const [showAdjustModal, setShowAdjustModal] = useState(false);
     const [adjustingBalances, setAdjustingBalances] = useState<Record<string, string>>({});
 
     // Variantes de animación simplificadas — tween es más ligero que spring physics
@@ -808,6 +808,9 @@ export default function DashboardPage() {
                     {/* Saldo Total */}
                     <div
                         onClick={() => router.push('/dashboard/reportes')}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/dashboard/reportes'); }}
                         className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-all duration-300 relative overflow-hidden cursor-pointer active:scale-95"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-all"></div>
@@ -829,6 +832,7 @@ export default function DashboardPage() {
                         </div>
                         <button
                             onClick={handleUpdateBalanceClick}
+                            aria-label="Ajustar saldo de cuentas"
                             className="inline-flex items-center gap-2 text-xs font-semibold text-violet-400 hover:text-violet-300 transition-colors uppercase tracking-wide bg-violet-500/10 px-3 py-1.5 rounded-lg border border-violet-500/20 hover:border-violet-500/30 relative z-20"
                         >
                             Ajustar Saldo <FiEdit2 />
@@ -839,6 +843,9 @@ export default function DashboardPage() {
                     {/* Ingresos del Mes */}
                     <div
                         onClick={() => router.push('/dashboard/movimientos')}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/dashboard/movimientos'); }}
                         className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-all duration-300 relative overflow-hidden cursor-pointer active:scale-95"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-all"></div>
@@ -865,6 +872,9 @@ export default function DashboardPage() {
                     {/* Gastos del Mes */}
                     <div
                         onClick={() => router.push('/dashboard/reportes')}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/dashboard/reportes'); }}
                         className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-red-500/30 hover:bg-slate-900/70 transition-all duration-300 relative overflow-hidden cursor-pointer active:scale-95"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-red-500/20 transition-all"></div>
