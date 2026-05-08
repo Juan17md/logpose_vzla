@@ -132,7 +132,7 @@ export default function ReportsPage() {
                 <motion.div variants={itemVariants} className="flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bungee text-white leading-none">Reportes</h1>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Reportes</h1>
                             <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mt-2">Resumen financiero mensual</p>
                         </div>
                         <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-500 shadow-lg shadow-amber-500/5">
@@ -275,7 +275,7 @@ export default function ReportsPage() {
                     <div className="absolute -top-24 -left-24 w-64 h-64 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
                     <div className="relative z-10">
-                        <h1 className="text-3xl md:text-5xl font-bungee text-white mb-2 tracking-tight">Reportes Financieros</h1>
+                        <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">Reportes Financieros</h1>
                         <p className="text-slate-400 text-sm md:text-lg max-w-lg font-medium">Analiza tus finanzas con precisión y claridad estratégica.</p>
                     </div>
                     <div className="relative z-10 flex gap-3 min-w-[300px]">

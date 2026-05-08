@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
@@ -58,9 +58,11 @@ export default function RecentTransactions() {
     }, [filteredTransactions, startIndex, itemsPerPage]);
 
     // Reset page on search
-    if (currentPage > totalPages && totalPages > 0) {
-        setCurrentPage(1);
-    }
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(1);
+        }
+    }, [currentPage, totalPages]);
 
     if (loading) {
         return (

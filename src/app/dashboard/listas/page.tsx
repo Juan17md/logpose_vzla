@@ -172,7 +172,7 @@ export default function ShoppingListsPage() {
                 <div className="absolute -top-24 -left-24 w-64 h-64 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
                 <div className="relative z-10">
-                    <h1 className="text-5xl font-bungee text-white mb-2 tracking-tight">Listas de Compras</h1>
+                    <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">Listas de Compras</h1>
                     <p className="text-slate-400 text-lg max-w-lg font-medium">
                         Planifica tus compras mensuales o crea listas de deseos con precisión y estilo.
                     </p>
@@ -378,7 +378,7 @@ export default function ShoppingListsPage() {
                                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
                                                     <div>
                                                         <div className="flex items-center gap-4 mb-3">
-                                                            <h2 className="text-3xl md:text-5xl font-bungee text-white tracking-tight leading-none">{currentList.name}</h2>
+                                                            <h2 className="text-2xl md:text-4xl font-bold text-white tracking-tight">{currentList.name}</h2>
                                                             <button
                                                                 onClick={handleEditListNameClick}
                                                                 className="p-3 bg-slate-800/80 text-slate-400 hover:text-amber-400 rounded-2xl transition-all border border-slate-700/50 hover:border-amber-500/30 active:scale-90"

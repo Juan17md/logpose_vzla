@@ -97,17 +97,20 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                 if (!transDoc.exists()) throw "La transacción no existe";
 
                 const transData = transDoc.data();
-                const { accountId, amount, type } = transData;
+                const { accountId, amount, type, currency, exchangeRate, originalAmount } = transData;
 
                 if (accountId) {
                     const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const currentSaldo = cuentaDoc.data().saldo || 0;
+                        const cuentaMoneda = cuentaDoc.data().moneda || "USD";
+                        const montoParaReversar = convertirMontoParaCuenta(amount, currency || 'USD', cuentaMoneda, exchangeRate, originalAmount);
+
                         let nuevoSaldo = currentSaldo;
-                        if (type === 'ingreso') nuevoSaldo -= amount;
-                        else if (type === 'gasto') nuevoSaldo += amount;
-                        else if (type === 'transferencia') nuevoSaldo += amount;
+                        if (type === 'ingreso') nuevoSaldo -= montoParaReversar;
+                        else if (type === 'gasto') nuevoSaldo += montoParaReversar;
+                        else if (type === 'transferencia') nuevoSaldo += montoParaReversar;
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }
@@ -117,7 +120,9 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     const targetCuentaDoc = await transaction.get(targetCuentaRef);
                     if (targetCuentaDoc.exists()) {
                         const currentSaldo = targetCuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = currentSaldo - amount;
+                        const targetCuentaMoneda = targetCuentaDoc.data().moneda || "USD";
+                        const montoParaTargetReversar = convertirMontoParaCuenta(amount, currency || 'USD', targetCuentaMoneda, exchangeRate, originalAmount);
+                        const nuevoSaldo = currentSaldo - montoParaTargetReversar;
                         transaction.update(targetCuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }

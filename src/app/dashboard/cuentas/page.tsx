@@ -131,7 +131,7 @@ export default function CuentasPage() {
                             <div className="w-2 h-2 rounded-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]" />
                             <span className="text-[10px] text-slate-500 font-black uppercase tracking-[3px]">Gestión Bancaria</span>
                         </div>
-                        <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tight leading-none mb-3">
+                        <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight mb-3">
                             Mis <span className="text-transparent bg-clip-text bg-linear-to-r from-violet-400 to-indigo-400">Cuentas</span>
                         </h1>
                         <p className="text-slate-400 text-lg font-medium max-w-md">
@@ -155,7 +155,7 @@ export default function CuentasPage() {
 
                         <div className="flex items-baseline gap-2 mb-4">
                             <span className="text-xl font-bold text-slate-500">{obtenerSimboloMoneda(monedaBase)}</span>
-                            <h3 className="text-4xl font-black text-white tracking-tighter tabular-nums truncate">
+                            <h3 className="text-4xl font-bold text-white tracking-tighter tabular-nums truncate">
                                 {saldoTotal.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </h3>
                         </div>
@@ -195,7 +195,7 @@ export default function CuentasPage() {
             <header className="md:hidden space-y-4">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-black text-white tracking-tight">Mis Cuentas</h1>
+                        <h1 className="text-2xl font-bold text-white tracking-tight">Mis Cuentas</h1>
                         <p className="text-slate-500 text-xs">Gestión Premium</p>
                     </div>
                     <div className="p-3 bg-violet-500/10 rounded-2xl border border-violet-500/20">
