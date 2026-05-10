@@ -34,15 +34,46 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }, { status: 429 });
     }
 
-    const { message, conversationHistory = [], userContext = {} } = await req.json();
+    let message = "";
+    let conversationHistory: MensajeChat[] = [];
+    let userContext: Record<string, unknown> = {};
+
+    try {
+      const body = await req.json();
+      message = body.message || "";
+      conversationHistory = body.conversationHistory || [];
+      userContext = body.userContext || {};
+    } catch {
+      return NextResponse.json({
+        operations: [],
+        message: "No entendí bien tu mensaje. ¿Puedes repetirlo?",
+      });
+    }
 
     // Extraer contexto del usuario
-    const { balance, goals, debts, monthlyExpense, monthlyIncome, averageDailyExpense, lastTransaction, apiRates, fixedExpenses, shoppingLists, monthlyBudget, monthlySalary, topCategories, previousMonthlyExpense, upcomingFixedExpenses, bankAccounts, previousTopCategories, savingsRatio, projectedMonthlyExpense } = userContext;
-
-    // Obtener tasas oficiales desde API (sin soporte de tasas manuales)
-    const tUSD = apiRates?.USD || apiRates?.usd || 56.40;
-    const tEUR = apiRates?.EUR || apiRates?.eur || 61.20;
-    const tUSDT = apiRates?.USDT || apiRates?.usdt || 64.50;
+    const uc = userContext as Record<string, unknown>;
+    const balance = uc.balance as number | undefined;
+    const goals = uc.goals as Array<Record<string, unknown>> | undefined;
+    const debts = uc.debts as Array<Record<string, unknown>> | undefined;
+    const monthlyExpense = uc.monthlyExpense as number | undefined;
+    const monthlyIncome = uc.monthlyIncome as number | undefined;
+    const averageDailyExpense = uc.averageDailyExpense as number | undefined;
+    const lastTransaction = uc.lastTransaction as Record<string, unknown> | null;
+    const fixedExpenses = uc.fixedExpenses as Array<Record<string, unknown>> | undefined;
+    const shoppingLists = uc.shoppingLists as Array<Record<string, unknown>> | undefined;
+    const monthlyBudget = uc.monthlyBudget as number | undefined;
+    const monthlySalary = uc.monthlySalary as number | undefined;
+    const topCategories = uc.topCategories as Array<Record<string, unknown>> | undefined;
+    const previousMonthlyExpense = uc.previousMonthlyExpense as number | undefined;
+    const upcomingFixedExpenses = uc.upcomingFixedExpenses as Array<Record<string, unknown>> | undefined;
+    const bankAccounts = uc.bankAccounts as Array<Record<string, unknown>> | undefined;
+    const previousTopCategories = uc.previousTopCategories as Array<Record<string, unknown>> | undefined;
+    const savingsRatio = uc.savingsRatio as number | undefined;
+    const projectedMonthlyExpense = uc.projectedMonthlyExpense as number | undefined;
+    const apiRates = (uc.apiRates || {}) as Record<string, number | undefined>;
+    const tUSD = apiRates.USD || apiRates.usd || 56.40;
+    const tEUR = apiRates.EUR || apiRates.eur || 61.20;
+    const tUSDT = apiRates.USDT || apiRates.usdt || 64.50;
 
     // 🔍 Debug: Ver las tasas recibidas
     console.log('💱 Tasas recibidas:', { tUSD, tEUR, tUSDT });
@@ -70,7 +101,7 @@ ${balance !== undefined ? `💰 CONTEXTO FINANCIERO DEL USUARIO
 - Presupuesto mensual: $${monthlyBudget || 'No configurado'}
 - Salario mensual: $${monthlySalary || 'No configurado'}
 - Total gastado este mes: $${monthlyExpense || 0}
-- Total gastado el mes ANTERIOR: $${previousMonthlyExpense || 0} ${previousMonthlyExpense ? `(El usuario ha gastado ${Math.round(((monthlyExpense - previousMonthlyExpense) / previousMonthlyExpense) * 100)}% ${monthlyExpense > previousMonthlyExpense ? 'más' : 'menos'} que el mes pasado)` : ''}
+- Total gastado el mes ANTERIOR: $${previousMonthlyExpense || 0} ${previousMonthlyExpense ? `(El usuario ha gastado ${Math.round((((monthlyExpense ?? 0) - previousMonthlyExpense) / previousMonthlyExpense) * 100)}% ${(monthlyExpense ?? 0) > previousMonthlyExpense ? 'más' : 'menos'} que el mes pasado)` : ''}
 - Total ingresado este mes: $${monthlyIncome || 0}
 - Gasto promedio diario: $${averageDailyExpense || 0}
 ${topCategories && topCategories.length > 0 ? `- Top categorías de gasto este mes: ${(topCategories as Record<string, unknown>[]).map((c) => `${c.category} ($${parseFloat(Number(c.amount).toFixed(2))})`).join(', ')}` : ''}
@@ -86,7 +117,7 @@ ${projectedMonthlyExpense ? `- Proyección de gasto a fin de mes: $${projectedMo
 ${previousTopCategories && previousTopCategories.length > 0 ? `📊 TENDENCIAS: Top categorías del MES ANTERIOR
 ${previousTopCategories.map((c: Record<string, unknown>) => `- ${c.category}: $${c.amount}`).join('\n')}
 
-  ${bankAccounts.map((c: Record<string, unknown>) => `- ID: "${c.id}" | Nombre: "${c.nombre}" | Banco: ${c.banco} | Moneda: ${c.moneda} | Saldo: ${c.saldo}`).join('\n')}
+  ${(bankAccounts || []).map((c: Record<string, unknown>) => `- ID: "${c.id}" | Nombre: "${c.nombre}" | Banco: ${c.banco} | Moneda: ${c.moneda} | Saldo: ${c.saldo}`).join('\n')}
 
 🚨 REGLA VITAL SOBRE CUENTAS: 
 TODO gasto, ingreso o transferencia DEBE estar asociado a las cuentas anteriores mediante su "ID". 
@@ -550,54 +581,58 @@ Cuando el usuario pida análisis, tendencias o comparaciones, usa los datos disp
       return NextResponse.json({ error: "No valid response from AI" }, { status: 500 });
     }
 
-    // Mejorar extracción de JSON con múltiples patrones
+    // Intentar extraer JSON de la respuesta del AI
     let jsonString = content;
 
-    // Intentar extraer de bloques de código markdown
     const markdownMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
     if (markdownMatch) {
       jsonString = markdownMatch[1];
     } else {
-      // Intentar extraer objeto JSON del texto
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         jsonString = jsonMatch[0];
       }
     }
 
+    // Intentar parsear JSON
+    let data: Record<string, unknown> | null = null;
     try {
-      const data = JSON.parse(jsonString);
-
-      // Validar estructura de respuesta
-      if (!data.operations && !Array.isArray(data)) {
-        // Si no tiene operations pero es un objeto válido, intentar normalizar
-        if (data.intent || data.amount || data.person || data.name || data.item) {
-          // Es una operación única sin envolver
-          return NextResponse.json({ operations: [data] });
-        }
-        throw new Error("Invalid response structure: missing 'operations' array");
-      }
-
-      // Si es un array directo, envolver en operations
-      if (Array.isArray(data)) {
-        return NextResponse.json({ operations: data });
-      }
-
-      // Validar que operations sea un array
-      if (!Array.isArray(data.operations)) {
-        throw new Error("'operations' must be an array");
-      }
-
-      return NextResponse.json(data);
-    } catch (e) {
-      console.error("JSON parse error:", e);
-      console.error("Raw content:", content);
-      console.error("Extracted JSON string:", jsonString);
-      return NextResponse.json({
-        error: "Could not parse AI response",
-        rawResponse: content.substring(0, 200) // Primeros 200 caracteres para debugging
-      }, { status: 500 });
+      data = JSON.parse(jsonString);
+    } catch {
+      // No es JSON válido → tratar como respuesta de solo texto
     }
+
+    if (!data || typeof data !== "object") {
+      return NextResponse.json({
+        operations: [],
+        message: content,
+      });
+    }
+
+    // Validar y normalizar estructura
+    if (!data.operations && !Array.isArray(data)) {
+      if (data.intent || data.amount || data.person || data.name || data.item) {
+        return NextResponse.json({ operations: [data] });
+      }
+      // JSON válido pero sin operations ni operación única → devolver solo texto
+      return NextResponse.json({
+        operations: [],
+        message: data.message || content,
+      });
+    }
+
+    if (Array.isArray(data)) {
+      return NextResponse.json({ operations: data });
+    }
+
+    if (!Array.isArray(data.operations)) {
+      return NextResponse.json({
+        operations: [],
+        message: data.message || content,
+      });
+    }
+
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Groq API Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
