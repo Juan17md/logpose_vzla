@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, GoogleAuthProvider, User } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { FiUser, FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiPieChart, FiTrendingUp, FiShield } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
@@ -127,10 +127,10 @@ export default function RegisterPage() {
             await updateProfile(user, { displayName: data.name });
             await setDoc(doc(db,"users",user.uid), {
                 uid:user.uid, displayName:data.name, email:data.email,
-                plan:"free", createdAt:serverTimestamp(),
+                plan:"free", onboardingCompleted:false, createdAt:serverTimestamp(),
             });
-            toast.success("¡Cuenta creada!", { description:"Bienvenido a tu control de gastos." });
-            router.push("/dashboard");
+            toast.success("¡Cuenta creada!", { description:"Ahora configura tu perfil financiero." });
+            router.push("/onboarding");
         } catch (error) {
             let msg = "Ocurrió un error al registrarse.";
             if (error instanceof FirebaseError) {
@@ -145,13 +145,15 @@ export default function RegisterPage() {
         try {
             const docRef = doc(db, "users", usuario.uid);
             const docSnap = await getDoc(docRef);
-            
-            if (!docSnap.exists()) {
+            const esNuevo = !docSnap.exists();
+
+            if (esNuevo) {
                 await setDoc(docRef, {
                     uid: usuario.uid,
                     displayName: usuario.displayName || "Usuario",
                     email: usuario.email,
                     plan: "free",
+                    onboardingCompleted: false,
                     createdAt: serverTimestamp(),
                 });
             }
@@ -161,9 +163,21 @@ export default function RegisterPage() {
             if (!tienePassword) {
                 toast.info("¡Casi listo!", { description: "Crea una contraseña para completar tu perfil.", duration: 5000 });
                 router.push("/crear-contrasena");
+            } else if (esNuevo) {
+                router.push("/onboarding");
             } else {
-                toast.success("¡Bienvenido!", { description: "Has iniciado sesión con Google." });
-                router.push("/dashboard");
+                const userData = docSnap.data()!;
+                const oc = userData.onboardingCompleted;
+                if (oc === undefined) {
+                    await updateDoc(docRef, { onboardingCompleted: true });
+                    toast.success("¡Bienvenido!", { description: "Has iniciado sesión con Google." });
+                    router.push("/dashboard");
+                } else if (oc === false) {
+                    router.push("/onboarding");
+                } else {
+                    toast.success("¡Bienvenido!", { description: "Has iniciado sesión con Google." });
+                    router.push("/dashboard");
+                }
             }
         } catch (error) {
             console.error("Error al procesar login Google:", error);

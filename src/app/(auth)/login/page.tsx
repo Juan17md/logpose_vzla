@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, User } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiPieChart, FiTrendingUp, FiShield } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
@@ -70,8 +70,18 @@ export default function LoginPage() {
         setLoading(true);
         try {
             await signInWithEmailAndPassword(auth, data.email, data.password);
-            toast.success("¡Bienvenido de nuevo!", { description:"Has iniciado sesión correctamente." });
-            router.push("/dashboard");
+            const snap = await getDoc(doc(db, "users", auth.currentUser!.uid));
+            const oc = snap.data()?.onboardingCompleted;
+            if (oc === undefined) {
+                await updateDoc(doc(db, "users", auth.currentUser!.uid), { onboardingCompleted: true });
+                toast.success("¡Bienvenido de nuevo!", { description:"Has iniciado sesión correctamente." });
+                router.push("/dashboard");
+            } else if (oc === false) {
+                router.push("/onboarding");
+            } else {
+                toast.success("¡Bienvenido de nuevo!", { description:"Has iniciado sesión correctamente." });
+                router.push("/dashboard");
+            }
         } catch (error) {
             let msg = "Ocurrió un error al iniciar sesión.";
             if (error instanceof FirebaseError) {
@@ -102,8 +112,18 @@ export default function LoginPage() {
                 // Biometría verificada → iniciar sesión real con Firebase
                 toast.info("Verificado ✓", { description: "Iniciando sesión..." });
                 await signInWithEmailAndPassword(auth, credenciales.email, credenciales.password);
-                toast.success("¡Bienvenido!", { description: `Sesión iniciada con ${etiquetaBiometria}.` });
-                router.push("/dashboard");
+                const snapBio = await getDoc(doc(db, "users", auth.currentUser!.uid));
+                const ocBio = snapBio.data()?.onboardingCompleted;
+                if (ocBio === undefined) {
+                    await updateDoc(doc(db, "users", auth.currentUser!.uid), { onboardingCompleted: true });
+                    toast.success("¡Bienvenido!", { description: `Sesión iniciada con ${etiquetaBiometria}.` });
+                    router.push("/dashboard");
+                } else if (ocBio === false) {
+                    router.push("/onboarding");
+                } else {
+                    toast.success("¡Bienvenido!", { description: `Sesión iniciada con ${etiquetaBiometria}.` });
+                    router.push("/dashboard");
+                }
             }
         } catch (error) {
             console.error("Error de biometría:", error);
@@ -128,12 +148,15 @@ export default function LoginPage() {
         try {
             const docRef = doc(db, "users", usuario.uid);
             const docSnap = await getDoc(docRef);
-            if (!docSnap.exists()) {
+            const esNuevo = !docSnap.exists();
+
+            if (esNuevo) {
                 await setDoc(docRef, {
                     uid: usuario.uid,
                     displayName: usuario.displayName || "Usuario",
                     email: usuario.email,
                     plan: "free",
+                    onboardingCompleted: false,
                     createdAt: serverTimestamp(),
                 });
             }
@@ -146,9 +169,21 @@ export default function LoginPage() {
                     duration: 5000
                 });
                 router.push("/crear-contrasena");
+            } else if (esNuevo) {
+                router.push("/onboarding");
             } else {
-                toast.success("¡Bienvenido!", { description: "Sesión iniciada correctamente." });
-                router.push("/dashboard");
+                const userData = docSnap.data()!;
+                const oc = userData.onboardingCompleted;
+                if (oc === undefined) {
+                    await updateDoc(docRef, { onboardingCompleted: true });
+                    toast.success("¡Bienvenido!", { description: "Sesión iniciada correctamente." });
+                    router.push("/dashboard");
+                } else if (oc === false) {
+                    router.push("/onboarding");
+                } else {
+                    toast.success("¡Bienvenido!", { description: "Sesión iniciada correctamente." });
+                    router.push("/dashboard");
+                }
             }
         } catch (error) {
             console.error("Error al procesar login:", error);

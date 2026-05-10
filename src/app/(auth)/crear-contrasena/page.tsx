@@ -173,7 +173,7 @@ export default function CrearContrasenaPage() {
             toast.success("¡Contraseña creada!", {
                 description: "Ahora puedes iniciar sesión con correo y contraseña.",
             });
-            router.push("/dashboard");
+            router.push("/onboarding");
         } catch (error: unknown) {
             let msg = "Ocurrió un error al crear la contraseña.";
             if (error && typeof error === "object" && "code" in error) {

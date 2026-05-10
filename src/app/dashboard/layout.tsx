@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { auth, db } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import Sidebar from "@/components/layout/Sidebar";
 
 import Footer from "@/components/layout/Footer";
@@ -24,6 +28,36 @@ const Chatbot = dynamic(() => import("@/components/ui/Chatbot"), {
   loading: () => null, // El FAB del chatbot no necesita placeholder visible
 });
 
+function OnboardingGuard({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const [verificado, setVerificado] = useState(false);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+          const oc = snap.data().onboardingCompleted;
+          if (oc === undefined) {
+            await updateDoc(doc(db, "users", user.uid), { onboardingCompleted: true });
+          } else if (oc === false) {
+            router.replace("/onboarding");
+            return;
+          }
+        }
+      } catch {
+        // Si falla la lectura, dejar pasar
+      }
+      setVerificado(true);
+    });
+    return () => unsub();
+  }, [router]);
+
+  if (!verificado) return null;
+  return <>{children}</>;
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -36,6 +70,7 @@ export default function DashboardLayout({
       <TransactionsProvider>
         <UserDataProvider>
           <BankAccountsProvider>
+            <OnboardingGuard>
             <MigracionCuentas />
             <AvisoCuentasFaltantes />
           <div className="min-h-screen bg-slate-950 text-white selection:bg-amber-500/30 flex flex-col">
@@ -75,6 +110,7 @@ export default function DashboardLayout({
             
             <Chatbot />
           </div>
+          </OnboardingGuard>
           </BankAccountsProvider>
         </UserDataProvider>
       </TransactionsProvider>
