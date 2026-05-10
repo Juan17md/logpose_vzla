@@ -109,7 +109,7 @@ export default function Chatbot() {
     const { lists, deleteList, updateListName } = useShoppingLists();
     const { fixedExpenses, addFixedExpense, deleteFixedExpense, updateFixedExpense } = useFixedExpenses();
     const { userData, updateUserData } = useUserData();
-    const { apiRates, tasasEnBs, cuentas, realizarOperacion } = useBankAccounts();
+    const { apiRates, tasasEnBs, cuentas, calcularSaldoTotal, realizarOperacion } = useBankAccounts();
 
     // Calcular contexto financiero del usuario
     const userContext = useMemo(() => {
@@ -131,17 +131,7 @@ export default function Chatbot() {
             .filter(t => t.type === 'ingreso')
             .reduce((sum, t) => sum + t.amount, 0);
 
-        // Balance total = (ahorros + todos los ingresos) - todos los gastos
-        const totalIncome = transactions
-            .filter(t => t.type === 'ingreso')
-            .reduce((sum, t) => sum + t.amount, 0);
-
-        const totalExpenses = transactions
-            .filter(t => t.type === 'gasto')
-            .reduce((sum, t) => sum + t.amount, 0);
-
-        const savingsBalance = userData.savingsPhysical + userData.savingsUSDT;
-        const balance = savingsBalance + totalIncome - totalExpenses;
+        const balance = calcularSaldoTotal();
 
         // Gasto promedio diario
         const daysInMonth = now.getDate();
