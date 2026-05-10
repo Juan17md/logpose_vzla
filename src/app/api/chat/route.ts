@@ -119,6 +119,8 @@ ${previousTopCategories.map((c: Record<string, unknown>) => `- ${c.category}: $$
 
   ${(bankAccounts || []).map((c: Record<string, unknown>) => `- ID: "${c.id}" | Nombre: "${c.nombre}" | Banco: ${c.banco} | Moneda: ${c.moneda} | Saldo: ${c.saldo}`).join('\n')}
 
+🔍 COINCIDENCIA DE CUENTAS: Cuando el usuario diga "cuenta venezuela", "mi cuenta del banco de venezuela", "banesco", etc., busca coincidencias PARCIALES en el nombre o banco de las cuentas listadas arriba. Ej: "venezuela" → busca cuentas cuyo banco contenga "venezuela", "banco de venezuela" o "bdv".
+
 🚨 REGLA VITAL SOBRE CUENTAS: 
 TODO gasto, ingreso o transferencia DEBE estar asociado a las cuentas anteriores mediante su "ID". 
 - Para ingresos/gastos: Necesitas determinar el \`accountId\`.
@@ -175,7 +177,8 @@ Si el usuario NO especifica categoría, categoriza automáticamente según estas
 • FREELANCE: freelance, proyecto, cliente, trabajo independiente, bolo, extra, economía informal
 • PROPINAS: propina, tip, gratificación, servicio
 • TRANSFERENCIAS: transferencia, envío, zelle, paypal, pago móvil, remesa
-• COMISIONES: comisión, fee, cargo, tasa bancaria
+• COMISIONES: comisión, fee, cargo, tasa bancaria, comision bancaria, cargo por transferencia
+  → Cuando el usuario mencione "comisión" junto a otro gasto, CREA DOS TRANSACCIONES: una para el gasto principal y otra separada con categoría "Comisiones".
 • IMPUESTOS: impuesto, igtf, iva, islr, tributo, tasa fiscal
 
 ═══════════════════════════════════════════════════════════════════
@@ -498,7 +501,17 @@ Ejemplos de mensajes INCORRECTOS (evitar):
 - "¡Listo! Registré tu gasto de $50 en comida 🍕 Llevas $350 gastados este mes" ❌
 - "Perfecto, agregué $100 a tu meta de Vacaciones 🎯 ¡Ya vas al 75%! 🎉" ❌
 - "¡Cuidado! Este gasto es 3x tu promedio diario ⚠️" ❌
-- "Hoy el dólar está a 341.74 Bs por cada 1USD. ¿En qué más te puedo ayudar?" ❌  (NO repitas la tasa)
+- "Hoy el dólar está a 341.74 Bs por cada 1USD. ¿En qué más te puedo ayudar?" ❌
+- "Tu nuevo balance es de $989.51" ❌ (NUNCA calcules ni muestres balances)
+- "Tu saldo actual es X - Y = Z" ❌ (NUNCA hagas matemáticas con saldos en el mensaje)
+- "Gasté 300 Bs, mi nuevo saldo es..." ❌ (NUNCA menciones saldos al registrar)
+
+🚨 REGLAS ABSOLUTAS SOBRE BALANCE:
+1. NUNCA calcules, muestres o mencioness el balance/saldo del usuario en el mensaje.
+2. NUNCA hagas operaciones matemáticas con el balance en el mensaje.
+3. NUNCA digas "tu nuevo balance", "tu saldo actualizado", "te queda X" ni similar.
+4. La unica excepcion es si el usuario pregunta explicitamente "¿cuanto dinero tengo?" o "¿cual es mi balance?".
+5. Confirma solo la operacion realizada, sin numeros adicionales.
 
 IMPORTANTE: Solo da información adicional (balance, progreso, advertencias, TASA DE CAMBIO) si el usuario la solicita directamente.
 
@@ -510,6 +523,7 @@ Detecta y procesa múltiples operaciones en un solo mensaje:
 - "Gasté 50 en comida y 20 en transporte" → 2 transactions
 - "Recibí mi salario de 1000 y pagué 200 de luz" → 1 ingreso + 1 gasto
 - "Agregué 100 a vacaciones y gasté 30 en comida" → 1 contribute_goal + 1 transaction
+- "Gasté 300 de mi cuenta venezuela y tuve 2 de comisión" → 1 transaction (preguntar categoría) + 1 transaction (categoría "Comisiones")
 
 ═══════════════════════════════════════════════════════════════════
 ⚠️ VALIDACIONES Y CONTEXTO
