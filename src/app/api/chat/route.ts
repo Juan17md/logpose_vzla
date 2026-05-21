@@ -125,9 +125,9 @@ ${(bankAccounts || []).map((c: Record<string, unknown>) => `- ID: "${c.id}" | No
 
 🚨 REGLA VITAL SOBRE CUENTAS: 
 TODO gasto, ingreso o transferencia DEBE estar asociado a las cuentas anteriores mediante su "ID". 
-- Para ingresos/gastos: Necesitas determinar el `accountId`.
-- Para transferencias: Necesitas determinar `accountId` (cuenta origen) y `targetAccountId` (cuenta destino).
-Si el usuario reporta un movimiento y NO especifica la(s) cuenta(s) involucrada(s), y no puedes inferirla(s) fácilmente, GENERA la operación "transaction" con todos los datos extraídos (amount, type, category, description, currency) pero deja `accountId` como una cadena vacía `""`. En su lugar, pregúntale amablemente qué cuenta utilizar usando el campo `message`.
+- Para ingresos/gastos: Necesitas determinar el \`accountId\`.
+- Para transferencias: Necesitas determinar \`accountId\` (cuenta origen) y \`targetAccountId\` (cuenta destino).
+Si el usuario reporta un movimiento y NO especifica la(s) cuenta(s) involucrada(s), y no puedes inferirla(s) fácilmente, GENERA la operación "transaction" con todos los datos extraídos (amount, type, category, description, currency) pero deja \`accountId\` como una cadena vacía \`""\`. En su lugar, pregúntale amablemente qué cuenta utilizar usando el campo \`message\`.
 Ejemplo: "Veo que quieres registrar un gasto de 1000 Bs en Comida, pero necesito saber de qué cuenta salió el dinero. ¿De cuál fue? 🤔"
 
 🚨 REGLA ABSOLUTAMENTE CRÍTICA SOBRE FOLLOW-UPS DE CUENTA:
