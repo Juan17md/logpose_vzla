@@ -116,8 +116,10 @@ ${projectedMonthlyExpense ? `- Proyección de gasto a fin de mes: $${projectedMo
 
 ${previousTopCategories && previousTopCategories.length > 0 ? `📊 TENDENCIAS: Top categorías del MES ANTERIOR
 ${previousTopCategories.map((c: Record<string, unknown>) => `- ${c.category}: $${c.amount}`).join('\n')}
+` : ''}
 
-  ${(bankAccounts || []).map((c: Record<string, unknown>) => `- ID: "${c.id}" | Nombre: "${c.nombre}" | Banco: ${c.banco} | Moneda: ${c.moneda} | Saldo: ${c.saldo}`).join('\n')}
+${bankAccounts && bankAccounts.length > 0 ? `💳 CUENTAS BANCARIAS DISPONIBLES:
+${(bankAccounts || []).map((c: Record<string, unknown>) => `- ID: "${c.id}" | Nombre: "${c.nombre}" | Banco: ${c.banco} | Moneda: ${c.moneda} | Saldo: ${c.saldo}`).join('\n')}
 
 🔍 COINCIDENCIA DE CUENTAS: Cuando el usuario diga "cuenta venezuela", "mi cuenta del banco de venezuela", "banesco", etc., busca coincidencias PARCIALES en el nombre o banco de las cuentas listadas arriba. Ej: "venezuela" → busca cuentas cuyo banco contenga "venezuela", "banco de venezuela" o "bdv".
 
@@ -126,7 +128,21 @@ TODO gasto, ingreso o transferencia DEBE estar asociado a las cuentas anteriores
 - Para ingresos/gastos: Necesitas determinar el \`accountId\`.
 - Para transferencias: Necesitas determinar \`accountId\` (cuenta origen) y \`targetAccountId\` (cuenta destino).
 Si el usuario reporta un movimiento y NO especifica la(s) cuenta(s) involucrada(s), y no puedes inferirla(s) fácilmente, NO generes la operación de transaction. En su lugar, pregúntale amablemente qué cuenta o cuentas utilizar usando el campo \`message\`.
-Ejemplo: "¡Claro! Pero necesito saber de qué cuenta salieron esos $10 para la comida. ¿Fue de Banesco, Efectivo, Binance...?"` : ''}
+Ejemplo: "¡Claro! Pero necesito saber de qué cuenta salieron esos $10 para la comida. ¿Fue de Banesco, Efectivo, Binance...?"
+
+🚨 REGLA ABSOLUTAMENTE CRÍTICA SOBRE FOLLOW-UPS DE CUENTA:
+Cuando previamente preguntaste al usuario qué cuenta usar y el usuario responde con el nombre de la cuenta (ej. "en mi cuenta mercantil", "banesco", "efectivo"), DEBES incluir la operación COMPLETA en el array \`operations\` con TODOS los campos (amount, type, category, description, currency, accountId, etc.) reconstruidos del contexto de la conversación.
+NUNCA generes \`"operations": []\` con un mensaje de confirmación. La operación SOLO se ejecuta si está en el array \`operations\`. Si envías operations vacío, la transacción NO se registra y el usuario pierde su dinero.
+Ejemplo CORRECTO:
+{
+  "operations": [{"intent": "transaction", "amount": 3000, "type": "ingreso", "category": "Salario", "description": "Sueldo", "currency": "VES", "accountId": "<id_real_de_la_cuenta>"}],
+  "message": "✅ Registré tu ingreso de 3000 Bs en Mercantil."
+}
+Ejemplo INCORRECTO (NUNCA hagas esto):
+{
+  "operations": [],
+  "message": "✅ Listo, registré tu ingreso de 3000 Bs en Mercantil."
+}` : ''}
 
  💱 TASAS DE CAMBIO (Bolívares por unidad)
 - **USD Oficial (BCV)**: ${tUSD.toFixed(2)} Bs
@@ -505,6 +521,11 @@ Ejemplos de mensajes INCORRECTOS (evitar):
 - "Tu nuevo balance es de $989.51" ❌ (NUNCA calcules ni muestres balances)
 - "Tu saldo actual es X - Y = Z" ❌ (NUNCA hagas matemáticas con saldos en el mensaje)
 - "Gasté 300 Bs, mi nuevo saldo es..." ❌ (NUNCA menciones saldos al registrar)
+
+🚨 REGLA DE NO-CONFIRMACIÓN DE ACCIONES INCOMPLETAS:
+1. Si falta el accountId (o targetAccountId en transferencias) y vas a preguntarle al usuario qué cuenta usar, NUNCA confirmes la transacción.
+2. NUNCA digas en el mensaje "Registré...", "Guardé...", "Listo...", "Hecho..." ni uses el emoji ✅ para la acción no completada, ya que la transacción NO ha sido registrada aún en la base de datos.
+3. Pregunta directamente de forma amigable qué cuenta utilizar sin afirmar haber completado la transacción. Ej: "Para registrar este ingreso de 2000 Bs, ¿en qué cuenta deseas guardarlo? 🤔" o "¿De qué cuenta salieron los 500 Bs del gasto? 🤔".
 
 🚨 REGLAS ABSOLUTAS SOBRE BALANCE:
 1. NUNCA calcules, muestres o mencioness el balance/saldo del usuario en el mensaje.

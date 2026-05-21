@@ -143,7 +143,10 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         try {
             await runTransaction(db, async (transaction) => {
                 const { id: _, date, ...rest } = transactionToCopy;
-                const { accountId, amount, type } = rest;
+                const cleanRest = Object.fromEntries(
+                    Object.entries(rest).filter(([, v]) => v !== undefined)
+                ) as Omit<Transaction, 'id' | 'date'>;
+                const { accountId, amount, type } = cleanRest;
 
                 if (accountId) {
                     const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
@@ -158,8 +161,8 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     }
                 }
 
-                if (type === 'transferencia' && rest.targetAccountId) {
-                    const targetCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", rest.targetAccountId);
+                if (type === 'transferencia' && cleanRest.targetAccountId) {
+                    const targetCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", cleanRest.targetAccountId);
                     const targetCuentaDoc = await transaction.get(targetCuentaRef);
                     if (targetCuentaDoc.exists()) {
                         const currentSaldo = targetCuentaDoc.data().saldo || 0;
@@ -170,7 +173,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
 
                 const newTransRef = doc(collection(db, "transactions"));
                 transaction.set(newTransRef, {
-                    ...rest,
+                    ...cleanRest,
                     userId: auth.currentUser!.uid,
                     date: createVenezuelaDate(),
                     createdAt: serverTimestamp()
@@ -187,9 +190,13 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         if (!auth.currentUser) return null;
 
         try {
+            const cleanTransactionData = Object.fromEntries(
+                Object.entries(transactionData).filter(([, v]) => v !== undefined)
+            ) as Omit<Transaction, 'id'>;
+
             let newId = "";
             await runTransaction(db, async (transaction) => {
-                const { accountId, amount, type } = transactionData;
+                const { accountId, amount, type } = cleanTransactionData;
 
                 if (accountId) {
                     const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
@@ -199,7 +206,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                         const cuentaMoneda = cuentaDoc.data().moneda || "USD";
                         
                         // Determinar el monto en la moneda de la cuenta
-                        const montoParaCuenta = convertirMontoParaCuenta(amount, transactionData.currency || 'USD', cuentaMoneda, transactionData.exchangeRate, transactionData.originalAmount);
+                        const montoParaCuenta = convertirMontoParaCuenta(amount, cleanTransactionData.currency || 'USD', cuentaMoneda, cleanTransactionData.exchangeRate, cleanTransactionData.originalAmount);
 
                         let nuevoSaldo = currentSaldo;
                         if (type === 'ingreso') nuevoSaldo += montoParaCuenta;
@@ -210,14 +217,14 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     }
                 }
 
-                if (type === 'transferencia' && transactionData.targetAccountId) {
-                    const targetCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", transactionData.targetAccountId);
+                if (type === 'transferencia' && cleanTransactionData.targetAccountId) {
+                    const targetCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", cleanTransactionData.targetAccountId);
                     const targetCuentaDoc = await transaction.get(targetCuentaRef);
                     if (targetCuentaDoc.exists()) {
                         const currentSaldo = targetCuentaDoc.data().saldo || 0;
                         const targetCuentaMoneda = targetCuentaDoc.data().moneda || "USD";
                         
-                        const montoParaTargetCuenta = convertirMontoParaCuenta(amount, transactionData.currency || 'USD', targetCuentaMoneda, transactionData.exchangeRate, transactionData.originalAmount);
+                        const montoParaTargetCuenta = convertirMontoParaCuenta(amount, cleanTransactionData.currency || 'USD', targetCuentaMoneda, cleanTransactionData.exchangeRate, cleanTransactionData.originalAmount);
 
                         const nuevoSaldo = currentSaldo + montoParaTargetCuenta;
                         transaction.update(targetCuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
@@ -227,7 +234,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                 const newTransRef = doc(collection(db, "transactions"));
                 newId = newTransRef.id;
                 transaction.set(newTransRef, {
-                    ...transactionData,
+                    ...cleanTransactionData,
                     userId: auth.currentUser!.uid,
                     createdAt: serverTimestamp()
                 });
@@ -248,17 +255,21 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                 if (!transDoc.exists()) throw "Transacción no encontrada";
 
                 const oldData = transDoc.data() as Transaction;
-                const newData = { ...oldData, ...updates };
+                const cleanUpdates = Object.fromEntries(
+                    Object.entries(updates).filter(([, v]) => v !== undefined)
+                ) as Partial<Transaction>;
+                
+                const newData = { ...oldData, ...cleanUpdates };
 
                 // Si ha cambiado la cuenta, el destino, el monto o el tipo, necesitamos recalcular saldos
                 const needsBalanceUpdate = 
-                    oldData.accountId !== updates.accountId || 
-                    oldData.targetAccountId !== updates.targetAccountId ||
-                    oldData.amount !== updates.amount || 
-                    oldData.type !== updates.type ||
-                    oldData.currency !== updates.currency ||
-                    oldData.exchangeRate !== updates.exchangeRate ||
-                    oldData.originalAmount !== updates.originalAmount;
+                    oldData.accountId !== cleanUpdates.accountId || 
+                    oldData.targetAccountId !== cleanUpdates.targetAccountId ||
+                    oldData.amount !== cleanUpdates.amount || 
+                    oldData.type !== cleanUpdates.type ||
+                    oldData.currency !== cleanUpdates.currency ||
+                    oldData.exchangeRate !== cleanUpdates.exchangeRate ||
+                    oldData.originalAmount !== cleanUpdates.originalAmount;
 
                 if (needsBalanceUpdate) {
                     // 1. Revertir impacto anterior
@@ -316,7 +327,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     }
                 }
 
-                transaction.update(transRef, updates);
+                transaction.update(transRef, cleanUpdates);
             });
             return true;
         } catch (error) {

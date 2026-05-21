@@ -1033,18 +1033,31 @@ export default function Chatbot() {
                 // ✅ FIX: Esperar un tick para que React actualice el contexto
                 await new Promise(resolve => setTimeout(resolve, 100));
 
-                // Usar el mensaje natural de la IA si está disponible
-                const aiMessage = rawData.message ||
-                    (results.length === 1
+                // ✅ FIX: Verificar si TODAS las operaciones fallaron
+                const allFailed = results.every(r => !r.success);
+                const someSucceeded = results.some(r => r.success);
+
+                let aiMessage: string;
+                if (allFailed) {
+                    // Si todas fallaron, NO usar el mensaje del LLM (puede ser falsa confirmación)
+                    // Usar las respuestas reales del procesamiento
+                    aiMessage = results.length === 1
                         ? results[0].response
-                        : `Procesé ${results.length} operaciones:\n${results.map(r => `• ${r.response}`).join("\n")}`
-                    );
+                        : `Hubo problemas con las operaciones:\n${results.map(r => `• ${r.response}`).join("\n")}`;
+                } else {
+                    // Al menos una operación fue exitosa, usar mensaje del LLM o las respuestas
+                    aiMessage = rawData.message ||
+                        (results.length === 1
+                            ? results[0].response
+                            : `Procesé ${results.length} operaciones:\n${results.map(r => `• ${r.response}`).join("\n")}`
+                        );
+                }
 
                 if (isMountedRef.current) {
                     setMessages(prev => [...prev, {
                         role: "ai",
                         content: aiMessage,
-                        isTransaction: results.some(r => r.success),
+                        isTransaction: someSucceeded,
                         chartType: results.find(r => r.chartType)?.chartType
                     }]);
                 }
