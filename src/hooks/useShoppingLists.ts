@@ -74,7 +74,7 @@ export const useShoppingLists = () => {
 
     const createList = async (name: string) => {
         if (!auth.currentUser) return;
-        await addDoc(collection(db, "shopping_lists"), {
+        return await addDoc(collection(db, "shopping_lists"), {
             userId: auth.currentUser.uid,
             name,
             items: [],

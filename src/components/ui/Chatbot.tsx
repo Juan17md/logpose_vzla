@@ -104,9 +104,9 @@ export default function Chatbot() {
 
     // Hooks
     const { transactions, addTransaction, deleteTransaction, updateTransaction } = useTransactions();
-    const { debts, addDebt, deleteDebt, updateDebt } = useDebts();
-    const { goals, updateGoal, deleteGoal } = useGoals();
-    const { lists, deleteList, updateListName } = useShoppingLists();
+    const { debts, addDebt, deleteDebt, updateDebt, addPayment } = useDebts();
+    const { goals, addGoal, addContribution, updateGoal, deleteGoal } = useGoals();
+    const { lists, createList, addItem, deleteList, updateListName } = useShoppingLists();
     const { fixedExpenses, addFixedExpense, deleteFixedExpense, updateFixedExpense } = useFixedExpenses();
     const { userData, updateUserData } = useUserData();
     const { apiRates, tasasEnBs, cuentas, calcularSaldoTotal, realizarOperacion } = useBankAccounts();
@@ -428,6 +428,7 @@ export default function Chatbot() {
     const processOperation = async (data: any) => {
         let success = false;
         let aiResponse = "";
+        let chartType: "pie" | "bar" | undefined = undefined;
 
         switch (data.intent) {
             case "transaction":
@@ -797,6 +798,126 @@ export default function Chatbot() {
 
             case "query":
             case "warning":
+            case "new_goal":
+                try {
+                    const targetAmount = parseNumeroFlexible(data.targetAmount);
+                    await addGoal(data.name, targetAmount, data.deadline);
+                    aiResponse = `Creé la meta de ahorro "${data.name}" con un objetivo de $${parseFloat(targetAmount.toFixed(2))}${data.deadline ? ` para el ${new Date(data.deadline).toLocaleDateString()}` : ""}.`;
+                    success = true;
+                } catch (error) {
+                    console.error("Error creating goal via Nami:", error);
+                    aiResponse = `No pude crear la meta de ahorro "${data.name}".`;
+                    success = false;
+                }
+                break;
+
+            case "contribute_goal":
+                try {
+                    const goalToContribute = goals.find(g => g.name.toLowerCase().includes(data.name.toLowerCase()));
+                    if (goalToContribute) {
+                        const contributionAmount = parseNumeroFlexible(data.amount);
+                        const method = (data.currency === "USDT" || String(data.name).toLowerCase().includes("usdt") || String(data.name).toLowerCase().includes("cripto")) ? "usdt" : "physical";
+                        await addContribution(goalToContribute.id, goalToContribute.name, contributionAmount, method);
+                        aiResponse = `Aporté $${parseFloat(contributionAmount.toFixed(2))} a tu meta "${goalToContribute.name}".`;
+                        success = true;
+                    } else {
+                        aiResponse = `No encontré la meta de ahorro "${data.name}".`;
+                        success = false;
+                    }
+                } catch (error) {
+                    console.error("Error contributing to goal via Nami:", error);
+                    aiResponse = `No pude registrar el aporte a tu meta "${data.name}".`;
+                    success = false;
+                }
+                break;
+
+            case "shopping_item":
+                try {
+                    const listName = data.listName || "Lista de compras";
+                    let listToAddTo = lists.find(l => l.name.toLowerCase().includes(listName.toLowerCase()));
+                    let targetListId = "";
+                    
+                    if (listToAddTo) {
+                        targetListId = listToAddTo.id;
+                    } else {
+                        const newListRef = await createList(listName);
+                        if (newListRef) {
+                            targetListId = newListRef.id;
+                        }
+                    }
+                    
+                    if (targetListId) {
+                        const itemQuantity = typeof data.quantity === 'number' ? data.quantity : parseInt(data.quantity) || 1;
+                        await addItem(targetListId, {
+                            name: data.item,
+                            quantity: itemQuantity,
+                            price: 0
+                        });
+                        aiResponse = `Agregué **${data.item}** (x${itemQuantity}) a la lista "${listName}".`;
+                        success = true;
+                    } else {
+                        aiResponse = `No pude encontrar ni crear la lista de compras "${listName}".`;
+                        success = false;
+                    }
+                } catch (error) {
+                    console.error("Error adding shopping item via Nami:", error);
+                    aiResponse = `No pude agregar el elemento a la lista de compras.`;
+                    success = false;
+                }
+                break;
+
+            case "pay_debt":
+                try {
+                    const debtToPay = debts.find(d => !d.isPaid && d.personName.toLowerCase().includes(data.person.toLowerCase()));
+                    if (debtToPay) {
+                        const paymentAmount = parseNumeroFlexible(data.amount);
+                        const isVes = data.currency === "VES" || debtToPay.currency === "VES";
+                        const rate = tasasEnBs.USD;
+                        
+                        let payAmountUSD = paymentAmount;
+                        let payOriginalAmount = undefined;
+                        let payExchangeRate = 1;
+                        
+                        if (isVes) {
+                            payExchangeRate = rate;
+                            payOriginalAmount = paymentAmount;
+                            payAmountUSD = parseFloat((paymentAmount / rate).toFixed(2));
+                        }
+                        
+                        success = await addPayment(debtToPay.id, {
+                            amount: payAmountUSD,
+                            date: createVenezuelaDate(),
+                            note: "Abono registrado por Nami",
+                            currency: isVes ? "VES" : "USD",
+                            originalAmount: payOriginalAmount,
+                            exchangeRate: payExchangeRate
+                        }) || false;
+                        
+                        if (success) {
+                            const payDisplay = isVes 
+                                ? `Bs. ${paymentAmount.toFixed(2)} (${obtenerSimboloMoneda("USD")}${payAmountUSD})`
+                                : `${obtenerSimboloMoneda("USD")}${parseFloat(paymentAmount.toFixed(2))}`;
+                            aiResponse = `Registré el pago de ${payDisplay} para la deuda con ${debtToPay.personName}.`;
+                        } else {
+                            aiResponse = `Hubo un error al registrar el pago de la deuda con ${debtToPay.personName}.`;
+                        }
+                    } else {
+                        aiResponse = `No encontré ninguna deuda pendiente con "${data.person}".`;
+                        success = false;
+                    }
+                } catch (error) {
+                    console.error("Error paying debt via Nami:", error);
+                    aiResponse = `No pude registrar el pago de la deuda.`;
+                    success = false;
+                }
+                break;
+
+            case "analysis_chart":
+                aiResponse = data.message || "Aquí tienes el gráfico de tus gastos este mes:";
+                success = true;
+                chartType = data.chartType || "pie";
+                break;
+
             case "suggestion":
                 aiResponse = data.response;
                 success = true;
@@ -819,7 +940,7 @@ export default function Chatbot() {
                     aiResponse = "No entendí muy bien esta operación.";
                 }
         }
-        return { success, response: aiResponse };
+        return { success, response: aiResponse, chartType };
     };
 
     // Retry logic para peticiones a la API
