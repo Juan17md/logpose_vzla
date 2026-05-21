@@ -69,7 +69,9 @@ type Message = {
     content: string;
     isTransaction?: boolean;
     chartType?: "pie" | "bar";
+    pendingTransaction?: any;
 };
+
 
 export default function Chatbot() {
     const [isOpen, setIsOpen] = useState(false);
@@ -429,12 +431,20 @@ export default function Chatbot() {
         let success = false;
         let aiResponse = "";
         let chartType: "pie" | "bar" | undefined = undefined;
+        let pendingTransaction: any = undefined;
 
         switch (data.intent) {
             case "transaction":
                 if (!data.accountId) {
-                    aiResponse = "Necesito saber de qué cuenta salió o entró el dinero. ¿De qué cuenta fue?";
+                    const exactAmount = typeof data.amount === 'string' ? parseNumeroFlexible(data.amount) : data.amount;
+                    const isVes = data.currency === "VES";
+                    const formattedAmount = isVes ? `Bs. ${exactAmount.toFixed(2)}` : `${obtenerSimboloMoneda(data.currency || "USD")}${exactAmount.toFixed(2)}`;
+                    const actionWord = data.type === "ingreso" ? "guardar tu ingreso" : "registrar tu gasto";
+                    const questionWord = data.type === "ingreso" ? "deseas guardar el dinero" : "salió el dinero";
+                    
+                    aiResponse = `Entendido, quiero ${actionWord} de **${formattedAmount}** en **${data.category || "General"}**. ¿En qué cuenta ${questionWord}? 🤔`;
                     success = false;
+                    pendingTransaction = data;
                     break;
                 }
 
@@ -940,7 +950,58 @@ export default function Chatbot() {
                     aiResponse = "No entendí muy bien esta operación.";
                 }
         }
-        return { success, response: aiResponse, chartType };
+        return { success, response: aiResponse, chartType, pendingTransaction };
+    };
+
+    const handleSelectPendingAccount = async (messageIndex: number, accountId: string, accountName: string) => {
+        const msg = messages[messageIndex];
+        if (!msg || !msg.pendingTransaction) return;
+
+        const pendingData = { ...msg.pendingTransaction, accountId };
+
+        setIsLoading(true);
+        setIndicadorTexto("Registrando transacción...");
+
+        try {
+            // Eliminar los botones inline del mensaje origen
+            setMessages(prev => {
+                const updated = [...prev];
+                if (updated[messageIndex]) {
+                    const newMsg = { ...updated[messageIndex] };
+                    delete newMsg.pendingTransaction;
+                    updated[messageIndex] = newMsg;
+                }
+                return updated;
+            });
+
+            // Agregar un mensaje del usuario simulando la respuesta
+            setMessages(prev => [...prev, {
+                role: "user",
+                content: `En mi cuenta **${accountName}**`
+            }]);
+
+            const result = await processOperation(pendingData);
+
+            if (result.success) {
+                setMessages(prev => [...prev, {
+                    role: "ai",
+                    content: `✅ ¡Listo! Registré tu transacción en **${accountName}** de forma exitosa.`,
+                    isTransaction: true
+                }]);
+                toast.success("Transacción registrada");
+            } else {
+                setMessages(prev => [...prev, {
+                    role: "ai",
+                    content: `Hubo un problema al registrar la transacción en **${accountName}**: ${result.response}`
+                }]);
+                toast.error("Error al completar transacción");
+            }
+        } catch (error) {
+            console.error("Error al completar la transacción pendiente:", error);
+            toast.error("Error técnico al registrar");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Retry logic para peticiones a la API
@@ -977,6 +1038,81 @@ export default function Chatbot() {
         setMessages(newMessages);
         setIsLoading(true);
         pendingOperationsRef.current = true;
+
+        // Normalizar texto para pre-ruteo local
+        const textNormalizado = userMsg
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim();
+
+        // 1. Balance
+        const esBalance = ["balance", "saldo", "cuanto dinero tengo", "mis cuentas", "ver cuentas", "ver saldo"].some(palabra => textNormalizado.includes(palabra));
+        // 2. Gastos
+        const esGastos = ["gastos", "que he gastado", "ver mis gastos", "en que gaste", "cuanto he gastado"].some(palabra => textNormalizado.includes(palabra));
+        // 3. Metas
+        const esMetas = ["metas", "mis metas", "ver metas", "ahorros", "mi meta"].some(palabra => textNormalizado.includes(palabra));
+        // 4. Compras
+        const esCompras = ["lista de compras", "compras", "lista del super", "mi lista", "ver lista"].some(palabra => textNormalizado.includes(palabra));
+        // 5. Pagos / Gastos fijos
+        const esPagos = ["gastos fijos", "pagos", "servicios", "suscripciones", "mi suscripcion"].some(palabra => textNormalizado.includes(palabra));
+        // 6. Deudas
+        const esDeudas = ["deudas", "mis deudas", "quien me debe", "a quien le debo", "ver deudas"].some(palabra => textNormalizado.includes(palabra));
+
+        let respuestaLocal = "";
+
+        if (esBalance) {
+            const saldosStr = cuentas.map(c => `- **${c.nombre}**: ${obtenerSimboloMoneda(c.moneda)}${c.saldo.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`).join('\n');
+            respuestaLocal = `💰 **Tus Saldos Actuales:**\n\n${saldosStr}\n\n**Saldo Total**: $${calcularSaldoTotal().toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else if (esGastos) {
+            const categoriesStr = userContext.topCategories.length > 0
+                ? userContext.topCategories.map(c => `- **${c.category}**: $${c.amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`).join('\n')
+                : "No hay gastos registrados en este mes.";
+            respuestaLocal = `📊 **Gasto Mensual:**\n\n- Total gastado este mes: **$${userContext.monthlyExpense.toLocaleString('es-VE', { minimumFractionDigits: 2 })}**\n- Promedio diario: **$${userContext.averageDailyExpense.toLocaleString('es-VE', { minimumFractionDigits: 2 })}**\n\n**Top Categorías:**\n${categoriesStr}`;
+        } else if (esMetas) {
+            const metasStr = goals.length > 0
+                ? goals.map(g => {
+                    const pct = g.targetAmount > 0 ? Math.round((g.currentAmount / g.targetAmount) * 100) : 0;
+                    return `- **${g.name}**: $${g.currentAmount.toLocaleString('es-VE')} de $${g.targetAmount.toLocaleString('es-VE')} (**${pct}%**)`;
+                  }).join('\n')
+                : "No tienes metas de ahorro activas.";
+            respuestaLocal = `🎯 **Metas de Ahorro:**\n\n${metasStr}`;
+        } else if (esCompras) {
+            const listasStr = lists.length > 0
+                ? lists.map(l => {
+                    const pending = l.items.filter(i => !i.completed).length;
+                    return `- **${l.name}**: ${pending} pendientes de ${l.items.length} ítems`;
+                  }).join('\n')
+                : "No tienes listas de compras activas.";
+            respuestaLocal = `📋 **Listas de Compras:**\n\n${listasStr}`;
+        } else if (esPagos) {
+            const fijosStr = fixedExpenses.length > 0
+                ? fixedExpenses.map(e => `- **${e.title || e.description}**: $${e.amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })} (Día ${e.dueDay} de cada mes)`).join('\n')
+                : "No tienes gastos fijos registrados.";
+            respuestaLocal = `📅 **Gastos Fijos y Suscripciones:**\n\n${fijosStr}`;
+        } else if (esDeudas) {
+            const deudasActivas = debts.filter(d => !d.isPaid);
+            const deudasStr = deudasActivas.length > 0
+                ? deudasActivas.map(d => {
+                    const pagado = d.payments?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+                    const restante = d.amount - pagado;
+                    const tipo = d.type === "por_cobrar" ? "Por cobrar a" : "Por pagar a";
+                    return `- ${tipo} **${d.personName}**: $${restante.toLocaleString('es-VE', { minimumFractionDigits: 2 })} (Original: $${d.amount.toLocaleString('es-VE')})`;
+                  }).join('\n')
+                : "No tienes deudas pendientes.";
+            respuestaLocal = `🤝 **Deudas Pendientes:**\n\n${deudasStr}`;
+        }
+
+        if (respuestaLocal) {
+            setTimeout(() => {
+                if (isMountedRef.current) {
+                    setMessages(prev => [...prev, { role: "ai", content: respuestaLocal }]);
+                    setIsLoading(false);
+                }
+                pendingOperationsRef.current = false;
+            }, 400);
+            return;
+        }
 
         try {
             // Preparar historial de conversación para contexto (excluir mensaje actual)
@@ -1024,7 +1160,7 @@ export default function Chatbot() {
                 const aiMessage = rawData.message || "No pude identificar ninguna operación.";
                 setMessages(prev => [...prev, { role: "ai", content: aiMessage }]);
             } else {
-                const results: { success: boolean; response: string; chartType?: "pie" | "bar" }[] = [];
+                const results: { success: boolean; response: string; chartType?: "pie" | "bar"; pendingTransaction?: any }[] = [];
                 for (const op of operations) {
                     const result = await processOperation(op);
                     results.push(result as any);
@@ -1036,6 +1172,7 @@ export default function Chatbot() {
                 // ✅ FIX: Verificar si TODAS las operaciones fallaron
                 const allFailed = results.every(r => !r.success);
                 const someSucceeded = results.some(r => r.success);
+                const pendingTx = results.find(r => r.pendingTransaction)?.pendingTransaction;
 
                 let aiMessage: string;
                 if (allFailed) {
@@ -1058,7 +1195,8 @@ export default function Chatbot() {
                         role: "ai",
                         content: aiMessage,
                         isTransaction: someSucceeded,
-                        chartType: results.find(r => r.chartType)?.chartType
+                        chartType: results.find(r => r.chartType)?.chartType,
+                        pendingTransaction: pendingTx
                     }]);
                 }
 
@@ -1299,6 +1437,23 @@ export default function Chatbot() {
                                                 {msg.chartType === 'pie' && (
                                                     <div className="mt-4 bg-slate-900/50 rounded-xl p-2 border border-slate-700/50">
                                                         <ExpensePieChart transactions={transactions} />
+                                                    </div>
+                                                )}
+
+                                                {/* Cuentas sugeridas cuando la transacción está pendiente de cuenta */}
+                                                {msg.pendingTransaction && cuentas && cuentas.length > 0 && (
+                                                    <div className="mt-3 flex flex-wrap gap-2 pt-2 border-t border-slate-700/30">
+                                                        {cuentas.map((cuenta) => (
+                                                            <button
+                                                                key={cuenta.id}
+                                                                onClick={() => handleSelectPendingAccount(i, cuenta.id, cuenta.nombre)}
+                                                                disabled={isLoading}
+                                                                className="px-3 py-1.5 bg-slate-700 hover:bg-violet-600/30 active:scale-[0.97] border border-slate-600/50 rounded-xl text-xs font-semibold text-slate-200 hover:text-violet-300 hover:border-violet-500/30 transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                                                            >
+                                                                <span>{obtenerSimboloMoneda(cuenta.moneda)}</span>
+                                                                <span>{cuenta.nombre}</span>
+                                                            </button>
+                                                        ))}
                                                     </div>
                                                 )}
                                             </div>
