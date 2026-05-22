@@ -15,7 +15,7 @@ import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { parseNumeroFlexible } from "@/lib/number";
 import { inferirTransaccionDesdeTexto, mensajePideCuenta } from "@/lib/inferirTransaccionNami";
 import { ejecutarConsultaNami } from "@/lib/consultasNami";
-import { aplicarCuentaAPendiente, filtrarCuentasParaBotones } from "@/lib/namiPendiente";
+import { aplicarCuentaAPendiente, filtrarCuentasParaBotones, esMensajeCorrectivo } from "@/lib/namiPendiente";
 import { auth } from "@/lib/firebase";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1167,24 +1167,20 @@ export default function Chatbot() {
         pendingOperationsRef.current = true;
 
         // Completar transacción pendiente localmente (sin depender del LLM en el follow-up)
+        // Completar transacción pendiente localmente (sin depender del LLM en el follow-up)
         const mensajePendiente = [...messages].reverse().find(
             (m) => m.role === "ai" && m.pendingTransaction
         );
         if (mensajePendiente?.pendingTransaction) {
-            let idCuenta =
-                resolverIdCuenta(userMsg, cuentas) ||
-                (mensajePendiente.pendingTransaction.accountId
-                    ? resolverIdCuenta(String(mensajePendiente.pendingTransaction.accountId), cuentas)
-                    : null);
+            const esCorrectivo = esMensajeCorrectivo(
+                userMsg,
+                mensajePendiente.pendingTransaction.amount,
+                cuentas
+            );
 
-            if (idCuenta) {
-                const cuenta = cuentas.find((c) => c.id === idCuenta);
+            if (esCorrectivo) {
+                // Borrar la transacción pendiente anterior porque se procesará una corrección en el backend
                 const indicePendiente = messages.lastIndexOf(mensajePendiente);
-                const datosPendientes = aplicarCuentaAPendiente(
-                    mensajePendiente.pendingTransaction as Record<string, unknown>,
-                    idCuenta
-                );
-
                 setMessages((prev) => {
                     const actualizado = [...prev];
                     if (actualizado[indicePendiente]) {
@@ -1194,52 +1190,78 @@ export default function Chatbot() {
                     }
                     return actualizado;
                 });
+                // No retornamos aquí, dejamos que continúe el flujo normal de la API
+            } else {
+                let idCuenta =
+                    resolverIdCuenta(userMsg, cuentas) ||
+                    (mensajePendiente.pendingTransaction.accountId
+                        ? resolverIdCuenta(String(mensajePendiente.pendingTransaction.accountId), cuentas)
+                        : null);
 
-                try {
-                    const resultado = await processOperation(datosPendientes);
-                    if (isMountedRef.current) {
-                        setMessages((prev) => [
-                            ...prev,
-                            {
-                                role: "ai",
-                                content: resultado.success
-                                    ? `✅ Registré tu transacción en **${cuenta?.nombre || "tu cuenta"}**.`
-                                    : resultado.response,
-                                isTransaction: resultado.success,
-                            },
-                        ]);
-                        if (resultado.success) toast.success("Transacción registrada");
-                        else toast.error("No se pudo registrar la transacción");
+                if (idCuenta) {
+                    const cuenta = cuentas.find((c) => c.id === idCuenta);
+                    const indicePendiente = messages.lastIndexOf(mensajePendiente);
+                    const datosPendientes = aplicarCuentaAPendiente(
+                        mensajePendiente.pendingTransaction as Record<string, unknown>,
+                        idCuenta
+                    );
+
+                    setMessages((prev) => {
+                        const actualizado = [...prev];
+                        if (actualizado[indicePendiente]) {
+                            const copia = { ...actualizado[indicePendiente] };
+                            delete copia.pendingTransaction;
+                            actualizado[indicePendiente] = copia;
+                        }
+                        return actualizado;
+                    });
+
+                    try {
+                        const resultado = await processOperation(datosPendientes);
+                        if (isMountedRef.current) {
+                            setMessages((prev) => [
+                                ...prev,
+                                {
+                                    role: "ai",
+                                    content: resultado.success
+                                        ? `✅ Registré tu transacción en **${cuenta?.nombre || "tu cuenta"}**.`
+                                        : resultado.response,
+                                    isTransaction: resultado.success,
+                                },
+                            ]);
+                            if (resultado.success) toast.success("Transacción registrada");
+                            else toast.error("No se pudo registrar la transacción");
+                        }
+                    } catch (error) {
+                        console.error("Error al completar transacción pendiente por texto:", error);
+                        if (isMountedRef.current) {
+                            setMessages((prev) => [
+                                ...prev,
+                                { role: "ai", content: "Hubo un error técnico al registrar el movimiento." },
+                            ]);
+                        }
+                        toast.error("Error técnico al registrar");
+                    } finally {
+                        if (isMountedRef.current) setIsLoading(false);
+                        pendingOperationsRef.current = false;
                     }
-                } catch (error) {
-                    console.error("Error al completar transacción pendiente por texto:", error);
-                    if (isMountedRef.current) {
-                        setMessages((prev) => [
-                            ...prev,
-                            { role: "ai", content: "Hubo un error técnico al registrar el movimiento." },
-                        ]);
-                    }
-                    toast.error("Error técnico al registrar");
-                } finally {
-                    if (isMountedRef.current) setIsLoading(false);
-                    pendingOperationsRef.current = false;
+                    return;
                 }
+
+                // Hay transacción pendiente pero no se reconoció la cuenta y no es correctivo: no llamar a la API
+                if (isMountedRef.current) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            role: "ai",
+                            content: `No reconocí **"${userMsg}"** como una de tus cuentas. Toca uno de los botones de arriba (ej. Banco Venezuela) para confirmar el movimiento.`,
+                        },
+                    ]);
+                    setIsLoading(false);
+                }
+                pendingOperationsRef.current = false;
                 return;
             }
-
-            // Hay transacción pendiente pero no se reconoció la cuenta: no llamar a la API
-            if (isMountedRef.current) {
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        role: "ai",
-                        content: `No reconocí **"${userMsg}"** como una de tus cuentas. Toca uno de los botones de arriba (ej. Banco Venezuela) para confirmar el movimiento.`,
-                    },
-                ]);
-                setIsLoading(false);
-            }
-            pendingOperationsRef.current = false;
-            return;
         }
 
         // Normalizar texto para pre-ruteo local
