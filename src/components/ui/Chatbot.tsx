@@ -10,9 +10,13 @@ import { useShoppingLists } from "@/hooks/useShoppingLists";
 import { useFixedExpenses } from "@/hooks/useFixedExpenses";
 import { useUserData } from "@/contexts/UserDataContext";
 import { createVenezuelaDate } from "@/lib/timezone";
-import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
+import { obtenerSimboloMoneda, resolverIdCuenta, obtenerTasaParaMoneda } from "@/lib/bankAccounts";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { parseNumeroFlexible } from "@/lib/number";
+import { inferirTransaccionDesdeTexto, mensajePideCuenta } from "@/lib/inferirTransaccionNami";
+import { ejecutarConsultaNami } from "@/lib/consultasNami";
+import { aplicarCuentaAPendiente, filtrarCuentasParaBotones } from "@/lib/namiPendiente";
+import { auth } from "@/lib/firebase";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -427,6 +431,21 @@ export default function Chatbot() {
         }
     }, [isOpen]);
 
+    const mensajeSinCuentasBancarias =
+        "Primero debes crear al menos una **cuenta bancaria** en la sección Cuentas para registrar movimientos con saldo.";
+
+    const marcarPendienteCuenta = (
+        datos: Record<string, unknown>,
+        campo: "accountId" | "targetAccountId",
+        mensaje: string
+    ) => {
+        const { campoFaltante: _c, ...resto } = datos;
+        return {
+            pendiente: { ...resto, campoFaltante: campo },
+            mensaje,
+        };
+    };
+
     const processOperation = async (data: any) => {
         let success = false;
         let aiResponse = "";
@@ -434,8 +453,29 @@ export default function Chatbot() {
         let pendingTransaction: any = undefined;
 
         switch (data.intent) {
-            case "transaction":
-                if (!data.accountId) {
+            case "transaction": {
+                if (cuentas.length === 0) {
+                    aiResponse = mensajeSinCuentasBancarias;
+                    success = false;
+                    break;
+                }
+
+                // Auto-selección si solo hay una cuenta
+                if (!data.accountId && cuentas.length === 1) {
+                    data.accountId = cuentas[0].id;
+                }
+
+                // Resolver ID real si la IA envió nombre de banco/cuenta en lugar del ID
+                if (data.accountId) {
+                    const idResuelto = resolverIdCuenta(String(data.accountId), cuentas);
+                    if (idResuelto) data.accountId = idResuelto;
+                }
+
+                const cuentaDestino = data.accountId
+                    ? cuentas.find((c) => c.id === data.accountId)
+                    : undefined;
+
+                if (!data.accountId || !cuentaDestino) {
                     const exactAmount = typeof data.amount === 'string' ? parseNumeroFlexible(data.amount) : data.amount;
                     const isVes = data.currency === "VES";
                     const formattedAmount = isVes ? `Bs. ${exactAmount.toFixed(2)}` : `${obtenerSimboloMoneda(data.currency || "USD")}${exactAmount.toFixed(2)}`;
@@ -444,61 +484,65 @@ export default function Chatbot() {
                     
                     aiResponse = `Entendido, quiero ${actionWord} de **${formattedAmount}** en **${data.category || "General"}**. ¿En qué cuenta ${questionWord}? 🤔`;
                     success = false;
-                    pendingTransaction = data;
+                    const marcado = marcarPendienteCuenta(
+                        { intent: "transaction", ...data },
+                        "accountId",
+                        aiResponse
+                    );
+                    pendingTransaction = marcado.pendiente;
                     break;
+                }
+
+                if (data.type === "transferencia" && data.targetAccountId) {
+                    const idDestino = resolverIdCuenta(String(data.targetAccountId), cuentas);
+                    if (idDestino) data.targetAccountId = idDestino;
+                }
+
+                if (data.type === "transferencia") {
+                    const cuentaDestinoTransfer = data.targetAccountId
+                        ? cuentas.find((c) => c.id === data.targetAccountId)
+                        : undefined;
+                    if (!data.targetAccountId || !cuentaDestinoTransfer) {
+                        aiResponse = `Para la transferencia desde **${cuentaDestino.nombre}**, ¿a qué cuenta va el dinero?`;
+                        success = false;
+                        pendingTransaction = marcarPendienteCuenta(
+                            { intent: "transaction", ...data },
+                            "targetAccountId",
+                            aiResponse
+                        ).pendiente;
+                        break;
+                    }
+                    if (data.targetAccountId === data.accountId) {
+                        aiResponse = "La cuenta origen y destino no pueden ser la misma.";
+                        success = false;
+                        break;
+                    }
                 }
 
                 let amountUSD = typeof data.amount === 'string' ? parseNumeroFlexible(data.amount) : data.amount;
                 let exchangeRate = 1;
                 let originalAmount = undefined;
-
-                // 🔍 DEBUG: Ver qué está enviando la IA
-                if (data.currency === "VES") {
-                    console.log('💱 DEBUG VES Transaction:', {
-                        receivedAmount: data.amount,
-                        typeOfAmount: typeof data.amount,
-                        parsedAmount: amountUSD,
-                        amountInUSD: data.amountInUSD
-                    });
-                }
+                const monedaTransaccion = (data.currency || "USD").toUpperCase();
 
                 // Caso especial: "Gasté 5$ en bolívares"
                 if (data.currency === "VES" && data.amountInUSD) {
-                    // El usuario dijo "5 dólares en bolívares"
-                    // La IA ya calculó el equivalente en Bs y lo envió en 'amount'
                     const rate = tasasEnBs.USD;
                     exchangeRate = rate;
                     const usdAmount = parseNumeroFlexible(data.amountInUSD);
-
-                    // Usar el monto en Bs que ya calculó la IA
-                    originalAmount = amountUSD; // Este es el monto en Bs calculado por la IA
-                    amountUSD = usdAmount; // Guardar el valor en USD para la base de datos
-
-                    console.log('💱 DEBUG "X$ en Bs" case:', {
-                        userSaidUSD: usdAmount,
-                        calculatedBs: originalAmount,
-                        rate: rate,
-                        willSaveAsUSD: amountUSD
-                    });
+                    originalAmount = amountUSD;
+                    amountUSD = usdAmount;
                 } else if (data.currency === "VES") {
-                    // Caso normal: "100 bolívares"
-                    // Identificar qué tasa usar (USD por defecto, o EUR/USDT si se detecta en el texto)
                     let rate = tasasEnBs.USD;
                     if (data.currency_type === "EUR") rate = tasasEnBs.EUR;
                     if (data.currency_type === "USDT") rate = tasasEnBs.USDT;
                     
                     exchangeRate = rate;
-                    // 🔧 FIX: Guardar el monto EXACTO en Bs ANTES de cualquier conversión
-                    const exactBsAmount = amountUSD; // Guardar el valor original
-                    originalAmount = exactBsAmount; // Este es el valor que el usuario ingresó
-                    amountUSD = parseFloat((exactBsAmount / rate).toFixed(2)); // Convertir a USD con 2 decimales
-
-                    console.log('💱 DEBUG After Conversion:', {
-                        originalBs: exactBsAmount,
-                        rate: rate,
-                        convertedUSD: amountUSD,
-                        savedOriginalAmount: originalAmount
-                    });
+                    const exactBsAmount = amountUSD;
+                    originalAmount = exactBsAmount;
+                    amountUSD = parseFloat((exactBsAmount / rate).toFixed(2));
+                } else if (cuentaDestino.moneda === "BS") {
+                    // USD/EUR/USDT en cuenta bolívares: aplicar tasa para actualizar saldo correctamente
+                    exchangeRate = obtenerTasaParaMoneda(monedaTransaccion, tasasEnBs);
                 }
 
 
@@ -536,8 +580,9 @@ export default function Chatbot() {
                 const amountDisplay = data.currency === "VES" && originalAmount
                     ? `Bs. ${originalAmount.toFixed(2)}`
                     : `${obtenerSimboloMoneda(data.currency as any || "USD")}${parseFloat(amountUSD.toFixed(2))}`;
-                aiResponse = `Registré el ${data.type} de ${amountDisplay} (${data.category}).`;
+                aiResponse = `Registré el ${data.type} de ${amountDisplay} (${data.category}) en **${cuentaDestino.nombre}**.`;
                 break;
+            }
 
             case "new_debt":
                 let debtOriginalAmount = undefined;
@@ -580,15 +625,48 @@ export default function Chatbot() {
                 aiResponse = `He programado el gasto fijo "${data.name}" por $${parseFloat(Number(data.amount).toFixed(2))} para el día ${data.dueDay} de cada mes.`;
                 break;
 
-            case "account_operation":
-                if (!data.accountId) {
-                    aiResponse = "Necesito saber en qué cuenta realizar la operación. ¿Cuál es?";
+            case "account_operation": {
+                if (cuentas.length === 0) {
+                    aiResponse = mensajeSinCuentasBancarias;
                     success = false;
                     break;
                 }
-                if (data.operation === "transferencia" && !data.targetAccountId) {
-                    aiResponse = "Para una transferencia necesito saber la cuenta destino. ¿A qué cuenta va?";
+
+                if (!data.accountId && cuentas.length === 1) {
+                    data.accountId = cuentas[0].id;
+                }
+
+                if (data.accountId) {
+                    const idOrigen = resolverIdCuenta(String(data.accountId), cuentas);
+                    if (idOrigen) data.accountId = idOrigen;
+                }
+                if (data.targetAccountId) {
+                    const idDestinoOp = resolverIdCuenta(String(data.targetAccountId), cuentas);
+                    if (idDestinoOp) data.targetAccountId = idDestinoOp;
+                }
+
+                const cuentaOp = data.accountId
+                    ? cuentas.find((c) => c.id === data.accountId)
+                    : undefined;
+
+                if (!data.accountId || !cuentaOp) {
+                    aiResponse = "¿En qué cuenta quieres realizar esta operación?";
                     success = false;
+                    pendingTransaction = marcarPendienteCuenta(
+                        { intent: "account_operation", ...data },
+                        "accountId",
+                        aiResponse
+                    ).pendiente;
+                    break;
+                }
+                if (data.operation === "transferencia" && !data.targetAccountId) {
+                    aiResponse = "Para la transferencia, ¿a qué cuenta destino va el dinero?";
+                    success = false;
+                    pendingTransaction = marcarPendienteCuenta(
+                        { intent: "account_operation", ...data },
+                        "targetAccountId",
+                        aiResponse
+                    ).pendiente;
                     break;
                 }
                 try {
@@ -620,6 +698,7 @@ export default function Chatbot() {
                     success = false;
                 }
                 break;
+            }
 
             case "delete_item":
                 // 🗑️ Lógica genérica de eliminación
@@ -758,16 +837,47 @@ export default function Chatbot() {
 
                 // Opcionalmente crear transacción de gasto
                 if (data.createTransaction) {
+                    if (cuentas.length === 0) {
+                        aiResponse = mensajeSinCuentasBancarias;
+                        success = false;
+                        break;
+                    }
+
+                    let cuentaPagoId = data.accountId as string | undefined;
+                    if (!cuentaPagoId && cuentas.length === 1) {
+                        cuentaPagoId = cuentas[0].id;
+                    }
+                    if (cuentaPagoId) {
+                        const resuelta = resolverIdCuenta(String(cuentaPagoId), cuentas);
+                        if (resuelta) cuentaPagoId = resuelta;
+                    }
+
+                    if (!cuentaPagoId || !cuentas.find((c) => c.id === cuentaPagoId)) {
+                        aiResponse = `Marqué "${fixedExpense.title}" como pendiente de pago. ¿De qué cuenta salió el dinero?`;
+                        success = false;
+                        pendingTransaction = marcarPendienteCuenta(
+                            {
+                                intent: "pay_fixed_expense",
+                                name: data.name,
+                                createTransaction: true,
+                            },
+                            "accountId",
+                            aiResponse
+                        ).pendiente;
+                        break;
+                    }
+
                     const rate = tasasEnBs.USD;
                     await addTransaction({
                         amount: fixedExpense.amount,
                         type: "gasto",
                         category: fixedExpense.category,
-                        description: `Pago mensual: ${fixedExpense.title}`,
+                        description: `Pago mensual: ${fixedExpense.title || fixedExpense.description}`,
                         date: createVenezuelaDate(),
                         currency: "USD",
                         originalAmount: fixedExpense.amount,
-                        exchangeRate: rate
+                        exchangeRate: rate,
+                        accountId: cuentaPagoId,
                     } as any);
                     aiResponse = `Marqué "${fixedExpense.title}" como pagado y registré el gasto de $${parseFloat(fixedExpense.amount.toFixed(2))}.`;
                 } else {
@@ -807,7 +917,23 @@ export default function Chatbot() {
                 break;
 
             case "query":
+                aiResponse = ejecutarConsultaNami(data, {
+                    balance: userContext.balance,
+                    monthlyExpense: userContext.monthlyExpense,
+                    monthlyIncome: userContext.monthlyIncome,
+                    monthlyBudget: userContext.monthlyBudget,
+                    topCategories: userContext.topCategories,
+                    debts: userContext.debts,
+                    goals: userContext.goals,
+                });
+                success = true;
+                break;
+
             case "warning":
+                aiResponse = data.message || "Ten en cuenta este aviso sobre tus finanzas.";
+                success = true;
+                break;
+
             case "new_goal":
                 try {
                     const targetAmount = parseNumeroFlexible(data.targetAmount);
@@ -929,26 +1055,24 @@ export default function Chatbot() {
                 break;
 
             case "suggestion":
-                aiResponse = data.response;
+                aiResponse = data.message || data.response || "Aquí tienes una sugerencia para tus finanzas.";
                 success = true;
                 break;
 
             default:
-                // Fallback legacy support
+                // Fallback legacy: redirigir al flujo de transacción con validación de cuenta
                 if (data.amount && data.category) {
-                    const legacyTransactionId = await addTransaction({
-                        amount: typeof data.amount === 'string' ? parseNumeroFlexible(data.amount) : data.amount,
-                        type: (data.type as "ingreso" | "gasto") || "gasto",
+                    return processOperation({
+                        intent: "transaction",
+                        amount: data.amount,
+                        type: data.type || "gasto",
                         category: data.category,
-                        description: data.description || "Transacción rápida con IA",
-                        date: createVenezuelaDate(),
-                        currency: "USD"
-                    } as any);
-                    success = !!legacyTransactionId; // ✅ Check if ID was returned
-                    aiResponse = "Transacción registrada.";
-                } else {
-                    aiResponse = "No entendí muy bien esta operación.";
+                        description: data.description,
+                        currency: data.currency || "USD",
+                        accountId: data.accountId,
+                    });
                 }
+                aiResponse = "No entendí muy bien esta operación.";
         }
         return { success, response: aiResponse, chartType, pendingTransaction };
     };
@@ -957,7 +1081,10 @@ export default function Chatbot() {
         const msg = messages[messageIndex];
         if (!msg || !msg.pendingTransaction) return;
 
-        const pendingData = { ...msg.pendingTransaction, accountId };
+        const pendingData = aplicarCuentaAPendiente(
+            msg.pendingTransaction as Record<string, unknown>,
+            accountId
+        );
 
         setIsLoading(true);
         setIndicadorTexto("Registrando transacción...");
@@ -1038,6 +1165,82 @@ export default function Chatbot() {
         setMessages(newMessages);
         setIsLoading(true);
         pendingOperationsRef.current = true;
+
+        // Completar transacción pendiente localmente (sin depender del LLM en el follow-up)
+        const mensajePendiente = [...messages].reverse().find(
+            (m) => m.role === "ai" && m.pendingTransaction
+        );
+        if (mensajePendiente?.pendingTransaction) {
+            let idCuenta =
+                resolverIdCuenta(userMsg, cuentas) ||
+                (mensajePendiente.pendingTransaction.accountId
+                    ? resolverIdCuenta(String(mensajePendiente.pendingTransaction.accountId), cuentas)
+                    : null);
+
+            if (idCuenta) {
+                const cuenta = cuentas.find((c) => c.id === idCuenta);
+                const indicePendiente = messages.lastIndexOf(mensajePendiente);
+                const datosPendientes = aplicarCuentaAPendiente(
+                    mensajePendiente.pendingTransaction as Record<string, unknown>,
+                    idCuenta
+                );
+
+                setMessages((prev) => {
+                    const actualizado = [...prev];
+                    if (actualizado[indicePendiente]) {
+                        const copia = { ...actualizado[indicePendiente] };
+                        delete copia.pendingTransaction;
+                        actualizado[indicePendiente] = copia;
+                    }
+                    return actualizado;
+                });
+
+                try {
+                    const resultado = await processOperation(datosPendientes);
+                    if (isMountedRef.current) {
+                        setMessages((prev) => [
+                            ...prev,
+                            {
+                                role: "ai",
+                                content: resultado.success
+                                    ? `✅ Registré tu transacción en **${cuenta?.nombre || "tu cuenta"}**.`
+                                    : resultado.response,
+                                isTransaction: resultado.success,
+                            },
+                        ]);
+                        if (resultado.success) toast.success("Transacción registrada");
+                        else toast.error("No se pudo registrar la transacción");
+                    }
+                } catch (error) {
+                    console.error("Error al completar transacción pendiente por texto:", error);
+                    if (isMountedRef.current) {
+                        setMessages((prev) => [
+                            ...prev,
+                            { role: "ai", content: "Hubo un error técnico al registrar el movimiento." },
+                        ]);
+                    }
+                    toast.error("Error técnico al registrar");
+                } finally {
+                    if (isMountedRef.current) setIsLoading(false);
+                    pendingOperationsRef.current = false;
+                }
+                return;
+            }
+
+            // Hay transacción pendiente pero no se reconoció la cuenta: no llamar a la API
+            if (isMountedRef.current) {
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        role: "ai",
+                        content: `No reconocí **"${userMsg}"** como una de tus cuentas. Toca uno de los botones de arriba (ej. Banco Venezuela) para confirmar el movimiento.`,
+                    },
+                ]);
+                setIsLoading(false);
+            }
+            pendingOperationsRef.current = false;
+            return;
+        }
 
         // Normalizar texto para pre-ruteo local
         const textNormalizado = userMsg
@@ -1121,18 +1324,45 @@ export default function Chatbot() {
                 content: msg.content
             }));
 
+            const token = auth.currentUser
+                ? await auth.currentUser.getIdToken()
+                : null;
+
+            const operacionPendienteActiva = [...messages]
+                .reverse()
+                .find((m) => m.role === "ai" && m.pendingTransaction)?.pendingTransaction;
+
             const res = await fetchWithRetry("/api/chat", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
                 body: JSON.stringify({
                     message: userMsg,
                     conversationHistory,
+                    operacionPendiente: operacionPendienteActiva || null,
                     userContext: {
                         ...userContext,
                         apiRates
                     }
                 }),
             });
+
+            if (res.status === 401) {
+                if (isMountedRef.current) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            role: "ai",
+                            content: "Tu sesión expiró. Inicia sesión de nuevo para continuar con Nami.",
+                        },
+                    ]);
+                    setIsLoading(false);
+                }
+                pendingOperationsRef.current = false;
+                return;
+            }
 
             const rawData = await res.json();
 
@@ -1150,15 +1380,31 @@ export default function Chatbot() {
                 operations = rawData.operations;
             } else if (Array.isArray(rawData)) {
                 operations = rawData;
+            } else if (rawData.intent || rawData.amount) {
+                operations = [rawData];
             } else {
-                operations = [rawData]; // Single object fallback
+                operations = [];
             }
+
+            const inferirPendienteSiPideCuenta = (textoRespuesta: string) => {
+                if (!mensajePideCuenta(textoRespuesta)) return undefined;
+                return inferirTransaccionDesdeTexto(userMsg) ?? undefined;
+            };
 
             // Process each operation
             if (operations.length === 0) {
-                // Si no hay operaciones pero hay mensaje, mostrarlo
-                const aiMessage = rawData.message || "No pude identificar ninguna operación.";
-                setMessages(prev => [...prev, { role: "ai", content: aiMessage }]);
+                const mensajeLlm = rawData.message || "No pude identificar ninguna operación.";
+                const pareceConfirmacion = /registr[eé]|guard[eé]|listo|hecho|✅/i.test(mensajeLlm);
+                const habiaPendiente = messages.some((m) => m.pendingTransaction);
+                const aiMessage = pareceConfirmacion && habiaPendiente
+                    ? "Entendí tu respuesta, pero no pude registrar el movimiento. Selecciona la cuenta con los botones de arriba o repite el gasto/ingreso completo indicando la cuenta."
+                    : mensajeLlm;
+                const pendingTx = inferirPendienteSiPideCuenta(mensajeLlm);
+                setMessages(prev => [...prev, {
+                    role: "ai",
+                    content: aiMessage,
+                    pendingTransaction: pendingTx,
+                }]);
             } else {
                 const results: { success: boolean; response: string; chartType?: "pie" | "bar"; pendingTransaction?: any }[] = [];
                 for (const op of operations) {
@@ -1172,22 +1418,34 @@ export default function Chatbot() {
                 // ✅ FIX: Verificar si TODAS las operaciones fallaron
                 const allFailed = results.every(r => !r.success);
                 const someSucceeded = results.some(r => r.success);
-                const pendingTx = results.find(r => r.pendingTransaction)?.pendingTransaction;
+                const algunFallo = results.some(r => !r.success);
+                let pendingTx = results.find(r => r.pendingTransaction)?.pendingTransaction;
 
                 let aiMessage: string;
-                if (allFailed) {
-                    // Si todas fallaron, NO usar el mensaje del LLM (puede ser falsa confirmación)
-                    // Usar las respuestas reales del procesamiento
+                if (someSucceeded && algunFallo) {
+                    aiMessage = results
+                        .map((r) => `${r.success ? "✅" : "⚠️"} ${r.response}`)
+                        .join("\n");
+                    if (!pendingTx) {
+                        pendingTx = inferirPendienteSiPideCuenta(aiMessage)
+                            ?? inferirPendienteSiPideCuenta(rawData.message || "");
+                    }
+                } else if (allFailed) {
                     aiMessage = results.length === 1
                         ? results[0].response
                         : `Hubo problemas con las operaciones:\n${results.map(r => `• ${r.response}`).join("\n")}`;
+                    if (!pendingTx) {
+                        pendingTx = inferirPendienteSiPideCuenta(aiMessage)
+                            ?? inferirPendienteSiPideCuenta(rawData.message || "");
+                    }
                 } else {
-                    // Al menos una operación fue exitosa, usar mensaje del LLM o las respuestas
-                    aiMessage = rawData.message ||
-                        (results.length === 1
+                    aiMessage =
+                        results.length === 1
                             ? results[0].response
-                            : `Procesé ${results.length} operaciones:\n${results.map(r => `• ${r.response}`).join("\n")}`
-                        );
+                            : results.map((r) => `✅ ${r.response}`).join("\n");
+                    if (rawData.message && results.every((r) => r.success)) {
+                        aiMessage = rawData.message;
+                    }
                 }
 
                 if (isMountedRef.current) {
@@ -1443,7 +1701,7 @@ export default function Chatbot() {
                                                 {/* Cuentas sugeridas cuando la transacción está pendiente de cuenta */}
                                                 {msg.pendingTransaction && cuentas && cuentas.length > 0 && (
                                                     <div className="mt-3 flex flex-wrap gap-2 pt-2 border-t border-slate-700/30">
-                                                        {cuentas.map((cuenta) => (
+                                                        {filtrarCuentasParaBotones(cuentas, msg.pendingTransaction).map((cuenta) => (
                                                             <button
                                                                 key={cuenta.id}
                                                                 onClick={() => handleSelectPendingAccount(i, cuenta.id, cuenta.nombre)}

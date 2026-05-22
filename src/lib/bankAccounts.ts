@@ -206,3 +206,112 @@ export function convertirMontoParaCuenta(
 export function obtenerColorAleatorio(): string {
     return COLORES_CUENTA[Math.floor(Math.random() * COLORES_CUENTA.length)];
 }
+
+/** Normaliza texto para comparaciones insensibles a acentos y mayúsculas */
+function normalizarTextoCuenta(texto: string): string {
+    return texto
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+}
+
+/** Limpia frases habituales al elegir cuenta por chat ("en mi cuenta mercantil") */
+function limpiarReferenciaCuenta(referencia: string): string {
+    return normalizarTextoCuenta(referencia)
+        .replace(/^(en(\s+(la|mi))?\s+)?(cuenta\s+)?/, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+/**
+ * Resuelve el ID de Firestore de una cuenta a partir de una referencia del usuario o la IA.
+ * Usa puntuación por coincidencia para tolerar nombres parciales ("venezuela" → Banco de Venezuela).
+ */
+export function resolverIdCuenta(
+    referencia: string,
+    cuentas: Array<{ id: string; nombre: string; banco: string }>
+): string | null {
+    if (!referencia?.trim() || cuentas.length === 0) return null;
+
+    const refOriginal = referencia.trim();
+    const ref = limpiarReferenciaCuenta(referencia);
+    if (!ref) return null;
+
+    const porId = cuentas.find((c) => c.id === refOriginal);
+    if (porId) return porId.id;
+
+    const porNombreExacto = cuentas.find(
+        (c) => normalizarTextoCuenta(c.nombre) === ref
+    );
+    if (porNombreExacto) return porNombreExacto.id;
+
+    const predefinido = BANCOS_PREDEFINIDOS.find(
+        (b) =>
+            b.id === ref ||
+            normalizarTextoCuenta(b.nombre) === ref ||
+            normalizarTextoCuenta(b.nombre).includes(ref) ||
+            ref.includes(normalizarTextoCuenta(b.nombre))
+    );
+
+    let mejorCuenta: { id: string } | null = null;
+    let mejorPuntaje = 0;
+    let segundoPuntaje = 0;
+
+    for (const cuenta of cuentas) {
+        const nombre = normalizarTextoCuenta(cuenta.nombre);
+        const banco = normalizarTextoCuenta(cuenta.banco);
+        let puntaje = 0;
+
+        if (nombre === ref || banco === ref) puntaje += 120;
+        if (nombre.includes(ref)) puntaje += 80;
+        if (banco.includes(ref)) puntaje += 70;
+        if (ref.length >= 4 && nombre.includes(ref)) puntaje += 10;
+
+        if (predefinido) {
+            const nombrePredef = normalizarTextoCuenta(predefinido.nombre);
+            if (
+                banco.includes(nombrePredef) ||
+                nombre.includes(nombrePredef) ||
+                banco.includes(predefinido.id) ||
+                nombre.includes(predefinido.id)
+            ) {
+                puntaje += 90;
+            }
+        }
+
+        const palabras = ref.split(" ").filter((p) => p.length >= 3);
+        for (const palabra of palabras) {
+            if (nombre.includes(palabra)) puntaje += 25;
+            if (banco.includes(palabra)) puntaje += 20;
+        }
+
+        if (puntaje > mejorPuntaje) {
+            segundoPuntaje = mejorPuntaje;
+            mejorPuntaje = puntaje;
+            mejorCuenta = cuenta;
+        } else if (puntaje > segundoPuntaje) {
+            segundoPuntaje = puntaje;
+        }
+    }
+
+    const umbralMinimo = 50;
+    if (mejorCuenta && mejorPuntaje >= umbralMinimo && mejorPuntaje > segundoPuntaje) {
+        return mejorCuenta.id;
+    }
+
+    return null;
+}
+
+/**
+ * Tasa Bs por unidad de moneda extranjera para impactar saldos de cuentas en BS.
+ */
+export function obtenerTasaParaMoneda(
+    moneda: string,
+    tasasEnBs: Record<string, number>
+): number {
+    const clave = moneda.toUpperCase();
+    if (clave === "EUR") return tasasEnBs.EUR || tasasEnBs.USD || 1;
+    if (clave === "USDT") return tasasEnBs.USDT || tasasEnBs.USD || 1;
+    return tasasEnBs.USD || 1;
+}

@@ -1,5 +1,6 @@
 import { Groq } from 'groq-sdk';
 import { NextResponse } from 'next/server';
+import { verificarTokenFirebase } from '@/lib/verificarAuthFirebase';
 
 interface MensajeChat {
     role: "system" | "user" | "assistant";
@@ -29,20 +30,34 @@ const client = new Groq({
 
 export async function POST(req: Request) {
   try {
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const sesion = token ? await verificarTokenFirebase(token) : null;
+
+    if (!sesion) {
+      return NextResponse.json(
+        { error: 'Debes iniciar sesión para usar el asistente.' },
+        { status: 401 }
+      );
+    }
+
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    if (!checkRateLimit(ip)) {
+    const claveRateLimit = `${sesion.uid}:${ip}`;
+    if (!checkRateLimit(claveRateLimit)) {
       return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }, { status: 429 });
     }
 
     let message = "";
     let conversationHistory: MensajeChat[] = [];
     let userContext: Record<string, unknown> = {};
+    let operacionPendiente: Record<string, unknown> | null = null;
 
     try {
       const body = await req.json();
       message = body.message || "";
       conversationHistory = body.conversationHistory || [];
       userContext = body.userContext || {};
+      operacionPendiente = body.operacionPendiente || null;
     } catch {
       return NextResponse.json({
         operations: [],
@@ -75,14 +90,16 @@ export async function POST(req: Request) {
     const tEUR = apiRates.EUR || apiRates.eur || 61.20;
     const tUSDT = apiRates.USDT || apiRates.usdt || 64.50;
 
-    // 🔍 Debug: Ver las tasas recibidas
-    console.log('💱 Tasas recibidas:', { tUSD, tEUR, tUSDT });
+    const contextoPendiente = operacionPendiente
+      ? `\n\n⚠️ CONTEXTO ACTIVO: El usuario tiene una operación PENDIENTE esperando ${operacionPendiente.campoFaltante === 'targetAccountId' ? 'la cuenta DESTINO' : 'la cuenta ORIGEN'}. Si el mensaje indica una cuenta, DEBES devolver la operación COMPLETA en "operations" con el accountId/targetAccountId correcto (ID real de la lista de cuentas).`
+      : '';
 
     // Construir mensajes con historial de conversación
     const messages: MensajeChat[] = [
       {
         role: "system",
         content: `Eres Nami, una experta asistente financiera personal, amigable y conversacional.
+${contextoPendiente}
 Tu objetivo es ayudar al usuario a gestionar sus finanzas de manera inteligente y natural.
 
 ═══════════════════════════════════════════════════════════════════

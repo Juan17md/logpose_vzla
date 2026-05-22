@@ -42,6 +42,8 @@ next-env.d.ts
 
 #rules
 .cursorrules
+AGENTS.md
+CLAUDE.md
 
 # Agent & AI Assistant files
 .agents/
