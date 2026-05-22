@@ -14,10 +14,10 @@ export function aplicarCuentaAPendiente(
     return copia;
 }
 
-export function filtrarCuentasParaBotones(
-    cuentas: Array<{ id: string; nombre: string; banco: string }>,
+export function filtrarCuentasParaBotones<T extends { id: string; nombre: string; banco: string }>(
+    cuentas: T[],
     pendiente?: Record<string, unknown> | null
-) {
+): T[] {
     if (pendiente?.campoFaltante === "targetAccountId" && pendiente.accountId) {
         return cuentas.filter((c) => c.id !== pendiente.accountId);
     }
