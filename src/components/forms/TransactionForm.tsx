@@ -522,11 +522,11 @@ export default function TransactionForm() {
     };
 
     return (
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
             {/* Decorative Background Elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
 
-            <div className="flex items-center justify-between mb-8 relative z-10">
+            <div className="hidden md:flex items-center justify-between mb-8 relative z-10">
                 <div className="flex items-center gap-3">
                     <div className="p-3 bg-violet-500/10 text-violet-400 rounded-2xl border border-violet-500/20 ring-4 ring-violet-500/5">
                         <FiDollarSign size={24} />

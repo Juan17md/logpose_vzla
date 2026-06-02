@@ -42,17 +42,21 @@ export default function MovimientosPage() {
             </div>
 
             {/* Mobile Header */}
-            <div className="md:hidden flex items-center justify-between mb-2">
+            <div className="md:hidden flex items-center justify-between mb-3 px-1">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Movimientos</h1>
-                    <p className="text-slate-400 text-sm">Registro de actividad</p>
+                    <h1 className="text-xl font-black text-white tracking-tight">
+                        {mobileView === 'list' ? 'Movimientos' : transactionToEdit ? 'Editar Movimiento' : 'Nuevo Movimiento'}
+                    </h1>
+                    <p className="text-slate-400 text-xs mt-0.5">
+                        {mobileView === 'list' ? 'Registro de actividad' : 'Completa los datos del registro'}
+                    </p>
                 </div>
                 {mobileView === 'form' && (
                     <button
                         onClick={handleBackToList}
-                        className="p-2 bg-slate-800 rounded-xl text-slate-300 hover:text-white border border-slate-700"
+                        className="p-2.5 bg-slate-800/80 backdrop-blur-md rounded-xl text-slate-300 hover:text-white border border-slate-700/50 hover:bg-slate-700 transition-all shadow-md active:scale-95"
                     >
-                        <FiArrowLeft size={20} />
+                        <FiArrowLeft size={18} />
                     </button>
                 )}
             </div>
