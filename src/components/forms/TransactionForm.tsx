@@ -46,6 +46,7 @@ import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { obtenerSimboloMoneda, convertirMontoParaCuenta } from "@/lib/bankAccounts";
 import { parseNumeroFlexible } from "@/lib/number";
+import { calcularComision } from "@/lib/comisiones";
 import Input from "../ui/forms/Input";
 import CustomCurrencyInput from "../ui/forms/CurrencyInput";
 import Select, { SelectOption } from "../ui/forms/Select";
@@ -103,6 +104,7 @@ const transactionSchema = z.object({
     accountId: z.string().min(1, "Debes seleccionar una cuenta"),
     targetAccountId: z.string().optional(),
     hasCommission: z.boolean().optional(),
+    commissionType: z.enum(["p2p", "p2c", "interbancaria", "custom"]).optional(),
     commissionAmount: z.string().optional(),
     vesCommissionAmount: z.string().optional(),
 }).refine(data => {
@@ -165,6 +167,7 @@ export default function TransactionForm() {
             accountId: "",
             targetAccountId: "",
             hasCommission: false,
+            commissionType: "custom",
             commissionAmount: "",
             vesCommissionAmount: "",
         }
@@ -177,6 +180,7 @@ export default function TransactionForm() {
     const exchangeRate = watch("exchangeRate");
     const category = watch("category");
     const hasCommission = watch("hasCommission");
+    const commissionType = watch("commissionType");
     const commissionAmount = watch("commissionAmount");
     const vesCommissionAmount = watch("vesCommissionAmount");
     const currentAccountId = watch("accountId");
@@ -210,6 +214,7 @@ export default function TransactionForm() {
                     ? parseFloat(transactionToEdit.originalAmount.toFixed(2)).toString()
                     : "",
                 hasCommission: false,
+                commissionType: "custom",
                 commissionAmount: "",
                 vesCommissionAmount: "",
                 targetAccountId: "",
@@ -271,14 +276,37 @@ export default function TransactionForm() {
 
     // Calculate USD from VES for commission
     useEffect(() => {
-        if (currency === "VES" && vesCommissionAmount && exchangeRate) {
+        if (commissionType === "custom" && currency === "VES" && vesCommissionAmount && exchangeRate) {
             const v = parseNumeroFlexible(vesCommissionAmount);
             const r = parseNumeroFlexible(exchangeRate);
             if (!isNaN(v) && !isNaN(r) && r > 0) {
                 setValue("commissionAmount", (v / r).toFixed(2));
             }
         }
-    }, [currency, vesCommissionAmount, exchangeRate, setValue]);
+    }, [currency, vesCommissionAmount, exchangeRate, commissionType, setValue]);
+
+    // Cálculo automático de la comisión en base a commissionType y montos principales
+    useEffect(() => {
+        if (!hasCommission || !commissionType || commissionType === "custom") return;
+
+        const tasa = parseNumeroFlexible(exchangeRate || "1") || rate || 1;
+        const montoPrincipal = currency === "VES" ? vesAmount : amount;
+        
+        const { vesAmount: calculatedVES, usdAmount: calculatedUSD } = calcularComision(
+            montoPrincipal || "0",
+            currency,
+            commissionType,
+            tasa
+        );
+
+        if (calculatedVES > 0) {
+            setValue("vesCommissionAmount", calculatedVES.toString());
+            setValue("commissionAmount", calculatedUSD.toString());
+        } else {
+            setValue("vesCommissionAmount", "");
+            setValue("commissionAmount", "");
+        }
+    }, [hasCommission, commissionType, currency, amount, vesAmount, exchangeRate, rate, setValue]);
 
     const onSubmit = async (data: TransactionFormData) => {
         if (cuentas.length === 0) {
@@ -529,7 +557,7 @@ export default function TransactionForm() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 relative z-10">
 
                 {/* Type Toggle */}
-                <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-950/60 rounded-[1.25rem] border border-slate-800/80 text-sm shadow-inner relative z-10">
+                <div className="grid grid-cols-3 gap-2 p-1 bg-slate-950/60 rounded-2xl border border-slate-800/80 text-sm shadow-inner relative z-10">
                     <Controller
                         control={control}
                         name="type"
@@ -537,21 +565,21 @@ export default function TransactionForm() {
                             <>
                                 <motion.div
                                     layout
-                                    className={`absolute top-1.5 h-[calc(100%-12px)] rounded-xl border shadow-[0_0_15px_rgba(0,0,0,0.25)] ${
+                                    className={`absolute top-1 h-[calc(100%-8px)] rounded-xl border shadow-[0_0_15px_rgba(0,0,0,0.25)] ${
                                         field.value === "ingreso"
-                                            ? "left-[6px] w-[calc(33.333%-8px)] bg-emerald-500/15 border-emerald-500/30"
+                                            ? "left-[4px] w-[calc(33.333%-6px)] bg-emerald-500/15 border-emerald-500/30"
                                             : field.value === "gasto"
-                                            ? "left-[calc(33.333%+2px)] w-[calc(33.333%-8px)] bg-red-500/15 border-red-500/30"
-                                            : "left-[calc(66.666%+0px)] w-[calc(33.333%-8px)] bg-blue-500/15 border-blue-500/30"
+                                            ? "left-[calc(33.333%+2px)] w-[calc(33.333%-6px)] bg-red-500/15 border-red-500/30"
+                                            : "left-[calc(66.666%+0px)] w-[calc(33.333%-6px)] bg-blue-500/15 border-blue-500/30"
                                     }`}
                                     transition={{ type: "spring", stiffness: 320, damping: 28 }}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("ingreso")}
-                                    className={`relative z-10 flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
                                         field.value === "ingreso"
-                                            ? "text-emerald-300"
+                                            ? "text-emerald-300 font-extrabold"
                                             : "text-slate-500 hover:text-slate-300"
                                     }`}
                                 >
@@ -560,9 +588,9 @@ export default function TransactionForm() {
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("gasto")}
-                                    className={`relative z-10 flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
                                         field.value === "gasto"
-                                            ? "text-red-300"
+                                            ? "text-red-300 font-extrabold"
                                             : "text-slate-500 hover:text-slate-300"
                                     }`}
                                 >
@@ -571,13 +599,13 @@ export default function TransactionForm() {
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("transferencia")}
-                                    className={`relative z-10 flex items-center justify-center gap-1.5 md:gap-2 py-3 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
                                         field.value === "transferencia"
-                                            ? "text-blue-300"
+                                            ? "text-blue-300 font-extrabold"
                                             : "text-slate-500 hover:text-slate-300"
                                     }`}
                                 >
-                                    <FiRefreshCw className={field.value === "transferencia" ? "text-blue-300" : ""} /> Transferencia
+                                    <FiRefreshCw className={field.value === "transferencia" ? "text-blue-300" : ""} /> Transf.
                                 </button>
                             </>
                         )}
@@ -604,7 +632,7 @@ export default function TransactionForm() {
                 )}
 
                 {/* Cuenta Bancaria - OBLIGATORIO */}
-                <div className="z-30 relative grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="z-30 relative grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Controller
                         control={control}
                         name="accountId"
@@ -724,70 +752,68 @@ export default function TransactionForm() {
                     )}
                 </div>
 
-                {/* Amount Section */}
-                <div className="space-y-4">
-                    <div className="flex gap-4">
-                        {/* Currency Toggle */}
-                        <div className="flex-1">
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Moneda</label>
-                            <Controller
-                                control={control}
-                                name="currency"
-                                render={({ field }) => (
-                                    <div className="flex p-1 bg-slate-900/60 rounded-[1.25rem] border border-slate-700/50 shadow-inner">
-                                        {(["USD", "VES"] as const).map((curr) => (
-                                            <button
-                                                key={curr}
-                                                type="button"
-                                                onClick={() => {
-                                                    field.onChange(curr);
-                                                    setValue("amount", "");
-                                                    setValue("vesAmount", "");
-                                                }}
-                                                className={`flex-1 py-3 text-xs md:text-sm font-bold rounded-xl transition-all duration-300 ${field.value === curr
-                                                    ? curr === "USD" 
-                                                        ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]" 
-                                                        : "bg-slate-800 text-cyan-400 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
-                                                    : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 border border-transparent"
-                                                    }`}
-                                            >
-                                                {curr === "VES" ? "Bs (VES)" : "USD"}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            />
-                        </div>
-                        {/* Rate Input */}
-                        <AnimatePresence>
-                            {currency === "VES" && (
-                                <motion.div
-                                    initial={{ opacity: 0, width: 0 }}
-                                    animate={{ opacity: 1, width: "33%" }}
-                                    exit={{ opacity: 0, width: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <Controller
-                                        control={control}
-                                        name="exchangeRate"
-                                        render={({ field }) => (
-                                            <Input
-                                                label="Tasa"
-                                                type="number"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                {...field}
-                                                error={errors.exchangeRate}
-                                                className="text-center"
-                                            />
-                                        )}
-                                    />
-                                </motion.div>
+                {/* Amount & Currency Section (Compact) */}
+                <div className="grid grid-cols-12 gap-3 items-end">
+                    {/* Currency Toggle */}
+                    <div className={currency === "VES" ? "col-span-6 sm:col-span-4" : "col-span-12 sm:col-span-6"}>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Moneda</label>
+                        <Controller
+                            control={control}
+                            name="currency"
+                            render={({ field }) => (
+                                <div className="flex p-1 bg-slate-900/60 rounded-xl border border-slate-700/50 shadow-inner">
+                                    {(["USD", "VES"] as const).map((curr) => (
+                                        <button
+                                            key={curr}
+                                            type="button"
+                                            onClick={() => {
+                                                field.onChange(curr);
+                                                setValue("amount", "");
+                                                setValue("vesAmount", "");
+                                            }}
+                                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-300 ${field.value === curr
+                                                ? curr === "USD" 
+                                                    ? "bg-slate-800 text-emerald-400 border border-emerald-500/20 shadow-md" 
+                                                    : "bg-slate-800 text-cyan-400 border border-cyan-500/20 shadow-md"
+                                                : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/10 border border-transparent"
+                                                }`}
+                                        >
+                                            {curr === "VES" ? "Bs (VES)" : "USD"}
+                                        </button>
+                                    ))}
+                                </div>
                             )}
-                        </AnimatePresence>
+                        />
                     </div>
-
-                    <div className="relative">
+                    {/* Rate Input */}
+                    <AnimatePresence>
+                        {currency === "VES" && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="col-span-6 sm:col-span-3 overflow-hidden"
+                            >
+                                <Controller
+                                    control={control}
+                                    name="exchangeRate"
+                                    render={({ field }) => (
+                                        <Input
+                                            label="Tasa"
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="0.00"
+                                            {...field}
+                                            error={errors.exchangeRate}
+                                            className="text-center py-2 min-h-[40px] text-xs font-semibold"
+                                        />
+                                    )}
+                                />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    {/* Amount Input */}
+                    <div className={currency === "VES" ? "col-span-12 sm:col-span-5 relative" : "col-span-12 sm:col-span-6 relative"}>
                         <Controller
                             control={control}
                             name={currency === "VES" ? "vesAmount" : "amount"}
@@ -805,11 +831,11 @@ export default function TransactionForm() {
                         />
                         {currency === "VES" && amount && (
                             <motion.div
-                                initial={{ opacity: 0, y: 10 }}
+                                initial={{ opacity: 0, y: 5 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="absolute top-9 right-4 pointer-events-none"
+                                className="absolute top-8.5 right-3 pointer-events-none"
                             >
-                                <span className="text-emerald-400 font-bold text-sm bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
+                                <span className="text-emerald-400 font-bold text-xs bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20">
                                     ≈ ${amount}
                                 </span>
                             </motion.div>
@@ -817,117 +843,139 @@ export default function TransactionForm() {
                     </div>
                 </div>
 
-                <div className="space-y-6">
-                    {/* Category */}
-                    {type !== "transferencia" && (
-                        <div>
-                            <Controller
-                                control={control}
-                                name="category"
-                                render={({ field }) => (
-                                    <Select
-                                        label="Categoría"
-                                        options={CATEGORIES}
-                                        value={field.value}
-                                        onChange={field.onChange}
-                                        error={errors.category}
-                                        icon={<FiTag />}
-                                        renderOption={(opt) => {
-                                            const categoria = opt as CategoriaOpcion;
-                                            const IconoCategoria = categoria.icono;
-                                            return (
-                                                <div className="flex items-center gap-2.5">
-                                                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                                                        <IconoCategoria size={14} />
-                                                    </span>
-                                                    <span className="font-semibold text-slate-100">{categoria.name}</span>
-                                                </div>
-                                            );
-                                        }}
-                                        renderValue={(opt) => {
-                                            const categoria = opt as CategoriaOpcion;
-                                            const IconoCategoria = categoria.icono;
-                                            return (
-                                                <div className="flex items-center gap-2.5">
-                                                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                                                        <IconoCategoria size={14} />
-                                                    </span>
-                                                    <span className="font-semibold text-slate-100">{categoria.name}</span>
-                                                </div>
-                                            );
-                                        }}
-                                    />
-                                )}
-                            />
-                            <AnimatePresence>
-                                {category === "Otra" && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                        animate={{ opacity: 1, height: "auto", marginTop: 12 }}
-                                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                    >
-                                        <Controller
-                                            control={control}
-                                            name="customCategory"
-                                            render={({ field }) => (
-                                                <Input
-                                                    placeholder="Especifica la categoría..."
-                                                    icon={<FiTag className="text-violet-400" />}
-                                                    {...field}
-                                                    error={errors.customCategory}
-                                                />
-                                            )}
+                {/* Category & Date (Grid) */}
+                <div className="grid grid-cols-12 gap-3 items-start">
+                    {type !== "transferencia" ? (
+                        <>
+                            <div className="col-span-6">
+                                <Controller
+                                    control={control}
+                                    name="category"
+                                    render={({ field }) => (
+                                        <Select
+                                            label="Categoría"
+                                            options={CATEGORIES}
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                            error={errors.category}
+                                            icon={<FiTag size={12} />}
+                                            renderOption={(opt) => {
+                                                const categoria = opt as CategoriaOpcion;
+                                                const IconoCategoria = categoria.icono;
+                                                return (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                                            <IconoCategoria size={12} />
+                                                        </span>
+                                                        <span className="font-semibold text-xs text-slate-100">{categoria.name}</span>
+                                                    </div>
+                                                );
+                                            }}
+                                            renderValue={(opt) => {
+                                                const categoria = opt as CategoriaOpcion;
+                                                const IconoCategoria = categoria.icono;
+                                                return (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                                            <IconoCategoria size={12} />
+                                                        </span>
+                                                        <span className="font-semibold text-xs text-slate-100">{categoria.name}</span>
+                                                    </div>
+                                                );
+                                            }}
                                         />
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                                    )}
+                                />
+                            </div>
+                            <div className="col-span-6">
+                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Fecha</label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 transition-colors">
+                                        <FiCalendar className="text-slate-400 group-focus-within:text-emerald-400" size={14} />
+                                    </div>
+                                    <Controller
+                                        control={control}
+                                        name="date"
+                                        render={({ field }) => (
+                                            <DatePicker
+                                                selected={field.value}
+                                                onChange={(date: Date | null) => field.onChange(date)}
+                                                locale="es"
+                                                dateFormat="dd/MM/yyyy"
+                                                className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-xs font-semibold rounded-2xl py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/40 transition-all cursor-pointer hover:border-slate-600 hover:bg-slate-800 min-h-[44px]"
+                                                wrapperClassName="w-full"
+                                                calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-xl !rounded-2xl overflow-hidden"
+                                                dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-all"}
+                                                weekDayClassName={() => "!text-slate-500 !uppercase !text-[10px] !tracking-wider"}
+                                                popperClassName="!z-50"
+                                            />
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                            {category === "Otra" && (
+                                <div className="col-span-12 mt-1">
+                                    <Controller
+                                        control={control}
+                                        name="customCategory"
+                                        render={({ field }) => (
+                                            <Input
+                                                placeholder="Especifica la categoría..."
+                                                icon={<FiTag className="text-violet-400" size={12} />}
+                                                {...field}
+                                                error={errors.customCategory}
+                                                className="py-2 text-xs"
+                                            />
+                                        )}
+                                    />
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="col-span-12">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Fecha</label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 transition-colors">
+                                    <FiCalendar className="text-slate-400 group-focus-within:text-emerald-400" size={14} />
+                                </div>
+                                <Controller
+                                    control={control}
+                                    name="date"
+                                    render={({ field }) => (
+                                        <DatePicker
+                                            selected={field.value}
+                                            onChange={(date: Date | null) => field.onChange(date)}
+                                            locale="es"
+                                            dateFormat="dd/MM/yyyy"
+                                            className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-xs font-semibold rounded-2xl py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/40 transition-all cursor-pointer hover:border-slate-600 hover:bg-slate-800 min-h-[44px]"
+                                            wrapperClassName="w-full"
+                                            calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-xl !rounded-2xl overflow-hidden"
+                                            dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-all"}
+                                            weekDayClassName={() => "!text-slate-500 !uppercase !text-[10px] !tracking-wider"}
+                                            popperClassName="!z-50"
+                                        />
+                                    )}
+                                />
+                            </div>
                         </div>
                     )}
-
-                    {/* Date */}
-                    <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Fecha</label>
-                        <div className="relative group">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10 transition-colors">
-                                <FiCalendar className="text-slate-400 group-focus-within:text-emerald-400" />
-                            </div>
-                            <Controller
-                                control={control}
-                                name="date"
-                                render={({ field }) => (
-                                    <DatePicker
-                                        selected={field.value}
-                                        onChange={(date: Date | null) => field.onChange(date)}
-                                        locale="es"
-                                        dateFormat="dd/MM/yyyy"
-                                        className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-sm font-medium rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all cursor-pointer hover:border-slate-600 hover:bg-slate-800"
-                                        wrapperClassName="w-full"
-                                        calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-xl !rounded-2xl overflow-hidden"
-                                        dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-all"}
-                                        weekDayClassName={() => "!text-slate-500 !uppercase !text-xs !tracking-wider"}
-                                        popperClassName="!z-50"
-                                    />
-                                )}
-                            />
-                        </div>
-                    </div>
                 </div>
 
                 {/* Description */}
                 <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Descripción</label>
                     <div className="relative">
-                        <div className="absolute top-4 left-4 pointer-events-none text-slate-400">
-                            <FiFileText />
+                        <div className="absolute top-3.5 left-3.5 pointer-events-none text-slate-400">
+                            <FiFileText size={14} />
                         </div>
                         <Controller
                             control={control}
                             name="description"
                             render={({ field }) => (
                                 <textarea
-                                    rows={3}
+                                    rows={2}
                                     {...field}
-                                    className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-sm font-medium rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-600 resize-none hover:border-slate-600 hover:bg-slate-800"
+                                    className="w-full bg-slate-800/40 border border-slate-700/40 text-slate-200 text-xs font-semibold rounded-2xl py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/40 transition-all placeholder:text-slate-600 resize-none hover:border-slate-600 hover:bg-slate-800 min-h-[64px]"
                                     placeholder="Detalles opcionales..."
                                 />
                             )}
@@ -937,71 +985,134 @@ export default function TransactionForm() {
 
                 {/* Commission Section */}
                 {!transactionToEdit && (
-                    <div className="space-y-4 pt-2">
-                        <label className="flex items-center gap-3 cursor-pointer group w-fit ml-1">
-                            <div className="relative flex items-center">
-                                <Controller
-                                    control={control}
-                                    name="hasCommission"
-                                    render={({ field }) => (
-                                        <input
-                                            type="checkbox"
-                                            className="peer sr-only"
-                                            checked={field.value}
-                                            onChange={(e) => {
-                                                field.onChange(e.target.checked);
-                                                if (!e.target.checked) {
-                                                    setValue("commissionAmount", "");
-                                                    setValue("vesCommissionAmount", "");
-                                                }
-                                            }}
-                                        />
-                                    )}
-                                />
-                                <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-violet-500 border border-slate-600/50"></div>
-                            </div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-300 transition-colors">¿Incluye comisión?</span>
-                        </label>
-
-                        <AnimatePresence>
-                            {hasCommission && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                    animate={{ opacity: 1, height: "auto", marginTop: 16 }}
-                                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="relative">
-                                        <Controller
-                                            control={control}
-                                            name={currency === "VES" ? "vesCommissionAmount" : "commissionAmount"}
-                                            render={({ field }) => (
-                                                <CustomCurrencyInput
-                                                    label={`Comisión ${currency === "VES" ? "(Bolívares)" : "(Dólares)"}`}
-                                                    placeholder="0.00"
-                                                    prefix={currency === "VES" ? "Bs. " : "$ "}
-                                                    decimalsLimit={2}
-                                                    onValueChange={(value) => field.onChange(value || "")}
-                                                    value={field.value}
-                                                    error={currency === "VES" ? errors.vesCommissionAmount : errors.commissionAmount}
-                                                />
-                                            )}
-                                        />
-                                        {currency === "VES" && commissionAmount && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className="absolute top-9 right-4 pointer-events-none"
-                                            >
-                                                <span className="text-red-400 font-bold text-sm bg-red-500/10 px-2 py-1 rounded-lg border border-red-500/20">
-                                                    ≈ ${commissionAmount}
-                                                </span>
-                                            </motion.div>
+                    <div className="pt-1">
+                        <div className="bg-slate-950/20 border border-slate-800/50 p-4 rounded-3xl space-y-3.5 backdrop-blur-md">
+                            <label className="flex items-center gap-3 cursor-pointer group w-fit">
+                                <div className="relative flex items-center">
+                                    <Controller
+                                        control={control}
+                                        name="hasCommission"
+                                        render={({ field }) => (
+                                            <input
+                                                type="checkbox"
+                                                className="peer sr-only"
+                                                checked={field.value}
+                                                onChange={(e) => {
+                                                    field.onChange(e.target.checked);
+                                                    if (!e.target.checked) {
+                                                        setValue("commissionAmount", "");
+                                                        setValue("vesCommissionAmount", "");
+                                                        setValue("commissionType", "custom");
+                                                    }
+                                                }}
+                                            />
                                         )}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                    />
+                                    <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-violet-500 border border-slate-600/50"></div>
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-300 transition-colors">¿Incluye comisión?</span>
+                            </label>
+
+                            <AnimatePresence>
+                                {hasCommission && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="space-y-3 overflow-hidden"
+                                    >
+                                        {/* Botones de Selección Rápida de Comisión */}
+                                        <div className="pt-1">
+                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">
+                                                Tipo de Comisión (Automática)
+                                            </label>
+                                            <Controller
+                                                control={control}
+                                                name="commissionType"
+                                                render={({ field }) => (
+                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-slate-950/60 rounded-xl border border-slate-800/80 shadow-inner">
+                                                        {[
+                                                            { id: "p2p", label: "P2P (0.3%)", desc: "Pago Móvil" },
+                                                            { id: "p2c", label: "P2C (1.5%)", desc: "Comercio" },
+                                                            { id: "interbancaria", label: "Interban. (0.3%)", desc: "Otros Bancos" },
+                                                            { id: "custom", label: "Personalizada", desc: "Monto libre" }
+                                                        ].map((opt) => (
+                                                            <button
+                                                                key={opt.id}
+                                                                type="button"
+                                                                onClick={() => field.onChange(opt.id)}
+                                                                className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border text-center transition-all duration-300 ${
+                                                                    field.value === opt.id
+                                                                        ? "bg-violet-500/10 text-violet-300 border-violet-500/30 shadow-[0_0_10px_rgba(139,92,246,0.1)] font-bold"
+                                                                        : "bg-transparent text-slate-400 border-transparent hover:text-slate-300 hover:bg-slate-800/20"
+                                                                }`}
+                                                            >
+                                                                <span className="text-[10px]">{opt.label}</span>
+                                                                <span className="text-[8px] text-slate-500 font-medium block mt-0.5">{opt.desc}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            />
+                                        </div>
+
+                                        {/* Input de la comisión */}
+                                        <div className="relative">
+                                            <Controller
+                                                control={control}
+                                                name={currency === "VES" ? "vesCommissionAmount" : "commissionAmount"}
+                                                render={({ field }) => (
+                                                    <CustomCurrencyInput
+                                                        label={
+                                                            commissionType !== "custom"
+                                                                ? `Comisión Calculada (${currency === "VES" ? "Bs. con mínimo 2.00 Bs." : "Dólares"})`
+                                                                : `Comisión Personalizada ${currency === "VES" ? "(Bolívares)" : "(Dólares)"}`
+                                                        }
+                                                        placeholder="0.00"
+                                                        prefix={currency === "VES" ? "Bs. " : "$ "}
+                                                        decimalsLimit={2}
+                                                        onValueChange={(value) => {
+                                                            if (commissionType === "custom") {
+                                                                field.onChange(value || "");
+                                                            }
+                                                        }}
+                                                        value={field.value}
+                                                        disabled={commissionType !== "custom"}
+                                                        error={currency === "VES" ? errors.vesCommissionAmount : errors.commissionAmount}
+                                                        className={commissionType !== "custom" ? "bg-slate-800/20 border-slate-700/30 text-slate-400 cursor-not-allowed select-none py-2 text-xs" : "py-2 text-xs"}
+                                                    />
+                                                )}
+                                            />
+                                            {currency === "VES" && commissionAmount && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 5 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="absolute top-8 right-3 pointer-events-none"
+                                                >
+                                                    <span className="text-red-400 font-bold text-xs bg-red-500/10 px-1.5 py-0.5 rounded-md border border-red-500/20">
+                                                        ≈ ${commissionAmount}
+                                                    </span>
+                                                </motion.div>
+                                            )}
+                                        </div>
+
+                                        {/* Indicador informativo de cálculo con mínimos */}
+                                        {commissionType !== "custom" && (
+                                            <motion.p 
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                className="text-[9px] text-slate-500 italic ml-1 mt-0.5 flex items-center gap-1"
+                                            >
+                                                <span>✨</span>
+                                                <span>
+                                                    Calculado: {commissionType === "p2c" ? "1.50%" : "0.30%"} del monto (mínimo de Bs. 2.00).
+                                                </span>
+                                            </motion.p>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </div>
                 )}
 
