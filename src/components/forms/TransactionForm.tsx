@@ -634,7 +634,7 @@ export default function TransactionForm() {
                 )}
 
                 {/* Cuenta Bancaria - OBLIGATORIO */}
-                <div className="z-30 relative grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="z-30 relative flex flex-col gap-3">
                     <Controller
                         control={control}
                         name="accountId"
@@ -757,7 +757,7 @@ export default function TransactionForm() {
                 {/* Amount & Currency Section (Compact) */}
                 <div className="grid grid-cols-12 gap-3 items-end">
                     {/* Currency Toggle */}
-                    <div className={currency === "VES" ? "col-span-6 sm:col-span-4" : "col-span-12 sm:col-span-6"}>
+                    <div className={currency === "VES" ? "col-span-6" : "col-span-12"}>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Moneda</label>
                         <Controller
                             control={control}
@@ -789,33 +789,33 @@ export default function TransactionForm() {
                     </div>
                     {/* Rate Input */}
                     <AnimatePresence>
-                        {currency === "VES" && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                className="col-span-6 sm:col-span-3 overflow-hidden"
-                            >
-                                <Controller
-                                    control={control}
-                                    name="exchangeRate"
-                                    render={({ field }) => (
-                                        <Input
-                                            label="Tasa"
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="0.00"
-                                            {...field}
-                                            error={errors.exchangeRate}
-                                            className="text-center py-2 min-h-[40px] text-xs font-semibold"
-                                        />
-                                    )}
-                                />
-                            </motion.div>
-                        )}
+                         {currency === "VES" && (
+                             <motion.div
+                                 initial={{ opacity: 0, scale: 0.95 }}
+                                 animate={{ opacity: 1, scale: 1 }}
+                                 exit={{ opacity: 0, scale: 0.95 }}
+                                 className="col-span-6 overflow-hidden"
+                             >
+                                 <Controller
+                                     control={control}
+                                     name="exchangeRate"
+                                     render={({ field }) => (
+                                         <Input
+                                             label="Tasa"
+                                             type="number"
+                                             step="0.01"
+                                             placeholder="0.00"
+                                             {...field}
+                                             error={errors.exchangeRate}
+                                             className="text-center py-2 min-h-[40px] text-xs font-semibold"
+                                         />
+                                     )}
+                                 />
+                             </motion.div>
+                         )}
                     </AnimatePresence>
                     {/* Amount Input */}
-                    <div className={currency === "VES" ? "col-span-12 sm:col-span-5 relative" : "col-span-12 sm:col-span-6 relative"}>
+                    <div className="col-span-12 relative">
                         <Controller
                             control={control}
                             name={currency === "VES" ? "vesAmount" : "amount"}
