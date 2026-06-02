@@ -181,7 +181,10 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
     };
 
     return (
-        <div className="relative overflow-hidden w-full">
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+            {/* Decorative background glow */}
+            <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[60px] pointer-events-none opacity-10 bg-violet-500" />
+
             <form onSubmit={handleSubmit(handleOnSubmit)} className="space-y-4 relative z-10">
 
 
@@ -380,52 +383,53 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
 
                 {/* Description */}
                 <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Descripción (Opcional)</label>
+                    <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-2.5 ml-0.5">
+                        Descripción <span className="opacity-40">(Opcional)</span>
+                    </label>
                     <div className="relative">
-                        <div className="absolute top-4 left-4 pointer-events-none text-slate-400">
+                        <div className="absolute top-4 left-4 pointer-events-none text-slate-500">
                             <FiFileText />
                         </div>
                         <Controller
                             control={control}
                             name="description"
                             render={({ field }) => (
-                        <textarea
-                                    rows={3}
+                                <textarea
                                     {...field}
-                                    className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-sm font-medium rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-600 resize-none hover:border-slate-600 hover:bg-slate-800"
+                                    className="w-full bg-[#0A0E1A]/80 border border-white/6 text-white text-sm font-medium rounded-xl py-3.5 pl-11 pr-4 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-white/12 hover:bg-[#0A0E1A] focus:ring-1 focus:ring-violet-500/30 focus:border-violet-500/40 focus:shadow-[0_0_20px_rgba(139,92,246,0.08)] resize-none h-28 custom-scrollbar"
                                     placeholder="Detalles sobre este gasto..."
+                                    disabled={isLoading}
                                 />
                             )}
                         />
                     </div>
                 </div>
 
-
-
                 {/* Action Buttons */}
-                <div className="flex items-center gap-3 pt-2">
+                <div className="flex gap-3 pt-6 border-t border-white/5">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="flex-1 py-3.5 px-4 rounded-xl font-bold text-[11px] tracking-widest border border-white/5 text-slate-500 hover:bg-slate-800 hover:text-white transition-all uppercase"
+                        disabled={isLoading}
+                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                     >
+                        <FiX size={16} />
                         CANCELAR
                     </button>
                     <motion.button
-                        whileHover={{ scale: 1.02, translateY: -1 }}
+                        whileHover={{ scale: 1.02, translateY: -2 }}
                         whileTap={{ scale: 0.98 }}
                         type="submit"
                         disabled={isLoading}
-                        className="flex-[1.5] relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-3.5 rounded-xl shadow-lg border border-violet-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all text-xs tracking-wider"
+                        className="flex-2 py-4 px-6 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black rounded-2xl text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all border border-white/10"
                     >
-                        <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                         {isLoading ? (
-                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin z-10"></span>
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         ) : (
-                            <div className="flex items-center space-x-2 z-10">
+                            <>
                                 <FiSave size={16} />
                                 <span>GUARDAR GASTO</span>
-                            </div>
+                            </>
                         )}
                     </motion.button>
                 </div>
