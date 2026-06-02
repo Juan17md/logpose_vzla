@@ -405,7 +405,7 @@ export default function DashboardPage() {
                         <div className="flex-none w-4"></div>
 
                         <MotionLink
-                            href="/dashboard/movimientos"
+                            href="/dashboard/movimientos?view=form"
                             whileTap={{ scale: 0.9 }}
                             className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 rounded-2xl transition-colors"
                         >
@@ -745,7 +745,7 @@ export default function DashboardPage() {
                         Accesos Rápidos
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <Link href="/dashboard/movimientos" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-amber-500/50 p-4 rounded-2xl transition-all flex items-center gap-4 relative overflow-hidden">
+                        <Link href="/dashboard/movimientos?view=form" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-amber-500/50 p-4 rounded-2xl transition-all flex items-center gap-4 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-amber-500/20 transition-all"></div>
                             <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl group-hover:scale-110 transition-transform shadow-inner border border-amber-500/10">
                                 <FiPlusCircle size={24} />

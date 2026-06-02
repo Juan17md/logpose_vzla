@@ -11,11 +11,15 @@ export default function MovimientosPage() {
     const { transactionToEdit, clearEditing } = useEditTransaction();
     const [mobileView, setMobileView] = useState<'list' | 'form'>('list');
 
-    // Automatically switch to form view when editing starts
+    // Automatically switch to form view based on URL search query or editing state
     useEffect(() => {
-        if (transactionToEdit) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate use: switch view when editing starts
-            setMobileView('form');
+        if (typeof window !== "undefined") {
+            const queryParams = new URLSearchParams(window.location.search);
+            if (queryParams.get("view") === "form" || transactionToEdit) {
+                setMobileView('form');
+            } else {
+                setMobileView('list');
+            }
         }
     }, [transactionToEdit]);
 
@@ -23,6 +27,12 @@ export default function MovimientosPage() {
     const handleBackToList = () => {
         clearEditing();
         setMobileView('list');
+        // Clean URL parameters without reloading
+        if (typeof window !== "undefined") {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("view");
+            window.history.replaceState({}, "", url.toString());
+        }
     };
 
     return (
