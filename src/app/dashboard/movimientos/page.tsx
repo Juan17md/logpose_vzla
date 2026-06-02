@@ -1,38 +1,51 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import TransactionForm from "@/components/forms/TransactionForm";
 import RecentTransactions from "@/components/ui/RecentTransactions";
 import { FiList, FiPlus, FiArrowLeft } from "react-icons/fi";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function MovimientosPage() {
+// Fallback de carga en esqueleto para evitar saltos visuales en PWA
+function MovimientosFallback() {
+    return (
+        <div className="space-y-6 pb-20 md:pb-0 animate-pulse">
+            {/* Esqueleto del header */}
+            <div className="h-32 bg-slate-900/50 rounded-3xl border border-slate-700/50"></div>
+            
+            {/* Esqueleto del grid principal */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1 h-[600px] bg-slate-900/50 rounded-3xl border border-slate-700/50"></div>
+                <div className="lg:col-span-2 h-[600px] bg-slate-900/50 rounded-3xl border border-slate-700/50"></div>
+            </div>
+        </div>
+    );
+}
+
+function MovimientosContent() {
     const { transactionToEdit, clearEditing } = useEditTransaction();
     const [mobileView, setMobileView] = useState<'list' | 'form'>('list');
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    
+    const viewParam = searchParams.get("view");
 
-    // Automatically switch to form view based on URL search query or editing state
+    // Sincroniza la vista móvil automáticamente al cambiar parámetros en la URL o editar transacción
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const queryParams = new URLSearchParams(window.location.search);
-            if (queryParams.get("view") === "form" || transactionToEdit) {
-                setMobileView('form');
-            } else {
-                setMobileView('list');
-            }
+        if (viewParam === "form" || transactionToEdit) {
+            setMobileView('form');
+        } else {
+            setMobileView('list');
         }
-    }, [transactionToEdit]);
+    }, [viewParam, transactionToEdit]);
 
-    // Handler to go back to list
+    // Retorna a la vista de lista y limpia la URL de forma reactiva
     const handleBackToList = () => {
         clearEditing();
         setMobileView('list');
-        // Clean URL parameters without reloading
-        if (typeof window !== "undefined") {
-            const url = new URL(window.location.href);
-            url.searchParams.delete("view");
-            window.history.replaceState({}, "", url.toString());
-        }
+        router.replace('/dashboard/movimientos', { scroll: false });
     };
 
     return (
@@ -42,7 +55,6 @@ export default function MovimientosPage() {
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiList className="text-7xl md:text-9xl text-violet-400" />
                 </div>
-                {/* blur-3xl eliminado — decorativo, sin valor perceptual en este header */}
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-violet-500/10 to-transparent pointer-events-none"></div>
 
                 <div className="relative z-10">
@@ -108,7 +120,6 @@ export default function MovimientosPage() {
                 </AnimatePresence>
             </div>
 
-
             {/* Desktop Layout Grid (Only visible on MD+) */}
             <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Columna Izquierda: Formulario */}
@@ -122,5 +133,13 @@ export default function MovimientosPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function MovimientosPage() {
+    return (
+        <Suspense fallback={<MovimientosFallback />}>
+            <MovimientosContent />
+        </Suspense>
     );
 }
