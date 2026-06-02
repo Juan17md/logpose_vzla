@@ -45,14 +45,14 @@ const CustomInput = forwardRef<
         ref={ref}
         disabled={disabled}
         className={`
-            w-full cursor-pointer bg-slate-950/40 border text-left rounded-xl py-3 pl-4 pr-10
-            text-sm transition-all duration-200 outline-none relative flex items-center gap-3
+            w-full cursor-pointer bg-slate-800/40 backdrop-blur-md border text-left rounded-2xl py-4 pl-5 pr-10
+            text-sm font-bold transition-all duration-300 outline-none relative flex items-center gap-3 shadow-lg
             ${hasValue ? "text-white" : "text-slate-500"}
             ${hasError
-                ? "border-red-500/40 focus:border-red-500/60 ring-1 ring-red-500/10"
-                : "border-white/5 hover:border-amber-500/30 focus:border-amber-500/50"
+                ? "border-red-500/40 focus:border-red-500/60 ring-4 ring-red-500/10"
+                : "border-slate-700/50 hover:border-amber-500/30 focus:border-amber-500/50 hover:bg-slate-800/60 focus:ring-4 focus:ring-amber-500/10 focus:bg-slate-800/80"
             }
-            ${disabled ? "opacity-50 cursor-not-allowed hover:border-white/5" : ""}
+            ${disabled ? "opacity-50 cursor-not-allowed hover:border-slate-700/50 hover:bg-slate-800/40" : ""}
         `}
     >
         <FiCalendar

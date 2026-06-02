@@ -64,49 +64,60 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="relative">
-                {/* Decorative background glow */}
-                <AnimatePresence mode="wait">
-                    <motion.div 
-                        key={type}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 0.1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className={`absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[60px] pointer-events-none ${
-                            type === 'por_cobrar' ? 'bg-emerald-500' : 'bg-red-500'
-                        }`}
-                    />
-                </AnimatePresence>
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+            {/* Decorative background glow */}
+            <AnimatePresence mode="wait">
+                <motion.div 
+                    key={type}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 0.1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className={`absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[60px] pointer-events-none ${
+                        type === 'por_cobrar' ? 'bg-emerald-500' : 'bg-red-500'
+                    }`}
+                />
+            </AnimatePresence>
 
-                <div className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+                <div className="space-y-4">
                     {/* Selector de Tipo (sólo si es nuevo) */}
                     {!initialData && (
-                        <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-950/60 rounded-[1.25rem] border border-slate-800/80 text-sm shadow-inner relative z-10">
-                            <button
-                                type="button"
-                                onClick={() => setType("por_cobrar")}
-                                className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all duration-300 ${
-                                    type === "por_cobrar"
-                                        ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
-                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border border-transparent"
-                                }`}
-                                disabled={isLoading}
-                            >
-                                ME DEBEN
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setType("por_pagar")}
-                                className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all duration-300 ${
-                                    type === "por_pagar"
-                                        ? "bg-red-500/15 text-red-400 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
-                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 border border-transparent"
-                                }`}
-                                disabled={isLoading}
-                            >
-                                YO DEBO
-                            </button>
+                        <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-950/60 rounded-2xl border border-slate-800/80 text-sm shadow-inner relative z-10">
+                            <div className="relative flex w-full col-span-2">
+                                <motion.div
+                                    layout
+                                    className={`absolute top-1 h-[calc(100%-8px)] rounded-xl border shadow-[0_0_15px_rgba(0,0,0,0.25)] ${
+                                        type === "por_cobrar"
+                                            ? "left-[4px] w-[calc(50%-6px)] bg-emerald-500/15 border-emerald-500/30"
+                                            : "left-[calc(50%+2px)] w-[calc(50%-6px)] bg-red-500/15 border-red-500/30"
+                                    }`}
+                                    transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setType("por_cobrar")}
+                                    className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                        type === "por_cobrar"
+                                            ? "text-emerald-300 font-extrabold"
+                                            : "text-slate-500 hover:text-slate-300"
+                                    }`}
+                                    disabled={isLoading}
+                                >
+                                    ME DEBEN
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setType("por_pagar")}
+                                    className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                        type === "por_pagar"
+                                            ? "text-red-300 font-extrabold"
+                                            : "text-slate-500 hover:text-slate-300"
+                                    }`}
+                                    disabled={isLoading}
+                                >
+                                    YO DEBO
+                                </button>
+                            </div>
                         </div>
                     )}
 
@@ -203,39 +214,39 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="flex gap-3 pt-6 border-t border-white/5">
-                <button
-                    type="button"
-                    onClick={() => onCancel ? onCancel() : router.back()}
-                    disabled={isLoading}
-                    className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                    <FiX size={16} />
-                    CANCELAR
-                </button>
-                <motion.button
-                    whileHover={{ scale: 1.02, translateY: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    disabled={isLoading}
-                    className={`flex-2 py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-white/10 ${
-                        type === 'por_cobrar' 
-                        ? 'bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/20'
-                        : 'bg-linear-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-red-500/20'
-                    }`}
-                >
-                    {isLoading ? (
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    ) : (
-                        <>
-                            <FiSave size={16} />
-                            {initialData ? "GUARDAR CAMBIOS" : "REGISTRAR DEUDA"}
-                        </>
-                    )}
-                </motion.button>
-            </div>
-        </form>
+                <div className="flex gap-3 pt-6 border-t border-white/5">
+                    <button
+                        type="button"
+                        onClick={() => onCancel ? onCancel() : router.back()}
+                        disabled={isLoading}
+                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                        <FiX size={16} />
+                        CANCELAR
+                    </button>
+                    <motion.button
+                        whileHover={{ scale: 1.02, translateY: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        disabled={isLoading}
+                        className={`flex-2 py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-white/10 ${
+                            type === 'por_cobrar' 
+                            ? 'bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/20'
+                            : 'bg-linear-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-red-500/20'
+                        }`}
+                    >
+                        {isLoading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : (
+                            <>
+                                <FiSave size={16} />
+                                {initialData ? "GUARDAR CAMBIOS" : "REGISTRAR DEUDA"}
+                            </>
+                        )}
+                    </motion.button>
+                </div>
+            </form>
+        </div>
     );
 }
