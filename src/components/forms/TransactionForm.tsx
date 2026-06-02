@@ -35,7 +35,9 @@ import {
     FiPieChart,
     FiAward,
     FiShield,
-    FiScissors
+    FiScissors,
+    FiSmartphone,
+    FiEdit2
 } from "react-icons/fi";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -1030,27 +1032,40 @@ export default function TransactionForm() {
                                                 control={control}
                                                 name="commissionType"
                                                 render={({ field }) => (
-                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-slate-950/60 rounded-xl border border-slate-800/80 shadow-inner">
+                                                    <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner">
                                                         {[
-                                                            { id: "p2p", label: "P2P (0.3%)", desc: "Pago Móvil" },
-                                                            { id: "p2c", label: "P2C (1.5%)", desc: "Comercio" },
-                                                            { id: "interbancaria", label: "Interban. (0.3%)", desc: "Otros Bancos" },
-                                                            { id: "custom", label: "Personalizada", desc: "Monto libre" }
-                                                        ].map((opt) => (
-                                                            <button
-                                                                key={opt.id}
-                                                                type="button"
-                                                                onClick={() => field.onChange(opt.id)}
-                                                                className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border text-center transition-all duration-300 ${
-                                                                    field.value === opt.id
-                                                                        ? "bg-violet-500/10 text-violet-300 border-violet-500/30 shadow-[0_0_10px_rgba(139,92,246,0.1)] font-bold"
-                                                                        : "bg-transparent text-slate-400 border-transparent hover:text-slate-300 hover:bg-slate-800/20"
-                                                                }`}
-                                                            >
-                                                                <span className="text-[10px]">{opt.label}</span>
-                                                                <span className="text-[8px] text-slate-500 font-medium block mt-0.5">{opt.desc}</span>
-                                                            </button>
-                                                        ))}
+                                                            { id: "p2p", label: "P2P (0.3%)", desc: "Pago Móvil", icono: FiSmartphone, color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+                                                            { id: "p2c", label: "P2C (1.5%)", desc: "Comercio", icono: FiShoppingBag, color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+                                                            { id: "interbancaria", label: "Interban. (0.3%)", desc: "Otros Bancos", icono: FiRepeat, color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20" },
+                                                            { id: "custom", label: "Personalizada", desc: "Monto libre", icono: FiEdit2, color: "text-violet-400 bg-violet-500/10 border-violet-500/20" }
+                                                        ].map((opt) => {
+                                                            const IconoOpt = opt.icono;
+                                                            const esActivo = field.value === opt.id;
+                                                            return (
+                                                                <button
+                                                                    key={opt.id}
+                                                                    type="button"
+                                                                    onClick={() => field.onChange(opt.id)}
+                                                                    className={`flex items-center gap-2.5 p-2 rounded-xl border text-left transition-all duration-300 min-h-[48px] ${
+                                                                        esActivo
+                                                                            ? "bg-slate-800 border-violet-500/40 shadow-[0_0_15px_rgba(139,92,246,0.15)] ring-2 ring-violet-500/10"
+                                                                            : "bg-slate-900/30 border-slate-800/80 hover:bg-slate-800/20 text-slate-400 hover:text-slate-300"
+                                                                    }`}
+                                                                >
+                                                                    <div className={`p-1.5 rounded-lg shrink-0 transition-colors duration-300 ${
+                                                                        esActivo ? opt.color : "bg-slate-950/60 text-slate-500 border border-slate-800/40"
+                                                                    }`}>
+                                                                        <IconoOpt size={14} />
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <span className={`text-[10px] sm:text-xs block truncate font-black tracking-tight ${
+                                                                            esActivo ? "text-white" : "text-slate-400"
+                                                                        }`}>{opt.label}</span>
+                                                                        <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold block mt-0.5 truncate">{opt.desc}</span>
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             />
