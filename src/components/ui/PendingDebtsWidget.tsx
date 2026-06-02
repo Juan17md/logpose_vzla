@@ -5,13 +5,52 @@ import { FiArrowUp, FiArrowDown, FiCreditCard, FiCheckCircle, FiClock, FiAlertCi
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
+import Skeleton from "./Skeleton";
 
 export default function PendingDebtsWidget() {
     const { debts, loadingDebts } = useDebts();
     const router = useRouter();
 
     if (loadingDebts) return (
-        <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-700/50 shadow-lg animate-pulse h-64"></div>
+        <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-700/50 shadow-lg flex flex-col gap-6 h-full min-h-[340px]">
+            {/* Cabecera Esqueleto */}
+            <div className="flex items-center gap-2">
+                <Skeleton className="w-8 h-8 rounded-lg" />
+                <Skeleton className="w-40 h-6 rounded-md" />
+            </div>
+
+            {/* Dos cajas superiores */}
+            <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-800/30 p-3 rounded-2xl border border-slate-700/20 flex flex-col gap-2">
+                    <Skeleton className="w-16 h-3 rounded-md" />
+                    <Skeleton className="w-24 h-6 rounded-md" />
+                </div>
+                <div className="bg-slate-800/30 p-3 rounded-2xl border border-slate-700/20 flex flex-col gap-2">
+                    <Skeleton className="w-16 h-3 rounded-md" />
+                    <Skeleton className="w-24 h-6 rounded-md" />
+                </div>
+            </div>
+
+            {/* Lista de deudas urgentes */}
+            <div className="space-y-3">
+                <Skeleton className="w-32 h-3 rounded-md mb-1" />
+                {[1, 2].map((i) => (
+                    <div key={i} className="flex justify-between items-center p-3 bg-slate-800/20 rounded-xl border border-transparent">
+                        <div className="flex items-center gap-3">
+                            <Skeleton className="w-2 h-2 rounded-full" />
+                            <div className="space-y-2">
+                                <Skeleton className="w-24 h-4 rounded-md" />
+                                <Skeleton className="w-16 h-3 rounded-md" />
+                            </div>
+                        </div>
+                        <Skeleton className="w-16 h-4 rounded-md" />
+                    </div>
+                ))}
+            </div>
+
+            {/* Botón inferior */}
+            <Skeleton className="w-full h-10 rounded-xl mt-auto" />
+        </div>
     );
 
     const pendingDebts = debts.filter(d => !d.isPaid);

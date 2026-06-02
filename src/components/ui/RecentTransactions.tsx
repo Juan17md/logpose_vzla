@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import ConfirmDialog from "./ConfirmDialog";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import PaginationControls from "./PaginationControls";
+import Skeleton from "./Skeleton";
 
 export default function RecentTransactions() {
     const router = useRouter();
@@ -66,8 +67,66 @@ export default function RecentTransactions() {
 
     if (loading) {
         return (
-            <div className="flex justify-center p-8">
-                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="bg-slate-900/50 backdrop-blur-md rounded-3xl border border-slate-700/50 overflow-hidden shadow-xl flex flex-col h-full">
+                {/* Cabecera Esqueleto */}
+                <div className="p-6 border-b border-slate-700/50 bg-slate-800/30 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Skeleton className="w-6 h-6 rounded-lg" />
+                        <Skeleton className="w-36 h-6 rounded-lg" />
+                    </div>
+                    <Skeleton className="w-full md:w-64 h-9 rounded-xl" />
+                </div>
+
+                {/* Filas Esqueleto (Desktop) */}
+                <div className="hidden md:block p-6">
+                    <div className="space-y-4">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="flex justify-between items-center py-2.5 border-b border-slate-800/30 last:border-0">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="w-10 h-10 rounded-xl" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="w-32 h-4 rounded-md" />
+                                        <Skeleton className="w-24 h-3 rounded-md" />
+                                    </div>
+                                </div>
+                                <Skeleton className="w-16 h-4 rounded-md" />
+                                <div className="flex gap-2">
+                                    <Skeleton className="w-8 h-8 rounded-lg" />
+                                    <Skeleton className="w-8 h-8 rounded-lg" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Filas Esqueleto (Móvil) */}
+                <div className="md:hidden space-y-3 p-4">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col gap-3">
+                            <div className="flex justify-between items-start">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="w-10 h-10 rounded-xl" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="w-24 h-4 rounded-md" />
+                                        <Skeleton className="w-16 h-3 rounded-md" />
+                                    </div>
+                                </div>
+                                <Skeleton className="w-16 h-5 rounded-md" />
+                            </div>
+                            <Skeleton className="w-full h-8 rounded-lg" />
+                            <div className="flex gap-2 justify-end pt-1 border-t border-slate-700/30">
+                                <Skeleton className="w-16 h-7 rounded-lg" />
+                                <Skeleton className="w-8 h-7 rounded-lg" />
+                                <Skeleton className="w-16 h-7 rounded-lg" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="p-4 border-t border-slate-700/50 flex justify-between items-center">
+                    <Skeleton className="w-24 h-8 rounded-lg" />
+                    <Skeleton className="w-16 h-8 rounded-lg" />
+                </div>
             </div>
         );
     }

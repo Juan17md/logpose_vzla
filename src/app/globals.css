@@ -152,3 +152,24 @@ button, a, [role="button"], img, select, input[type="range"] {
     font-size: 16px !important;
   }
 }
+
+/* Shimmer animation for Skeleton Loader */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.3) 25%,
+    rgba(30, 41, 59, 0.5) 37%,
+    rgba(15, 23, 42, 0.3) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+}

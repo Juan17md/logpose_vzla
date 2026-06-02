@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import CurrencySelector from "@/components/ui/CurrencySelector";
 import { MONEDAS_SOPORTADAS } from "@/lib/bankAccounts";
+import Skeleton from "./Skeleton";
 
 export default function BankAccountsWidget() {
     const { cuentas, loading, calcularSaldoTotal, monedaBase, actualizarMonedaBase } = useBankAccounts();
@@ -25,12 +26,18 @@ export default function BankAccountsWidget() {
 
     if (loading) {
         return (
-            <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden animate-pulse">
-                <div className="h-4 w-24 bg-slate-800 rounded mb-3" />
-                <div className="h-8 w-32 bg-slate-800 rounded mb-4" />
+            <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                    <Skeleton className="w-8 h-8 rounded-lg" />
+                    <Skeleton className="w-24 h-4 rounded-md" />
+                </div>
                 <div className="space-y-2">
-                    <div className="h-12 bg-slate-800 rounded-xl" />
-                    <div className="h-12 bg-slate-800 rounded-xl" />
+                    <Skeleton className="w-40 h-8 rounded-md" />
+                    <Skeleton className="w-32 h-3 rounded-md" />
+                </div>
+                <div className="space-y-2.5 mt-2">
+                    <Skeleton className="w-full h-[52px] rounded-2xl" />
+                    <Skeleton className="w-full h-[52px] rounded-2xl" />
                 </div>
             </div>
         );
