@@ -893,7 +893,7 @@ export default function TransactionForm() {
                                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Fecha</label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 transition-colors">
-                                        <FiCalendar className="text-slate-400 group-focus-within:text-emerald-400" size={14} />
+                                        <FiCalendar className="text-slate-400 group-focus-within:text-amber-400 transition-colors duration-300" size={14} />
                                     </div>
                                     <Controller
                                         control={control}
@@ -904,7 +904,7 @@ export default function TransactionForm() {
                                                 onChange={(date: Date | null) => field.onChange(date)}
                                                 locale="es"
                                                 dateFormat="dd/MM/yyyy"
-                                                className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-xs font-semibold rounded-2xl py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/40 transition-all cursor-pointer hover:border-slate-600 hover:bg-slate-800 min-h-[44px]"
+                                                className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-9 pr-3 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all duration-300 cursor-pointer hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg"
                                                 wrapperClassName="w-full"
                                                 calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-xl !rounded-2xl overflow-hidden"
                                                 dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-all"}
@@ -938,7 +938,7 @@ export default function TransactionForm() {
                             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Fecha</label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 transition-colors">
-                                    <FiCalendar className="text-slate-400 group-focus-within:text-emerald-400" size={14} />
+                                    <FiCalendar className="text-slate-400 group-focus-within:text-amber-400 transition-colors duration-300" size={14} />
                                 </div>
                                 <Controller
                                     control={control}
@@ -949,7 +949,7 @@ export default function TransactionForm() {
                                             onChange={(date: Date | null) => field.onChange(date)}
                                             locale="es"
                                             dateFormat="dd/MM/yyyy"
-                                            className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 text-xs font-semibold rounded-2xl py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/40 transition-all cursor-pointer hover:border-slate-600 hover:bg-slate-800 min-h-[44px]"
+                                            className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-9 pr-3 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all duration-300 cursor-pointer hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg"
                                             wrapperClassName="w-full"
                                             calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-xl !rounded-2xl overflow-hidden"
                                             dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-all"}
