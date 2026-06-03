@@ -509,26 +509,6 @@ export default function DebtsPage() {
                                 </AnimatePresence>
                             </div>
                         </div>
-
-                        {/* BCV Ticker Card */}
-                        <div className="mt-4 bg-amber-500/5 backdrop-blur-sm border border-amber-500/10 rounded-2xl p-4 flex items-center justify-between group overflow-hidden relative">
-                            <div className="absolute inset-0 bg-linear-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
-                            <div className="flex items-center gap-3 relative z-10">
-                                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500">
-                                    <FiDollarSign size={16} />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-amber-500/60 uppercase tracking-widest leading-none mb-1">Tasa BCV hoy</p>
-                                    <p className="text-sm font-bold text-white leading-none">Bs. {bcvRate.toLocaleString("es-VE", { minimumFractionDigits: 2 })}</p>
-                                </div>
-                            </div>
-                            <div className="text-right relative z-10">
-                                <div className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Sincronizado</div>
-                                <div className="text-[10px] font-bold text-emerald-400 flex items-center gap-1 justify-end">
-                                    <div className="w-1 h-1 bg-emerald-400 rounded-full" /> En Vivo
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     {/* RIGHT COLUMN: Content (2/3) */}
