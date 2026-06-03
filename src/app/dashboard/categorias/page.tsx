@@ -31,7 +31,8 @@ import {
     FiTruck,
     FiShield,
     FiScissors,
-    FiCircle
+    FiCircle,
+    FiEdit2
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -63,25 +64,44 @@ function ComponenteMonitor(props: any) {
     return <FiMonitor {...props} />;
 }
 
+const PALETA_COLORES = [
+    { nombre: "Violeta", hex: "#8b5cf6" },
+    { nombre: "Azul", hex: "#3b82f6" },
+    { nombre: "Esmeralda", hex: "#10b981" },
+    { nombre: "Teal", hex: "#14b8a6" },
+    { nombre: "Ámbar", hex: "#f59e0b" },
+    { nombre: "Naranja", hex: "#f97316" },
+    { nombre: "Rosa", hex: "#f43f5e" },
+    { nombre: "Rojo", hex: "#ef4444" },
+    { nombre: "Fucsia", hex: "#d946ef" },
+    { nombre: "Gris Slate", hex: "#64748b" }
+];
+
 export default function CategoriasPage() {
     const {
         categorias,
         cargando,
         agregarCategoria,
+        actualizarCategoria,
         eliminarCategoria,
         agregarSubcategoria,
         eliminarSubcategoria
     } = useCategorias();
 
-    // Estados del formulario de nueva categoría
+    // Estados del formulario híbrido
     const [nombre, setNombre] = useState("");
     const [tipo, setTipo] = useState<"ingreso" | "gasto" | "ambas">("gasto");
     const [iconoSeleccionado, setIconoSeleccionado] = useState("FiTag");
+    const [colorSeleccionado, setColorSeleccionado] = useState("#8b5cf6");
     const [subcategoriasInputs, setSubcategoriasInputs] = useState<Record<string, string>>({});
+    
+    // Estado de edición
+    const [editandoCategoria, setEditandoCategoria] = useState<CategoriaUsuario | null>(null);
 
     // Estados de navegación móvil y diálogos
     const [vistaMobile, setVistaMobile] = useState<"list" | "form">("list");
     const [categoriaAEliminar, setCategoriaAEliminar] = useState<CategoriaUsuario | null>(null);
+    const [subcategoriaAEliminar, setSubcategoriaAEliminar] = useState<{ categoriaId: string; sub: string } | null>(null);
 
     const handleCrearCategoria = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -90,16 +110,46 @@ export default function CategoriasPage() {
             return;
         }
 
-        const exito = await agregarCategoria(nombre, tipo, iconoSeleccionado, []);
-        if (exito) {
-            toast.success("Categoría creada exitosamente");
-            setNombre("");
-            setTipo("gasto");
-            setIconoSeleccionado("FiTag");
-            setVistaMobile("list");
+        if (editandoCategoria) {
+            const exito = await actualizarCategoria(editandoCategoria.id, {
+                nombre: nombre.trim(),
+                tipo,
+                icono: iconoSeleccionado,
+                color: colorSeleccionado
+            });
+            if (exito) {
+                toast.success("Categoría actualizada correctamente");
+                handleLimpiarFormulario();
+            } else {
+                toast.error("No se pudo actualizar la categoría");
+            }
         } else {
-            toast.error("No se pudo crear la categoría");
+            const exito = await agregarCategoria(nombre, tipo, iconoSeleccionado, [], colorSeleccionado);
+            if (exito) {
+                toast.success("Categoría creada exitosamente");
+                handleLimpiarFormulario();
+            } else {
+                toast.error("No se pudo crear la categoría");
+            }
         }
+    };
+
+    const handleIniciarEdicion = (cat: CategoriaUsuario) => {
+        setEditandoCategoria(cat);
+        setNombre(cat.nombre);
+        setTipo(cat.tipo);
+        setIconoSeleccionado(cat.icono);
+        setColorSeleccionado(cat.color || "#8b5cf6");
+        setVistaMobile("form");
+    };
+
+    const handleLimpiarFormulario = () => {
+        setEditandoCategoria(null);
+        setNombre("");
+        setTipo("gasto");
+        setIconoSeleccionado("FiTag");
+        setColorSeleccionado("#8b5cf6");
+        setVistaMobile("list");
     };
 
     const handleEliminarCategoria = async () => {
@@ -129,13 +179,16 @@ export default function CategoriasPage() {
         }
     };
 
-    const handleEliminarSubcategoria = async (categoriaId: string, sub: string) => {
+    const handleConfirmarEliminarSubcategoria = async () => {
+        if (!subcategoriaAEliminar) return;
+        const { categoriaId, sub } = subcategoriaAEliminar;
         const exito = await eliminarSubcategoria(categoriaId, sub);
         if (exito) {
             toast.success("Subcategoría eliminada");
         } else {
             toast.error("No se pudo eliminar la subcategoría");
         }
+        setSubcategoriaAEliminar(null);
     };
 
     if (cargando) {
@@ -186,22 +239,35 @@ export default function CategoriasPage() {
 
             {/* Layout Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Columna Izquierda: Formulario de Creación (1/3) */}
+                {/* Columna Izquierda: Formulario de Creación / Edición (1/3) */}
                 <div className={`lg:col-span-1 space-y-6 ${vistaMobile === "form" ? "block" : "hidden"} lg:block`}>
-                    <button
-                        onClick={() => setVistaMobile("list")}
-                        className="lg:hidden flex items-center gap-2 text-slate-500 font-black text-xs uppercase tracking-widest hover:text-white transition-colors w-fit"
-                    >
-                        <FiArrowLeft size={18} /> Volver a Categorías
-                    </button>
+                    {(vistaMobile === "form" || editandoCategoria !== null) && (
+                        <button
+                            onClick={handleLimpiarFormulario}
+                            className="lg:hidden flex items-center gap-2 text-slate-500 font-black text-xs uppercase tracking-widest hover:text-white transition-colors w-fit"
+                        >
+                            <FiArrowLeft size={18} /> Volver a Categorías
+                        </button>
+                    )}
 
                     <div className="sticky top-6">
                         <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-900/40 p-6 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] relative overflow-hidden group hover:border-slate-800/45 transition-all duration-500">
-                            {/* Glow decorativo de fondo */}
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
+                            {/* Glow decorativo de fondo dinámico */}
+                            <div 
+                                className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-all duration-500" 
+                                style={{ backgroundColor: `${colorSeleccionado}0c` }}
+                            />
                             
                             <h2 className="text-xl font-black text-white flex items-center gap-3 mb-6">
-                                <FiPlus className="text-violet-500" /> Nueva Categoría
+                                {editandoCategoria ? (
+                                    <>
+                                        <FiEdit2 className="text-violet-500 animate-pulse" style={{ color: colorSeleccionado }} /> Editar Categoría
+                                    </>
+                                ) : (
+                                    <>
+                                        <FiPlus className="text-violet-500" /> Nueva Categoría
+                                    </>
+                                )}
                             </h2>
 
                             <form onSubmit={handleCrearCategoria} className="space-y-5">
@@ -210,7 +276,10 @@ export default function CategoriasPage() {
                                     placeholder="Ej: Mascotas, Hogar"
                                     value={nombre}
                                     onChange={(e) => setNombre(e.target.value)}
-                                    className="py-4 text-sm font-semibold bg-slate-950/80 border border-slate-900/40 focus:border-violet-500/50 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-650"
+                                    className="py-4 text-sm font-semibold bg-slate-950/80 border border-slate-900/40 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-650"
+                                    style={{ 
+                                        borderColor: editandoCategoria ? `${colorSeleccionado}44` : ""
+                                    }}
                                 />
 
                                 {/* Tipo de Movimiento Selector */}
@@ -227,7 +296,7 @@ export default function CategoriasPage() {
                                                 type="button"
                                                 onClick={() => setTipo(opt.id as any)}
                                                 className={cn(
-                                                    "flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-300 text-center border border-transparent",
+                                                    "flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-300 text-center border border-transparent cursor-pointer",
                                                     tipo === opt.id
                                                         ? opt.color
                                                         : "text-slate-500 hover:text-slate-350"
@@ -236,6 +305,36 @@ export default function CategoriasPage() {
                                                 {opt.label}
                                             </button>
                                         ))}
+                                    </div>
+                                </div>
+
+                                {/* Selección Visual de Color */}
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Color de Categoría</label>
+                                    <div className="flex flex-wrap gap-2.5 p-3.5 bg-slate-950/50 rounded-2xl border border-slate-900 shadow-inner justify-between">
+                                        {PALETA_COLORES.map((c) => {
+                                            const esSeleccionado = colorSeleccionado === c.hex;
+                                            return (
+                                                <motion.button
+                                                    key={c.hex}
+                                                    type="button"
+                                                    whileHover={{ scale: 1.2 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => setColorSeleccionado(c.hex)}
+                                                    className="w-6 h-6 rounded-full cursor-pointer relative flex items-center justify-center transition-all duration-300 border border-transparent"
+                                                    style={{ 
+                                                        backgroundColor: c.hex,
+                                                        boxShadow: esSeleccionado ? `0 0 12px ${c.hex}cc` : "none",
+                                                        border: esSeleccionado ? "2px solid #ffffff" : "2px solid transparent"
+                                                    }}
+                                                    title={c.nombre}
+                                                >
+                                                    {esSeleccionado && (
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                    )}
+                                                </motion.button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
@@ -254,11 +353,17 @@ export default function CategoriasPage() {
                                                     whileTap={{ scale: 0.95 }}
                                                     onClick={() => setIconoSeleccionado(ico.nombre)}
                                                     className={cn(
-                                                        "p-2.5 rounded-xl flex items-center justify-center border transition-all duration-300",
+                                                        "p-2.5 rounded-xl flex items-center justify-center border transition-all duration-300 cursor-pointer",
                                                         esSeleccionado
                                                             ? "bg-violet-500/20 border-violet-500/50 text-violet-300 shadow-[0_0_15px_rgba(139,92,246,0.25)] scale-110 z-10"
                                                             : "bg-slate-950/40 border-slate-900 hover:border-slate-800 hover:bg-slate-900 text-slate-500 hover:text-slate-300"
                                                     )}
+                                                    style={{
+                                                        borderColor: esSeleccionado ? `${colorSeleccionado}88` : "",
+                                                        color: esSeleccionado ? colorSeleccionado : "",
+                                                        backgroundColor: esSeleccionado ? `${colorSeleccionado}18` : "",
+                                                        boxShadow: esSeleccionado ? `0 0 15px ${colorSeleccionado}1e` : ""
+                                                    }}
                                                     title={ico.nombre}
                                                 >
                                                     <IconComp size={16} />
@@ -268,22 +373,47 @@ export default function CategoriasPage() {
                                     </div>
                                 </div>
 
-                                <motion.button
-                                    whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(139, 92, 246, 0.3)" }}
-                                    whileTap={{ scale: 0.98 }}
-                                    type="submit"
-                                    className="w-full py-4 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-2xl shadow-lg transition-all border border-violet-500/10 flex items-center justify-center gap-2 mt-4 cursor-pointer"
-                                >
-                                    <FiPlusCircle size={18} />
-                                    CREAR CATEGORÍA
-                                </motion.button>
+                                <div className="space-y-2 mt-4">
+                                    <motion.button
+                                        whileHover={{ scale: 1.02, boxShadow: `0 0 25px ${colorSeleccionado}44` }}
+                                        whileTap={{ scale: 0.98 }}
+                                        type="submit"
+                                        className="w-full py-4 text-white font-black rounded-2xl shadow-lg transition-all border border-violet-500/10 flex items-center justify-center gap-2 cursor-pointer"
+                                        style={{ backgroundColor: colorSeleccionado }}
+                                    >
+                                        {editandoCategoria ? (
+                                            <>
+                                                <FiEdit2 size={18} />
+                                                GUARDAR CAMBIOS
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FiPlusCircle size={18} />
+                                                CREAR CATEGORÍA
+                                            </>
+                                        )}
+                                    </motion.button>
+
+                                    {editandoCategoria && (
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            type="button"
+                                            onClick={handleLimpiarFormulario}
+                                            className="w-full py-3 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white font-bold rounded-2xl transition-all border border-slate-800/40 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                                        >
+                                            <FiX size={16} />
+                                            CANCELAR EDICIÓN
+                                        </motion.button>
+                                    )}
+                                </div>
                             </form>
                         </div>
                     </div>
                 </div>
 
                 {/* Columna Derecha: Bento Grid de Categorías (2/3) */}
-                <div className={`lg:col-span-2 space-y-8 ${vistaMobile === "form" ? "hidden lg:block" : "block"}`}>
+                <div className={`lg:col-span-2 space-y-8 ${vistaMobile === "form" && editandoCategoria === null ? "hidden lg:block" : "block"}`}>
                     <div className="flex justify-between items-center bg-slate-950/40 p-4 rounded-3xl border border-slate-900 backdrop-blur-md">
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-violet-500/10 rounded-2xl border border-violet-500/20">
@@ -294,7 +424,10 @@ export default function CategoriasPage() {
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            onClick={() => setVistaMobile("form")}
+                            onClick={() => {
+                                handleLimpiarFormulario();
+                                setVistaMobile("form");
+                            }}
                             className="md:hidden flex items-center justify-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-indigo-500 transition-all border border-violet-500/10"
                         >
                             <FiPlus className="text-sm" />
@@ -308,6 +441,10 @@ export default function CategoriasPage() {
                                 const IconoCat = MAPA_ICONOS[cat.icono] || FiTag;
                                 const esGasto = cat.tipo === "gasto";
                                 const esIngreso = cat.tipo === "ingreso";
+                                
+                                // Color de acento de la categoría con fallback al color tradicional
+                                const colorCat = cat.color || (esIngreso ? "#10b981" : esGasto ? "#ef4444" : "#3b82f6");
+
                                 return (
                                     <motion.div
                                         key={cat.id}
@@ -316,56 +453,64 @@ export default function CategoriasPage() {
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
                                         transition={{ duration: 0.4, ease: "easeOut" }}
-                                        className="bg-slate-950/30 border border-slate-900/40 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between group hover:border-slate-850/50 hover:bg-slate-900/40 hover:-translate-y-1 transition-all duration-500 min-h-[320px]"
+                                        className="bg-slate-950/30 border border-slate-900/40 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between group hover:border-slate-800/50 hover:bg-slate-900/40 hover:-translate-y-1 transition-all duration-500 min-h-[330px]"
+                                        style={{
+                                            borderColor: editandoCategoria?.id === cat.id ? `${colorCat}66` : ""
+                                        }}
                                     >
-                                        {/* Halos decorativos de fondo basados en tipo */}
-                                        {esGasto && (
-                                            <div className="bg-red-500/5 blur-3xl w-28 h-28 absolute -bottom-10 -right-10 rounded-full pointer-events-none group-hover:bg-red-500/8 group-hover:scale-110 transition-all duration-500" />
-                                        )}
-                                        {esIngreso && (
-                                            <div className="bg-emerald-500/5 blur-3xl w-28 h-28 absolute -bottom-10 -right-10 rounded-full pointer-events-none group-hover:bg-emerald-500/8 group-hover:scale-110 transition-all duration-500" />
-                                        )}
-                                        {!esGasto && !esIngreso && (
-                                            <div className="bg-blue-500/5 blur-3xl w-28 h-28 absolute -bottom-10 -right-10 rounded-full pointer-events-none group-hover:bg-blue-500/8 group-hover:scale-110 transition-all duration-500" />
-                                        )}
+                                        {/* Halo decorativo de fondo dinámico */}
+                                        <div 
+                                            className="blur-3xl w-32 h-32 absolute -bottom-10 -right-10 rounded-full pointer-events-none group-hover:scale-120 transition-all duration-500" 
+                                            style={{ backgroundColor: `${colorCat}12` }}
+                                        />
 
                                         <div className="relative z-10">
                                             {/* Cabecera Tarjeta */}
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-center gap-3.5">
-                                                    <div className={cn(
-                                                        "p-3 rounded-2xl border ring-4 transition-colors duration-350",
-                                                        esIngreso 
-                                                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 ring-emerald-500/5" 
-                                                            : esGasto 
-                                                                ? "bg-red-500/10 border-red-500/20 text-red-400 ring-red-500/5"
-                                                                : "bg-blue-500/10 border-blue-500/20 text-blue-400 ring-blue-500/5"
-                                                    )}>
+                                                    <div 
+                                                        className="p-3 rounded-2xl border transition-all duration-350"
+                                                        style={{ 
+                                                            backgroundColor: `${colorCat}14`, 
+                                                            borderColor: `${colorCat}28`, 
+                                                            color: colorCat,
+                                                            boxShadow: `0 0 15px ${colorCat}0a`
+                                                        }}
+                                                    >
                                                         <IconoCat size={20} />
                                                     </div>
                                                     <div>
                                                         <h4 className="font-extrabold text-white text-base leading-tight tracking-tight">{cat.nombre}</h4>
-                                                        <span className={cn(
-                                                            "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mt-1.5 inline-block",
-                                                            esIngreso 
-                                                                ? "bg-emerald-500/10 text-emerald-400" 
-                                                                : esGasto 
-                                                                    ? "bg-red-500/10 text-red-400"
-                                                                    : "bg-blue-500/10 text-blue-400"
-                                                        )}>
+                                                        <span 
+                                                            className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mt-1.5 inline-block"
+                                                            style={{ 
+                                                                backgroundColor: `${colorCat}14`, 
+                                                                color: colorCat,
+                                                                border: `1px solid ${colorCat}1a`
+                                                            }}
+                                                        >
                                                             {cat.tipo}
                                                         </span>
                                                     </div>
                                                 </div>
 
-                                                {/* Botón de Papelera */}
-                                                <button
-                                                    onClick={() => setCategoriaAEliminar(cat)}
-                                                    className="p-2.5 text-slate-500 hover:text-red-450 hover:bg-red-500/10 rounded-xl transition-all duration-300"
-                                                    title="Eliminar Categoría"
-                                                >
-                                                    <FiTrash2 size={16} />
-                                                </button>
+                                                {/* Acciones de la Tarjeta */}
+                                                <div className="flex items-center gap-0.5">
+                                                    <button
+                                                        onClick={() => handleIniciarEdicion(cat)}
+                                                        className="p-2 text-slate-500 hover:text-white hover:bg-slate-900/60 rounded-xl transition-all duration-300 cursor-pointer"
+                                                        title="Editar Categoría"
+                                                    >
+                                                        <FiEdit2 size={15} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setCategoriaAEliminar(cat)}
+                                                        className="p-2 text-slate-500 hover:text-red-450 hover:bg-red-500/10 rounded-xl transition-all duration-300 cursor-pointer"
+                                                        title="Eliminar Categoría"
+                                                    >
+                                                        <FiTrash2 size={15} />
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             {/* Listado de Subcategorías */}
@@ -374,7 +519,7 @@ export default function CategoriasPage() {
                                                 {cat.subcategorias.length === 0 ? (
                                                     <p className="text-slate-650 text-xs italic py-1">Sin subcategorías agregadas.</p>
                                                 ) : (
-                                                    <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto custom-scrollbar pr-1">
+                                                    <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
                                                         <AnimatePresence>
                                                             {cat.subcategorias.map(sub => (
                                                                 <motion.div 
@@ -387,8 +532,8 @@ export default function CategoriasPage() {
                                                                 >
                                                                     <span>{sub}</span>
                                                                     <button
-                                                                        onClick={() => handleEliminarSubcategoria(cat.id, sub)}
-                                                                        className="p-0.5 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                                                                        onClick={() => setSubcategoriaAEliminar({ categoriaId: cat.id, sub })}
+                                                                        className="p-0.5 rounded-md text-slate-500 hover:text-red-450 hover:bg-red-550/10 transition-all duration-200 cursor-pointer"
                                                                         title={`Eliminar ${sub}`}
                                                                     >
                                                                         <FiX size={12} />
@@ -415,13 +560,20 @@ export default function CategoriasPage() {
                                                             handleAgregarSubcategoria(cat.id);
                                                         }
                                                     }}
-                                                    className="flex-1 bg-slate-950/80 border border-slate-900/40 text-slate-205 text-xs font-semibold rounded-xl py-2.5 px-3 outline-none focus:border-violet-500/60 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-600 transition-all hover:bg-slate-900/20"
+                                                    className="flex-1 bg-slate-950/80 border border-slate-900/40 text-slate-205 text-xs font-semibold rounded-xl py-2.5 px-3 outline-none focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-600 transition-all hover:bg-slate-900/20"
+                                                    style={{
+                                                        borderColor: editandoCategoria?.id === cat.id ? `${colorCat}33` : ""
+                                                    }}
                                                 />
                                                 <motion.button
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
                                                     onClick={() => handleAgregarSubcategoria(cat.id)}
-                                                    className="p-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl shadow-[0_0_15px_rgba(139,92,246,0.15)] transition-all duration-300 cursor-pointer"
+                                                    className="p-2.5 text-white rounded-xl shadow-md transition-all duration-300 cursor-pointer"
+                                                    style={{ 
+                                                        backgroundColor: colorCat,
+                                                        boxShadow: `0 0 12px ${colorCat}22`
+                                                    }}
                                                     title="Agregar"
                                                 >
                                                     <FiPlus size={16} />
@@ -443,6 +595,16 @@ export default function CategoriasPage() {
                 message={`¿Proceder con la desvinculación completa de "${categoriaAEliminar?.nombre}"? Se perderá toda su lista de subcategorías.`}
                 onConfirm={handleEliminarCategoria}
                 onClose={() => setCategoriaAEliminar(null)}
+                type="danger"
+            />
+
+            {/* Diálogo de Confirmación para Eliminar Subcategoría */}
+            <ConfirmDialog
+                isOpen={subcategoriaAEliminar !== null}
+                title="Eliminar Subcategoría"
+                message={`¿Seguro que deseas eliminar la subcategoría "${subcategoriaAEliminar?.sub}" de esta categoría?`}
+                onConfirm={handleConfirmarEliminarSubcategoria}
+                onClose={() => setSubcategoriaAEliminar(null)}
                 type="danger"
             />
         </div>

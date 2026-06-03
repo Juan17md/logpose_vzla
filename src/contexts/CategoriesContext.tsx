@@ -36,6 +36,7 @@ export interface CategoriaUsuario {
     icono: string; // Nombre del icono de react-icons/fi
     subcategorias: string[];
     esPredeterminada: boolean;
+    color?: string; // Color hexadecimal de la categoría
     creadoEn?: any;
 }
 
@@ -65,29 +66,29 @@ export const MAPA_ICONOS: Record<string, IconType> = {
 
 // Categorías iniciales por defecto que se clonarán al Firestore del usuario la primera vez
 const CATEGORIAS_PREDETERMINADAS = [
-    { nombre: "Comida", tipo: "gasto" as const, icono: "FiCoffee", subcategorias: ["Supermercado", "Restaurantes", "Delivery", "Cafetería"] },
-    { nombre: "Hogar", tipo: "gasto" as const, icono: "FiHome", subcategorias: ["Alquiler", "Servicios", "Limpieza", "Mantenimiento"] },
-    { nombre: "Transporte", tipo: "gasto" as const, icono: "FiTruck", subcategorias: ["Gasolina", "Pasaje / Bus", "Taxi / Uber", "Mantenimiento"] },
-    { nombre: "Servicios", tipo: "gasto" as const, icono: "FiTool", subcategorias: ["Internet", "Telefonía", "Luz", "Streaming"] },
-    { nombre: "Salud", tipo: "gasto" as const, icono: "FiHeart", subcategorias: ["Farmacia", "Consultas Médicas", "Exámenes"] },
-    { nombre: "Educación", tipo: "gasto" as const, icono: "FiBookOpen", subcategorias: ["Mensualidad", "Cursos / Talleres", "Libros / Útiles"] },
-    { nombre: "Entretenimiento", tipo: "gasto" as const, icono: "FiFilm", subcategorias: ["Cine", "Suscripciones / Juegos", "Eventos / Conciertos", "Salidas"] },
-    { nombre: "Salario", tipo: "ingreso" as const, icono: "FiAward", subcategorias: ["Nómina principal", "Bono", "Aguinaldos"] },
-    { nombre: "Freelance", tipo: "ingreso" as const, icono: "FiBriefcase", subcategorias: ["Proyectos", "Asesorías", "Trabajos Independientes"] },
-    { nombre: "Mascotas", tipo: "gasto" as const, icono: "FiHeart", subcategorias: ["Alimento", "Veterinario", "Accesorios"] },
-    { nombre: "Regalos", tipo: "gasto" as const, icono: "FiGift", subcategorias: ["Cumpleaños", "Navidad", "Detalles"] },
-    { nombre: "Ropa", tipo: "gasto" as const, icono: "FiShoppingBag", subcategorias: ["Prendas de vestir", "Calzado", "Accesorios"] },
-    { nombre: "Seguros", tipo: "gasto" as const, icono: "FiShield", subcategorias: ["Auto", "Vida", "Hogar"] },
-    { nombre: "Belleza", tipo: "gasto" as const, icono: "FiScissors", subcategorias: ["Peluquería", "Estética", "Cuidado personal"] },
-    { nombre: "Deudas", tipo: "gasto" as const, icono: "FiCreditCard", subcategorias: ["Préstamo personal", "Tarjeta de Crédito", "Intereses"] },
-    { nombre: "Inversiones", tipo: "gasto" as const, icono: "FiPieChart", subcategorias: ["Criptomonedas", "Bolsa de Valores", "Ahorros"] },
-    { nombre: "Otra", tipo: "gasto" as const, icono: "FiCircle", subcategorias: ["Varios", "Imprevistos"] }
+    { nombre: "Comida", tipo: "gasto" as const, icono: "FiCoffee", subcategorias: ["Supermercado", "Restaurantes", "Delivery", "Cafetería"], color: "#f43f5e" },
+    { nombre: "Hogar", tipo: "gasto" as const, icono: "FiHome", subcategorias: ["Alquiler", "Servicios", "Limpieza", "Mantenimiento"], color: "#f97316" },
+    { nombre: "Transporte", tipo: "gasto" as const, icono: "FiTruck", subcategorias: ["Gasolina", "Pasaje / Bus", "Taxi / Uber", "Mantenimiento"], color: "#f59e0b" },
+    { nombre: "Servicios", tipo: "gasto" as const, icono: "FiTool", subcategorias: ["Internet", "Telefonía", "Luz", "Streaming"], color: "#3b82f6" },
+    { nombre: "Salud", tipo: "gasto" as const, icono: "FiHeart", subcategorias: ["Farmacia", "Consultas Médicas", "Exámenes"], color: "#10b981" },
+    { nombre: "Educación", tipo: "gasto" as const, icono: "FiBookOpen", subcategorias: ["Mensualidad", "Cursos / Talleres", "Libros / Útiles"], color: "#8b5cf6" },
+    { nombre: "Entretenimiento", tipo: "gasto" as const, icono: "FiFilm", subcategorias: ["Cine", "Suscripciones / Juegos", "Eventos / Conciertos", "Salidas"], color: "#d946ef" },
+    { nombre: "Salario", tipo: "ingreso" as const, icono: "FiAward", subcategorias: ["Nómina principal", "Bono", "Aguinaldos"], color: "#10b981" },
+    { nombre: "Freelance", tipo: "ingreso" as const, icono: "FiBriefcase", subcategorias: ["Proyectos", "Asesorías", "Trabajos Independientes"], color: "#14b8a6" },
+    { nombre: "Mascotas", tipo: "gasto" as const, icono: "FiHeart", subcategorias: ["Alimento", "Veterinario", "Accesorios"], color: "#f97316" },
+    { nombre: "Regalos", tipo: "gasto" as const, icono: "FiGift", subcategorias: ["Cumpleaños", "Navidad", "Detalles"], color: "#f43f5e" },
+    { nombre: "Ropa", tipo: "gasto" as const, icono: "FiShoppingBag", subcategorias: ["Prendas de vestir", "Calzado", "Accesorios"], color: "#d946ef" },
+    { nombre: "Seguros", tipo: "gasto" as const, icono: "FiShield", subcategorias: ["Auto", "Vida", "Hogar"], color: "#3b82f6" },
+    { nombre: "Belleza", tipo: "gasto" as const, icono: "FiScissors", subcategorias: ["Peluquería", "Estética", "Cuidado personal"], color: "#d946ef" },
+    { nombre: "Deudas", tipo: "gasto" as const, icono: "FiCreditCard", subcategorias: ["Préstamo personal", "Tarjeta de Crédito", "Intereses"], color: "#ef4444" },
+    { nombre: "Inversiones", tipo: "gasto" as const, icono: "FiPieChart", subcategorias: ["Criptomonedas", "Bolsa de Valores", "Ahorros"], color: "#14b8a6" },
+    { nombre: "Otra", tipo: "gasto" as const, icono: "FiCircle", subcategorias: ["Varios", "Imprevistos"], color: "#64748b" }
 ];
 
 interface CategoriesContextType {
     categorias: CategoriaUsuario[];
     cargando: boolean;
-    agregarCategoria: (nombre: string, tipo: "ingreso" | "gasto" | "ambas", icono: string, subcategorias: string[]) => Promise<boolean>;
+    agregarCategoria: (nombre: string, tipo: "ingreso" | "gasto" | "ambas", icono: string, subcategorias: string[], color?: string) => Promise<boolean>;
     actualizarCategoria: (id: string, updates: Partial<CategoriaUsuario>) => Promise<boolean>;
     eliminarCategoria: (id: string) => Promise<boolean>;
     agregarSubcategoria: (categoriaId: string, subcategoria: string) => Promise<boolean>;
@@ -131,6 +132,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
                                     icono: cat.icono,
                                     subcategorias: cat.subcategorias,
                                     esPredeterminada: true,
+                                    color: cat.color,
                                     creadoEn: serverTimestamp()
                                 });
                             });
@@ -160,7 +162,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
         };
     }, [cargando]);
 
-    const agregarCategoria = useCallback(async (nombre: string, tipo: "ingreso" | "gasto" | "ambas", icono: string, subcategorias: string[]) => {
+    const agregarCategoria = useCallback(async (nombre: string, tipo: "ingreso" | "gasto" | "ambas", icono: string, subcategorias: string[], color?: string) => {
         if (!auth.currentUser) return false;
         try {
             const coleccionRef = collection(db, "users", auth.currentUser.uid, "categories");
@@ -170,6 +172,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
                 icono,
                 subcategorias: subcategorias.map(s => s.trim()).filter(s => s !== ""),
                 esPredeterminada: false,
+                color: color || null,
                 creadoEn: serverTimestamp()
             });
             return true;
