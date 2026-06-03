@@ -182,7 +182,12 @@ export default function RecentTransactions() {
                                                     {t.type === 'ingreso' ? <FiTrendingUp /> : t.type === 'transferencia' ? <FiRefreshCw /> : <FiTrendingDown />}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-medium text-white">{t.category}</div>
+                                                    <div className="text-sm font-medium text-white">
+                                                        {t.category}
+                                                        {t.subcategory && (
+                                                            <span className="text-xs font-normal text-slate-400 font-sans"> › {t.subcategory}</span>
+                                                        )}
+                                                    </div>
                                                     <div className="text-xs text-slate-500 truncate max-w-[150px]">{t.description}</div>
                                                 </div>
                                             </div>
@@ -254,7 +259,12 @@ export default function RecentTransactions() {
                                             {t.type === 'ingreso' ? <FiTrendingUp size={18} /> : t.type === 'transferencia' ? <FiRefreshCw size={18} /> : <FiTrendingDown size={18} />}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-white text-sm">{t.category}</p>
+                                            <p className="font-bold text-white text-sm">
+                                                {t.category}
+                                                {t.subcategory && (
+                                                    <span className="text-xs font-normal text-slate-400 font-sans"> › {t.subcategory}</span>
+                                                )}
+                                            </p>
                                             <p className="text-xs text-slate-400 flex items-center gap-1">
                                                 <FiClock size={10} />
                                                 {t.date.toLocaleDateString("es-ES", { day: 'numeric', month: 'short' })}

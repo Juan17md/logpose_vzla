@@ -12,6 +12,7 @@ export interface Transaction {
     amount: number;
     type: "ingreso" | "gasto" | "transferencia";
     category: string;
+    subcategory?: string;
     description: string;
     date: Date;
     // Optional extended fields if you have them in database

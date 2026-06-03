@@ -46,6 +46,7 @@ import { getBCVRate } from "@/lib/currency";
 import { createVenezuelaDate } from "@/lib/timezone";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
+import { useCategorias, MAPA_ICONOS } from "@/contexts/CategoriesContext";
 import { obtenerSimboloMoneda, convertirMontoParaCuenta } from "@/lib/bankAccounts";
 import { parseNumeroFlexible } from "@/lib/number";
 import { calcularComision } from "@/lib/comisiones";
@@ -63,40 +64,11 @@ interface OpcionCuenta extends SelectOption<string> {
 
 registerLocale('es', es);
 
-interface CategoriaOpcion {
-    id: string;
-    name: string;
-    value: string;
-    icono: IconType;
-    [key: string]: any;
-}
-
-const CATEGORIES: CategoriaOpcion[] = [
-    { id: "Comida", name: "Comida", value: "Comida", icono: FiCoffee },
-    { id: "Deudas", name: "Deudas", value: "Deudas", icono: FiCreditCard },
-    { id: "Educación", name: "Educación", value: "Educación", icono: FiBookOpen },
-    { id: "Entretenimiento", name: "Entretenimiento", value: "Entretenimiento", icono: FiFilm },
-    { id: "Freelance", name: "Trabajo Informal", value: "Trabajo Informal", icono: FiBriefcase },
-    { id: "Hogar", name: "Hogar", value: "Hogar", icono: FiHome },
-    { id: "Inversiones", name: "Inversiones", value: "Inversiones", icono: FiPieChart },
-    { id: "Mascotas", name: "Mascotas", value: "Mascotas", icono: FiHeart },
-    { id: "Regalos", name: "Regalos", value: "Regalos", icono: FiGift },
-    { id: "Ropa", name: "Ropa", value: "Ropa", icono: FiShoppingBag },
-    { id: "Salario", name: "Salario", value: "Salario", icono: FiAward },
-    { id: "Salud", name: "Salud", value: "Salud", icono: FiHeart },
-    { id: "Servicios", name: "Servicios", value: "Servicios", icono: FiTool },
-    { id: "Tecnología", name: "Tecnología", value: "Tecnología", icono: FiMonitor },
-    { id: "Transferencias", name: "Transferencias", value: "Transferencias", icono: FiRepeat },
-    { id: "Transporte", name: "Transporte", value: "Transporte", icono: FiTruck },
-    { id: "Seguros", name: "Seguros", value: "Seguros", icono: FiShield },
-    { id: "Belleza", name: "Belleza", value: "Belleza", icono: FiScissors },
-    { id: "Otra", name: "Otra", value: "Otra", icono: FiCircle }
-];
-
 const transactionSchema = z.object({
     amount: z.string().min(1, "El monto es obligatorio"),
     description: z.string().optional(),
     category: z.string().min(1, "La categoría es obligatoria"),
+    subcategory: z.string().optional(),
     customCategory: z.string().optional(),
     date: z.date(),
     type: z.enum(["ingreso", "gasto", "transferencia"]),
@@ -151,15 +123,17 @@ type TransactionFormData = z.infer<typeof transactionSchema>;
 export default function TransactionForm() {
     const { transactionToEdit, clearEditing } = useEditTransaction();
     const { cuentas } = useBankAccounts();
+    const { categorias: categoriasUsuario } = useCategorias();
     const [loading, setLoading] = useState(false);
     const [rate, setRate] = useState<number>(0);
 
-    const { control, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<TransactionFormData>({
+    const { control, handleSubmit, watch, setValue, reset, setError, formState: { errors } } = useForm<TransactionFormData>({
         resolver: zodResolver(transactionSchema),
         defaultValues: {
             amount: "",
             description: "",
-            category: "Comida",
+            category: "",
+            subcategory: "",
             customCategory: "",
             date: createVenezuelaDate(),
             type: "gasto",
@@ -169,7 +143,7 @@ export default function TransactionForm() {
             accountId: "",
             targetAccountId: "",
             hasCommission: false,
-            commissionType: "custom",
+            commissionType: "p2p",
             commissionAmount: "",
             vesCommissionAmount: "",
         }
@@ -181,6 +155,7 @@ export default function TransactionForm() {
     const vesAmount = watch("vesAmount");
     const exchangeRate = watch("exchangeRate");
     const category = watch("category");
+    const subcategory = watch("subcategory");
     const hasCommission = watch("hasCommission");
     const commissionType = watch("commissionType");
     const commissionAmount = watch("commissionAmount");
@@ -201,13 +176,12 @@ export default function TransactionForm() {
     // Populate form if editing
     useEffect(() => {
         if (transactionToEdit) {
-            const isStandardCategory = CATEGORIES.some(c => c.value === transactionToEdit.category);
-
             reset({
                 amount: parseFloat(transactionToEdit.amount.toFixed(2)).toString(),
                 description: transactionToEdit.description || "",
-                category: isStandardCategory ? transactionToEdit.category : "Otra",
-                customCategory: isStandardCategory ? "" : transactionToEdit.category,
+                category: transactionToEdit.category || "",
+                subcategory: transactionToEdit.subcategory || "",
+                customCategory: "",
                 date: new Date(transactionToEdit.date),
                 type: transactionToEdit.type,
                 currency: transactionToEdit.currency || "USD",
@@ -216,7 +190,7 @@ export default function TransactionForm() {
                     ? parseFloat(transactionToEdit.originalAmount.toFixed(2)).toString()
                     : "",
                 hasCommission: false,
-                commissionType: "custom",
+                commissionType: "p2p",
                 commissionAmount: "",
                 vesCommissionAmount: "",
                 targetAccountId: "",
@@ -264,6 +238,55 @@ export default function TransactionForm() {
             }
         }
     }, [description, setValue, transactionToEdit]);
+
+    // Efecto para desactivar comisiones en ingresos y forzar P2P por defecto en gastos/transferencias
+    useEffect(() => {
+        if (type === "ingreso") {
+            setValue("hasCommission", false);
+            setValue("commissionAmount", "");
+            setValue("vesCommissionAmount", "");
+        } else if (type === "gasto" || type === "transferencia") {
+            const currentType = watch("commissionType");
+            if (!currentType) {
+                setValue("commissionType", "p2p");
+            }
+        }
+    }, [type, setValue, watch]);
+
+    // Efecto para forzar una categoría válida al cambiar el tipo de transacción
+    useEffect(() => {
+        if (transactionToEdit) return; // No sobreescribir al editar
+        const filtradas = categoriasUsuario.filter(c => {
+            if (type === "gasto") return c.tipo === "gasto" || c.tipo === "ambas";
+            if (type === "ingreso") return c.tipo === "ingreso" || c.tipo === "ambas";
+            return false;
+        });
+        if (filtradas.length > 0) {
+            const esValida = filtradas.some(c => c.nombre === category);
+            if (!esValida) {
+                setValue("category", filtradas[0].nombre);
+            }
+        } else {
+            setValue("category", "");
+        }
+    }, [type, categoriasUsuario, category, setValue, transactionToEdit]);
+
+    // Efecto para auto-seleccionar la primera subcategoría al cambiar de categoría principal
+    useEffect(() => {
+        if (!category) {
+            setValue("subcategory", "");
+            return;
+        }
+        const cat = categoriasUsuario.find(c => c.nombre === category);
+        if (cat && cat.subcategorias.length > 0) {
+            const subActual = watch("subcategory");
+            if (!cat.subcategorias.includes(subActual || "")) {
+                setValue("subcategory", cat.subcategorias[0]);
+            }
+        } else {
+            setValue("subcategory", "");
+        }
+    }, [category, categoriasUsuario, setValue, watch]);
 
     // Calculate USD from VES
     useEffect(() => {
@@ -315,6 +338,16 @@ export default function TransactionForm() {
             toast.error("Debes crear una cuenta bancaria antes de registrar movimientos.");
             return;
         }
+
+        // Validación manual de subcategoría requerida
+        if (data.type !== "transferencia") {
+            const catObj = categoriasUsuario.find(c => c.nombre === data.category);
+            if (catObj && catObj.subcategorias.length > 0 && (!data.subcategory || data.subcategory === "")) {
+                setError("subcategory", { type: "manual", message: "La subcategoría es obligatoria" });
+                return;
+            }
+        }
+
         setLoading(true);
 
         if (!auth.currentUser) {
@@ -329,7 +362,8 @@ export default function TransactionForm() {
             const transactionData = {
                 amount: parseNumeroFlexible(data.amount),
                 type: data.type,
-                category: finalCategory,
+                category: data.type === "transferencia" ? "Transferencias" : finalCategory,
+                subcategory: data.type === "transferencia" ? "" : (data.subcategory || ""),
                 description: data.description || "",
                 date: data.date,
                 currency: data.currency,
@@ -391,6 +425,7 @@ export default function TransactionForm() {
                         userId: auth.currentUser!.uid,
                         type: "transferencia",
                         category: "Transferencias",
+                        subcategory: "",
                         description: data.description || `Transferencia a ${cuentaDestino.nombre}`,
                         targetAccountId: data.targetAccountId,
                         period: "mensual",
@@ -405,6 +440,7 @@ export default function TransactionForm() {
                             amount: comisionUSD,
                             type: "gasto",
                             category: "Comisiones",
+                            subcategory: "",
                             description: `Comisión de transferencia`,
                             date: data.date,
                             currency: data.currency,
@@ -418,7 +454,7 @@ export default function TransactionForm() {
                 });
                 toast.success("Transferencia registrada exitosamente.");
                 reset({
-                    amount: "", description: "", category: "Comida", customCategory: "",
+                    amount: "", description: "", category: "", subcategory: "", customCategory: "",
                     date: createVenezuelaDate(), type: "gasto", currency: "VES",
                     exchangeRate: rate.toFixed(2), vesAmount: "", accountId: data.accountId,
                     targetAccountId: "", hasCommission: false, commissionAmount: "", vesCommissionAmount: "",
@@ -494,6 +530,7 @@ export default function TransactionForm() {
                             amount: comisionUSD,
                             type: "gasto",
                             category: "Comisiones",
+                            subcategory: "",
                             description: `Comisión de: ${data.description || data.category}`,
                             date: data.date,
                             currency: data.currency,
@@ -509,7 +546,7 @@ export default function TransactionForm() {
 
                 // Reset form but keep some defaults
                 reset({
-                    amount: "", description: "", category: "Comida", customCategory: "",
+                    amount: "", description: "", category: "", subcategory: "", customCategory: "",
                     date: createVenezuelaDate(), type: "gasto", currency: "VES",
                     exchangeRate: rate.toFixed(2), vesAmount: "", accountId: data.accountId,
                     targetAccountId: "", hasCommission: false, commissionAmount: "", vesCommissionAmount: "",
@@ -522,6 +559,32 @@ export default function TransactionForm() {
             setLoading(false);
         }
     };
+
+    // Categorías del usuario filtradas por el tipo (gasto o ingreso)
+    const categoriasFiltradas = categoriasUsuario.filter(c => {
+        if (type === "gasto") return c.tipo === "gasto" || c.tipo === "ambas";
+        if (type === "ingreso") return c.tipo === "ingreso" || c.tipo === "ambas";
+        return false;
+    });
+
+    const opcionesCategorias = categoriasFiltradas.map(c => {
+        const Icono = MAPA_ICONOS[c.icono] || FiCircle;
+        return {
+            id: c.nombre,
+            name: c.nombre,
+            value: c.nombre,
+            icono: Icono
+        };
+    });
+
+    // Subcategorías de la categoría seleccionada
+    const categoriaActiva = categoriasUsuario.find(c => c.nombre === category);
+    const tieneSubcategorias = !!(categoriaActiva && categoriaActiva.subcategorias && categoriaActiva.subcategorias.length > 0);
+    const opcionesSubcategorias = (categoriaActiva?.subcategorias || []).map(sub => ({
+        id: sub,
+        name: sub,
+        value: sub
+    }));
 
     return (
         <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
@@ -544,7 +607,7 @@ export default function TransactionForm() {
                         onClick={() => {
                             clearEditing();
                             reset({
-                                amount: "", description: "", category: "Comida", customCategory: "",
+                                amount: "", description: "", category: "", subcategory: "", customCategory: "",
                                 date: createVenezuelaDate(), type: "gasto", currency: "VES",
                                 exchangeRate: rate.toFixed(2), vesAmount: "", accountId: "",
                             });
@@ -849,6 +912,7 @@ export default function TransactionForm() {
                 <div className="grid grid-cols-12 gap-3 items-start">
                     {type !== "transferencia" ? (
                         <>
+                            {/* Categoría Principal */}
                             <div className="col-span-6">
                                 <Controller
                                     control={control}
@@ -856,32 +920,33 @@ export default function TransactionForm() {
                                     render={({ field }) => (
                                         <Select
                                             label="Categoría"
-                                            options={CATEGORIES}
+                                            options={opcionesCategorias}
                                             value={field.value}
-                                            onChange={field.onChange}
+                                            onChange={(val) => {
+                                                field.onChange(val);
+                                                setValue("subcategory", "");
+                                            }}
                                             error={errors.category}
                                             icon={<FiTag size={12} />}
                                             renderOption={(opt) => {
-                                                const categoria = opt as CategoriaOpcion;
-                                                const IconoCategoria = categoria.icono;
+                                                const Icono = opt.icono as IconType;
                                                 return (
                                                     <div className="flex items-center gap-2">
                                                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                                                            <IconoCategoria size={12} />
+                                                            <Icono size={12} />
                                                         </span>
-                                                        <span className="font-semibold text-xs text-slate-100">{categoria.name}</span>
+                                                        <span className="font-semibold text-xs text-slate-100">{opt.name}</span>
                                                     </div>
                                                 );
                                             }}
                                             renderValue={(opt) => {
-                                                const categoria = opt as CategoriaOpcion;
-                                                const IconoCategoria = categoria.icono;
+                                                const Icono = opt.icono as IconType;
                                                 return (
                                                     <div className="flex items-center gap-2">
                                                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                                                            <IconoCategoria size={12} />
+                                                            <Icono size={12} />
                                                         </span>
-                                                        <span className="font-semibold text-xs text-slate-100">{categoria.name}</span>
+                                                        <span className="font-semibold text-xs text-slate-100">{opt.name}</span>
                                                     </div>
                                                 );
                                             }}
@@ -889,7 +954,29 @@ export default function TransactionForm() {
                                     )}
                                 />
                             </div>
-                            <div className="col-span-6">
+
+                            {/* Subcategoría (Condicional) */}
+                            {tieneSubcategorias && (
+                                <div className="col-span-6">
+                                    <Controller
+                                        control={control}
+                                        name="subcategory"
+                                        render={({ field }) => (
+                                            <Select
+                                                label="Subcategoría"
+                                                options={opcionesSubcategorias}
+                                                value={field.value || ""}
+                                                onChange={field.onChange}
+                                                error={errors.subcategory}
+                                                icon={<FiTag size={12} className="text-violet-400" />}
+                                            />
+                                        )}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Fecha */}
+                            <div className={tieneSubcategorias ? "col-span-12" : "col-span-6"}>
                                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Fecha</label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 transition-colors">
@@ -915,6 +1002,7 @@ export default function TransactionForm() {
                                     />
                                 </div>
                             </div>
+
                             {category === "Otra" && (
                                 <div className="col-span-12 mt-1">
                                     <Controller
