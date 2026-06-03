@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useTransactions } from "@/hooks/useTransactions";
-import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiPieChart, FiBriefcase } from "react-icons/fi";
+import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiPieChart, FiBriefcase, FiPercent, FiActivity, FiArrowUpRight, FiArrowDownRight, FiAward } from "react-icons/fi";
 import { useSavingsTransactions } from "@/hooks/useSavingsTransactions";
 import Select from "@/components/ui/forms/Select";
 import { FiCalendar, FiClock } from "react-icons/fi";
@@ -87,6 +87,77 @@ export default function ReportsPage() {
         { name: "Gastos", value: stats.expense, color: "#ef4444" },
         { name: "Ahorro", value: Math.max(0, savingsStats.netSavings), color: "#8b5cf6" }
     ];
+
+    const advancedStats = useMemo(() => {
+        // 1. Día de mayor gasto (Peak Spending Day)
+        const dailyExpenses: Record<number, number> = {};
+        filteredTransactions.forEach(t => {
+            if (t.type === "gasto") {
+                const d = new Date(t.date);
+                const day = d.getDate();
+                dailyExpenses[day] = (dailyExpenses[day] || 0) + Number(t.amount);
+            }
+        });
+
+        let peakDay = null;
+        let peakAmount = 0;
+        Object.entries(dailyExpenses).forEach(([day, amount]) => {
+            if (amount > peakAmount) {
+                peakAmount = amount;
+                peakDay = Number(day);
+            }
+        });
+
+        // 2. Promedio de Gasto Diario
+        const now = new Date();
+        let daysInSelectedPeriod = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+        if (selectedMonth === now.getMonth() && selectedYear === now.getFullYear()) {
+            daysInSelectedPeriod = now.getDate();
+        }
+        const dailyAverage = stats.expense / (daysInSelectedPeriod || 1);
+
+        // 3. Comparativa con el mes anterior (MoM)
+        const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+        const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
+
+        const prevPeriodTransactions = transactions.filter(t => {
+            const d = new Date(t.date);
+            return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+        });
+
+        let prevIncome = 0;
+        let prevExpense = 0;
+        prevPeriodTransactions.forEach(t => {
+            if (t.type === "ingreso") {
+                prevIncome += Number(t.amount);
+            } else if (t.type === "gasto") {
+                prevExpense += Number(t.amount);
+            }
+        });
+
+        const incomeDiff = stats.income - prevIncome;
+        const incomeChangePct = prevIncome > 0 ? (incomeDiff / prevIncome) * 100 : 0;
+
+        const expenseDiff = stats.expense - prevExpense;
+        const expenseChangePct = prevExpense > 0 ? (expenseDiff / prevExpense) * 100 : 0;
+
+        // 4. Eficiencia de consumo (Gastos / Ingresos)
+        const expenseToIncomeRatio = stats.income > 0 ? (stats.expense / stats.income) * 100 : 0;
+
+        // 5. Tasa de Ahorro Real (Net Savings / Incomes)
+        const netSavings = savingsStats.netSavings;
+        const savingRate = stats.income > 0 ? (netSavings / stats.income) * 100 : 0;
+
+        return {
+            peakDay,
+            peakAmount,
+            dailyAverage,
+            incomeChangePct,
+            expenseChangePct,
+            expenseToIncomeRatio,
+            savingRate
+        };
+    }, [filteredTransactions, stats, transactions, selectedMonth, selectedYear, savingsStats]);
 
     const MONTHS = [
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -263,6 +334,87 @@ export default function ReportsPage() {
                         )}
                     </div>
                 </motion.div>
+
+                {/* Mobile Advanced Analytics Bento Grid */}
+                <motion.div variants={itemVariants} className="space-y-4">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider px-1">Análisis de Eficiencia</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* Card 1: Tasa de Ahorro */}
+                        <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-violet-500/20 backdrop-blur-xl relative overflow-hidden group">
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/5 rounded-full blur-2xl"></div>
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center border border-violet-500/10">
+                                    <FiBriefcase size={16} />
+                                </div>
+                            </div>
+                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Ahorro Real</p>
+                            <p className="text-xl font-black text-white">{advancedStats.savingRate.toFixed(1)}%</p>
+                            <span className={`text-[8px] font-black uppercase inline-block mt-2 px-2 py-0.5 rounded-full ${
+                                advancedStats.savingRate >= 20 
+                                    ? 'bg-emerald-500/20 text-emerald-400' 
+                                    : advancedStats.savingRate >= 10 
+                                        ? 'bg-amber-500/20 text-amber-400' 
+                                        : 'bg-red-500/20 text-red-400'
+                            }`}>
+                                {advancedStats.savingRate >= 20 ? 'Excelente' : advancedStats.savingRate >= 10 ? 'Saludable' : 'Bajo'}
+                            </span>
+                        </div>
+
+                        {/* Card 2: Eficiencia */}
+                        <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-amber-500/20 backdrop-blur-xl relative overflow-hidden group">
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl"></div>
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/10">
+                                    <FiPercent size={16} />
+                                </div>
+                            </div>
+                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Uso de Ingresos</p>
+                            <p className="text-xl font-black text-white">{advancedStats.expenseToIncomeRatio.toFixed(1)}%</p>
+                            <div className="w-full h-1 bg-slate-800 rounded-full mt-2.5 overflow-hidden">
+                                <div 
+                                    className={`h-full rounded-full ${
+                                        advancedStats.expenseToIncomeRatio <= 70 ? 'bg-emerald-500' : advancedStats.expenseToIncomeRatio <= 90 ? 'bg-amber-500' : 'bg-red-500'
+                                    }`}
+                                    style={{ width: `${Math.min(advancedStats.expenseToIncomeRatio, 100)}%` }}
+                                ></div>
+                            </div>
+                        </div>
+
+                        {/* Card 3: Día Crítico */}
+                        <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-red-500/20 backdrop-blur-xl relative overflow-hidden group">
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/5 rounded-full blur-2xl"></div>
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/10">
+                                    <FiActivity size={16} />
+                                </div>
+                            </div>
+                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Pico de Gasto</p>
+                            <p className="text-xl font-black text-white">
+                                {advancedStats.peakDay ? `Día ${advancedStats.peakDay}` : 'N/A'}
+                            </p>
+                            <p className="text-[9px] text-slate-400 font-bold mt-1 truncate">
+                                {advancedStats.peakAmount > 0 ? `$${Math.round(advancedStats.peakAmount)}` : 'Sin registros'}
+                            </p>
+                        </div>
+
+                        {/* Card 4: Comparativa MoM */}
+                        <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-emerald-500/20 backdrop-blur-xl relative overflow-hidden group">
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl"></div>
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/10">
+                                    <FiAward size={16} />
+                                </div>
+                            </div>
+                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Cambio Gastos</p>
+                            <p className={`text-xl font-black ${
+                                advancedStats.expenseChangePct < 0 ? 'text-emerald-400' : advancedStats.expenseChangePct > 0 ? 'text-red-400' : 'text-white'
+                            }`}>
+                                {advancedStats.expenseChangePct === 0 ? '0%' : `${advancedStats.expenseChangePct > 0 ? '+' : ''}${advancedStats.expenseChangePct.toFixed(0)}%`}
+                            </p>
+                            <p className="text-[8px] text-slate-500 mt-1 font-medium">Respecto al mes anterior</p>
+                        </div>
+                    </div>
+                </motion.div>
             </motion.div>
 
             {/* ===== DESKTOP LAYOUT (Original wrapped) ===== */}
@@ -377,6 +529,106 @@ export default function ReportsPage() {
                         </div>
                     </div>
 
+                </div>
+
+                {/* Desktop Advanced Analytics Bento Grid */}
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
+                        Análisis de Eficiencia y Consumo
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {/* Card 1: Tasa de Ahorro */}
+                        <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-violet-500/20 backdrop-blur-xl relative overflow-hidden group">
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-all duration-500"></div>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center border border-violet-500/10">
+                                    <FiBriefcase size={20} />
+                                </div>
+                                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full ${
+                                    advancedStats.savingRate >= 20 
+                                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' 
+                                        : advancedStats.savingRate >= 10 
+                                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20' 
+                                            : 'bg-red-500/20 text-red-400 border border-red-500/20'
+                                }`}>
+                                    {advancedStats.savingRate >= 20 ? 'Excelente 🚀' : advancedStats.savingRate >= 10 ? 'Saludable 👍' : 'Bajo ⚠️'}
+                                </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Tasa de Ahorro</p>
+                            <p className="text-3xl font-black text-white">{advancedStats.savingRate.toFixed(1)}%</p>
+                            <p className="text-[10px] text-slate-500 mt-2 font-medium">De tus ingresos totales de este mes.</p>
+                        </div>
+
+                        {/* Card 2: Eficiencia de Consumo */}
+                        <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-amber-500/20 backdrop-blur-xl relative overflow-hidden group">
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all duration-500"></div>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/10">
+                                    <FiPercent size={20} />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Eficiencia de Consumo</p>
+                            <p className="text-3xl font-black text-white">{advancedStats.expenseToIncomeRatio.toFixed(1)}%</p>
+                            <div className="w-full h-1.5 bg-slate-800 rounded-full mt-3 overflow-hidden">
+                                <div 
+                                    className={`h-full rounded-full transition-all duration-500 ${
+                                        advancedStats.expenseToIncomeRatio <= 70 ? 'bg-emerald-500' : advancedStats.expenseToIncomeRatio <= 90 ? 'bg-amber-500' : 'bg-red-500'
+                                    }`}
+                                    style={{ width: `${Math.min(advancedStats.expenseToIncomeRatio, 100)}%` }}
+                                ></div>
+                            </div>
+                            <p className="text-[9px] text-slate-500 mt-2 font-medium">Proporción de ingresos consumidos por gastos.</p>
+                        </div>
+
+                        {/* Card 3: Día de Mayor Consumo */}
+                        <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-red-500/20 backdrop-blur-xl relative overflow-hidden group">
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-all duration-500"></div>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/10">
+                                    <FiActivity size={20} />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Día de Mayor Gasto</p>
+                            <p className="text-3xl font-black text-white">
+                                {advancedStats.peakDay ? `Día ${advancedStats.peakDay}` : 'N/A'}
+                            </p>
+                            <p className="text-[10px] text-red-400 font-bold mt-2">
+                                {advancedStats.peakAmount > 0 ? `$${advancedStats.peakAmount.toLocaleString('es-ES', { maximumFractionDigits: 2 })} acumulados` : 'Sin registros de gastos'}
+                            </p>
+                        </div>
+
+                        {/* Card 4: Comparación MoM */}
+                        <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-emerald-500/20 backdrop-blur-xl relative overflow-hidden group">
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500"></div>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/10">
+                                    <FiAward size={20} />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Comparativa MoM</p>
+                            <div className="space-y-1.5 mt-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] text-slate-400 font-medium">Gastos:</span>
+                                    <span className={`text-xs font-bold flex items-center ${
+                                        advancedStats.expenseChangePct < 0 ? 'text-emerald-400' : advancedStats.expenseChangePct > 0 ? 'text-red-400' : 'text-slate-400'
+                                    }`}>
+                                        {advancedStats.expenseChangePct === 0 ? '' : advancedStats.expenseChangePct < 0 ? <FiArrowDownRight className="inline mr-0.5" /> : <FiArrowUpRight className="inline mr-0.5" />}
+                                        {Math.abs(advancedStats.expenseChangePct).toFixed(1)}%
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] text-slate-400 font-medium">Ingresos:</span>
+                                    <span className={`text-xs font-bold flex items-center ${
+                                        advancedStats.incomeChangePct > 0 ? 'text-emerald-400' : advancedStats.incomeChangePct < 0 ? 'text-red-400' : 'text-slate-400'
+                                    }`}>
+                                        {advancedStats.incomeChangePct === 0 ? '' : advancedStats.incomeChangePct > 0 ? <FiArrowUpRight className="inline mr-0.5" /> : <FiArrowDownRight className="inline mr-0.5" />}
+                                        {Math.abs(advancedStats.incomeChangePct).toFixed(1)}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </>
