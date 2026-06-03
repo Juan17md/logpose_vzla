@@ -57,7 +57,7 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
     };
 
     return (
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        <div className="relative">
             {/* Decorative background glow */}
             <div className={`absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[60px] pointer-events-none opacity-10 ${
                 debt.type === 'por_cobrar' ? 'bg-emerald-500' : 'bg-red-500'
@@ -189,7 +189,7 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
                         whileTap={{ scale: 0.98 }}
                         type="submit"
                         disabled={isLoading}
-                        className="flex-2 py-4 px-6 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-2xl text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all border border-white/10"
+                        className="flex-[2] py-4 px-6 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-2xl text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all border border-white/10"
                     >
                         {isLoading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

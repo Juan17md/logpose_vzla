@@ -64,7 +64,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
     };
 
     return (
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        <div className="relative">
             {/* Decorative background glow */}
             <AnimatePresence mode="wait">
                 <motion.div 
@@ -230,7 +230,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                         whileTap={{ scale: 0.98 }}
                         type="submit"
                         disabled={isLoading}
-                        className={`flex-2 py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-white/10 ${
+                        className={`flex-[2] py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-white/10 ${
                             type === 'por_cobrar' 
                             ? 'bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/20'
                             : 'bg-linear-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-red-500/20'

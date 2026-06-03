@@ -120,6 +120,19 @@ export default function DebtsPage() {
         }
     };
 
+    const handleCancelMobile = () => {
+        setMobileView("list");
+        setTimeout(() => {
+            setView("create");
+            setEditingDebt(null);
+        }, 300);
+    };
+
+    const handleCancelDesktop = () => {
+        setView("create");
+        setEditingDebt(null);
+    };
+
     const handleDeleteClick = (id: string) => {
         setDeletingId(id);
         setShowConfirmDelete(true);
@@ -389,7 +402,7 @@ export default function DebtsPage() {
                             {/* Form Header Mobile */}
                             <div className="flex items-center gap-4 mb-2">
                                 <button
-                                    onClick={() => setMobileView('list')}
+                                    onClick={handleCancelMobile}
                                     className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-slate-400"
                                 >
                                     <FiArrowLeft size={20} />
@@ -410,14 +423,14 @@ export default function DebtsPage() {
                                         <DebtPaymentForm 
                                             debt={editingDebt} 
                                             onSubmit={handlePaymentSubmit} 
-                                            onCancel={() => setMobileView('list')}
+                                            onCancel={handleCancelMobile}
                                             isLoading={isSubmitting} 
                                         />
                                     ) : (
                                         <DebtForm 
                                             initialData={editingDebt} 
                                             onSubmit={handleFormSubmit} 
-                                            onCancel={() => setMobileView('list')}
+                                            onCancel={handleCancelMobile}
                                             isLoading={isSubmitting}
                                             defaultType={activeTab}
                                         />
@@ -426,7 +439,7 @@ export default function DebtsPage() {
                             </div>
 
                             <button
-                                onClick={() => setMobileView('list')}
+                                onClick={handleCancelMobile}
                                 className="w-full py-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] hover:text-white transition-colors"
                             >
                                 Volver al Listado
@@ -480,12 +493,14 @@ export default function DebtsPage() {
                                             <DebtPaymentForm 
                                                 debt={editingDebt} 
                                                 onSubmit={handlePaymentSubmit} 
+                                                onCancel={handleCancelDesktop}
                                                 isLoading={isSubmitting} 
                                             />
                                         ) : (
                                             <DebtForm 
                                                 initialData={editingDebt} 
                                                 onSubmit={handleFormSubmit} 
+                                                onCancel={handleCancelDesktop}
                                                 isLoading={isSubmitting}
                                                 defaultType={activeTab}
                                             />
