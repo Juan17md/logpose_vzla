@@ -87,6 +87,14 @@ service cloud.firestore {
       match /account_transactions/{transId} {
         allow read, write: if isOwner(userId);
       }
+
+      // ----------------------------------------
+      // 🏷️ CATEGORÍAS - Categorías y subcategorías personalizadas del usuario
+      // ----------------------------------------
+      // Colección: users/{userId}/categories/{categoryId}
+      match /categories/{categoryId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
 
