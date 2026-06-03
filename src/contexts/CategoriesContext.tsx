@@ -25,7 +25,20 @@ import {
     FiScissors,
     FiCircle,
     FiSmartphone,
-    FiEdit2
+    FiEdit2,
+    FiActivity,
+    FiDollarSign,
+    FiPercent,
+    FiMusic,
+    FiTv,
+    FiSmile,
+    FiShoppingCart,
+    FiCompass,
+    FiGlobe,
+    FiUsers,
+    FiKey,
+    FiCamera,
+    FiSun
 } from "react-icons/fi";
 
 // Tipado de Categoría de Usuario
@@ -61,7 +74,20 @@ export const MAPA_ICONOS: Record<string, IconType> = {
     FiScissors,
     FiCircle,
     FiSmartphone,
-    FiEdit2
+    FiEdit2,
+    FiActivity,
+    FiDollarSign,
+    FiPercent,
+    FiMusic,
+    FiTv,
+    FiSmile,
+    FiShoppingCart,
+    FiCompass,
+    FiGlobe,
+    FiUsers,
+    FiKey,
+    FiCamera,
+    FiSun
 };
 
 // Categorías iniciales por defecto que se clonarán al Firestore del usuario la primera vez

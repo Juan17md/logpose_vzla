@@ -32,7 +32,21 @@ import {
     FiShield,
     FiScissors,
     FiCircle,
-    FiEdit2
+    FiEdit2,
+    FiActivity,
+    FiDollarSign,
+    FiPercent,
+    FiMusic,
+    FiTv,
+    FiSmile,
+    FiShoppingCart,
+    FiCompass,
+    FiGlobe,
+    FiUsers,
+    FiSmartphone,
+    FiKey,
+    FiCamera,
+    FiSun
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -57,7 +71,21 @@ const LISTA_ICONOS_SELECCIONABLES = [
     { nombre: "FiPieChart", componente: FiPieChart },
     { nombre: "FiMonitor", componente: ComponenteMonitor },
     { nombre: "FiRepeat", componente: FiRepeat },
-    { nombre: "FiCircle", componente: FiCircle }
+    { nombre: "FiCircle", componente: FiCircle },
+    { nombre: "FiActivity", componente: FiActivity },
+    { nombre: "FiDollarSign", componente: FiDollarSign },
+    { nombre: "FiPercent", componente: FiPercent },
+    { nombre: "FiMusic", componente: FiMusic },
+    { nombre: "FiTv", componente: FiTv },
+    { nombre: "FiSmile", componente: FiSmile },
+    { nombre: "FiShoppingCart", componente: FiShoppingCart },
+    { nombre: "FiCompass", componente: FiCompass },
+    { nombre: "FiGlobe", componente: FiGlobe },
+    { nombre: "FiUsers", componente: FiUsers },
+    { nombre: "FiSmartphone", componente: FiSmartphone },
+    { nombre: "FiKey", componente: FiKey },
+    { nombre: "FiCamera", componente: FiCamera },
+    { nombre: "FiSun", componente: FiSun }
 ];
 
 function ComponenteMonitor(props: any) {
