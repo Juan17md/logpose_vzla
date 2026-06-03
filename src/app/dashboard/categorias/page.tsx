@@ -149,22 +149,22 @@ export default function CategoriasPage() {
     return (
         <div className="space-y-8 pb-32 md:pb-10">
             {/* Banner superior de escritorio */}
-            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+            <div className="hidden md:block bg-linear-to-br from-slate-950 to-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden backdrop-blur-2xl">
                 <div className="absolute top-0 right-0 p-8 opacity-[0.03] transform translate-x-10 -translate-y-10">
                     <FiTag className="text-9xl text-violet-400 rotate-12" />
                 </div>
-                <div className="absolute top-0 left-0 w-full h-full bg-linear-to-r from-violet-500/10 to-transparent pointer-events-none" />
+                <div className="absolute top-0 left-0 w-full h-full bg-linear-to-r from-violet-500/5 to-transparent pointer-events-none" />
 
                 <div className="relative z-10 flex justify-between items-end">
                     <div>
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="w-2 h-2 rounded-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]" />
+                            <div className="w-2 h-2 rounded-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.6)]" />
                             <span className="text-[10px] text-slate-500 font-black uppercase tracking-[3px]">Estructura de Negocio</span>
                         </div>
                         <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight mb-3">
                             Mis <span className="text-transparent bg-clip-text bg-linear-to-r from-violet-400 to-indigo-400">Categorías</span>
                         </h1>
-                        <p className="text-slate-400 text-lg font-medium max-w-md">
+                        <p className="text-slate-400 text-base font-medium max-w-md">
                             Organiza tus flujos de ingresos y gastos clasificándolos con subcategorías detalladas.
                         </p>
                     </div>
@@ -196,38 +196,41 @@ export default function CategoriasPage() {
                     </button>
 
                     <div className="sticky top-6">
-                        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-6 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+                        <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-800/80 p-6 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] relative overflow-hidden group hover:border-slate-700/40 transition-all duration-500">
+                            {/* Glow decorativo de fondo */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
+                            
                             <h2 className="text-xl font-black text-white flex items-center gap-3 mb-6">
                                 <FiPlus className="text-violet-500" /> Nueva Categoría
                             </h2>
 
-                            <form onSubmit={handleCrearCategoria} className="space-y-4">
+                            <form onSubmit={handleCrearCategoria} className="space-y-5">
                                 <Input
                                     label="Nombre"
                                     placeholder="Ej: Mascotas, Hogar"
                                     value={nombre}
                                     onChange={(e) => setNombre(e.target.value)}
-                                    className="py-4 text-sm font-bold"
+                                    className="py-4 text-sm font-semibold bg-slate-950/80 border-slate-850 focus:border-violet-500/50 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-650"
                                 />
 
                                 {/* Tipo de Movimiento Selector */}
-                                <div>
-                                    <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">Tipo de Movimiento</label>
-                                    <div className="flex p-1 bg-slate-950/60 rounded-2xl border border-slate-800/80 shadow-inner">
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Tipo de Movimiento</label>
+                                    <div className="flex p-1.5 bg-slate-950/80 rounded-2xl border border-slate-900 shadow-inner">
                                         {[
-                                            { id: "gasto", label: "Gasto", color: "text-red-300 bg-red-500/15 border border-red-500/20 shadow-md" },
-                                            { id: "ingreso", label: "Ingreso", color: "text-emerald-300 bg-emerald-500/15 border border-emerald-500/20 shadow-md" },
-                                            { id: "ambas", label: "Ambas", color: "text-blue-300 bg-blue-500/15 border border-blue-500/20 shadow-md" }
+                                            { id: "gasto", label: "Gasto", color: "text-red-400 bg-red-500/10 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.15)]" },
+                                            { id: "ingreso", label: "Ingreso", color: "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]" },
+                                            { id: "ambas", label: "Ambas", color: "text-violet-400 bg-violet-500/10 border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.15)]" }
                                         ].map((opt) => (
                                             <button
                                                 key={opt.id}
                                                 type="button"
                                                 onClick={() => setTipo(opt.id as any)}
                                                 className={cn(
-                                                    "flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-300 text-center",
+                                                    "flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-300 text-center border border-transparent",
                                                     tipo === opt.id
                                                         ? opt.color
-                                                        : "text-slate-500 hover:text-slate-300"
+                                                        : "text-slate-500 hover:text-slate-350"
                                                 )}
                                             >
                                                 {opt.label}
@@ -237,36 +240,39 @@ export default function CategoriasPage() {
                                 </div>
 
                                 {/* Selección Visual de Icono */}
-                                <div>
-                                    <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">Seleccionar Icono</label>
-                                    <div className="grid grid-cols-6 gap-2 p-3 bg-slate-950/40 rounded-2xl border border-slate-800/60 max-h-40 overflow-y-auto custom-scrollbar shadow-inner">
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Seleccionar Icono</label>
+                                    <div className="grid grid-cols-6 gap-2.5 p-3.5 bg-slate-950/50 rounded-2xl border border-slate-900 max-h-44 overflow-y-auto custom-scrollbar shadow-inner">
                                         {LISTA_ICONOS_SELECCIONABLES.map((ico) => {
                                             const IconComp = ico.componente;
                                             const esSeleccionado = iconoSeleccionado === ico.nombre;
                                             return (
-                                                <button
+                                                <motion.button
                                                     key={ico.nombre}
                                                     type="button"
+                                                    whileHover={{ scale: 1.15, rotate: 5 }}
+                                                    whileTap={{ scale: 0.95 }}
                                                     onClick={() => setIconoSeleccionado(ico.nombre)}
                                                     className={cn(
-                                                        "p-2.5 rounded-lg flex items-center justify-center border transition-all duration-200",
+                                                        "p-2.5 rounded-xl flex items-center justify-center border transition-all duration-300",
                                                         esSeleccionado
-                                                            ? "bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-md shadow-amber-500/10 scale-110"
-                                                            : "bg-slate-900/40 border-slate-850 hover:bg-slate-800 text-slate-500 hover:text-slate-300"
+                                                            ? "bg-violet-500/20 border-violet-500/50 text-violet-300 shadow-[0_0_15px_rgba(139,92,246,0.25)] scale-110 z-10"
+                                                            : "bg-slate-950/40 border-slate-900 hover:border-slate-800 hover:bg-slate-900 text-slate-500 hover:text-slate-300"
                                                     )}
                                                     title={ico.nombre}
                                                 >
                                                     <IconComp size={16} />
-                                                </button>
+                                                </motion.button>
                                             );
                                         })}
                                     </div>
                                 </div>
 
                                 <motion.button
+                                    whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(139, 92, 246, 0.3)" }}
                                     whileTap={{ scale: 0.98 }}
                                     type="submit"
-                                    className="w-full py-4 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black rounded-2xl shadow-lg shadow-violet-500/20 transition-all border border-violet-400/30 flex items-center justify-center gap-2 mt-4"
+                                    className="w-full py-4 bg-linear-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:via-indigo-500 hover:to-blue-500 text-white font-black rounded-2xl shadow-lg transition-all border border-violet-400/20 flex items-center justify-center gap-2 mt-4 cursor-pointer"
                                 >
                                     <FiPlusCircle size={18} />
                                     CREAR CATEGORÍA
@@ -278,7 +284,7 @@ export default function CategoriasPage() {
 
                 {/* Columna Derecha: Bento Grid de Categorías (2/3) */}
                 <div className={`lg:col-span-2 space-y-8 ${vistaMobile === "form" ? "hidden lg:block" : "block"}`}>
-                    <div className="flex justify-between items-center bg-slate-900/40 p-4 rounded-3xl border border-white/5 backdrop-blur-md">
+                    <div className="flex justify-between items-center bg-slate-950/40 p-4 rounded-3xl border border-slate-900 backdrop-blur-md">
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-violet-500/10 rounded-2xl border border-violet-500/20">
                                 <FiGrid className="text-violet-500 text-xl" />
@@ -309,14 +315,26 @@ export default function CategoriasPage() {
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
-                                        className="bg-slate-900/40 border border-white/10 rounded-3xl p-5 shadow-2xl relative overflow-hidden backdrop-blur-md flex flex-col justify-between group hover:border-slate-700 transition-all duration-300 min-h-[300px]"
+                                        transition={{ duration: 0.4, ease: "easeOut" }}
+                                        className="bg-slate-950/30 border border-slate-900 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between group hover:border-slate-800/80 hover:bg-slate-900/40 hover:-translate-y-1 transition-all duration-500 min-h-[320px]"
                                     >
-                                        <div>
+                                        {/* Halos decorativos de fondo basados en tipo */}
+                                        {esGasto && (
+                                            <div className="bg-red-500/5 blur-3xl w-28 h-28 absolute -bottom-10 -right-10 rounded-full pointer-events-none group-hover:bg-red-500/8 group-hover:scale-110 transition-all duration-500" />
+                                        )}
+                                        {esIngreso && (
+                                            <div className="bg-emerald-500/5 blur-3xl w-28 h-28 absolute -bottom-10 -right-10 rounded-full pointer-events-none group-hover:bg-emerald-500/8 group-hover:scale-110 transition-all duration-500" />
+                                        )}
+                                        {!esGasto && !esIngreso && (
+                                            <div className="bg-blue-500/5 blur-3xl w-28 h-28 absolute -bottom-10 -right-10 rounded-full pointer-events-none group-hover:bg-blue-500/8 group-hover:scale-110 transition-all duration-500" />
+                                        )}
+
+                                        <div className="relative z-10">
                                             {/* Cabecera Tarjeta */}
                                             <div className="flex items-start justify-between">
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-3.5">
                                                     <div className={cn(
-                                                        "p-3 rounded-2xl border ring-4",
+                                                        "p-3 rounded-2xl border ring-4 transition-colors duration-350",
                                                         esIngreso 
                                                             ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 ring-emerald-500/5" 
                                                             : esGasto 
@@ -328,12 +346,12 @@ export default function CategoriasPage() {
                                                     <div>
                                                         <h4 className="font-extrabold text-white text-base leading-tight tracking-tight">{cat.nombre}</h4>
                                                         <span className={cn(
-                                                            "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border mt-1 inline-block",
+                                                            "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border mt-1.5 inline-block",
                                                             esIngreso 
-                                                                ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400" 
+                                                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
                                                                 : esGasto 
-                                                                    ? "bg-red-500/5 border-red-500/10 text-red-400"
-                                                                    : "bg-blue-500/5 border-blue-500/10 text-blue-400"
+                                                                    ? "bg-red-500/10 border-red-500/20 text-red-400"
+                                                                    : "bg-blue-500/10 border-blue-500/20 text-blue-400"
                                                         )}>
                                                             {cat.tipo}
                                                         </span>
@@ -343,7 +361,7 @@ export default function CategoriasPage() {
                                                 {/* Botón de Papelera */}
                                                 <button
                                                     onClick={() => setCategoriaAEliminar(cat)}
-                                                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-300"
+                                                    className="p-2.5 text-slate-500 hover:text-red-450 hover:bg-red-500/10 rounded-xl transition-all duration-300"
                                                     title="Eliminar Categoría"
                                                 >
                                                     <FiTrash2 size={16} />
@@ -351,34 +369,40 @@ export default function CategoriasPage() {
                                             </div>
 
                                             {/* Listado de Subcategorías */}
-                                            <div className="mt-5 space-y-2">
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block mb-2.5">Subcategorías Obligatorias</span>
+                                            <div className="mt-6 space-y-3">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block">Subcategorías Obligatorias</span>
                                                 {cat.subcategorias.length === 0 ? (
-                                                    <p className="text-slate-600 text-xs italic py-1">Sin subcategorías agregadas.</p>
+                                                    <p className="text-slate-650 text-xs italic py-1">Sin subcategorías agregadas.</p>
                                                 ) : (
-                                                    <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto custom-scrollbar pr-1">
-                                                        {cat.subcategorias.map(sub => (
-                                                            <div 
-                                                                key={sub}
-                                                                className="flex items-center gap-1.5 bg-slate-950/40 text-slate-300 text-xs py-1.5 pl-3 pr-2 rounded-xl border border-slate-800/80 hover:border-slate-700/50 hover:bg-slate-900/50 transition-colors"
-                                                            >
-                                                                <span>{sub}</span>
-                                                                <button
-                                                                    onClick={() => handleEliminarSubcategoria(cat.id, sub)}
-                                                                    className="p-0.5 hover:bg-slate-800 rounded-md text-slate-500 hover:text-white transition-colors"
-                                                                    title={`Eliminar ${sub}`}
+                                                    <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto custom-scrollbar pr-1">
+                                                        <AnimatePresence>
+                                                            {cat.subcategorias.map(sub => (
+                                                                <motion.div 
+                                                                    key={sub}
+                                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                                    animate={{ opacity: 1, scale: 1 }}
+                                                                    exit={{ opacity: 0, scale: 0.8 }}
+                                                                    transition={{ duration: 0.2 }}
+                                                                    className="flex items-center gap-1.5 bg-slate-900/50 hover:bg-slate-800/70 text-slate-300 hover:text-white text-xs py-1.5 pl-3 pr-2.5 rounded-xl border border-slate-850 hover:border-slate-700/60 shadow-xs transition-all duration-300 group/chip"
                                                                 >
-                                                                    <FiX size={12} />
-                                                                </button>
-                                                            </div>
-                                                        ))}
+                                                                    <span>{sub}</span>
+                                                                    <button
+                                                                        onClick={() => handleEliminarSubcategoria(cat.id, sub)}
+                                                                        className="p-0.5 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                                                                        title={`Eliminar ${sub}`}
+                                                                    >
+                                                                        <FiX size={12} />
+                                                                    </button>
+                                                                </motion.div>
+                                                            ))}
+                                                        </AnimatePresence>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
 
                                         {/* Input Rápido para Nueva Subcategoría */}
-                                        <div className="mt-5 pt-4 border-t border-slate-850">
+                                        <div className="mt-6 pt-4 border-t border-slate-900 relative z-10">
                                             <div className="flex items-center gap-2">
                                                 <input
                                                     type="text"
@@ -391,15 +415,17 @@ export default function CategoriasPage() {
                                                             handleAgregarSubcategoria(cat.id);
                                                         }
                                                     }}
-                                                    className="flex-1 bg-slate-950/60 border border-slate-850 text-slate-200 text-xs font-semibold rounded-xl py-2 px-3 outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 placeholder:text-slate-600 transition-all hover:bg-slate-900/20"
+                                                    className="flex-1 bg-slate-950/80 border border-slate-850 text-slate-205 text-xs font-semibold rounded-xl py-2.5 px-3 outline-none focus:border-violet-500/60 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-600 transition-all hover:bg-slate-900/20"
                                                 />
-                                                <button
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
                                                     onClick={() => handleAgregarSubcategoria(cat.id)}
-                                                    className="p-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl shadow-md transition-colors"
+                                                    className="p-2.5 bg-linear-to-r from-violet-600 to-indigo-650 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl shadow-[0_0_15px_rgba(139,92,246,0.2)] transition-all duration-300 cursor-pointer"
                                                     title="Agregar"
                                                 >
                                                     <FiPlus size={16} />
-                                                </button>
+                                                </motion.button>
                                             </div>
                                         </div>
                                     </motion.div>
