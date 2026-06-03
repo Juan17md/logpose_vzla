@@ -149,7 +149,7 @@ export default function CategoriasPage() {
     return (
         <div className="space-y-8 pb-32 md:pb-10">
             {/* Banner superior de escritorio */}
-            <div className="hidden md:block bg-linear-to-br from-slate-950 to-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden backdrop-blur-2xl">
+            <div className="hidden md:block bg-linear-to-br from-slate-950 to-slate-900/40 border border-slate-900/40 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden backdrop-blur-2xl">
                 <div className="absolute top-0 right-0 p-8 opacity-[0.03] transform translate-x-10 -translate-y-10">
                     <FiTag className="text-9xl text-violet-400 rotate-12" />
                 </div>
@@ -196,7 +196,7 @@ export default function CategoriasPage() {
                     </button>
 
                     <div className="sticky top-6">
-                        <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-800/80 p-6 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] relative overflow-hidden group hover:border-slate-700/40 transition-all duration-500">
+                        <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-900/40 p-6 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] relative overflow-hidden group hover:border-slate-800/45 transition-all duration-500">
                             {/* Glow decorativo de fondo */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
                             
@@ -210,7 +210,7 @@ export default function CategoriasPage() {
                                     placeholder="Ej: Mascotas, Hogar"
                                     value={nombre}
                                     onChange={(e) => setNombre(e.target.value)}
-                                    className="py-4 text-sm font-semibold bg-slate-950/80 border-slate-850 focus:border-violet-500/50 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-650"
+                                    className="py-4 text-sm font-semibold bg-slate-950/80 border border-slate-900/40 focus:border-violet-500/50 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-650"
                                 />
 
                                 {/* Tipo de Movimiento Selector */}
@@ -272,7 +272,7 @@ export default function CategoriasPage() {
                                     whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(139, 92, 246, 0.3)" }}
                                     whileTap={{ scale: 0.98 }}
                                     type="submit"
-                                    className="w-full py-4 bg-linear-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:via-indigo-500 hover:to-blue-500 text-white font-black rounded-2xl shadow-lg transition-all border border-violet-400/20 flex items-center justify-center gap-2 mt-4 cursor-pointer"
+                                    className="w-full py-4 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-2xl shadow-lg transition-all border border-violet-500/10 flex items-center justify-center gap-2 mt-4 cursor-pointer"
                                 >
                                     <FiPlusCircle size={18} />
                                     CREAR CATEGORÍA
@@ -295,7 +295,7 @@ export default function CategoriasPage() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setVistaMobile("form")}
-                            className="md:hidden flex items-center justify-center gap-2 px-5 py-3 bg-linear-to-r from-violet-600 to-indigo-600 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-indigo-500 transition-all border border-violet-400/30"
+                            className="md:hidden flex items-center justify-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-indigo-500 transition-all border border-violet-500/10"
                         >
                             <FiPlus className="text-sm" />
                             Nueva
@@ -316,7 +316,7 @@ export default function CategoriasPage() {
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
                                         transition={{ duration: 0.4, ease: "easeOut" }}
-                                        className="bg-slate-950/30 border border-slate-900 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between group hover:border-slate-800/80 hover:bg-slate-900/40 hover:-translate-y-1 transition-all duration-500 min-h-[320px]"
+                                        className="bg-slate-950/30 border border-slate-900/40 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between group hover:border-slate-850/50 hover:bg-slate-900/40 hover:-translate-y-1 transition-all duration-500 min-h-[320px]"
                                     >
                                         {/* Halos decorativos de fondo basados en tipo */}
                                         {esGasto && (
@@ -346,12 +346,12 @@ export default function CategoriasPage() {
                                                     <div>
                                                         <h4 className="font-extrabold text-white text-base leading-tight tracking-tight">{cat.nombre}</h4>
                                                         <span className={cn(
-                                                            "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border mt-1.5 inline-block",
+                                                            "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mt-1.5 inline-block",
                                                             esIngreso 
-                                                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                                                                ? "bg-emerald-500/10 text-emerald-400" 
                                                                 : esGasto 
-                                                                    ? "bg-red-500/10 border-red-500/20 text-red-400"
-                                                                    : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                                                                    ? "bg-red-500/10 text-red-400"
+                                                                    : "bg-blue-500/10 text-blue-400"
                                                         )}>
                                                             {cat.tipo}
                                                         </span>
@@ -383,7 +383,7 @@ export default function CategoriasPage() {
                                                                     animate={{ opacity: 1, scale: 1 }}
                                                                     exit={{ opacity: 0, scale: 0.8 }}
                                                                     transition={{ duration: 0.2 }}
-                                                                    className="flex items-center gap-1.5 bg-slate-900/50 hover:bg-slate-800/70 text-slate-300 hover:text-white text-xs py-1.5 pl-3 pr-2.5 rounded-xl border border-slate-850 hover:border-slate-700/60 shadow-xs transition-all duration-300 group/chip"
+                                                                    className="flex items-center gap-1.5 bg-slate-900/50 hover:bg-slate-800/70 text-slate-300 hover:text-white text-xs py-1.5 pl-3 pr-2.5 rounded-xl border border-slate-900/30 hover:border-slate-800/40 shadow-xs transition-all duration-300 group/chip"
                                                                 >
                                                                     <span>{sub}</span>
                                                                     <button
@@ -415,13 +415,13 @@ export default function CategoriasPage() {
                                                             handleAgregarSubcategoria(cat.id);
                                                         }
                                                     }}
-                                                    className="flex-1 bg-slate-950/80 border border-slate-850 text-slate-205 text-xs font-semibold rounded-xl py-2.5 px-3 outline-none focus:border-violet-500/60 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-600 transition-all hover:bg-slate-900/20"
+                                                    className="flex-1 bg-slate-950/80 border border-slate-900/40 text-slate-205 text-xs font-semibold rounded-xl py-2.5 px-3 outline-none focus:border-violet-500/60 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-600 transition-all hover:bg-slate-900/20"
                                                 />
                                                 <motion.button
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
                                                     onClick={() => handleAgregarSubcategoria(cat.id)}
-                                                    className="p-2.5 bg-linear-to-r from-violet-600 to-indigo-650 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl shadow-[0_0_15px_rgba(139,92,246,0.2)] transition-all duration-300 cursor-pointer"
+                                                    className="p-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl shadow-[0_0_15px_rgba(139,92,246,0.15)] transition-all duration-300 cursor-pointer"
                                                     title="Agregar"
                                                 >
                                                     <FiPlus size={16} />
