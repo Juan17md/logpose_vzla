@@ -1,80 +1,13 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from 'recharts';
+import { useMemo, useState, useEffect } from 'react';
+import { pie, arc, PieArcDatum } from 'd3';
 import { FiPieChart } from 'react-icons/fi';
 
 interface ChartDataItem {
     name: string;
     value: number;
 }
-
-interface ActiveShapeProps {
-    cx: number;
-    cy: number;
-    innerRadius: number;
-    outerRadius: number;
-    startAngle: number;
-    endAngle: number;
-    fill: string;
-    payload: ChartDataItem;
-    percent: number;
-}
-
-const COLORS = [
-    '#F59E0B', // Amber
-    '#EF4444', // Red
-    '#10B981', // Emerald
-    '#8B5CF6', // Violet
-    '#F97316', // Orange
-    '#0EA5E9', // Sky/Cyan
-    '#6366F1', // Indigo
-    '#3B82F6', // Blue
-    '#EC4899', // Pink
-    '#14B8A6', // Teal
-];
-
-const RADIAN = Math.PI / 180; // eslint-disable-line @typescript-eslint/no-unused-vars
-
-const renderActiveShape = (props: ActiveShapeProps) => {
-    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
-    // Detectar si es versión móvil basándonos en el radio (45 en móvil vs 85 en desktop)
-    const isCompact = outerRadius < 60;
-
-    return (
-        <g>
-            {/* Solo mostrar texto en centro si NO es compacto */}
-            {!isCompact && (
-                <>
-                    <text x={cx} y={cy} dy={-10} textAnchor="middle" fill="#fff" className="text-sm font-bold opacity-80">
-                        {payload.name}
-                    </text>
-                    <text x={cx} y={cy} dy={15} textAnchor="middle" fill="#fff" className="text-xs">
-                        {`${(percent * 100).toFixed(1)}%`}
-                    </text>
-                </>
-            )}
-            <Sector
-                cx={cx}
-                cy={cy}
-                innerRadius={innerRadius}
-                outerRadius={outerRadius + (isCompact ? 3 : 6)}
-                startAngle={startAngle}
-                endAngle={endAngle}
-                fill={fill}
-            />
-            <Sector
-                cx={cx}
-                cy={cy}
-                startAngle={startAngle}
-                endAngle={endAngle}
-                innerRadius={outerRadius + (isCompact ? 5 : 8)}
-                outerRadius={outerRadius + (isCompact ? 8 : 12)}
-                fill={fill}
-            />
-        </g>
-    );
-};
 
 interface ExpensePieChartProps {
     transactions: Array<{
@@ -87,15 +20,26 @@ interface ExpensePieChartProps {
     }>;
 }
 
+const GRADIENTS = [
+    { id: 'grad-amber', from: '#F59E0B', to: '#B45309' },   // Amber
+    { id: 'grad-red', from: '#EF4444', to: '#B91C1C' },     // Red
+    { id: 'grad-emerald', from: '#10B981', to: '#047857' }, // Emerald
+    { id: 'grad-violet', from: '#8B5CF6', to: '#5B21B6' },  // Violet
+    { id: 'grad-orange', from: '#F97316', to: '#C2410C' },  // Orange
+    { id: 'grad-sky', from: '#0EA5E9', to: '#0369A1' },     // Sky
+    { id: 'grad-indigo', from: '#6366F1', to: '#3730A3' },  // Indigo
+    { id: 'grad-blue', from: '#3B82F6', to: '#1D4ED8' },    // Blue
+    { id: 'grad-pink', from: '#EC4899', to: '#9D174D' },    // Pink
+    { id: 'grad-teal', from: '#14B8A6', to: '#0F766E' },    // Teal
+];
+
 export default function ExpensePieChart({ transactions }: ExpensePieChartProps) {
     const [activeIndex, setActiveIndex] = useState(0);
+    const [isMounted, setIsMounted] = useState(false);
 
-    // Use useSyncExternalStore to safely detect client-side mounting
-    const isMounted = useSyncExternalStore(
-        () => () => { },
-        () => true,
-        () => false
-    );
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const data = useMemo(() => {
         const now = new Date();
@@ -117,15 +61,35 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
             return acc;
         }, {} as Record<string, number>);
 
-        // 3. Formatear para Recharts
+        // 3. Formatear para D3
         return Object.entries(grouped)
             .map(([name, value]) => ({ name, value }))
             .sort((a, b) => b.value - a.value); // Ordenar mayor a menor
     }, [transactions]);
 
-    const onPieEnter = (_: unknown, index: number) => {
-        setActiveIndex(index);
-    };
+    const totalExpense = useMemo(() => {
+        return data.reduce((acc, curr) => acc + curr.value, 0);
+    }, [data]);
+
+    // Configuración del Donut con D3
+    const radius = 100;
+    const pieLayout = useMemo(() => {
+        return pie<ChartDataItem>()
+            .value((d) => d.value)
+            .padAngle(0.035) // Ángulo de espacio entre rebanadas
+            .sort(null);
+    }, []);
+
+    const arcGenerator = useMemo(() => {
+        return arc<PieArcDatum<ChartDataItem>>()
+            .innerRadius(64)
+            .outerRadius((d) => (d.index === activeIndex ? 92 : 84)) // Efecto de pop-out dinámico al hover
+            .cornerRadius(6);
+    }, [activeIndex]);
+
+    const arcs = useMemo(() => {
+        return pieLayout(data);
+    }, [data, pieLayout]);
 
     if (data.length === 0) {
         return (
@@ -137,85 +101,101 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
         );
     }
 
+    const activeItem = data[activeIndex] || data[0] || { name: '', value: 0 };
+    const activePercentage = totalExpense > 0 ? ((activeItem.value / totalExpense) * 100).toFixed(0) : '0';
+
     return (
-        <div className="flex items-start gap-4 h-full">
-            {/* Chart Section - Más compacto */}
-            <div className="flex-none w-28 h-28 md:w-48 md:h-48 relative">
+        <div className="flex items-center gap-4 h-full">
+            {/* SVG Donut Chart */}
+            <div className="flex-none w-28 h-28 md:w-44 md:h-44 relative">
                 {isMounted ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                activeIndex={activeIndex}
-                                // @ts-expect-error Recharts types incomplete for activeShape
-                                activeShape={renderActiveShape}
-                                data={data}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={30}
-                                outerRadius={45}
-                                dataKey="value"
-                                onMouseEnter={onPieEnter}
-                                paddingAngle={3}
-                                stroke="none"
-                            >
-                                {data.map((entry, index) => (
-                                    <Cell
-                                        key={`cell-${index}`}
-                                        fill={COLORS[index % COLORS.length]}
-                                        className="transition-all duration-300 focus:outline-none"
-                                    />
+                    <>
+                        <svg
+                            viewBox={`-${radius} -${radius} ${radius * 2} ${radius * 2}`}
+                            className="w-full h-full overflow-visible"
+                        >
+                            <defs>
+                                {GRADIENTS.map((g, idx) => (
+                                    <linearGradient id={g.id} key={g.id} x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor={g.from} />
+                                        <stop offset="100%" stopColor={g.to} />
+                                    </linearGradient>
                                 ))}
-                            </Pie>
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                                    borderColor: 'rgba(51, 65, 85, 0.5)',
-                                    borderRadius: '12px',
-                                    color: '#fff',
-                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                    padding: '8px',
-                                    fontSize: '12px'
-                                }}
-                                itemStyle={{ color: '#fff', fontSize: '0.75rem' }}
-                                formatter={(value) => [`$${Number(value).toLocaleString('es-ES', { minimumFractionDigits: 0 })}`, '']}
-                            />
-                        </PieChart>
-                    </ResponsiveContainer>
+                            </defs>
+                            <g>
+                                {arcs.map((d, i) => {
+                                    const grad = GRADIENTS[i % GRADIENTS.length];
+                                    const isActive = i === activeIndex;
+                                    return (
+                                        <path
+                                            key={d.data.name}
+                                            d={arcGenerator(d) || undefined}
+                                            fill={`url(#${grad.id})`}
+                                            className="transition-all duration-300 cursor-pointer focus:outline-none"
+                                            style={{
+                                                filter: isActive ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' : 'none',
+                                                transform: isActive ? 'scale(1.02)' : 'scale(1)',
+                                                transformOrigin: 'center'
+                                            }}
+                                            onMouseEnter={() => setActiveIndex(i)}
+                                        />
+                                    );
+                                })}
+                            </g>
+                        </svg>
+
+                        {/* Centro del Donut con Información */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-2">
+                            <p className="text-[9px] md:text-[10px] uppercase font-black text-slate-400 tracking-wider truncate max-w-[80px] md:max-w-[110px]">
+                                {activeItem.name}
+                            </p>
+                            <p className="text-xs md:text-lg font-black text-white leading-none mt-1">
+                                ${Number(activeItem.value).toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                            </p>
+                            <p className="text-[8px] md:text-[10px] text-slate-500 font-medium">
+                                {activePercentage}%
+                            </p>
+                        </div>
+                    </>
                 ) : (
                     <div className="w-full h-full rounded-full border-4 border-slate-700/50 animate-pulse"></div>
                 )}
             </div>
 
-            {/* Custom Legend Section - Compacta */}
+            {/* Custom Legend Section */}
             <div className="flex-1 flex flex-col gap-1.5 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
-                {data.map((entry, index) => (
-                    <div
-                        key={entry.name}
-                        className={`flex items-center justify-between p-2 rounded-lg transition-all cursor-pointer ${index === activeIndex
-                            ? 'bg-slate-700/50 border border-slate-600/50'
-                            : 'hover:bg-slate-800/30 border border-transparent'
-                            }`}
-                        onMouseEnter={() => setActiveIndex(index)}
-                    >
-                        <div className="flex items-center gap-2">
-                            <div
-                                className="w-2.5 h-2.5 rounded-full"
-                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                            />
-                            <span className={`text-xs font-medium truncate max-w-[80px] ${index === activeIndex ? 'text-white' : 'text-slate-300'}`}>
-                                {entry.name}
-                            </span>
-                        </div>
-                        <div className="text-right">
-                            <div className={`text-xs font-bold ${index === activeIndex ? 'text-white' : 'text-slate-400'}`}>
-                                ${Number(entry.value).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                {data.map((entry, index) => {
+                    const grad = GRADIENTS[index % GRADIENTS.length];
+                    const isActive = index === activeIndex;
+                    return (
+                        <div
+                            key={entry.name}
+                            className={`flex items-center justify-between p-2 rounded-lg transition-all cursor-pointer ${isActive
+                                ? 'bg-slate-800/60 border border-slate-700/50 shadow-md'
+                                : 'hover:bg-slate-800/30 border border-transparent'
+                                }`}
+                            onMouseEnter={() => setActiveIndex(index)}
+                        >
+                            <div className="flex items-center gap-2">
+                                <div
+                                    className="w-2.5 h-2.5 rounded-full"
+                                    style={{ backgroundColor: grad.from }}
+                                />
+                                <span className={`text-xs font-semibold truncate max-w-[80px] ${isActive ? 'text-white font-bold' : 'text-slate-300'}`}>
+                                    {entry.name}
+                                </span>
                             </div>
-                            <div className="text-[9px] text-slate-500">
-                                {((Number(entry.value) / data.reduce((acc, curr) => acc + curr.value, 0)) * 100).toFixed(0)}%
+                            <div className="text-right">
+                                <div className={`text-xs font-black ${isActive ? 'text-white' : 'text-slate-400'}`}>
+                                    ${Number(entry.value).toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                                </div>
+                                <div className="text-[9px] text-slate-500 font-bold">
+                                    {((entry.value / totalExpense) * 100).toFixed(0)}%
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             <style jsx global>{`
