@@ -395,7 +395,7 @@ export default function ProfilePage() {
                             Zona de Peligro
                         </h3>
                         <p className="text-slate-400 text-xs mb-6 leading-relaxed">
-                            Esta acción eliminará permanentemente todos tus movimientos, deudas, metas y listas. <span className="text-red-400 font-bold">Las cuentas se mantendrán pero con saldo en 0.</span>
+                            Esta acción eliminará permanentemente todos tus movimientos, deudas, metas y listas. <span className="text-red-400 font-bold">Las cuentas se mantendrán con saldo en 0 y tus categorías personalizadas se conservarán intactas.</span>
                         </p>
                         <button
                             onClick={() => setShowDeleteConfirm(true)}
@@ -423,7 +423,7 @@ export default function ProfilePage() {
                 onClose={() => setShowDeleteConfirm(false)}
                 onConfirm={handleResetData}
                 title="¿Estás absolutamente seguro?"
-                message="Esta acción no se puede deshacer. Se borrarán todas las transacciones, deudas, metas y gastos fijos. Tus cuentas bancarias se conservarán con saldo cero."
+                message="Esta acción no se puede deshacer. Se borrarán todas las transacciones, deudas, metas y gastos fijos. Tus cuentas bancarias se conservarán con saldo cero y se mantendrán todas tus categorías y subcategorías personalizadas."
                 confirmText="Sí, Reiniciar Todo"
                 cancelText="Cancelar"
                 type="danger"
