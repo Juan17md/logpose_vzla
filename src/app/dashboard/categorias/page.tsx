@@ -278,165 +278,163 @@ export default function CategoriasPage() {
                         </button>
                     )}
 
-                    <div className="sticky top-6">
-                        <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-900/40 p-6 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] relative overflow-hidden group hover:border-slate-800/45 transition-all duration-500">
-                            {/* Glow decorativo de fondo dinámico */}
-                            <div 
-                                className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-all duration-500" 
-                                style={{ backgroundColor: `${colorSeleccionado}0c` }}
+                    <div className="sticky top-6 bg-slate-950/40 backdrop-blur-2xl border border-slate-900/40 p-6 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] relative overflow-hidden group hover:border-slate-800/45 transition-all duration-500">
+                        {/* Glow decorativo de fondo dinámico */}
+                        <div 
+                            className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-all duration-500" 
+                            style={{ backgroundColor: `${colorSeleccionado}0c` }}
+                        />
+                        
+                        <h2 className="text-xl font-black text-white flex items-center gap-3 mb-6">
+                            {editandoCategoria ? (
+                                <>
+                                    <FiEdit2 className="text-violet-500 animate-pulse" style={{ color: colorSeleccionado }} /> Editar Categoría
+                                </>
+                            ) : (
+                                <>
+                                    <FiPlus className="text-violet-500" /> Nueva Categoría
+                                </>
+                            )}
+                        </h2>
+
+                        <form onSubmit={handleCrearCategoria} className="space-y-5">
+                            <Input
+                                label="Nombre"
+                                placeholder="Ej: Mascotas, Hogar"
+                                value={nombre}
+                                onChange={(e) => setNombre(e.target.value)}
+                                className="py-4 text-sm font-semibold bg-slate-950/80 border border-slate-900/40 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-650"
+                                style={{ 
+                                    borderColor: editandoCategoria ? `${colorSeleccionado}44` : ""
+                                }}
                             />
-                            
-                            <h2 className="text-xl font-black text-white flex items-center gap-3 mb-6">
-                                {editandoCategoria ? (
-                                    <>
-                                        <FiEdit2 className="text-violet-500 animate-pulse" style={{ color: colorSeleccionado }} /> Editar Categoría
-                                    </>
-                                ) : (
-                                    <>
-                                        <FiPlus className="text-violet-500" /> Nueva Categoría
-                                    </>
-                                )}
-                            </h2>
 
-                            <form onSubmit={handleCrearCategoria} className="space-y-5">
-                                <Input
-                                    label="Nombre"
-                                    placeholder="Ej: Mascotas, Hogar"
-                                    value={nombre}
-                                    onChange={(e) => setNombre(e.target.value)}
-                                    className="py-4 text-sm font-semibold bg-slate-950/80 border border-slate-900/40 focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-650"
-                                    style={{ 
-                                        borderColor: editandoCategoria ? `${colorSeleccionado}44` : ""
-                                    }}
-                                />
-
-                                {/* Tipo de Movimiento Selector */}
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Tipo de Movimiento</label>
-                                    <div className="flex p-1.5 bg-slate-950/80 rounded-2xl border border-slate-900 shadow-inner">
-                                        {[
-                                            { id: "gasto", label: "Gasto", color: "text-red-400 bg-red-500/10 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.15)]" },
-                                            { id: "ingreso", label: "Ingreso", color: "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]" },
-                                            { id: "ambas", label: "Ambas", color: "text-violet-400 bg-violet-500/10 border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.15)]" }
-                                        ].map((opt) => (
-                                            <button
-                                                key={opt.id}
-                                                type="button"
-                                                onClick={() => setTipo(opt.id as any)}
-                                                className={cn(
-                                                    "flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-300 text-center border border-transparent cursor-pointer",
-                                                    tipo === opt.id
-                                                        ? opt.color
-                                                        : "text-slate-500 hover:text-slate-350"
-                                                )}
-                                            >
-                                                {opt.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Selección Visual de Color */}
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Color de Categoría</label>
-                                    <div className="flex flex-wrap gap-2.5 p-3.5 bg-slate-950/50 rounded-2xl border border-slate-900 shadow-inner justify-between">
-                                        {PALETA_COLORES.map((c) => {
-                                            const esSeleccionado = colorSeleccionado === c.hex;
-                                            return (
-                                                <motion.button
-                                                    key={c.hex}
-                                                    type="button"
-                                                    whileHover={{ scale: 1.2 }}
-                                                    whileTap={{ scale: 0.9 }}
-                                                    onClick={() => setColorSeleccionado(c.hex)}
-                                                    className="w-6 h-6 rounded-full cursor-pointer relative flex items-center justify-center transition-all duration-300 border border-transparent"
-                                                    style={{ 
-                                                        backgroundColor: c.hex,
-                                                        boxShadow: esSeleccionado ? `0 0 12px ${c.hex}cc` : "none",
-                                                        border: esSeleccionado ? "2px solid #ffffff" : "2px solid transparent"
-                                                    }}
-                                                    title={c.nombre}
-                                                >
-                                                    {esSeleccionado && (
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                                                    )}
-                                                </motion.button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Selección Visual de Icono */}
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Seleccionar Icono</label>
-                                    <div className="grid grid-cols-6 gap-2.5 p-3.5 bg-slate-950/50 rounded-2xl border border-slate-900 max-h-44 overflow-y-auto custom-scrollbar shadow-inner">
-                                        {LISTA_ICONOS_SELECCIONABLES.map((ico) => {
-                                            const IconComp = ico.componente;
-                                            const esSeleccionado = iconoSeleccionado === ico.nombre;
-                                            return (
-                                                <motion.button
-                                                    key={ico.nombre}
-                                                    type="button"
-                                                    whileHover={{ scale: 1.15, rotate: 5 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    onClick={() => setIconoSeleccionado(ico.nombre)}
-                                                    className={cn(
-                                                        "p-2.5 rounded-xl flex items-center justify-center border transition-all duration-300 cursor-pointer",
-                                                        esSeleccionado
-                                                            ? "bg-violet-500/20 border-violet-500/50 text-violet-300 shadow-[0_0_15px_rgba(139,92,246,0.25)] scale-110 z-10"
-                                                            : "bg-slate-950/40 border-slate-900 hover:border-slate-800 hover:bg-slate-900 text-slate-500 hover:text-slate-300"
-                                                    )}
-                                                    style={{
-                                                        borderColor: esSeleccionado ? `${colorSeleccionado}88` : "",
-                                                        color: esSeleccionado ? colorSeleccionado : "",
-                                                        backgroundColor: esSeleccionado ? `${colorSeleccionado}18` : "",
-                                                        boxShadow: esSeleccionado ? `0 0 15px ${colorSeleccionado}1e` : ""
-                                                    }}
-                                                    title={ico.nombre}
-                                                >
-                                                    <IconComp size={16} />
-                                                </motion.button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 mt-4">
-                                    <motion.button
-                                        whileHover={{ scale: 1.02, boxShadow: `0 0 25px ${colorSeleccionado}44` }}
-                                        whileTap={{ scale: 0.98 }}
-                                        type="submit"
-                                        className="w-full py-4 text-white font-black rounded-2xl shadow-lg transition-all border border-violet-500/10 flex items-center justify-center gap-2 cursor-pointer"
-                                        style={{ backgroundColor: colorSeleccionado }}
-                                    >
-                                        {editandoCategoria ? (
-                                            <>
-                                                <FiEdit2 size={18} />
-                                                GUARDAR CAMBIOS
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FiPlusCircle size={18} />
-                                                CREAR CATEGORÍA
-                                            </>
-                                        )}
-                                    </motion.button>
-
-                                    {editandoCategoria && (
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
+                            {/* Tipo de Movimiento Selector */}
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Tipo de Movimiento</label>
+                                <div className="flex p-1.5 bg-slate-950/80 rounded-2xl border border-slate-900 shadow-inner">
+                                    {[
+                                        { id: "gasto", label: "Gasto", color: "text-red-400 bg-red-500/10 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.15)]" },
+                                        { id: "ingreso", label: "Ingreso", color: "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]" },
+                                        { id: "ambas", label: "Ambas", color: "text-violet-400 bg-violet-500/10 border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.15)]" }
+                                    ].map((opt) => (
+                                        <button
+                                            key={opt.id}
                                             type="button"
-                                            onClick={handleLimpiarFormulario}
-                                            className="w-full py-3 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white font-bold rounded-2xl transition-all border border-slate-800/40 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                                            onClick={() => setTipo(opt.id as any)}
+                                            className={cn(
+                                                "flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-300 text-center border border-transparent cursor-pointer",
+                                                tipo === opt.id
+                                                    ? opt.color
+                                                    : "text-slate-500 hover:text-slate-350"
+                                            )}
                                         >
-                                            <FiX size={16} />
-                                            CANCELAR EDICIÓN
-                                        </motion.button>
-                                    )}
+                                            {opt.label}
+                                        </button>
+                                    ))}
                                 </div>
-                            </form>
-                        </div>
+                            </div>
+
+                            {/* Selección Visual de Color */}
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Color de Categoría</label>
+                                <div className="flex flex-wrap gap-2.5 p-3.5 bg-slate-950/50 rounded-2xl border border-slate-900 shadow-inner justify-between">
+                                    {PALETA_COLORES.map((c) => {
+                                        const esSeleccionado = colorSeleccionado === c.hex;
+                                        return (
+                                            <motion.button
+                                                key={c.hex}
+                                                type="button"
+                                                whileHover={{ scale: 1.2 }}
+                                                whileTap={{ scale: 0.9 }}
+                                                onClick={() => setColorSeleccionado(c.hex)}
+                                                className="w-6 h-6 rounded-full cursor-pointer relative flex items-center justify-center transition-all duration-300 border border-transparent"
+                                                style={{ 
+                                                    backgroundColor: c.hex,
+                                                    boxShadow: esSeleccionado ? `0 0 12px ${c.hex}cc` : "none",
+                                                    border: esSeleccionado ? "2px solid #ffffff" : "2px solid transparent"
+                                                }}
+                                                title={c.nombre}
+                                            >
+                                                {esSeleccionado && (
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                )}
+                                            </motion.button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Selección Visual de Icono */}
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Seleccionar Icono</label>
+                                <div className="grid grid-cols-6 gap-2.5 p-3.5 bg-slate-950/50 rounded-2xl border border-slate-900 max-h-44 overflow-y-auto custom-scrollbar shadow-inner">
+                                    {LISTA_ICONOS_SELECCIONABLES.map((ico) => {
+                                        const IconComp = ico.componente;
+                                        const esSeleccionado = iconoSeleccionado === ico.nombre;
+                                        return (
+                                            <motion.button
+                                                key={ico.nombre}
+                                                type="button"
+                                                whileHover={{ scale: 1.15, rotate: 5 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => setIconoSeleccionado(ico.nombre)}
+                                                className={cn(
+                                                    "p-2.5 rounded-xl flex items-center justify-center border transition-all duration-300 cursor-pointer",
+                                                    esSeleccionado
+                                                        ? "bg-violet-500/20 border-violet-500/50 text-violet-300 shadow-[0_0_15px_rgba(139,92,246,0.25)] scale-110 z-10"
+                                                        : "bg-slate-950/40 border-slate-900 hover:border-slate-800 hover:bg-slate-900 text-slate-500 hover:text-slate-300"
+                                                )}
+                                                style={{
+                                                    borderColor: esSeleccionado ? `${colorSeleccionado}88` : "",
+                                                    color: esSeleccionado ? colorSeleccionado : "",
+                                                    backgroundColor: esSeleccionado ? `${colorSeleccionado}18` : "",
+                                                    boxShadow: esSeleccionado ? `0 0 15px ${colorSeleccionado}1e` : ""
+                                                }}
+                                                title={ico.nombre}
+                                            >
+                                                <IconComp size={16} />
+                                            </motion.button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 mt-4">
+                                <motion.button
+                                    whileHover={{ scale: 1.02, boxShadow: `0 0 25px ${colorSeleccionado}44` }}
+                                    whileTap={{ scale: 0.98 }}
+                                    type="submit"
+                                    className="w-full py-4 text-white font-black rounded-2xl shadow-lg transition-all border border-violet-500/10 flex items-center justify-center gap-2 cursor-pointer"
+                                    style={{ backgroundColor: colorSeleccionado }}
+                                >
+                                    {editandoCategoria ? (
+                                        <>
+                                            <FiEdit2 size={18} />
+                                            GUARDAR CAMBIOS
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FiPlusCircle size={18} />
+                                            CREAR CATEGORÍA
+                                        </>
+                                    )}
+                                </motion.button>
+
+                                {editandoCategoria && (
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        type="button"
+                                        onClick={handleLimpiarFormulario}
+                                        className="w-full py-3 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white font-bold rounded-2xl transition-all border border-slate-800/40 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                                    >
+                                        <FiX size={16} />
+                                        CANCELAR EDICIÓN
+                                    </motion.button>
+                                )}
+                            </div>
+                        </form>
                     </div>
                 </div>
 

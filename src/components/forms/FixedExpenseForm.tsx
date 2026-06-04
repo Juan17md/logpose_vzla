@@ -181,259 +181,251 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
     };
 
     return (
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-            {/* Decorative background glow */}
-            <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[60px] pointer-events-none opacity-10 bg-violet-500" />
+        <form onSubmit={handleSubmit(handleOnSubmit)} className="space-y-4 relative z-10">
+            {/* Nombre del Gasto */}
+            <Controller
+                control={control}
+                name="title"
+                render={({ field }) => (
+                    <Input
+                        label="Nombre del Gasto"
+                        placeholder="Ej: Internet, Alquiler, Gimnasio"
+                        icon={<FiTag />}
+                        {...field}
+                        error={errors.title}
+                    />
+                )}
+            />
 
-            <form onSubmit={handleSubmit(handleOnSubmit)} className="space-y-4 relative z-10">
-
-
-                
-                {/* Nombre del Gasto */}
-                <Controller
-                    control={control}
-                    name="title"
-                    render={({ field }) => (
-                        <Input
-                            label="Nombre del Gasto"
-                            placeholder="Ej: Internet, Alquiler, Gimnasio"
-                            icon={<FiTag />}
-                            {...field}
-                            error={errors.title}
-                        />
-                    )}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Moneda Toggle */}
-                    <div className="space-y-2">
-                        <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500/80 ml-1">Moneda</label>
-                        <Controller
-                            control={control}
-                            name="currency"
-                            render={({ field }) => (
-                                <div className="flex p-1 bg-[#0A0E1A]/80 rounded-2xl border border-white/10 shadow-inner h-[46px]">
-                                    {(["USD", "BS"] as const).map((curr) => (
-                                        <button
-                                            key={curr}
-                                            type="button"
-                                            onClick={() => {
-                                                field.onChange(curr);
-                                                setValue("amount", "");
-                                                setValue("bsAmount", "");
-                                            }}
-                                            className={`flex-1 py-1 text-[11px] font-black tracking-tighter rounded-lg transition-all duration-300 ${field.value === curr
-                                                ? curr === "USD" 
-                                                    ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]" 
-                                                    : "bg-slate-800 text-amber-400 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
-                                                : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 border border-transparent"
-                                                }`}
-                                        >
-                                            {curr === "BS" ? "BS (VES)" : "USD ($)"}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        />
-                    </div>
-
-                    {/* Día de Pago */}
-                    <div>
-                        <Controller
-                            control={control}
-                            name="dueDay"
-                            render={({ field }) => (
-                                <Input
-                                    label="Día de Pago"
-                                    type="number"
-                                    min="1"
-                                    max="31"
-                                    placeholder="Ej: 15"
-                                    icon={<FiCalendar className="text-[14px]" />}
-                                    rightElement={
-                                        <div className="group/info relative cursor-help">
-                                            <FiAlertCircle className="text-slate-500 hover:text-violet-400 transition-colors" size={14} />
-                                            <div className="absolute bottom-full right-0 mb-3 w-48 p-2 bg-slate-900 border border-slate-700 rounded-xl text-[10px] text-slate-400 opacity-0 group-hover/info:opacity-100 pointer-events-none transition-all shadow-2xl z-50 leading-tight">
-                                                Se proyectará en tu flujo de caja este día del mes.
-                                            </div>
-                                        </div>
-                                    }
-                                    {...field}
-                                    error={errors.dueDay}
-                                />
-                            )}
-                        />
-                    </div>
-                </div>
-
-                {/* Amount Section */}
-                <div className="space-y-4">
-                    <AnimatePresence>
-                        {currency === "BS" && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="grid grid-cols-3 gap-4"
-                            >
-                                <div className="col-span-1">
-                                    <Controller
-                                        control={control}
-                                        name="exchangeRate"
-                                        render={({ field }) => (
-                                            <Input
-                                                label="Tasa"
-                                                type="number"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                {...field}
-                                                error={errors.exchangeRate}
-                                                className="text-center"
-                                            />
-                                        )}
-                                    />
-                                </div>
-                                <div className="col-span-2">
-                                    <Controller
-                                        control={control}
-                                        name="bsAmount"
-                                        render={({ field }) => (
-                                            <CustomCurrencyInput
-                                                label="Monto en Bolívares"
-                                                placeholder="0.00"
-                                                prefix="Bs. "
-                                                decimalsLimit={2}
-                                                onValueChange={(value) => field.onChange(value || "")}
-                                                value={field.value}
-                                                error={errors.bsAmount}
-                                            />
-                                        )}
-                                    />
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    <div className="relative">
-                        <Controller
-                            control={control}
-                            name="amount"
-                            render={({ field }) => (
-                                <CustomCurrencyInput
-                                    label={currency === "BS" ? "Equivalente en Dólares" : "Monto en Dólares"}
-                                    placeholder="0.00"
-                                    prefix="$ "
-                                    decimalsLimit={2}
-                                    onValueChange={(value) => field.onChange(value || "")}
-                                    value={field.value}
-                                    error={errors.amount}
-                                    disabled={currency === "BS"}
-                                />
-                            )}
-                        />
-                        {currency === "BS" && amount && (
-                            <div className="absolute top-9 right-4 pointer-events-none">
-                                <span className="text-emerald-400 font-bold text-sm bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
-                                    ≈ ${amount}
-                                </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Moneda Toggle */}
+                <div className="space-y-2">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500/80 ml-1">Moneda</label>
+                    <Controller
+                        control={control}
+                        name="currency"
+                        render={({ field }) => (
+                            <div className="flex p-1 bg-[#0A0E1A]/80 rounded-2xl border border-white/10 shadow-inner h-[46px]">
+                                {(["USD", "BS"] as const).map((curr) => (
+                                    <button
+                                        key={curr}
+                                        type="button"
+                                        onClick={() => {
+                                            field.onChange(curr);
+                                            setValue("amount", "");
+                                            setValue("bsAmount", "");
+                                        }}
+                                        className={`flex-1 py-1 text-[11px] font-black tracking-tighter rounded-lg transition-all duration-300 ${field.value === curr
+                                            ? curr === "USD" 
+                                                ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]" 
+                                                : "bg-slate-800 text-amber-400 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+                                            : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 border border-transparent"
+                                            }`}
+                                    >
+                                        {curr === "BS" ? "BS (VES)" : "USD ($)"}
+                                    </button>
+                                ))}
                             </div>
                         )}
-                    </div>
+                    />
                 </div>
 
-                {/* Category */}
+                {/* Día de Pago */}
                 <div>
                     <Controller
                         control={control}
-                        name="category"
+                        name="dueDay"
                         render={({ field }) => (
-                            <Select
-                                label="Categoría"
-                                options={FIXED_CATEGORIES}
-                                value={field.value}
-                                onChange={field.onChange}
-                                error={errors.category}
-                                icon={<FiLayers />}
+                            <Input
+                                label="Día de Pago"
+                                type="number"
+                                min="1"
+                                max="31"
+                                placeholder="Ej: 15"
+                                icon={<FiCalendar className="text-[14px]" />}
+                                rightElement={
+                                    <div className="group/info relative cursor-help">
+                                        <FiAlertCircle className="text-slate-500 hover:text-violet-400 transition-colors" size={14} />
+                                        <div className="absolute bottom-full right-0 mb-3 w-48 p-2 bg-slate-900 border border-slate-700 rounded-xl text-[10px] text-slate-400 opacity-0 group-hover/info:opacity-100 pointer-events-none transition-all shadow-2xl z-50 leading-tight">
+                                            Se proyectará en tu flujo de caja este día del mes.
+                                        </div>
+                                    </div>
+                                }
+                                {...field}
+                                error={errors.dueDay}
                             />
                         )}
                     />
-                    <AnimatePresence>
-                        {category === "Otros" && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                animate={{ opacity: 1, height: "auto", marginTop: 12 }}
-                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                            >
+                </div>
+            </div>
+
+            {/* Amount Section */}
+            <div className="space-y-4">
+                <AnimatePresence>
+                    {currency === "BS" && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="grid grid-cols-3 gap-4"
+                        >
+                            <div className="col-span-1">
                                 <Controller
                                     control={control}
-                                    name="customCategory"
+                                    name="exchangeRate"
                                     render={({ field }) => (
                                         <Input
-                                            placeholder="Especifica la categoría..."
-                                            icon={<FiTag className="text-violet-400" />}
+                                            label="Tasa"
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="0.00"
                                             {...field}
-                                            error={errors.customCategory}
+                                            error={errors.exchangeRate}
+                                            className="text-center"
                                         />
                                     )}
                                 />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-
-                {/* Description */}
-                <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-2.5 ml-0.5">
-                        Descripción <span className="opacity-40">(Opcional)</span>
-                    </label>
-                    <div className="relative">
-                        <div className="absolute top-4 left-4 pointer-events-none text-slate-500">
-                            <FiFileText />
-                        </div>
-                        <Controller
-                            control={control}
-                            name="description"
-                            render={({ field }) => (
-                                <textarea
-                                    {...field}
-                                    className="w-full bg-[#0A0E1A]/80 border border-white/6 text-white text-sm font-medium rounded-xl py-3.5 pl-11 pr-4 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-white/12 hover:bg-[#0A0E1A] focus:ring-1 focus:ring-violet-500/30 focus:border-violet-500/40 focus:shadow-[0_0_20px_rgba(139,92,246,0.08)] resize-none h-28 custom-scrollbar"
-                                    placeholder="Detalles sobre este gasto..."
-                                    disabled={isLoading}
+                            </div>
+                            <div className="col-span-2">
+                                <Controller
+                                    control={control}
+                                    name="bsAmount"
+                                    render={({ field }) => (
+                                        <CustomCurrencyInput
+                                            label="Monto en Bolívares"
+                                            placeholder="0.00"
+                                            prefix="Bs. "
+                                            decimalsLimit={2}
+                                            onValueChange={(value) => field.onChange(value || "")}
+                                            value={field.value}
+                                            error={errors.bsAmount}
+                                        />
+                                    )}
                                 />
-                            )}
-                        />
-                    </div>
-                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-6 border-t border-white/5">
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        disabled={isLoading}
-                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                        <FiX size={16} />
-                        CANCELAR
-                    </button>
-                    <motion.button
-                        whileHover={{ scale: 1.02, translateY: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        type="submit"
-                        disabled={isLoading}
-                        className="flex-2 py-4 px-6 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black rounded-2xl text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all border border-white/10"
-                    >
-                        {isLoading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        ) : (
-                            <>
-                                <FiSave size={16} />
-                                <span>GUARDAR GASTO</span>
-                            </>
+                <div className="relative">
+                    <Controller
+                        control={control}
+                        name="amount"
+                        render={({ field }) => (
+                            <CustomCurrencyInput
+                                label={currency === "BS" ? "Equivalente en Dólares" : "Monto en Dólares"}
+                                placeholder="0.00"
+                                prefix="$ "
+                                decimalsLimit={2}
+                                onValueChange={(value) => field.onChange(value || "")}
+                                value={field.value}
+                                error={errors.amount}
+                                disabled={currency === "BS"}
+                            />
                         )}
-                    </motion.button>
+                    />
+                    {currency === "BS" && amount && (
+                        <div className="absolute top-9 right-4 pointer-events-none">
+                            <span className="text-emerald-400 font-bold text-sm bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
+                                ≈ ${amount}
+                            </span>
+                        </div>
+                    )}
                 </div>
-            </form>
-        </div>
+            </div>
+
+            {/* Category */}
+            <div>
+                <Controller
+                    control={control}
+                    name="category"
+                    render={({ field }) => (
+                        <Select
+                            label="Categoría"
+                            options={FIXED_CATEGORIES}
+                            value={field.value}
+                            onChange={field.onChange}
+                            error={errors.category}
+                            icon={<FiLayers />}
+                        />
+                    )}
+                />
+                <AnimatePresence>
+                    {category === "Otros" && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                            animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        >
+                            <Controller
+                                control={control}
+                                name="customCategory"
+                                render={({ field }) => (
+                                    <Input
+                                        placeholder="Especifica la categoría..."
+                                        icon={<FiTag className="text-violet-400" />}
+                                        {...field}
+                                        error={errors.customCategory}
+                                    />
+                                )}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Description */}
+            <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-2.5 ml-0.5">
+                    Descripción <span className="opacity-40">(Opcional)</span>
+                </label>
+                <div className="relative">
+                    <div className="absolute top-4 left-4 pointer-events-none text-slate-500">
+                        <FiFileText />
+                    </div>
+                    <Controller
+                        control={control}
+                        name="description"
+                        render={({ field }) => (
+                            <textarea
+                                {...field}
+                                className="w-full bg-[#0A0E1A]/80 border border-white/6 text-white text-sm font-medium rounded-xl py-3.5 pl-11 pr-4 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-white/12 hover:bg-[#0A0E1A] focus:ring-1 focus:ring-violet-500/30 focus:border-violet-500/40 focus:shadow-[0_0_20px_rgba(139,92,246,0.08)] resize-none h-28 custom-scrollbar"
+                                placeholder="Detalles sobre este gasto..."
+                                disabled={isLoading}
+                            />
+                        )}
+                    />
+                </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-6 border-t border-white/5">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    disabled={isLoading}
+                    className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                    <FiX size={16} />
+                    CANCELAR
+                </button>
+                <motion.button
+                    whileHover={{ scale: 1.02, translateY: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex-2 py-4 px-6 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black rounded-2xl text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all border border-white/10"
+                >
+                    {isLoading ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                        <>
+                            <FiSave size={16} />
+                            <span>GUARDAR GASTO</span>
+                        </>
+                    )}
+                </motion.button>
+            </div>
+        </form>
     );
 }

@@ -15,7 +15,7 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
 
   const [salaryStr, setSalaryStr] = useState(perfil?.monthlySalary?.toString() || "");
   const [budgetStr, setBudgetStr] = useState(perfil?.monthlyBudget?.toString() || "");
-  const [monedaBase, setMonedaBase] = useState<"USD" | "VES">(perfil?.monedaBase || "USD");
+  const [monedaBase, setMonedaBase] = useState<"USD" | "VES">(perfil?.monedaBase || "VES");
   const [savingsPhysicalStr, setSavingsPhysicalStr] = useState(perfil?.savingsPhysical?.toString() || "");
   const [savingsUSDTStr, setSavingsUSDTStr] = useState(perfil?.savingsUSDT?.toString() || "");
 

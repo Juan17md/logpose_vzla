@@ -14,6 +14,7 @@ import { getBCVRate } from "@/lib/currency";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import FixedExpenseForm from "@/components/forms/FixedExpenseForm";
+import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 
 // FixedExpensesCalendar se carga solo cuando el usuario activa la vista calendario
 const FixedExpensesCalendar = dynamic(
@@ -120,15 +121,19 @@ export default function FixedExpensesPage() {
 
         try {
             if (withTransaction && auth.currentUser) {
+                const esBs = payingExpense.currency === "BS";
+                const amountUSD = esBs && bcvRate > 0 ? parseFloat((payingExpense.amount / bcvRate).toFixed(2)) : payingExpense.amount;
+                const originalAmount = payingExpense.amount;
+
                 await addDoc(collection(db, "transactions"), {
                     userId: auth.currentUser.uid,
-                    amount: payingExpense.amount,
+                    amount: amountUSD,
                     type: "gasto",
                     category: payingExpense.category,
                     description: `Pago mensual: ${payingExpense.title}`,
                     date: Timestamp.now(),
-                    currency: "USD",
-                    originalAmount: payingExpense.amount,
+                    currency: esBs ? "VES" : "USD",
+                    originalAmount: originalAmount,
                     exchangeRate: bcvRate,
                 });
                 toast.success("Pago y Gasto registrados");
@@ -350,8 +355,8 @@ export default function FixedExpensesPage() {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
                             >
-                                <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-6 rounded-3xl shadow-xl backdrop-blur-xl">
-                                    <div className="flex justify-between items-center mb-6">
+                                <div className="space-y-5">
+                                    <div className="flex justify-between items-center">
                                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                             {editingExpense ? (
                                                 <><FiEdit2 className="text-amber-400" /> Editar Gasto</>
@@ -388,8 +393,8 @@ export default function FixedExpensesPage() {
                     {/* Left Column: Form */}
                     <div className="lg:col-span-1 space-y-6">
                         <div className="sticky top-6 space-y-6">
-                            <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-6 rounded-3xl shadow-xl backdrop-blur-xl">
-                                <div className="flex justify-between items-center mb-6">
+                            <div className="space-y-5">
+                                <div className="flex justify-between items-center">
                                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                         {editingExpense ? (
                                             <><FiEdit2 className="text-amber-400" /> Editar Gasto</>
@@ -607,7 +612,9 @@ export default function FixedExpensesPage() {
 
                 <div className="flex flex-col gap-1 mb-8">
                     <div className="flex items-center gap-1.5">
-                        <span className="text-3xl font-black text-white">$</span>
+                        <span className="text-3xl font-black text-white">
+                            {obtenerSimboloMoneda(expense.currency === "BS" ? "BS" : "USD")}
+                        </span>
                         <span className="text-4xl font-black text-white tracking-tighter">
                             {Math.floor(expense.amount).toLocaleString("es-ES")}
                             <span className="text-xl text-slate-500 font-bold">
@@ -616,7 +623,10 @@ export default function FixedExpensesPage() {
                         </span>
                     </div>
                     <p className="text-xs font-bold text-slate-500 tracking-wide">
-                        ≈ Bs. {(expense.amount * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {expense.currency === "BS"
+                            ? `≈ $ ${bcvRate > 0 ? (expense.amount / bcvRate).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0,00"} USD`
+                            : `≈ Bs. ${(expense.amount * bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        }
                     </p>
                 </div>
 

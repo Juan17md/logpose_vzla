@@ -368,7 +368,7 @@ export default function TransactionForm() {
                 date: data.date,
                 currency: data.currency,
                 originalAmount: data.currency === "VES" ? parseNumeroFlexible(data.vesAmount || "0") : parseNumeroFlexible(data.amount),
-                exchangeRate: data.currency === "VES" ? parseNumeroFlexible(data.exchangeRate || "1") : 1,
+                exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
                 accountId: data.accountId,
             };
 
@@ -445,7 +445,7 @@ export default function TransactionForm() {
                             date: data.date,
                             currency: data.currency,
                             originalAmount: data.currency === "VES" ? comisionVES : comisionUSD,
-                            exchangeRate: data.currency === "VES" ? parseNumeroFlexible(data.exchangeRate || "1") : 1,
+                            exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
                             accountId: data.accountId,
                             period: "mensual",
                             createdAt: serverTimestamp(),
@@ -535,7 +535,7 @@ export default function TransactionForm() {
                             date: data.date,
                             currency: data.currency,
                             originalAmount: data.currency === "VES" ? comisionVES : comisionUSD,
-                            exchangeRate: data.currency === "VES" ? parseNumeroFlexible(data.exchangeRate || "1") : 1,
+                            exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
                             accountId: data.accountId,
                             period: "mensual",
                             createdAt: serverTimestamp(),

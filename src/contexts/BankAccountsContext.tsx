@@ -85,13 +85,13 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [loadingTransacciones, setLoadingTransacciones] = useState(true);
     const [apiRates, setApiRates] = useState<TasasCambio>({ usd: 0, eur: 0, usdt: 0, lastUpdated: "" });
-    const [monedaBase, setMonedaBase] = useState<MonedaSoportada>("USD");
+    const [monedaBase, setMonedaBase] = useState<MonedaSoportada>("BS");
 
     // Cargar preferencias de sesión
     useEffect(() => {
         const savedMoneda = localStorage.getItem("logpose_moneda_base") as MonedaSoportada;
         if (savedMoneda) setMonedaBase(savedMoneda);
-        else localStorage.setItem("logpose_moneda_base", "USD");
+        else localStorage.setItem("logpose_moneda_base", "BS");
 
         // Las tasas manuales fueron deshabilitadas: limpiamos cualquier valor legado.
         localStorage.removeItem("logpose_tasas_manuales");

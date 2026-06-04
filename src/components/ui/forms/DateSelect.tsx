@@ -2,7 +2,7 @@
 
 import DatePicker, { registerLocale } from "react-datepicker";
 import { es } from "date-fns/locale";
-import { FiCalendar, FiAlertCircle, FiX } from "react-icons/fi";
+import { FiCalendar, FiAlertCircle, FiX, FiChevronDown } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { FieldError } from "react-hook-form";
 import { forwardRef } from "react";
@@ -46,7 +46,7 @@ const CustomInput = forwardRef<
         disabled={disabled}
         className={`
             w-full cursor-pointer bg-slate-800/40 backdrop-blur-md border text-left rounded-2xl py-4 pl-5 pr-10
-            text-sm font-bold transition-all duration-300 outline-none relative flex items-center gap-3 shadow-lg
+            text-sm font-bold transition-all duration-300 outline-none relative flex items-center gap-3 shadow-lg group
             ${hasValue ? "text-white" : "text-slate-500"}
             ${hasError
                 ? "border-red-500/40 focus:border-red-500/60 ring-4 ring-red-500/10"
@@ -61,7 +61,7 @@ const CustomInput = forwardRef<
                 hasValue ? "text-amber-400/70" : "text-slate-600"
             }`}
         />
-        <span className="flex-1 truncate font-medium">
+        <span className="flex-1 truncate font-bold text-sm">
             {value || placeholder || "Seleccionar fecha"}
         </span>
 
@@ -86,7 +86,7 @@ const CustomInput = forwardRef<
 
         {(!clearable || !hasValue) && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <FiCalendar size={14} className="text-slate-600" />
+                <FiChevronDown size={16} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
             </span>
         )}
     </button>
@@ -220,6 +220,7 @@ export default function DateSelect({
                 maxDate={maxDate}
                 popperClassName="logpose-datepicker-popper"
                 popperPlacement="bottom-start"
+                wrapperClassName="w-full"
                 customInput={
                     <CustomInput
                         hasValue={!!value}

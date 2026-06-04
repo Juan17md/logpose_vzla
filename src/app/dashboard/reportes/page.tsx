@@ -8,6 +8,8 @@ import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiPieChart, FiBriefcase, Fi
 import { useSavingsTransactions } from "@/hooks/useSavingsTransactions";
 import Select from "@/components/ui/forms/Select";
 import { FiCalendar, FiClock } from "react-icons/fi";
+import { useBankAccounts } from "@/contexts/BankAccountsContext";
+import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 
 // Recharts (~40KB) cargado de forma diferida — solo se descarga al navegar a /reportes
 const SkeletonChart = () => <div className="h-80 w-full bg-slate-800/40 rounded-2xl animate-pulse" aria-hidden="true" />;
@@ -23,9 +25,67 @@ const BalanceChart = dynamic(
 export default function ReportsPage() {
     const { transactions, loading } = useTransactions();
     const { savingsTransactions, loadingSavings } = useSavingsTransactions();
+    const { monedaBase, tasasEnBs, apiRates } = useBankAccounts();
 
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+    const tasasEnBsEfectivas = useMemo(() => {
+        return tasasEnBs || { USD: apiRates.usd || 0, EUR: apiRates.eur || 0, USDT: apiRates.usdt || 0, BS: 1 };
+    }, [tasasEnBs, apiRates]);
+
+    const convertirDesdeBs = (montoEnBs: number): number => {
+        if (monedaBase === "BS") return montoEnBs;
+        const tasaBaseEnBs = tasasEnBsEfectivas[monedaBase] || 1;
+        if (!tasaBaseEnBs || tasaBaseEnBs <= 0) return 0;
+        return montoEnBs / tasaBaseEnBs;
+    };
+
+    const convertirTransaccionAMonedaBase = (t: any): number => {
+        const amount = Number(t.amount) || 0;
+        const currency = String(t.currency || "USD").toUpperCase();
+        const exchangeRate = Number(t.exchangeRate) || 0;
+        const originalAmount = Number(t.originalAmount) || 0;
+
+        let montoEnBs = 0;
+        if (currency === "VES" || currency === "BS") {
+            if (originalAmount > 0) montoEnBs = originalAmount;
+            else if (exchangeRate > 0 && exchangeRate !== 1) montoEnBs = amount * exchangeRate;
+            else montoEnBs = amount * (tasasEnBsEfectivas.USD || 0);
+        } else if (currency === "USDT") {
+            montoEnBs = amount * (tasasEnBsEfectivas.USDT || 0);
+        } else if (currency === "EUR") {
+            montoEnBs = amount * (tasasEnBsEfectivas.EUR || 0);
+        } else {
+            // USD
+            if (exchangeRate > 0 && exchangeRate !== 1) {
+                montoEnBs = amount * exchangeRate;
+            } else {
+                montoEnBs = amount * (tasasEnBsEfectivas.USD || 0);
+            }
+        }
+
+        return convertirDesdeBs(montoEnBs);
+    };
+
+    const convertirAhorroAMonedaBase = (t: any): number => {
+        const amount = Number(t.amount) || 0;
+        const method = t.method;
+
+        let montoEnBs = 0;
+        if (method === "bs") {
+            montoEnBs = amount;
+        } else {
+            montoEnBs = amount * (apiRates.usd || 0);
+        }
+
+        if (monedaBase === "BS") {
+            return montoEnBs;
+        } else {
+            const tasaUsdEnBs = apiRates.usd || 1;
+            return montoEnBs / tasaUsdEnBs;
+        }
+    };
 
     const filteredTransactions = useMemo(() => {
         return transactions.filter(t => {
@@ -40,11 +100,12 @@ export default function ReportsPage() {
         const categoryExpenses: Record<string, number> = {};
 
         filteredTransactions.forEach(t => {
+            const amountConverted = convertirTransaccionAMonedaBase(t);
             if (t.type === "ingreso") {
-                income += Number(t.amount);
+                income += amountConverted;
             } else {
-                expense += Number(t.amount);
-                categoryExpenses[t.category] = (categoryExpenses[t.category] || 0) + Number(t.amount);
+                expense += amountConverted;
+                categoryExpenses[t.category] = (categoryExpenses[t.category] || 0) + amountConverted;
             }
         });
 
@@ -56,7 +117,7 @@ export default function ReportsPage() {
         const balanceCalculado = Math.round((income - expense) * 100) / 100;
         const balanceFinal = Object.is(balanceCalculado, -0) ? 0 : balanceCalculado;
         return { income, expense, balance: balanceFinal, categoryData };
-    }, [filteredTransactions]);
+    }, [filteredTransactions, monedaBase, tasasEnBsEfectivas]);
 
     const savingsStats = useMemo(() => {
         const periodSavings = savingsTransactions.filter(t => {
@@ -68,10 +129,11 @@ export default function ReportsPage() {
         let totalWithdrawn = 0;
 
         periodSavings.forEach(t => {
+            const amountConverted = convertirAhorroAMonedaBase(t);
             if (t.type === "deposit") {
-                totalDeposited += Number(t.amount);
+                totalDeposited += amountConverted;
             } else {
-                totalWithdrawn += Number(t.amount);
+                totalWithdrawn += amountConverted;
             }
         });
 
@@ -80,7 +142,7 @@ export default function ReportsPage() {
             totalWithdrawn,
             netSavings: totalDeposited - totalWithdrawn
         };
-    }, [savingsTransactions, selectedMonth, selectedYear]);
+    }, [savingsTransactions, selectedMonth, selectedYear, monedaBase, apiRates]);
 
     const balanceData = [
         { name: "Ingresos", value: stats.income, color: "#10b981" },
@@ -95,7 +157,7 @@ export default function ReportsPage() {
             if (t.type === "gasto") {
                 const d = new Date(t.date);
                 const day = d.getDate();
-                dailyExpenses[day] = (dailyExpenses[day] || 0) + Number(t.amount);
+                dailyExpenses[day] = (dailyExpenses[day] || 0) + convertirTransaccionAMonedaBase(t);
             }
         });
 
@@ -128,10 +190,11 @@ export default function ReportsPage() {
         let prevIncome = 0;
         let prevExpense = 0;
         prevPeriodTransactions.forEach(t => {
+            const amountConverted = convertirTransaccionAMonedaBase(t);
             if (t.type === "ingreso") {
-                prevIncome += Number(t.amount);
+                prevIncome += amountConverted;
             } else if (t.type === "gasto") {
-                prevExpense += Number(t.amount);
+                prevExpense += amountConverted;
             }
         });
 
@@ -157,7 +220,7 @@ export default function ReportsPage() {
             expenseToIncomeRatio,
             savingRate
         };
-    }, [filteredTransactions, stats, transactions, selectedMonth, selectedYear, savingsStats]);
+    }, [filteredTransactions, stats, transactions, selectedMonth, selectedYear, savingsStats, monedaBase, tasasEnBsEfectivas]);
 
     const MONTHS = [
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -243,7 +306,7 @@ export default function ReportsPage() {
                             <FiTrendingUp size={20} />
                         </div>
                         <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-1">Ingresos</p>
-                        <p className="text-2xl font-black text-white tracking-tight">${stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                        <p className="text-2xl font-black text-white tracking-tight">{obtenerSimboloMoneda(monedaBase)} {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
                     <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-red-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
@@ -252,7 +315,7 @@ export default function ReportsPage() {
                             <FiTrendingDown size={20} />
                         </div>
                         <p className="text-[10px] text-red-500 font-black uppercase tracking-widest mb-1">Gastos</p>
-                        <p className="text-2xl font-black text-white tracking-tight">${stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                        <p className="text-2xl font-black text-white tracking-tight">{obtenerSimboloMoneda(monedaBase)} {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
                     <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-amber-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
@@ -262,7 +325,7 @@ export default function ReportsPage() {
                         </div>
                         <p className="text-[10px] text-amber-500 font-black uppercase tracking-widest mb-1">Balance</p>
                         <p className={`text-2xl font-black tracking-tight ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
-                            ${stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            {obtenerSimboloMoneda(monedaBase)} {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
                     </div>
 
@@ -273,7 +336,7 @@ export default function ReportsPage() {
                         </div>
                         <p className="text-[10px] text-violet-500 font-black uppercase tracking-widest mb-1">Ahorro</p>
                         <p className={`text-2xl font-black tracking-tight ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
-                            ${savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            {obtenerSimboloMoneda(monedaBase)} {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
                     </div>
                 </motion.div>
@@ -326,7 +389,7 @@ export default function ReportsPage() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-white font-bold text-sm">${item.value.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</p>
+                                        <p className="text-white font-bold text-sm">{obtenerSimboloMoneda(monedaBase)} {item.value.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</p>
                                         <p className="text-slate-500 text-xs">{((item.value / stats.expense) * 100).toFixed(1)}%</p>
                                     </div>
                                 </div>
@@ -393,7 +456,7 @@ export default function ReportsPage() {
                                 {advancedStats.peakDay ? `Día ${advancedStats.peakDay}` : 'N/A'}
                             </p>
                             <p className="text-[9px] text-slate-400 font-bold mt-1 truncate">
-                                {advancedStats.peakAmount > 0 ? `$${Math.round(advancedStats.peakAmount)}` : 'Sin registros'}
+                                {advancedStats.peakAmount > 0 ? `${obtenerSimboloMoneda(monedaBase)} ${Math.round(advancedStats.peakAmount)}` : 'Sin registros'}
                             </p>
                         </div>
 
@@ -463,7 +526,7 @@ export default function ReportsPage() {
                             <div className="p-3 bg-emerald-500 text-slate-900 rounded-xl shadow-lg shadow-emerald-500/20"><FiTrendingUp size={20} /></div>
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-emerald-500">Ingresos</span>
                         </div>
-                        <p className="text-3xl font-black text-white">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-black text-white">{obtenerSimboloMoneda(monedaBase)} {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
                     <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-red-500/30 relative overflow-hidden group active:scale-95 transition-all">
@@ -472,7 +535,7 @@ export default function ReportsPage() {
                             <div className="p-3 bg-red-500 text-slate-900 rounded-xl shadow-lg shadow-red-500/20"><FiTrendingDown size={20} /></div>
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-red-500">Gastos</span>
                         </div>
-                        <p className="text-3xl font-black text-white">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-black text-white">{obtenerSimboloMoneda(monedaBase)} {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
                     <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-amber-500/30 relative overflow-hidden group active:scale-95 transition-all">
@@ -482,7 +545,7 @@ export default function ReportsPage() {
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-amber-500">Balance</span>
                         </div>
                         <p className={`text-3xl font-black ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
-                            $ {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                            {obtenerSimboloMoneda(monedaBase)} {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
 
@@ -493,7 +556,7 @@ export default function ReportsPage() {
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-violet-500">Ahorro</span>
                         </div>
                         <p className={`text-3xl font-black ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
-                            $ {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                            {obtenerSimboloMoneda(monedaBase)} {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
                 </div>
@@ -523,7 +586,7 @@ export default function ReportsPage() {
                                         <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: ["#10b981", "#ef4444", "#06b6d4", "#f59e0b", "#8b5cf6", "#ec4899"][index % 6] }}></span>
                                         <span className="text-slate-300 capitalize font-medium">{item.name}</span>
                                     </div>
-                                    <span className="font-bold text-white">${item.value.toLocaleString()}</span>
+                                    <span className="font-bold text-white">{obtenerSimboloMoneda(monedaBase)} {item.value.toLocaleString()}</span>
                                 </div>
                             ))}
                         </div>
@@ -594,7 +657,7 @@ export default function ReportsPage() {
                                 {advancedStats.peakDay ? `Día ${advancedStats.peakDay}` : 'N/A'}
                             </p>
                             <p className="text-[10px] text-red-400 font-bold mt-2">
-                                {advancedStats.peakAmount > 0 ? `$${advancedStats.peakAmount.toLocaleString('es-ES', { maximumFractionDigits: 2 })} acumulados` : 'Sin registros de gastos'}
+                                {advancedStats.peakAmount > 0 ? `${obtenerSimboloMoneda(monedaBase)} ${advancedStats.peakAmount.toLocaleString('es-ES', { maximumFractionDigits: 2 })} acumulados` : 'Sin registros de gastos'}
                             </p>
                         </div>
 

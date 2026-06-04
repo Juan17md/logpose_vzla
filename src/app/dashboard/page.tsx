@@ -163,17 +163,20 @@ export default function DashboardPage() {
 
             let montoEnBs = 0;
             if (currency === "VES" || currency === "BS") {
-                // Para VES/BS priorizamos el monto original; si no existe, inferimos por tasa.
                 if (originalAmount > 0) montoEnBs = originalAmount;
                 else if (exchangeRate > 0 && exchangeRate !== 1) montoEnBs = amount * exchangeRate;
-                else montoEnBs = amount;
+                else montoEnBs = amount * (tasasEnBs.USD || 0);
             } else if (currency === "USDT") {
                 montoEnBs = amount * (tasasEnBs.USDT || 0);
             } else if (currency === "EUR") {
                 montoEnBs = amount * (tasasEnBs.EUR || 0);
             } else {
-                // USD por defecto
-                montoEnBs = amount * (tasasEnBs.USD || 0);
+                // USD
+                if (exchangeRate > 0 && exchangeRate !== 1) {
+                    montoEnBs = amount * exchangeRate;
+                } else {
+                    montoEnBs = amount * (tasasEnBs.USD || 0);
+                }
             }
 
             return convertirDesdeBs(montoEnBs);
@@ -820,10 +823,13 @@ export default function DashboardPage() {
                                     <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Saldo Total</p>
                                 </div>
                                 <h3 className={`text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-white to-slate-400`}>
-                                    {isPrivacyMode ? "****" : `$ ${convertirMontoBaseAUsd(stats.totalBalance).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    {isPrivacyMode ? "****" : `${obtenerSimboloMoneda(monedaBase)} ${stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </h3>
                                 <p className="text-sm text-slate-500 font-medium mt-1 pl-1 border-l-2 border-violet-500/30">
-                                    {`≈ Bs. ${isPrivacyMode ? "****" : convertirMontoBaseABs(stats.totalBalance).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    {monedaBase === "BS"
+                                        ? `≈ $ ${isPrivacyMode ? "****" : convertirMontoBaseAUsd(stats.totalBalance).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+                                        : `≈ Bs. ${isPrivacyMode ? "****" : convertirMontoBaseABs(stats.totalBalance).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    }
                                 </p>
                             </div>
                             <div className="p-3 bg-violet-500/20 rounded-2xl border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.2)]">
@@ -853,10 +859,13 @@ export default function DashboardPage() {
                             <div>
                                 <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Ingresos (Mes)</p>
                                 <h3 className="text-3xl font-bold text-emerald-400">
-                                    {isPrivacyMode ? "****" : `$ ${convertirMontoBaseAUsd(stats.monthlyIncome).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    {isPrivacyMode ? "****" : `${obtenerSimboloMoneda(monedaBase)} ${stats.monthlyIncome.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </h3>
                                 <p className="text-sm text-emerald-500/60 font-medium mt-1 pl-1 border-l-2 border-emerald-500/30">
-                                    {`≈ Bs. ${isPrivacyMode ? "****" : convertirMontoBaseABs(stats.monthlyIncome).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    {monedaBase === "BS"
+                                        ? `≈ $ ${isPrivacyMode ? "****" : convertirMontoBaseAUsd(stats.monthlyIncome).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+                                        : `≈ Bs. ${isPrivacyMode ? "****" : convertirMontoBaseABs(stats.monthlyIncome).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    }
                                 </p>
                             </div>
                             <div className="p-3 bg-emerald-500/20 rounded-2xl border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
@@ -882,10 +891,13 @@ export default function DashboardPage() {
                             <div>
                                 <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Gastos (Mes)</p>
                                 <h3 className="text-3xl font-bold text-red-400">
-                                    {isPrivacyMode ? "****" : `$ ${convertirMontoBaseAUsd(stats.monthlyExpense).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    {isPrivacyMode ? "****" : `${obtenerSimboloMoneda(monedaBase)} ${stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </h3>
                                 <p className="text-sm text-red-500/60 font-medium mt-1 pl-1 border-l-2 border-red-500/30">
-                                    {`≈ Bs. ${isPrivacyMode ? "****" : convertirMontoBaseABs(stats.monthlyExpense).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    {monedaBase === "BS"
+                                        ? `≈ $ ${isPrivacyMode ? "****" : convertirMontoBaseAUsd(stats.monthlyExpense).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+                                        : `≈ Bs. ${isPrivacyMode ? "****" : convertirMontoBaseABs(stats.monthlyExpense).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    }
                                 </p>
                             </div>
                             <div className="p-3 bg-red-500/20 rounded-2xl border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
