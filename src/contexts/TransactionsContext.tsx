@@ -154,10 +154,20 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     const cuentaDoc = await transaction.get(cuentaRef);
                     if (cuentaDoc.exists()) {
                         const currentSaldo = cuentaDoc.data().saldo || 0;
+                        const cuentaMoneda = cuentaDoc.data().moneda || "USD";
+
+                        const montoParaCuenta = convertirMontoParaCuenta(
+                            amount,
+                            cleanRest.currency || 'USD',
+                            cuentaMoneda,
+                            cleanRest.exchangeRate,
+                            cleanRest.originalAmount
+                        );
+
                         let nuevoSaldo = currentSaldo;
-                        if (type === 'ingreso') nuevoSaldo += amount;
-                        else if (type === 'gasto') nuevoSaldo -= amount;
-                        else if (type === 'transferencia') nuevoSaldo -= amount;
+                        if (type === 'ingreso') nuevoSaldo += montoParaCuenta;
+                        else if (type === 'gasto') nuevoSaldo -= montoParaCuenta;
+                        else if (type === 'transferencia') nuevoSaldo -= montoParaCuenta;
                         transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }
@@ -167,7 +177,17 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     const targetCuentaDoc = await transaction.get(targetCuentaRef);
                     if (targetCuentaDoc.exists()) {
                         const currentSaldo = targetCuentaDoc.data().saldo || 0;
-                        const nuevoSaldo = currentSaldo + amount;
+                        const targetCuentaMoneda = targetCuentaDoc.data().moneda || "USD";
+
+                        const montoParaTargetCuenta = convertirMontoParaCuenta(
+                            amount,
+                            cleanRest.currency || 'USD',
+                            targetCuentaMoneda,
+                            cleanRest.exchangeRate,
+                            cleanRest.originalAmount
+                        );
+
+                        const nuevoSaldo = currentSaldo + montoParaTargetCuenta;
                         transaction.update(targetCuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
                     }
                 }

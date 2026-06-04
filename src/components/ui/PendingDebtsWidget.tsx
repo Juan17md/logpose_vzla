@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 import Skeleton from "./Skeleton";
+import { useBankAccounts } from "@/contexts/BankAccountsContext";
 
 export default function PendingDebtsWidget() {
     const { debts, loadingDebts } = useDebts();
     const router = useRouter();
+    const { monedaBase, apiRates } = useBankAccounts();
 
     if (loadingDebts) return (
         <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-700/50 shadow-lg flex flex-col gap-6 h-full min-h-[340px]">
@@ -55,14 +57,28 @@ export default function PendingDebtsWidget() {
 
     const pendingDebts = debts.filter(d => !d.isPaid);
 
-    // Calculate totals
-    const totalReceivable = pendingDebts
-        .filter(d => d.type === "por_cobrar")
-        .reduce((acc, curr) => acc + (curr.amount - curr.payments.reduce((p, c) => p + c.amount, 0)), 0);
+    const bcvRate = apiRates?.usd || 1;
 
-    const totalPayable = pendingDebts
+    // Helper de consolidación
+    const obtenerMontoRestanteConsolidado = (d: typeof debts[number], monedaDestino: "USD" | "BS") => {
+        const totalPaid = d.payments?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+        const remaining = Math.max(0, d.amount - totalPaid);
+        const isVES = d.currency === "VES";
+        if (monedaDestino === "BS") {
+            return isVES ? remaining : remaining * bcvRate;
+        } else {
+            return isVES ? remaining / bcvRate : remaining;
+        }
+    };
+
+    // Calculate totals
+    const displayReceivable = pendingDebts
+        .filter(d => d.type === "por_cobrar")
+        .reduce((acc, curr) => acc + obtenerMontoRestanteConsolidado(curr, monedaBase === "BS" ? "BS" : "USD"), 0);
+
+    const displayPayable = pendingDebts
         .filter(d => d.type === "por_pagar")
-        .reduce((acc, curr) => acc + (curr.amount - curr.payments.reduce((p, c) => p + c.amount, 0)), 0);
+        .reduce((acc, curr) => acc + obtenerMontoRestanteConsolidado(curr, monedaBase === "BS" ? "BS" : "USD"), 0);
 
     // Get top 3 urgent debts (closest due date or simply by creation if no due date)
     const urgentDebts = [...pendingDebts].sort((a, b) => {
@@ -97,13 +113,13 @@ export default function PendingDebtsWidget() {
                     <p className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1">
                         <FiArrowDown className="text-emerald-400" /> Por Cobrar
                     </p>
-                    <p className="text-lg font-bold text-emerald-400">{obtenerSimboloMoneda("USD")} {totalReceivable.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                    <p className="text-lg font-bold text-emerald-400">{obtenerSimboloMoneda(monedaBase)} {displayReceivable.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                 </div>
                 <div className="bg-slate-800/50 p-3 rounded-2xl border border-red-500/10">
                     <p className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1">
                         <FiArrowUp className="text-red-400" /> Por Pagar
                     </p>
-                    <p className="text-lg font-bold text-red-400">{obtenerSimboloMoneda("USD")} {totalPayable.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                    <p className="text-lg font-bold text-red-400">{obtenerSimboloMoneda(monedaBase)} {displayPayable.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                 </div>
             </div>
 
@@ -112,6 +128,7 @@ export default function PendingDebtsWidget() {
                 {urgentDebts.length > 0 ? (
                     urgentDebts.map((debt) => {
                         const remaining = debt.amount - debt.payments.reduce((acc, curr) => acc + curr.amount, 0);
+                        const displayRemaining = remaining;
                         return (
                             <div key={debt.id} className="flex items-center justify-between p-3 bg-slate-800/30 hover:bg-slate-800/60 rounded-xl transition-colors border border-transparent hover:border-slate-700">
                                 <div className="flex items-center gap-3">
@@ -131,7 +148,7 @@ export default function PendingDebtsWidget() {
                                     </div>
                                 </div>
                                 <span className={`text-sm font-bold ${debt.type === 'por_cobrar' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                    {obtenerSimboloMoneda(debt.currency as any || "USD")} {remaining.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                    {obtenerSimboloMoneda(debt.currency === "VES" ? "BS" : "USD")} {displayRemaining.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                 </span>
                             </div>
                         );

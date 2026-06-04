@@ -32,6 +32,15 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
     const totalPaid = debt.payments?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
     const remaining = Math.max(0, debt.amount - totalPaid);
 
+    const maxLimit = (() => {
+        const isDebtVES = debt.currency === "VES";
+        if (isDebtVES) {
+            return currency === "VES" ? remaining : (bcvRate > 0 ? remaining / bcvRate : 0);
+        } else {
+            return currency === "USD" ? remaining : (bcvRate > 0 ? remaining * bcvRate : 0);
+        }
+    })();
+
     useEffect(() => {
         getBCVRate().then(setBcvRate);
     }, []);
@@ -42,8 +51,15 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
         const amountVal = parseNumeroFlexible(amountStr);
         let finalAmount = amountVal;
         
-        if (currency === "VES" && bcvRate > 0) {
-            finalAmount = amountVal / bcvRate;
+        const isDebtVES = debt.currency === "VES";
+        if (isDebtVES) {
+            if (currency === "USD") {
+                finalAmount = amountVal * bcvRate;
+            }
+        } else {
+            if (currency === "VES" && bcvRate > 0) {
+                finalAmount = amountVal / bcvRate;
+            }
         }
 
         await onSubmit({
@@ -65,15 +81,15 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
 
             <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
                 <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-slate-950/50 backdrop-blur-md p-4 md:p-6 rounded-2xl border border-slate-800/80 mb-4 flex flex-col items-center relative overflow-hidden group shadow-inner"
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     className="bg-slate-950/50 backdrop-blur-md p-4 md:p-6 rounded-2xl border border-slate-800/80 mb-4 flex flex-col items-center relative overflow-hidden group shadow-inner"
                 >
                     <p className="text-slate-500 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] mb-1.5">
                         {debt.type === "por_cobrar" ? "Saldo Pendiente" : "Monto a Pagar"}
                     </p>
                     <div className="flex items-baseline gap-1">
-                        <span className="text-slate-400 text-lg font-medium">$</span>
+                        <span className="text-slate-400 text-lg font-medium">{debt.currency === "VES" ? "Bs." : "$"}</span>
                         <span className="text-3xl md:text-4xl font-black text-white tracking-tight">
                             {remaining.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                         </span>
@@ -128,7 +144,7 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
                             onValueChange={(value) => setAmountStr(value || "")}
                             value={amountStr}
                             required
-                            max={currency === "USD" ? remaining : remaining * bcvRate}
+                            max={maxLimit}
                         />
                         
                         <AnimatePresence>
@@ -148,12 +164,14 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
                     </div>
                 </div>
 
-                {currency === "VES" && (
-                    <div className="text-[11px] font-medium text-amber-400/90 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 flex items-center gap-2">
-                        <FiInfo className="shrink-0" />
-                        <span>Monto exacto para saldar: <span className="font-bold underline tracking-wider">Bs. {(remaining * bcvRate).toLocaleString("es-ES", { maximumFractionDigits: 2 })}</span> (Tasa: {bcvRate})</span>
-                    </div>
-                )}
+                <div className="text-[11px] font-medium text-amber-400/90 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 flex items-center gap-2">
+                    <FiInfo className="shrink-0" />
+                    {currency === "VES" ? (
+                        <span>Monto exacto para saldar: <span className="font-bold underline tracking-wider">Bs. {(debt.currency === "VES" ? remaining : remaining * bcvRate).toLocaleString("es-ES", { maximumFractionDigits: 2 })}</span> {debt.currency !== "VES" && `(Tasa: ${bcvRate})`}</span>
+                    ) : (
+                        <span>Monto exacto para saldar: <span className="font-bold underline tracking-wider">$ {(debt.currency === "USD" ? remaining : (bcvRate > 0 ? remaining / bcvRate : 0)).toLocaleString("es-ES", { maximumFractionDigits: 2 })} USD</span> {debt.currency !== "USD" && `(Tasa: ${bcvRate})`}</span>
+                    )}
+                </div>
 
                 <DateSelect
                     label="Fecha del Pago"

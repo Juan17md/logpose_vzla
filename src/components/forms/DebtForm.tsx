@@ -36,20 +36,13 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
     useEffect(() => {
         getBCVRate().then(setBcvRate);
     }, []);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         const amountVal = parseNumeroFlexible(amountStr);
         let finalAmount = amountVal;
-        let originalAmount = undefined;
-        let exchangeRateValue = 1;
-        
-        if (currency === "VES" && bcvRate > 0) {
-            finalAmount = parseFloat((amountVal / bcvRate).toFixed(2));
-            originalAmount = amountVal;
-            exchangeRateValue = bcvRate;
-        }
+        let originalAmount = amountVal;
+        let exchangeRateValue = bcvRate > 0 ? bcvRate : 1;
 
         await onSubmit({
             personName,
@@ -58,7 +51,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
             description,
             dueDate: dueDate ?? undefined,
             currency,
-            originalAmount: originalAmount ?? finalAmount,
+            originalAmount: originalAmount,
             exchangeRate: exchangeRateValue,
         });
     };

@@ -11,11 +11,14 @@ import { getBCVRate } from "@/lib/currency";
 import { motion, AnimatePresence } from "framer-motion";
 import DebtForm from "@/components/forms/DebtForm";
 import DebtPaymentForm from "@/components/forms/DebtPaymentForm";
+import { useBankAccounts } from "@/contexts/BankAccountsContext";
+import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 
 export default function DebtsPage() {
     const router = useRouter();
     const { debts, loadingDebts, addDebt, deleteDebt, updateDebt, addPayment } = useDebts();
     const [bcvRate, setBcvRate] = useState(0);
+    const { monedaBase } = useBankAccounts();
     const [activeTab, setActiveTab] = useState<"por_cobrar" | "por_pagar">("por_cobrar");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -53,8 +56,24 @@ export default function DebtsPage() {
 
 
     // Calculate totals
-    const totalReceivable = debts.filter(d => d.type === "por_cobrar").reduce((acc, d) => acc + (d.amount - d.payments.reduce((pAcc, p) => pAcc + p.amount, 0)), 0);
-    const totalPayable = debts.filter(d => d.type === "por_pagar").reduce((acc, d) => acc + (d.amount - d.payments.reduce((pAcc, p) => pAcc + p.amount, 0)), 0);
+    const obtenerMontoRestanteConsolidado = (d: Debt, monedaDestino: "USD" | "BS") => {
+        const totalPaid = d.payments?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+        const remaining = Math.max(0, d.amount - totalPaid);
+        const isVES = d.currency === "VES";
+        if (monedaDestino === "BS") {
+            return isVES ? remaining : remaining * (bcvRate || 1);
+        } else {
+            return isVES ? remaining / (bcvRate || 1) : remaining;
+        }
+    };
+
+    const totalReceivable = debts
+        .filter(d => d.type === "por_cobrar")
+        .reduce((acc, d) => acc + obtenerMontoRestanteConsolidado(d, monedaBase === "BS" ? "BS" : "USD"), 0);
+
+    const totalPayable = debts
+        .filter(d => d.type === "por_pagar")
+        .reduce((acc, d) => acc + obtenerMontoRestanteConsolidado(d, monedaBase === "BS" ? "BS" : "USD"), 0);
 
     const handleAddDebtClick = () => {
         setView("create");
@@ -218,7 +237,7 @@ export default function DebtsPage() {
                                         </div>
                                         <div className="mt-4">
                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Por Cobrar</p>
-                                            <h3 className="text-xl font-black text-white">${totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</h3>
+                                            <h3 className="text-xl font-black text-white">{obtenerSimboloMoneda(monedaBase)} {totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h3>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -238,7 +257,7 @@ export default function DebtsPage() {
                                         </div>
                                         <div className="mt-4">
                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Por Pagar</p>
-                                            <h3 className="text-xl font-black text-white">${totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</h3>
+                                            <h3 className="text-xl font-black text-white">{obtenerSimboloMoneda(monedaBase)} {totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h3>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -282,6 +301,10 @@ export default function DebtsPage() {
                                             const progress = (totalPaid / debt.amount) * 100;
                                             const isFullyPaid = remaining <= 0.01;
 
+                                            const simboloDeuda = obtenerSimboloMoneda(debt.currency === "VES" ? "BS" : "USD");
+                                            const montoInicialDeuda = debt.amount;
+                                            const montoRestanteDeuda = remaining;
+
                                             return (
                                                 <motion.div
                                                     key={debt.id}
@@ -300,10 +323,10 @@ export default function DebtsPage() {
                                                         </div>
                                                         <div className="text-right">
                                                             <span className={`block text-lg font-black ${remaining > 0 ? (debt.type === 'por_cobrar' ? 'text-emerald-400' : 'text-red-400') : 'text-slate-500'}`}>
-                                                                ${remaining.toLocaleString("es-ES", { minimumFractionDigits: 0 })}
+                                                                {simboloDeuda} {montoRestanteDeuda.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                             </span>
                                                             <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">
-                                                                de ${debt.amount.toLocaleString("es-ES", { minimumFractionDigits: 0 })}
+                                                                de {simboloDeuda} {montoInicialDeuda.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -538,9 +561,9 @@ export default function DebtsPage() {
                                                 <FiArrowUpRight size={20} />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 group-hover/stat:text-emerald-500/60 transition-colors">Por Cobrar</p>
-                                                <p className="text-xl font-black text-white leading-none">${totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</p>
-                                            </div>
+                                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 group-hover/stat:text-emerald-500/60 transition-colors">Por Cobrar</p>
+                                                 <p className="text-xl font-black text-white leading-none">{obtenerSimboloMoneda(monedaBase)} {totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                                             </div>
                                         </div>
                                     </div>
 
@@ -553,9 +576,9 @@ export default function DebtsPage() {
                                                 <FiArrowDownLeft size={20} />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 group-hover/stat:text-red-500/60 transition-colors">Por Pagar</p>
-                                                <p className="text-xl font-black text-white leading-none">${totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</p>
-                                            </div>
+                                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 group-hover/stat:text-red-500/60 transition-colors">Por Pagar</p>
+                                                 <p className="text-xl font-black text-white leading-none">{obtenerSimboloMoneda(monedaBase)} {totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                                             </div>
                                         </div>
                                     </div>
                                 </div>
@@ -605,6 +628,10 @@ export default function DebtsPage() {
                                         const progress = (totalPaid / debt.amount) * 100;
                                         const isFullyPaid = remaining <= 0.01;
 
+                                        const simboloDeuda = obtenerSimboloMoneda(debt.currency === "VES" ? "BS" : "USD");
+                                        const montoInicialDeuda = debt.amount;
+                                        const montoRestanteDeuda = remaining;
+
                                         return (
                                             <motion.div 
                                                 key={debt.id} 
@@ -636,13 +663,13 @@ export default function DebtsPage() {
                                                     <div className="bg-slate-900/60 p-4 rounded-3xl border border-white/5 relative overflow-hidden group/statcard">
                                                         <div className="absolute inset-x-0 bottom-0 h-1 bg-slate-800" />
                                                         <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Inicial</p>
-                                                        <p className="text-lg font-bold text-slate-400">${debt.amount.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</p>
+                                                        <p className="text-lg font-bold text-slate-400">{simboloDeuda} {montoInicialDeuda.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                                                     </div>
                                                     <div className={`p-4 rounded-3xl border relative overflow-hidden group/statcard ${isFullyPaid ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-white/5 border-white/5'}`}>
                                                         <div className={`absolute inset-x-0 bottom-0 h-1 ${isFullyPaid ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                                                         <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Restante</p>
                                                         <p className={`text-lg font-bold ${remaining > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                                                            ${remaining.toLocaleString("es-ES", { minimumFractionDigits: 0 })}
+                                                            {simboloDeuda} {montoRestanteDeuda.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                         </p>
                                                     </div>
                                                 </div>
