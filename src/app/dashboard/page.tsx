@@ -94,6 +94,9 @@ export default function DashboardPage() {
 
     // Variantes de animación simplificadas — tween es más ligero que spring physics
     // Spring requiere múltiples frames de cálculo; tween es una curva predefinida
+    // haAnimado: variable a nivel módulo para evitar repetir animaciones al volver atrás
+    // desde otra página (el swipe-back de iOS mostraba el dashboard, luego las animaciones
+    // de entrada lo "recargaban" visualmente)
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -117,6 +120,20 @@ export default function DashboardPage() {
             } as const
         }
     };
+
+    // Persiste entre montajes del componente durante la sesión.
+    // Evita que al volver al dashboard desde otra página se re-ejecuten las
+    // animaciones de entrada (stagger), lo cual causaba una falsa sensación de recarga.
+    const [haAnimado] = useState(() => {
+        if (typeof window !== "undefined") {
+            const yaVisito = sessionStorage.getItem("dashboard_animado");
+            if (yaVisito === "1") return true;
+            sessionStorage.setItem("dashboard_animado", "1");
+        }
+        return false;
+    });
+
+    const estadoAnimacion = haAnimado ? "visible" : "hidden";
 
     useEffect(() => {
         // En PWA, el estado puede tardar unos milisegundos extra en restaurarse
@@ -314,7 +331,7 @@ export default function DashboardPage() {
             <motion.div
                 className="md:hidden flex flex-col gap-4 pb-32"
                 variants={containerVariants}
-                initial="hidden"
+                initial={estadoAnimacion}
                 animate="visible"
             >
 

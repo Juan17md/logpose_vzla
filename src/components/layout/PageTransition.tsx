@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface PageTransitionProps {
     children: React.ReactNode;
@@ -11,7 +11,6 @@ interface PageTransitionProps {
 export default function PageTransition({ children }: PageTransitionProps) {
     const pathname = usePathname();
     const [esMovil, setEsMovil] = useState(false);
-    const direccionNavegacion = useRef<"adelante" | "atras">("adelante");
 
     useEffect(() => {
         const checkEsMovil = () => {
@@ -22,31 +21,20 @@ export default function PageTransition({ children }: PageTransitionProps) {
         return () => window.removeEventListener("resize", checkEsMovil);
     }, []);
 
-    // Detecta la dirección de navegación comparando profundidad de rutas
-    useEffect(() => {
-        const segmentos = pathname.split("/").filter(Boolean);
-        direccionNavegacion.current = segmentos.length > 2 ? "adelante" : "atras";
-    }, [pathname]);
+    // En móvil: sin animación de transición entre páginas.
+    // iOS ya maneja el swipe-back nativo con su propia animación de Safari;
+    // agregar una segunda animación encima causa parpadeo y sensación de recarga.
+    // Además, sin key={pathname} los componentes no se desmontan/remontan,
+    // lo que evita que las animaciones internas del dashboard se re-ejecuten.
+    if (esMovil) {
+        return <>{children}</>;
+    }
 
-    // popLayout: la salida se superpone a la entrada sin parpadeo (ideal para iOS swipe-back)
-    // En móvil: fade rápido sin desplazamiento para evitar conflicto con el gesto nativo
-    // En desktop: fade + desplazamiento vertical suave con popLayout superpuesto
+    // Desktop: popLayout con fade + desplazamiento vertical suave
     const variants = {
-        initial: {
-            opacity: 0,
-            x: esMovil ? (direccionNavegacion.current === "adelante" ? 20 : -20) : 0,
-            y: esMovil ? 0 : 12,
-        },
-        animate: {
-            opacity: 1,
-            x: 0,
-            y: 0,
-        },
-        exit: {
-            opacity: 0,
-            x: esMovil ? (direccionNavegacion.current === "adelante" ? -20 : 20) : 0,
-            y: esMovil ? 0 : -8,
-        }
+        initial: { opacity: 0, y: 12 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -8 },
     };
 
     return (
@@ -59,7 +47,7 @@ export default function PageTransition({ children }: PageTransitionProps) {
                 exit="exit"
                 transition={{
                     type: "tween",
-                    duration: esMovil ? 0.15 : 0.25,
+                    duration: 0.25,
                     ease: [0.25, 0.46, 0.45, 0.94],
                 }}
                 className="w-full"
