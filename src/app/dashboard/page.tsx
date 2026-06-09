@@ -16,6 +16,8 @@ import Modal from "@/components/ui/Modal";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { obtenerSimboloMoneda, MONEDAS_SOPORTADAS } from "@/lib/bankAccounts";
 import CurrencySelector from "@/components/ui/CurrencySelector";
+import Select from "@/components/ui/forms/Select";
+
 
 // ─── Placeholder ligero para widgets durante carga ────────────────────────────
 const SkeletonWidget = () => (
@@ -90,7 +92,8 @@ export default function DashboardPage() {
     } = useBankAccounts();
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);
     const [showAdjustModal, setShowAdjustModal] = useState(false);
-    const [adjustingBalances, setAdjustingBalances] = useState<Record<string, string>>({});
+    const [cuentaAjustando, setCuentaAjustando] = useState<string>("");
+    const [ajustandoBalance, setAjustandoBalance] = useState("");
 
     // Variantes de animación simplificadas — tween es más ligero que spring physics
     // Spring requiere múltiples frames de cálculo; tween es una curva predefinida
@@ -245,67 +248,63 @@ export default function DashboardPage() {
         return montoEnBs / tasaUsdEnBs;
     };
 
-    const handleUpdateBalanceClick = (e: React.MouseEvent) => {
+    const handleUpdateBalanceClick = (e: React.MouseEvent, accountId?: string) => {
         e.stopPropagation();
-
-        setAdjustingBalances({});
+        setCuentaAjustando(accountId || (cuentas.length > 0 ? cuentas[0].id : ""));
+        setAjustandoBalance("");
         setShowAdjustModal(true);
-    };
-
-    const handleBalanceChange = (accountId: string, value: string) => {
-        setAdjustingBalances(prev => ({
-            ...prev,
-            [accountId]: value
-        }));
     };
 
     const submitAdjustBalance = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!user) return;
+        if (!user || !cuentaAjustando) return;
+
+        const amount = parseFloat(ajustandoBalance.replace(",", "."));
+        if (isNaN(amount)) {
+            toast.error("Ingresa un monto válido");
+            return;
+        }
+
+        const cuenta = cuentas.find(c => c.id === cuentaAjustando);
+        if (!cuenta) return;
+
+        if (Math.abs(cuenta.saldo - amount) < 0.01) {
+            toast.info("El saldo es el mismo, no hay cambios que guardar.");
+            return;
+        }
 
         try {
             await runTransaction(db, async (transaction) => {
-                for (const [id, newValue] of Object.entries(adjustingBalances)) {
-                    const amount = parseFloat(newValue.replace(",", "."));
-                    if (isNaN(amount)) continue;
+                const diff = amount - cuenta.saldo;
+                const cuentaRef = doc(db, "users", user.uid, "bank_accounts", cuentaAjustando);
+                
+                transaction.update(cuentaRef, { 
+                    saldo: amount, 
+                    actualizadoEn: serverTimestamp() 
+                });
 
-                    const cuenta = cuentas.find(c => c.id === id);
-                    if (!cuenta) continue;
-                    
-                    if (Math.abs(cuenta.saldo - amount) < 0.01) continue;
-
-                    const diff = amount - cuenta.saldo;
-                    const cuentaRef = doc(db, "users", user.uid, "bank_accounts", id);
-                    
-                    transaction.update(cuentaRef, { 
-                        saldo: amount, 
-                        actualizadoEn: serverTimestamp() 
-                    });
-
-                    // Crear registro de la transacción de ajuste
-                    const newTransRef = doc(collection(db, "transactions"));
-                    transaction.set(newTransRef, {
-                        userId: user.uid,
-                        accountId: id,
-                        amount: Math.abs(diff),
-                        type: diff > 0 ? 'ingreso' : 'gasto',
-                        category: 'Ajuste',
-                        description: `Ajuste manual de saldo`,
-                        date: Timestamp.now(),
-                        currency: cuenta.moneda,
-                        originalAmount: Math.abs(diff),
-                        exchangeRate: 1,
-                        createdAt: serverTimestamp()
-                    });
-                }
+                const newTransRef = doc(collection(db, "transactions"));
+                transaction.set(newTransRef, {
+                    userId: user.uid,
+                    accountId: cuentaAjustando,
+                    amount: Math.abs(diff),
+                    type: diff > 0 ? 'ingreso' : 'gasto',
+                    category: 'Ajuste',
+                    description: `Ajuste manual de saldo`,
+                    date: Timestamp.now(),
+                    currency: cuenta.moneda,
+                    originalAmount: Math.abs(diff),
+                    exchangeRate: 1,
+                    createdAt: serverTimestamp()
+                });
             });
 
-            toast.success("Cuentas actualizadas correctamente");
+            toast.success("Saldo actualizado correctamente");
             setShowAdjustModal(false);
         } catch (error) {
-            console.error("Error al ajustar saldos:", error);
-            toast.error("No se pudieron actualizar los saldos.");
+            console.error("Error al ajustar saldo:", error);
+            toast.error("No se pudo actualizar el saldo.");
         }
     };
 
@@ -407,7 +406,7 @@ export default function DashboardPage() {
                                     <span className="text-red-200 text-xs font-medium">Gastos</span>
                                 </div>
                                 <p className="text-red-300 font-bold text-lg">
-                                    {isPrivacyMode ? "••••" : `${obtenerSimboloMoneda(monedaBase)}${stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 0 })}`}
+                                    {isPrivacyMode ? "••••" : `${obtenerSimboloMoneda(monedaBase)}${stats.monthlyExpense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
                                 </p>
                             </div>
                         </div>
@@ -1014,25 +1013,81 @@ export default function DashboardPage() {
             <Modal
                 isOpen={showAdjustModal}
                 onClose={() => setShowAdjustModal(false)}
-                title="Ajustar Saldo Actual"
+                title="Ajustar Saldo"
             >
                 <form onSubmit={submitAdjustBalance} className="flex flex-col gap-4 text-left">
-                    <p className="text-sm text-slate-400">Verifica y corrige el saldo de cada una de tus cuentas.</p>
+                    <p className="text-sm text-slate-400">Selecciona la cuenta y escribe el nuevo saldo.</p>
                     
-                    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                        {cuentas.map((cuenta) => (
-                            <div key={cuenta.id} className="bg-slate-800/40 p-4 rounded-2xl border border-slate-700/50 hover:border-amber-500/30 transition-colors group">
-                                <div className="flex justify-between items-center mb-2">
+                    {/* Selector de cuenta */}
+                    <div className="z-50 relative">
+                        <Select<string>
+                            label="Cuenta"
+                            icon={<FiCreditCard size={14} className="text-amber-500" />}
+                            value={cuentaAjustando}
+                            onChange={(val) => {
+                                setCuentaAjustando(val);
+                                setAjustandoBalance("");
+                            }}
+                            options={cuentas.map((c) => ({
+                                id: c.id,
+                                value: c.id,
+                                name: c.nombre,
+                                moneda: c.moneda,
+                                saldo: c.saldo,
+                                banco: c.banco
+                            }))}
+                            placeholder="Seleccionar cuenta..."
+                            renderOption={(opt) => (
+                                <div className="flex flex-col text-left">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="font-bold text-slate-100 truncate">{opt.name}</span>
+                                        <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md border border-slate-700/50 font-black shrink-0">
+                                            {opt.moneda as string}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2 mt-1">
+                                        <span className="text-xs text-amber-500/80 font-bold">
+                                            {obtenerSimboloMoneda(opt.moneda as any)} {(opt.saldo as number).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                        <span className="text-[10px] text-slate-500 italic uppercase tracking-tighter truncate max-w-[120px]">
+                                            {opt.banco as string}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                            renderValue={(opt) => (
+                                <div className="flex items-center justify-between w-full pr-2 text-left">
+                                    <div className="flex items-center gap-2 overflow-hidden mr-2">
+                                        <span className="truncate font-semibold">{opt.name}</span>
+                                        <span className="text-[10px] text-slate-500 shrink-0">({opt.banco as string})</span>
+                                    </div>
+                                    <span className="text-amber-500 font-black text-xs shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg ml-auto">
+                                        {obtenerSimboloMoneda(opt.moneda as any)} {(opt.saldo as number).toLocaleString("es-ES", { maximumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                            )}
+                        />
+                    </div>
+
+
+                    {cuentaAjustando && (() => {
+                        const cuenta = cuentas.find(c => c.id === cuentaAjustando);
+                        if (!cuenta) return null;
+                        return (
+                            <div className="bg-slate-800/40 p-4 rounded-2xl border border-amber-500/20">
+                                <div className="flex justify-between items-center mb-3">
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
                                         <span className="text-sm font-bold text-white uppercase tracking-wide">{cuenta.nombre}</span>
                                     </div>
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                                        cuenta.moneda === 'USD' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' : 
-                                        cuenta.moneda === 'BS' ? 'text-amber-400 border-amber-500/20 bg-amber-500/10' :
-                                        'text-violet-400 border-violet-500/20 bg-violet-500/10'
-                                    }`}>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border text-amber-400 border-amber-500/20 bg-amber-500/10">
                                         {cuenta.moneda}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between mb-3 px-1">
+                                    <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Saldo Actual</span>
+                                    <span className="text-sm font-bold text-slate-300">
+                                        {obtenerSimboloMoneda(cuenta.moneda)} {cuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </span>
                                 </div>
                                 <div className="relative">
@@ -1042,23 +1097,17 @@ export default function DashboardPage() {
                                     <input
                                         type="text"
                                         inputMode="decimal"
-                                        value={adjustingBalances[cuenta.id] || ''}
-                                        onChange={(e) => handleBalanceChange(cuenta.id, e.target.value)}
+                                        value={ajustandoBalance}
+                                        onChange={(e) => setAjustandoBalance(e.target.value)}
                                         className="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white font-bold text-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all placeholder:text-slate-700"
                                         placeholder="0.00"
                                     />
                                 </div>
                             </div>
-                        ))}
+                        );
+                    })()}
 
-                        {cuentas.length === 0 && (
-                            <div className="py-8 text-center text-slate-500 italic border border-dashed border-slate-700 rounded-2xl">
-                                No hay cuentas registradas para ajustar.
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-700/50">
+                    <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-slate-700/50">
                         <button
                             type="button"
                             onClick={() => setShowAdjustModal(false)}
@@ -1068,10 +1117,10 @@ export default function DashboardPage() {
                         </button>
                         <button
                             type="submit"
-                            disabled={cuentas.length === 0}
+                            disabled={!cuentaAjustando || cuentas.length === 0}
                             className="px-8 py-2.5 bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                         >
-                            Actualizar Todo
+                            Actualizar Saldo
                         </button>
                     </div>
                 </form>

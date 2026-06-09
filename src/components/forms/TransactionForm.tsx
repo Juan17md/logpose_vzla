@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,7 +37,8 @@ import {
     FiShield,
     FiScissors,
     FiSmartphone,
-    FiEdit2
+    FiEdit2,
+    FiInfo
 } from "react-icons/fi";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -47,7 +48,7 @@ import { createVenezuelaDate } from "@/lib/timezone";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { useCategorias, MAPA_ICONOS } from "@/contexts/CategoriesContext";
-import { obtenerSimboloMoneda, convertirMontoParaCuenta } from "@/lib/bankAccounts";
+import { obtenerSimboloMoneda, convertirMontoParaCuenta, calcularTasaConversion } from "@/lib/bankAccounts";
 import { parseNumeroFlexible } from "@/lib/number";
 import { calcularComision } from "@/lib/comisiones";
 import Input from "../ui/forms/Input";
@@ -81,6 +82,8 @@ const transactionSchema = z.object({
     commissionType: z.enum(["p2p", "p2c", "interbancaria", "custom"]).optional(),
     commissionAmount: z.string().optional(),
     vesCommissionAmount: z.string().optional(),
+    tasaCambio: z.string().optional(),
+    montoDestino: z.string().optional(),
 }).refine(data => {
     if (data.type === "transferencia" && !data.targetAccountId) {
         return false;
@@ -122,7 +125,7 @@ type TransactionFormData = z.infer<typeof transactionSchema>;
 
 export default function TransactionForm() {
     const { transactionToEdit, clearEditing } = useEditTransaction();
-    const { cuentas } = useBankAccounts();
+    const { cuentas, tasasEnBs } = useBankAccounts();
     const { categorias: categoriasUsuario } = useCategorias();
     const [loading, setLoading] = useState(false);
     const [rate, setRate] = useState<number>(0);
@@ -146,6 +149,8 @@ export default function TransactionForm() {
             commissionType: "p2p",
             commissionAmount: "",
             vesCommissionAmount: "",
+            tasaCambio: "",
+            montoDestino: "",
         }
     });
 
@@ -161,6 +166,12 @@ export default function TransactionForm() {
     const commissionAmount = watch("commissionAmount");
     const vesCommissionAmount = watch("vesCommissionAmount");
     const currentAccountId = watch("accountId");
+    const targetAccountId = watch("targetAccountId");
+    const tasaCambio = watch("tasaCambio");
+    const montoDestino = watch("montoDestino");
+
+    // Ref para evitar bucles en la sincronización bidireccional monto ↔ montoDestino
+    const sincronizandoDestino = useRef(false);
 
     // Fetch Rate on Mount
     useEffect(() => {
@@ -193,6 +204,8 @@ export default function TransactionForm() {
                 commissionType: "p2p",
                 commissionAmount: "",
                 vesCommissionAmount: "",
+                tasaCambio: "",
+                montoDestino: "",
                 targetAccountId: "",
             });
         }
@@ -256,6 +269,10 @@ export default function TransactionForm() {
     // Efecto para forzar una categoría válida al cambiar el tipo de transacción
     useEffect(() => {
         if (transactionToEdit) return; // No sobreescribir al editar
+        if (type === "transferencia") {
+            setValue("category", "Transferencias");
+            return;
+        }
         const filtradas = categoriasUsuario.filter(c => {
             if (type === "gasto") return c.tipo === "gasto" || c.tipo === "ambas";
             if (type === "ingreso") return c.tipo === "ingreso" || c.tipo === "ambas";
@@ -333,6 +350,38 @@ export default function TransactionForm() {
         }
     }, [hasCommission, commissionType, currency, amount, vesAmount, exchangeRate, rate, setValue]);
 
+    // Detectar si las monedas de origen y destino son diferentes
+    const cuentaOrigen = cuentas.find(c => c.id === currentAccountId);
+    const cuentaDestino = cuentas.find(c => c.id === targetAccountId);
+    const monedasDiferentes = type === "transferencia" && cuentaOrigen && cuentaDestino && cuentaOrigen.moneda !== cuentaDestino.moneda;
+
+    // Auto-calcular tasaCambio cuando las monedas son diferentes
+    useEffect(() => {
+        if (monedasDiferentes) {
+            const tasa = calcularTasaConversion(cuentaOrigen!.moneda, cuentaDestino!.moneda, tasasEnBs);
+            if (tasa > 0) {
+                setValue("tasaCambio", tasa.toFixed(4));
+            }
+        } else {
+            setValue("tasaCambio", "");
+            setValue("montoDestino", "");
+        }
+    }, [monedasDiferentes, cuentaOrigen?.moneda, cuentaDestino?.moneda, tasasEnBs, setValue]);
+
+    // Sincronizar monto → montoDestino cuando cambia el monto origen
+    useEffect(() => {
+        if (sincronizandoDestino.current) {
+            sincronizandoDestino.current = false;
+            return;
+        }
+        if (!monedasDiferentes || !amount || !tasaCambio) return;
+        const montoUSD = parseNumeroFlexible(amount);
+        const tasa = parseNumeroFlexible(tasaCambio);
+        if (!isNaN(montoUSD) && !isNaN(tasa) && tasa > 0) {
+            setValue("montoDestino", (montoUSD * tasa).toFixed(4));
+        }
+    }, [amount, monedasDiferentes, tasaCambio, setValue]);
+
     const onSubmit = async (data: TransactionFormData) => {
         if (cuentas.length === 0) {
             toast.error("Debes crear una cuenta bancaria antes de registrar movimientos.");
@@ -408,11 +457,22 @@ export default function TransactionForm() {
                         const cuentaDestinoMoneda = destinoData?.moneda || "USD";
 
                         // Determinar montos según la moneda de la cuenta
-                        const montoOrigen = convertirMontoParaCuenta(montoUSD, data.currency, cuentaOrigenMoneda, parseNumeroFlexible(data.exchangeRate), parseNumeroFlexible(data.vesAmount));
+                        const montoOrigen = convertirMontoParaCuenta(montoUSD, data.currency, cuentaOrigenMoneda, parseNumeroFlexible(data.exchangeRate), parseNumeroFlexible(data.vesAmount), tasasEnBs);
                         
-                        const montoDestino = convertirMontoParaCuenta(montoUSD, data.currency, cuentaDestinoMoneda, parseNumeroFlexible(data.exchangeRate), parseNumeroFlexible(data.vesAmount));
+                        const tasaCambioUsuario = parseNumeroFlexible(data.tasaCambio || "0");
+                        let montoDestino: number;
+                        if (cuentaOrigenMoneda !== cuentaDestinoMoneda && tasaCambioUsuario > 0) {
+                            montoDestino = montoOrigen * tasaCambioUsuario;
+                        } else {
+                            montoDestino = convertirMontoParaCuenta(montoUSD, data.currency, cuentaDestinoMoneda, parseNumeroFlexible(data.exchangeRate), parseNumeroFlexible(data.vesAmount), tasasEnBs);
+                        }
 
                         const comisionParaOrigen = cuentaOrigenMoneda === "BS" ? comisionVES : comisionUSD;
+
+                        // Validar saldo suficiente
+                        if (saldoOrigen < montoOrigen + comisionParaOrigen) {
+                            throw new Error("Saldo insuficiente");
+                        }
 
                         transaction.update(cuentaOrigenRef, { saldo: saldoOrigen - montoOrigen - comisionParaOrigen, actualizadoEn: serverTimestamp() });
                         transaction.update(cuentaDestinoRef, { saldo: saldoDestino + montoDestino, actualizadoEn: serverTimestamp() });
@@ -458,6 +518,7 @@ export default function TransactionForm() {
                     date: createVenezuelaDate(), type: "gasto", currency: "VES",
                     exchangeRate: rate.toFixed(2), vesAmount: "", accountId: data.accountId,
                     targetAccountId: "", hasCommission: false, commissionAmount: "", vesCommissionAmount: "",
+                    tasaCambio: "", montoDestino: "",
                 });
             } else if (transactionToEdit) {
                 // Al editar, ajustar saldo: revertir el anterior y aplicar el nuevo
@@ -550,6 +611,7 @@ export default function TransactionForm() {
                     date: createVenezuelaDate(), type: "gasto", currency: "VES",
                     exchangeRate: rate.toFixed(2), vesAmount: "", accountId: data.accountId,
                     targetAccountId: "", hasCommission: false, commissionAmount: "", vesCommissionAmount: "",
+                    tasaCambio: "", montoDestino: "",
                 });
             }
         } catch (error) {
@@ -610,6 +672,8 @@ export default function TransactionForm() {
                                 amount: "", description: "", category: "", subcategory: "", customCategory: "",
                                 date: createVenezuelaDate(), type: "gasto", currency: "VES",
                                 exchangeRate: rate.toFixed(2), vesAmount: "", accountId: "",
+                                targetAccountId: "", hasCommission: false, commissionAmount: "", vesCommissionAmount: "",
+                                tasaCambio: "", montoDestino: "",
                             });
                         }}
                         className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-xl transition-all"
@@ -907,6 +971,91 @@ export default function TransactionForm() {
                         )}
                     </div>
                 </div>
+
+                {/* Sección de Transferencia: tasa de cambio y monto destino */}
+                <AnimatePresence>
+                    {monedasDiferentes && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-3 overflow-hidden"
+                        >
+                            <div className="bg-blue-500/5 border border-blue-500/20 p-4 rounded-2xl space-y-3 backdrop-blur-md relative">
+                                <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full blur-2xl -mr-4 -mt-4 pointer-events-none"></div>
+
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-blue-500/10 rounded-lg text-blue-400 border border-blue-500/20">
+                                        <FiRepeat size={14} />
+                                    </div>
+                                    <span className="text-xs font-bold text-blue-300 uppercase tracking-wider">Conversión de Moneda</span>
+                                </div>
+
+                                {/* Tasa de Cambio */}
+                                <div>
+                                    <label className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                                        <span className="flex items-center gap-1">
+                                            <FiInfo size={10} />
+                                            Tasa de Cambio
+                                        </span>
+                                        <span className="text-[10px] text-blue-400/70 font-medium">
+                                            1 {cuentaOrigen!.moneda} → {cuentaDestino!.moneda}
+                                        </span>
+                                    </label>
+                                    <Controller
+                                        control={control}
+                                        name="tasaCambio"
+                                        render={({ field }) => (
+                                            <CustomCurrencyInput
+                                                placeholder="0.00"
+                                                decimalsLimit={4}
+                                                onValueChange={(value) => {
+                                                    field.onChange(value || "");
+                                                }}
+                                                value={field.value || ""}
+                                                className="py-2 text-xs font-bold"
+                                            />
+                                        )}
+                                    />
+                                </div>
+
+                                {/* Monto que recibe la cuenta destino */}
+                                <div>
+                                    <label className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-emerald-400 mb-1.5">
+                                        <FiTrendingUp size={12} />
+                                        Recibirá {cuentaDestino!.nombre}
+                                    </label>
+                                    <Controller
+                                        control={control}
+                                        name="montoDestino"
+                                        render={({ field }) => (
+                                            <CustomCurrencyInput
+                                                placeholder="0.00"
+                                                prefix={`${obtenerSimboloMoneda(cuentaDestino!.moneda)} `}
+                                                decimalsLimit={2}
+                                                onValueChange={(value) => {
+                                                    field.onChange(value || "");
+                                                    sincronizandoDestino.current = true;
+                                                    const montoDest = parseNumeroFlexible(value || "0");
+                                                    const tasa = parseNumeroFlexible(tasaCambio || "1");
+                                                    if (!isNaN(montoDest) && !isNaN(tasa) && tasa > 0) {
+                                                        const montoUSD = montoDest / tasa;
+                                                        setValue("amount", montoUSD.toFixed(4));
+                                                        if (currency === "VES" && exchangeRate) {
+                                                            setValue("vesAmount", (montoUSD * parseNumeroFlexible(exchangeRate)).toFixed(4));
+                                                        }
+                                                    }
+                                                }}
+                                                value={field.value || ""}
+                                                className="py-2 text-xs font-bold border-emerald-500/20 focus:ring-emerald-500/20"
+                                            />
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Category & Date (Grid) */}
                 <div className="grid grid-cols-12 gap-3 items-start">

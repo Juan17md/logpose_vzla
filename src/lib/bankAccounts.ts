@@ -184,20 +184,48 @@ export function obtenerEtiquetaOperacion(tipo: TipoOperacion): {
 /**
  * Convierte un monto a la moneda de una cuenta bancaria.
  * Si la cuenta es "BS", transforma el monto usando exchangeRate/originalAmount.
- * Si la cuenta está en USD/USDT/EUR, devuelve el monto tal cual.
+ * Si la cuenta está en USD/USDT/EUR y la transacción es VES, convierte usando la tasa.
+ * Para conversiones entre monedas no-BS, usa tasasEnBs como intermediario.
  */
 export function convertirMontoParaCuenta(
     monto: number,
     monedaTransaccion: string,
     monedaCuenta: MonedaSoportada,
     exchangeRate?: number,
-    originalAmount?: number
+    originalAmount?: number,
+    tasasEnBs?: Record<string, number>
 ): number {
     if (monedaCuenta === "BS") {
         if (monedaTransaccion === "VES") return originalAmount || monto;
         return monto * (exchangeRate || 1);
     }
+    if (monedaTransaccion === "VES" && monedaCuenta !== "BS") {
+        return (originalAmount || monto) / (exchangeRate || 1);
+    }
+    if (tasasEnBs && monedaTransaccion !== "VES" && monedaCuenta !== "BS") {
+        const tasaTransaccionEnBs = tasasEnBs[monedaTransaccion] || 1;
+        const tasaCuentaEnBs = tasasEnBs[monedaCuenta] || 1;
+        if (tasaTransaccionEnBs > 0 && tasaCuentaEnBs > 0) {
+            return monto * (tasaTransaccionEnBs / tasaCuentaEnBs);
+        }
+    }
     return monto;
+}
+
+/**
+ * Calcula la tasa de conversión entre dos monedas usando tasasEnBs como intermediario.
+ * Retorna cuántas unidades de monedaDestino equivalen a 1 unidad de monedaOrigen.
+ */
+export function calcularTasaConversion(
+    monedaOrigen: MonedaSoportada,
+    monedaDestino: MonedaSoportada,
+    tasasEnBs: Record<string, number>
+): number {
+    if (monedaOrigen === monedaDestino) return 1;
+    const tasaOrigen = monedaOrigen === "BS" ? 1 : (tasasEnBs[monedaOrigen] || 0);
+    const tasaDestino = monedaDestino === "BS" ? 1 : (tasasEnBs[monedaDestino] || 0);
+    if (tasaOrigen === 0 || tasaDestino === 0) return 0;
+    return tasaOrigen / tasaDestino;
 }
 
 /**
