@@ -347,12 +347,14 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between mb-1">
                             <p className="text-slate-400 text-sm font-medium">Balance Disponible</p>
                             <div className="flex items-center gap-2">
+                                {monedaBase !== "BS" && (
                                 <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-full border border-amber-500/20">
                                     <span className="text-xs">🇻🇪</span>
                                     <span className="text-[10px] text-amber-500 font-bold uppercase tracking-tighter">
-                                        {apiRates.usd.toFixed(2)}
+                                        {(tasasEnBs[monedaBase] || 0).toFixed(2)}
                                     </span>
                                 </div>
+                                )}
                                 <CurrencySelector 
                                     value={monedaBase} 
                                     onChange={actualizarMonedaBase} 
@@ -379,8 +381,8 @@ export default function DashboardPage() {
 
                         <p className="text-slate-500 text-sm font-medium">
                             {monedaBase === "BS" 
-                                ? `≈ $ ${isPrivacyMode ? "••••" : (stats.totalBalance / apiRates.usd).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
-                                : `≈ Bs. ${isPrivacyMode ? "••••" : (stats.totalBalance * apiRates.usd).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                ? `≈ $ ${isPrivacyMode ? "••••" : convertirMontoBaseAUsd(stats.totalBalance).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+                                : `≈ Bs. ${isPrivacyMode ? "••••" : convertirMontoBaseABs(stats.totalBalance).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                             }
                         </p>
 
