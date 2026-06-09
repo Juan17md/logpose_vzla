@@ -21,18 +21,18 @@ export function ejecutarConsultaNami(
 
     switch (tipo) {
         case "balance":
-            return `💰 Tu **saldo total** consolidado es **$${ctx.balance.toLocaleString("es-VE", { minimumFractionDigits: 2 })}**.`;
+            return `💰 Tu **saldo total** consolidado es **$${ctx.balance.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**.`;
 
         case "expenses":
-            return `📊 Llevas **$${ctx.monthlyExpense.toLocaleString("es-VE", { minimumFractionDigits: 2 })}** en gastos este mes.`;
+            return `📊 Llevas **$${ctx.monthlyExpense.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}** en gastos este mes.`;
 
         case "income":
-            return `📈 Tus **ingresos del mes** suman **$${ctx.monthlyIncome.toLocaleString("es-VE", { minimumFractionDigits: 2 })}**.`;
+            return `📈 Tus **ingresos del mes** suman **$${ctx.monthlyIncome.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**.`;
 
         case "debts": {
             if (ctx.debts.length === 0) return "🤝 No tienes deudas pendientes registradas.";
             const lineas = ctx.debts
-                .map((d) => `- **${d.person}**: $${d.amount.toLocaleString("es-VE", { minimumFractionDigits: 2 })}`)
+                .map((d) => `- **${d.person}**: $${d.amount.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
                 .join("\n");
             return `🤝 **Deudas pendientes:**\n\n${lineas}`;
         }
@@ -42,7 +42,7 @@ export function ejecutarConsultaNami(
             const lineas = ctx.goals
                 .map((g) => {
                     const pct = g.target > 0 ? Math.round((g.current / g.target) * 100) : 0;
-                    return `- **${g.name}**: $${g.current.toLocaleString("es-VE")} de $${g.target.toLocaleString("es-VE")} (${pct}%)`;
+                    return `- **${g.name}**: $${g.current.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} de $${g.target.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${pct}%)`;
                 })
                 .join("\n");
             return `🎯 **Tus metas:**\n\n${lineas}`;
@@ -63,11 +63,11 @@ export function ejecutarConsultaNami(
             const lineas = filtradas
                 .map(
                     (c) =>
-                        `- **${c.category}**: $${c.amount.toLocaleString("es-VE", { minimumFractionDigits: 2 })}`
+                        `- **${c.category}**: $${c.amount.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 )
                 .join("\n");
             return cat
-                ? `📂 Gasto en **${cat}** este mes: **$${filtradas[0].amount.toLocaleString("es-VE", { minimumFractionDigits: 2 })}**`
+                ? `📂 Gasto en **${cat}** este mes: **$${filtradas[0].amount.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**`
                 : `📂 **Gastos por categoría (mes):**\n\n${lineas}`;
         }
 
@@ -81,12 +81,12 @@ export function ejecutarConsultaNami(
                     : 0;
             return (
                 `📋 **Resumen del mes:**\n\n` +
-                `- Ingresos: **$${ctx.monthlyIncome.toLocaleString("es-VE", { minimumFractionDigits: 2 })}**\n` +
-                `- Gastos: **$${ctx.monthlyExpense.toLocaleString("es-VE", { minimumFractionDigits: 2 })}**\n` +
-                `- Balance total: **$${ctx.balance.toLocaleString("es-VE", { minimumFractionDigits: 2 })}**\n` +
+                `- Ingresos: **$${ctx.monthlyIncome.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**\n` +
+                `- Gastos: **$${ctx.monthlyExpense.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**\n` +
+                `- Balance total: **$${ctx.balance.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**\n` +
                 `- Ratio de ahorro: **${ahorro}%**` +
                 (ctx.monthlyBudget > 0
-                    ? `\n- Presupuesto: **$${ctx.monthlyBudget.toLocaleString("es-VE")}**`
+                    ? `\n- Presupuesto: **$${ctx.monthlyBudget.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**`
                     : "")
             );
         }

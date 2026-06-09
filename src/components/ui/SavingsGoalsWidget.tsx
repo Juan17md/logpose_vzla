@@ -49,7 +49,7 @@ export default function SavingsGoalsWidget() {
         const amt = parseFloat(progressAmount.replace(",", "."));
         try {
             await addContribution(showProgressModal.id, showProgressModal.name, amt, progressMethod);
-            toast.success(`Se agregaron $${amt.toLocaleString()} a tu meta`);
+            toast.success(`Se agregaron $${amt.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} a tu meta`);
             setShowProgressModal(null);
             setProgressAmount("");
         } catch (error) {

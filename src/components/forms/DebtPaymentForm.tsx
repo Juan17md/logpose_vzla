@@ -91,7 +91,7 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
                     <div className="flex items-baseline gap-1">
                         <span className="text-slate-400 text-lg font-medium">{debt.currency === "VES" ? "Bs." : "$"}</span>
                         <span className="text-3xl md:text-4xl font-black text-white tracking-tight">
-                            {remaining.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                            {remaining.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                     </div>
                     <div className={`mt-3 px-4 py-1.5 rounded-full border text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${

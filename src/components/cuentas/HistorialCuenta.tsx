@@ -144,7 +144,7 @@ export default function HistorialCuenta({ cuenta }: HistorialCuentaProps) {
                                     <p className={`font-black text-base tabular-nums ${
                                         esEntrada ? "text-emerald-400" : "text-red-400"
                                     }`}>
-                                        {esEntrada ? "+" : "-"}{obtenerSimboloMoneda(t.moneda)}{t.monto.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                        {esEntrada ? "+" : "-"}{obtenerSimboloMoneda(t.moneda)}{t.monto.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
                             </div>

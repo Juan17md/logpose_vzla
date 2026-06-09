@@ -729,7 +729,7 @@ export default function TransactionForm() {
                                             </div>
                                             <div className="flex items-center gap-2 mt-0.5">
                                                 <span className="text-xs text-amber-500/80 font-medium">
-                                                    {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                    {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                                 <span className="text-[10px] text-slate-500 italic uppercase tracking-tighter">
                                                     • {opcionCuenta.banco}
@@ -788,7 +788,7 @@ export default function TransactionForm() {
                                                 </div>
                                                 <div className="flex items-center gap-2 mt-0.5">
                                                     <span className="text-xs text-amber-500/80 font-medium">
-                                                        {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                        {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </span>
                                                     <span className="text-[10px] text-slate-500 italic uppercase tracking-tighter">
                                                         • {opcionCuenta.banco}

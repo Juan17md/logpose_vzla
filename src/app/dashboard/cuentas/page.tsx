@@ -209,7 +209,7 @@ export default function CuentasPage() {
                         <div className="flex items-baseline gap-2">
                             <span className="text-slate-500 font-bold">{obtenerSimboloMoneda(monedaBase)}</span>
                             <span className="text-3xl font-black text-white tabular-nums">
-                                {saldoTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                {saldoTotal.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                         </div>
                     </div>

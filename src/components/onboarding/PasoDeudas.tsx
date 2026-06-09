@@ -150,7 +150,7 @@ export default function PasoDeudas({ onSiguiente, onAnterior }: PasoDeudasProps)
                   <div>
                     <p className="text-sm text-white font-medium">{d.personName}</p>
                     <p className="text-xs text-slate-500">
-                      {d.type === "por_cobrar" ? "Me deben" : "Debo"} &middot; {d.currency === "USD" ? "$" : "Bs."}{d.amount.toLocaleString()}
+                      {d.type === "por_cobrar" ? "Me deben" : "Debo"} &middot; {d.currency === "USD" ? "$" : "Bs."}{d.amount.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>

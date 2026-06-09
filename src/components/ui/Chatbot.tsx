@@ -1291,14 +1291,14 @@ export default function Chatbot() {
             respuestaLocal = `💰 **Tus Saldos Actuales:**\n\n${saldosStr}\n\n**Saldo Total**: $${calcularSaldoTotal().toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         } else if (esGastos) {
             const categoriesStr = userContext.topCategories.length > 0
-                ? userContext.topCategories.map(c => `- **${c.category}**: $${c.amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`).join('\n')
+                ? userContext.topCategories.map(c => `- **${c.category}**: $${c.amount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`).join('\n')
                 : "No hay gastos registrados en este mes.";
-            respuestaLocal = `📊 **Gasto Mensual:**\n\n- Total gastado este mes: **$${userContext.monthlyExpense.toLocaleString('es-VE', { minimumFractionDigits: 2 })}**\n- Promedio diario: **$${userContext.averageDailyExpense.toLocaleString('es-VE', { minimumFractionDigits: 2 })}**\n\n**Top Categorías:**\n${categoriesStr}`;
+            respuestaLocal = `📊 **Gasto Mensual:**\n\n- Total gastado este mes: **$${userContext.monthlyExpense.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**\n- Promedio diario: **$${userContext.averageDailyExpense.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**\n\n**Top Categorías:**\n${categoriesStr}`;
         } else if (esMetas) {
             const metasStr = goals.length > 0
                 ? goals.map(g => {
                     const pct = g.targetAmount > 0 ? Math.round((g.currentAmount / g.targetAmount) * 100) : 0;
-                    return `- **${g.name}**: $${g.currentAmount.toLocaleString('es-VE')} de $${g.targetAmount.toLocaleString('es-VE')} (**${pct}%**)`;
+                    return `- **${g.name}**: $${g.currentAmount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} de $${g.targetAmount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (**${pct}%**)`;
                   }).join('\n')
                 : "No tienes metas de ahorro activas.";
             respuestaLocal = `🎯 **Metas de Ahorro:**\n\n${metasStr}`;
@@ -1312,7 +1312,7 @@ export default function Chatbot() {
             respuestaLocal = `📋 **Listas de Compras:**\n\n${listasStr}`;
         } else if (esPagos) {
             const fijosStr = fixedExpenses.length > 0
-                ? fixedExpenses.map(e => `- **${e.title || e.description}**: $${e.amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })} (Día ${e.dueDay} de cada mes)`).join('\n')
+                ? fixedExpenses.map(e => `- **${e.title || e.description}**: $${e.amount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Día ${e.dueDay} de cada mes)`).join('\n')
                 : "No tienes gastos fijos registrados.";
             respuestaLocal = `📅 **Gastos Fijos y Suscripciones:**\n\n${fijosStr}`;
         } else if (esDeudas) {
@@ -1322,7 +1322,7 @@ export default function Chatbot() {
                     const pagado = d.payments?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
                     const restante = d.amount - pagado;
                     const tipo = d.type === "por_cobrar" ? "Por cobrar a" : "Por pagar a";
-                    return `- ${tipo} **${d.personName}**: $${restante.toLocaleString('es-VE', { minimumFractionDigits: 2 })} (Original: $${d.amount.toLocaleString('es-VE')})`;
+                    return `- ${tipo} **${d.personName}**: $${restante.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Original: $${d.amount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
                   }).join('\n')
                 : "No tienes deudas pendientes.";
             respuestaLocal = `🤝 **Deudas Pendientes:**\n\n${deudasStr}`;

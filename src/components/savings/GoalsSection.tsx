@@ -136,14 +136,14 @@ export default function GoalsSection({ userId }: { userId: string }) {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-white text-lg leading-tight">{goal.name}</h4>
-                                        <p className="text-slate-500 text-xs">Meta: ${goal.targetAmount.toLocaleString()}</p>
+                                        <p className="text-slate-500 text-xs">Meta: ${goal.targetAmount.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm font-medium">
-                                    <span className="text-white">${goal.currentAmount.toLocaleString()}</span>
+                                    <span className="text-white">${goal.currentAmount.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     <span className="text-emerald-400">{progress.toFixed(1)}%</span>
                                 </div>
                                 <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden">

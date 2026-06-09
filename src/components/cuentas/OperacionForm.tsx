@@ -82,15 +82,15 @@ export default function OperacionForm({
 
             if (origen === "BS") {
                 const tasa = tasasEnBs[destino as keyof typeof tasasEnBs];
-                if (tasa) setValue("tasaCambio", (1 / tasa).toFixed(4));
+                if (tasa) setValue("tasaCambio", (1 / tasa).toFixed(2));
             } else if (destino === "BS") {
                 const tasa = tasasEnBs[origen as keyof typeof tasasEnBs];
-                if (tasa) setValue("tasaCambio", tasa.toFixed(4));
+                if (tasa) setValue("tasaCambio", tasa.toFixed(2));
             } else {
                 const tasaOrigenEnBs = tasasEnBs[origen as keyof typeof tasasEnBs];
                 const tasaDestinoEnBs = tasasEnBs[destino as keyof typeof tasasEnBs];
                 if (tasaOrigenEnBs && tasaDestinoEnBs) {
-                    setValue("tasaCambio", (tasaOrigenEnBs / tasaDestinoEnBs).toFixed(4));
+                    setValue("tasaCambio", (tasaOrigenEnBs / tasaDestinoEnBs).toFixed(2));
                 }
             }
         }
@@ -216,7 +216,7 @@ export default function OperacionForm({
                                             <div className="flex items-center justify-between w-full">
                                                 <span className="font-bold">{opt.name}</span>
                                                 <span className="text-[10px] opacity-60 font-black tabular-nums">
-                                                    {obtenerSimboloMoneda(opt.moneda as MonedaSoportada)} {(opt.saldo as number).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                    {obtenerSimboloMoneda(opt.moneda as MonedaSoportada)} {(opt.saldo as number).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
                                         )}
@@ -259,7 +259,7 @@ export default function OperacionForm({
                                                 <div className="flex items-center justify-between w-full">
                                                     <span className="font-bold">{opt.name}</span>
                                                     <span className="text-[10px] opacity-60 font-black tabular-nums">
-                                                        {obtenerSimboloMoneda(opt.moneda as MonedaSoportada)} {(opt.saldo as number).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                        {obtenerSimboloMoneda(opt.moneda as MonedaSoportada)} {(opt.saldo as number).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </span>
                                                 </div>
                                             )}
@@ -299,7 +299,7 @@ export default function OperacionForm({
                             </div>
                             {cuentaOrigen && (tipo === "retiro" || tipo === "transferencia" || tipo === "pago") && (
                                 <p className="text-[10px] text-slate-500 mt-1 ml-1 font-bold">
-                                    Disponible: <span className="text-white">{obtenerSimboloMoneda(cuentaOrigen.moneda)} {cuentaOrigen.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                                    Disponible: <span className="text-white">{obtenerSimboloMoneda(cuentaOrigen.moneda)} {cuentaOrigen.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </p>
                             )}
                         </div>
@@ -363,7 +363,7 @@ export default function OperacionForm({
                                     <div className="text-[10px] text-emerald-400 mt-2 bg-emerald-500/10 px-4 py-3 rounded-xl border border-emerald-500/20 flex justify-between items-center">
                                         <span className="font-black uppercase tracking-wider">Recibirá:</span>
                                         <span className="text-sm font-black tabular-nums">
-                                            {obtenerSimboloMoneda(cuentaDestino!.moneda)} {(parseNumeroFlexible(monto) * parseNumeroFlexible(tasaCambio)).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                            {obtenerSimboloMoneda(cuentaDestino!.moneda)} {(parseNumeroFlexible(monto) * parseNumeroFlexible(tasaCambio)).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                     </div>
                                 )}

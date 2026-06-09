@@ -586,7 +586,7 @@ export default function ReportsPage() {
                                         <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: ["#10b981", "#ef4444", "#06b6d4", "#f59e0b", "#8b5cf6", "#ec4899"][index % 6] }}></span>
                                         <span className="text-slate-300 capitalize font-medium">{item.name}</span>
                                     </div>
-                                    <span className="font-bold text-white">{obtenerSimboloMoneda(monedaBase)} {item.value.toLocaleString()}</span>
+                                    <span className="font-bold text-white">{obtenerSimboloMoneda(monedaBase)} {item.value.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                             ))}
                         </div>

@@ -80,7 +80,7 @@ export default function CuentaCard({
                     "text-sm font-bold shrink-0",
                     cuenta.excluirDelTotal ? "text-slate-600 line-through" : "text-white"
                 )}>
-                    {obtenerSimboloMoneda(cuenta.moneda)} {cuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                    {obtenerSimboloMoneda(cuenta.moneda)} {cuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
             </button>
         );

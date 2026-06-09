@@ -274,11 +274,11 @@ export default function FixedExpensesPage() {
                             <div className="flex justify-between items-end">
                                 <div>
                                     <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Pagado</p>
-                                    <p className="text-xl font-bold text-white">${totalPaid.toLocaleString("es-ES")}</p>
+                                    <p className="text-xl font-bold text-white">${totalPaid.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                                 <div className="text-right text-slate-400">
                                     <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Total</p>
-                                    <p className="text-lg font-medium">${totalMonthly.toLocaleString("es-ES")}</p>
+                                    <p className="text-lg font-medium">${totalMonthly.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                             </div>
                             <div className="relative h-2 w-full bg-slate-800 rounded-full overflow-hidden">
@@ -616,7 +616,7 @@ export default function FixedExpensesPage() {
                             {obtenerSimboloMoneda(expense.currency === "BS" ? "BS" : "USD")}
                         </span>
                         <span className="text-4xl font-black text-white tracking-tighter">
-                            {Math.floor(expense.amount).toLocaleString("es-ES")}
+                            {Math.floor(expense.amount).toLocaleString("es-ES", { maximumFractionDigits: 0 })}
                             <span className="text-xl text-slate-500 font-bold">
                                 ,{(expense.amount % 1).toFixed(2).split('.')[1] || '00'}
                             </span>

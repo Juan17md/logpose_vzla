@@ -150,15 +150,15 @@ export default function PasoResumen({ onAnterior }: PasoResumenProps) {
             bg="bg-amber-500/5 border-amber-500/10"
           >
             <p className="text-xs text-slate-300">
-              Salario: ${perfil.monthlySalary.toLocaleString()} &middot;
-              Presupuesto: ${perfil.monthlyBudget.toLocaleString()} &middot;
+              Salario: ${perfil.monthlySalary.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &middot;
+              Presupuesto: ${perfil.monthlyBudget.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &middot;
               Base: {perfil.monedaBase === "USD" ? "$ USD" : "Bs. VES"}
             </p>
             {(perfil.savingsPhysical > 0 || perfil.savingsUSDT > 0) && (
               <p className="text-[11px] text-slate-500 mt-0.5">
-                Ahorros: {perfil.savingsPhysical > 0 ? `$${perfil.savingsPhysical.toLocaleString()} fís` : ""}
+                Ahorros: {perfil.savingsPhysical > 0 ? `$${perfil.savingsPhysical.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} fís` : ""}
                 {perfil.savingsPhysical > 0 && perfil.savingsUSDT > 0 ? " + " : ""}
-                {perfil.savingsUSDT > 0 ? `₮${perfil.savingsUSDT.toLocaleString()} USDT` : ""}
+                {perfil.savingsUSDT > 0 ? `₮${perfil.savingsUSDT.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT` : ""}
               </p>
             )}
           </ResumenCard>
@@ -187,7 +187,7 @@ export default function PasoResumen({ onAnterior }: PasoResumenProps) {
             <div className="flex flex-wrap gap-1.5 mt-1">
               {metas.map((m, i) => (
                 <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800/50 text-slate-300 border border-slate-700/30">
-                  {m.name}: ${m.targetAmount.toLocaleString()}
+                  {m.name}: ${m.targetAmount.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               ))}
             </div>

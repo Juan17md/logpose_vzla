@@ -159,7 +159,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
                   <div>
                     <p className="text-sm text-white font-medium">{g.title}</p>
                     <p className="text-xs text-slate-500">
-                      {g.currency === "USD" ? "$" : "Bs."}{g.amount.toLocaleString()} &middot; Día {g.dueDay}
+                      {g.currency === "USD" ? "$" : "Bs."}{g.amount.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &middot; Día {g.dueDay}
                     </p>
                   </div>
                 </div>

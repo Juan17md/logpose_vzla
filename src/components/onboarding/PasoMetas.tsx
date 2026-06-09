@@ -115,7 +115,7 @@ export default function PasoMetas({ onSiguiente, onAnterior }: PasoMetasProps) {
                   </div>
                   <div>
                     <p className="text-sm text-white font-medium">{m.name}</p>
-                    <p className="text-xs text-slate-500">$ {m.targetAmount.toLocaleString()} objetivo</p>
+                    <p className="text-xs text-slate-500">$ {m.targetAmount.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} objetivo</p>
                   </div>
                 </div>
                 <button

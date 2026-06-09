@@ -299,7 +299,7 @@ export default function ShoppingListsPage() {
                                                     </span>
                                                     <span className="h-1 w-1 bg-slate-700 rounded-full"></span>
                                                     <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                                                        ${calculateTotal(list.items || []).toLocaleString("es-ES")}
+                                                        ${calculateTotal(list.items || []).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </span>
                                                 </div>
                                             </div>
@@ -389,7 +389,7 @@ export default function ShoppingListsPage() {
 
                                                         <div className="flex flex-wrap items-center gap-3">
                                                             <div className="bg-emerald-500/10 px-5 py-2.5 rounded-2xl border border-emerald-500/20 text-emerald-400 font-black text-xl shadow-lg shadow-emerald-500/5">
-                                                                ${total.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                                ${total.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                             </div>
                                                             <div className="bg-slate-800/40 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-slate-700/30 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
                                                                 Bs. {(total * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 0 })}
@@ -507,7 +507,7 @@ export default function ShoppingListsPage() {
                                                                     <div className="text-right">
                                                                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Subtotal Item</p>
                                                                         <p className={`text-xl md:text-2xl font-black tracking-tight ${item.completed ? 'text-slate-500' : 'text-white'}`}>
-                                                                            ${(item.price * item.quantity).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                                                                            ${(item.price * item.quantity).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                         </p>
                                                                     </div>
                                                                 </div>

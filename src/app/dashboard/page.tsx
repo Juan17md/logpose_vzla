@@ -379,8 +379,8 @@ export default function DashboardPage() {
 
                         <p className="text-slate-500 text-sm font-medium">
                             {monedaBase === "BS" 
-                                ? `≈ $ ${isPrivacyMode ? "••••" : (stats.totalBalance / apiRates.usd).toLocaleString("es-ES", { minimumFractionDigits: 2 })} USD`
-                                : `≈ Bs. ${isPrivacyMode ? "••••" : (stats.totalBalance * apiRates.usd).toLocaleString("es-VE", { minimumFractionDigits: 2 })}`
+                                ? `≈ $ ${isPrivacyMode ? "••••" : (stats.totalBalance / apiRates.usd).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+                                : `≈ Bs. ${isPrivacyMode ? "••••" : (stats.totalBalance * apiRates.usd).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                             }
                         </p>
 
@@ -616,7 +616,7 @@ export default function DashboardPage() {
                                     Diario
                                 </h4>
                                 <p className="text-violet-400 font-semibold text-sm">
-                                    {isPrivacyMode ? "••••" : `${obtenerSimboloMoneda(monedaBase)}${stats.dailyAverage.toLocaleString("es-ES", { minimumFractionDigits: 2 })}`} <span className="text-slate-600 text-xs text-normal">/día</span>
+                                    {isPrivacyMode ? "••••" : `${obtenerSimboloMoneda(monedaBase)}${stats.dailyAverage.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} <span className="text-slate-600 text-xs text-normal">/día</span>
                                 </p>
                             </div>
                         </motion.div>
