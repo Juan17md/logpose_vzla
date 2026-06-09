@@ -468,6 +468,28 @@ export default function DashboardPage() {
                             <span className="text-[10px] font-semibold text-red-400">Deudas</span>
                         </MotionLink>
 
+                        <MotionLink
+                            href="/dashboard/cuentas"
+                            whileTap={{ scale: 0.9 }}
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-sky-500/20 to-sky-600/10 border border-sky-500/30 rounded-2xl transition-colors"
+                        >
+                            <div className="w-10 h-10 bg-sky-500/30 rounded-xl flex items-center justify-center">
+                                <FiCreditCard className="text-sky-400" size={22} />
+                            </div>
+                            <span className="text-[10px] font-semibold text-sky-400">Cuentas</span>
+                        </MotionLink>
+
+                        <MotionLink
+                            href="/dashboard/categorias"
+                            whileTap={{ scale: 0.9 }}
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-pink-500/20 to-pink-600/10 border border-pink-500/30 rounded-2xl transition-colors"
+                        >
+                            <div className="w-10 h-10 bg-pink-500/30 rounded-xl flex items-center justify-center">
+                                <FiTag className="text-pink-400" size={22} />
+                            </div>
+                            <span className="text-[10px] font-semibold text-pink-400">Categorías</span>
+                        </MotionLink>
+
                         {/* Spacer final */}
                         <div className="flex-none w-4"></div>
                     </div>
