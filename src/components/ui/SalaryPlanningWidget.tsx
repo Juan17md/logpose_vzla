@@ -31,7 +31,7 @@ export default function SalaryPlanningWidget({ userId }: Props) {
     const handleSetSalary = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        const newSalary = editAmount === "" || isNaN(parseFloat(editAmount)) ? 0 : parseFloat(editAmount);
+        const newSalary = editAmount === "" || isNaN(parseFloat(editAmount.replace(",", "."))) ? 0 : parseFloat(editAmount.replace(",", "."));
         try {
             const userRef = doc(db, "users", userId);
             await updateDoc(userRef, { monthlySalary: newSalary });
@@ -104,9 +104,8 @@ export default function SalaryPlanningWidget({ userId }: Props) {
                     <p className="text-sm text-slate-400">Ingresa tu ingreso fijo mensual para planificar mejor.</p>
                     <div>
                         <input
-                            type="number"
-                            step="0.01"
-                            min="0"
+                            type="text"
+                            inputMode="decimal"
                             value={editAmount}
                             onChange={(e) => setEditAmount(e.target.value)}
                             className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-violet-500/50 transition-colors"

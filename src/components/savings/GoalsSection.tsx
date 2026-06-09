@@ -49,7 +49,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
         try {
             await addDoc(collection(db, "users", userId, "saving_goals"), {
                 name: newGoalName,
-                targetAmount: parseFloat(newGoalTarget),
+                targetAmount: parseFloat(newGoalTarget.replace(",", ".")),
                 currentAmount: 0,
                 color: newGoalColor,
                 createdAt: serverTimestamp()
@@ -79,13 +79,13 @@ export default function GoalsSection({ userId }: { userId: string }) {
 
     const confirmAddProgress = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!showProgressModal || !progressAmount || parseFloat(progressAmount) <= 0) {
+        if (!showProgressModal || !progressAmount || parseFloat(progressAmount.replace(",", ".")) <= 0) {
             toast.error("Ingresa un monto válido");
             return;
         }
 
         try {
-            const numAmount = parseFloat(progressAmount);
+            const numAmount = parseFloat(progressAmount.replace(",", "."));
             const goalRef = doc(db, "users", userId, "saving_goals", showProgressModal.id);
             await updateDoc(goalRef, {
                 currentAmount: increment(numAmount)
@@ -206,10 +206,9 @@ export default function GoalsSection({ userId }: { userId: string }) {
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-1">Monto Objetivo ($)</label>
                                 <input
-                                    type="number"
+                                    type="text"
+                                    inputMode="decimal"
                                     required
-                                    min="1"
-                                    step="0.01"
                                     value={newGoalTarget}
                                     onChange={(e) => setNewGoalTarget(e.target.value)}
                                     placeholder="0.00"
@@ -250,13 +249,12 @@ export default function GoalsSection({ userId }: { userId: string }) {
                     <div>
                         <label className="block text-sm font-medium text-slate-400 mb-1">Monto a agregar ($)</label>
                         <input
-                            type="number"
-                            min="0.01"
-                            step="0.01"
+                            type="text"
+                            inputMode="decimal"
                             required
                             value={progressAmount}
                             onChange={(e) => setProgressAmount(e.target.value)}
-                            placeholder="Ej. 50.00"
+                            placeholder="0.00"
                             className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-violet-500 transition-colors"
                         />
                     </div>

@@ -45,7 +45,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
             return;
         }
 
-        const newLimit = editAmount === "" || isNaN(parseFloat(editAmount)) ? 0 : parseFloat(editAmount);
+        const newLimit = editAmount === "" || isNaN(parseFloat(editAmount.replace(",", "."))) ? 0 : parseFloat(editAmount.replace(",", "."));
 
         try {
             const userRef = doc(db, "users", userId);
@@ -90,9 +90,8 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
                     <div className="space-y-4">
                         <p className="text-sm text-slate-400">Te avisaremos si tus gastos superan este monto.</p>
                         <input
-                            type="number"
-                            step="0.01"
-                            min="0"
+                            type="text"
+                            inputMode="decimal"
                             value={editAmount}
                             onChange={(e) => setEditAmount(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') guardarLimite(); }}
@@ -167,9 +166,8 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
                 <div className="space-y-4">
                     <p className="text-sm text-slate-400">Te avisaremos si tus gastos superan este monto.</p>
                     <input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                        type="text"
+                        inputMode="decimal"
                         value={editAmount}
                         onChange={(e) => setEditAmount(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') guardarLimite(); }}

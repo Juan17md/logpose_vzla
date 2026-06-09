@@ -28,7 +28,7 @@ export default function SavingsGoalsWidget() {
         if (!newGoalName || !newGoalTarget) return;
 
         try {
-            await addGoal(newGoalName, parseFloat(newGoalTarget));
+            await addGoal(newGoalName, parseFloat(newGoalTarget.replace(",", ".")));
             toast.success("Meta creada exitosamente");
             setShowAddModal(false);
             setNewGoalName("");
@@ -41,15 +41,15 @@ export default function SavingsGoalsWidget() {
 
     const confirmAddProgress = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!showProgressModal || !progressAmount || isNaN(Number(progressAmount))) {
+        if (!showProgressModal || !progressAmount || isNaN(Number(progressAmount.replace(",", ".")))) {
             toast.error("Monto inválido");
             return;
         }
 
-        const amt = parseFloat(progressAmount);
+        const amt = parseFloat(progressAmount.replace(",", "."));
         try {
             await addContribution(showProgressModal.id, showProgressModal.name, amt, progressMethod);
-            toast.success(`Se agregaron $${amt} a tu meta`);
+            toast.success(`Se agregaron $${amt.toLocaleString()} a tu meta`);
             setShowProgressModal(null);
             setProgressAmount("");
         } catch (error) {
@@ -163,10 +163,9 @@ export default function SavingsGoalsWidget() {
                     <div>
                         <label className="block text-sm font-medium text-slate-400 mb-1">Monto Objetivo ($)</label>
                         <input
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
                             required
-                            min="1"
-                            step="0.01"
                             value={newGoalTarget}
                             onChange={(e) => setNewGoalTarget(e.target.value)}
                             placeholder="0.00"
@@ -205,9 +204,8 @@ export default function SavingsGoalsWidget() {
                     <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">Monto a agregar ($)</label>
                         <input
-                            type="number"
-                            step="0.01"
-                            min="0.01"
+                            type="text"
+                            inputMode="decimal"
                             required
                             value={progressAmount}
                             onChange={(e) => setProgressAmount(e.target.value)}

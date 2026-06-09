@@ -255,7 +255,7 @@ export default function DashboardPage() {
         try {
             await runTransaction(db, async (transaction) => {
                 for (const [id, newValue] of Object.entries(adjustingBalances)) {
-                    const amount = parseFloat(newValue);
+                    const amount = parseFloat(newValue.replace(",", "."));
                     if (isNaN(amount)) continue;
 
                     const cuenta = cuentas.find(c => c.id === id);
@@ -1004,8 +1004,8 @@ export default function DashboardPage() {
                                         <span className="text-slate-500 font-bold text-lg">{obtenerSimboloMoneda(cuenta.moneda)}</span>
                                     </div>
                                     <input
-                                        type="number"
-                                        step="0.01"
+                                        type="text"
+                                        inputMode="decimal"
                                         value={adjustingBalances[cuenta.id] || ''}
                                         onChange={(e) => handleBalanceChange(cuenta.id, e.target.value)}
                                         className="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white font-bold text-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all placeholder:text-slate-700"

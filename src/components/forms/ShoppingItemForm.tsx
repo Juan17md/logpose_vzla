@@ -13,14 +13,13 @@ interface ShoppingItemFormProps {
 
 export default function ShoppingItemForm({ initialData, onSubmit, onCancel, isLoading }: ShoppingItemFormProps) {
     const [name, setName] = useState(initialData?.name || "");
-    const [quantity, setQuantity] = useState(initialData?.quantity?.toString() || "1");
+    const [quantity, setQuantity] = useState(initialData?.quantity?.toString() || "");
     // const [price, setPrice] = useState(initialData?.price?.toString() || "");
 
-    // To reset form after add
     useEffect(() => {
         if (!initialData) {
             setName("");
-            setQuantity("1");
+            setQuantity("");
         }
     }, [initialData]);
 
@@ -29,13 +28,13 @@ export default function ShoppingItemForm({ initialData, onSubmit, onCancel, isLo
         
         await onSubmit({
             name,
-            quantity: parseInt(quantity) || 1,
+            quantity: parseInt(quantity.replace(",", ".")) || 1,
             price: 0, // Using 0 for new items as they typically input price on purchase
         });
 
         if (!initialData) {
             setName("");
-            setQuantity("1");
+            setQuantity("");
         }
     };
 
@@ -57,9 +56,9 @@ export default function ShoppingItemForm({ initialData, onSubmit, onCancel, isLo
                 />
                 
                 <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     required
-                    min="1"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
                     className="col-span-1 h-[46px] bg-[#0A0E1A]/80 border border-white/6 rounded-xl px-3 text-white text-sm font-medium outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-white/12 hover:bg-[#0A0E1A] focus:ring-1 focus:ring-amber-500/30 focus:border-amber-500/40 focus:shadow-[0_0_15px_rgba(202,138,4,0.05)] text-center"

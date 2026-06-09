@@ -22,7 +22,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
   const [amountStr, setAmountStr] = useState("");
   const [currency, setCurrency] = useState<"USD" | "BS">("USD");
   const [category, setCategory] = useState(CATEGORIAS[0]);
-  const [dueDay, setDueDay] = useState("1");
+  const [dueDay, setDueDay] = useState("");
 
   const parseNum = (v: string) => parseFloat(v.replace(/[^0-9.,]/g, "").replace(",", ".")) || 0;
 
@@ -35,7 +35,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
     setAmountStr("");
     setCurrency("USD");
     setCategory(CATEGORIAS[0]);
-    setDueDay("1");
+    setDueDay("");
   };
 
   return (
@@ -115,11 +115,13 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
               Día de pago (1-31)
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               min={1}
               max={31}
               value={dueDay}
               onChange={e => setDueDay(e.target.value)}
+              placeholder="1-31"
               className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all duration-300 text-sm"
             />
           </div>
