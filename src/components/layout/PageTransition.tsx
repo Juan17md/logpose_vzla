@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface PageTransitionProps {
     children: React.ReactNode;
@@ -11,6 +11,7 @@ interface PageTransitionProps {
 export default function PageTransition({ children }: PageTransitionProps) {
     const pathname = usePathname();
     const [esMovil, setEsMovil] = useState(false);
+    const direccionNavegacion = useRef<"adelante" | "atras">("adelante");
 
     useEffect(() => {
         const checkEsMovil = () => {
@@ -21,12 +22,20 @@ export default function PageTransition({ children }: PageTransitionProps) {
         return () => window.removeEventListener("resize", checkEsMovil);
     }, []);
 
-    // En móviles deslizamiento lateral tipo iOS; en desktop desvanecimiento vertical suave.
+    // Detecta la dirección de navegación comparando profundidad de rutas
+    useEffect(() => {
+        const segmentos = pathname.split("/").filter(Boolean);
+        direccionNavegacion.current = segmentos.length > 2 ? "adelante" : "atras";
+    }, [pathname]);
+
+    // popLayout: la salida se superpone a la entrada sin parpadeo (ideal para iOS swipe-back)
+    // En móvil: fade rápido sin desplazamiento para evitar conflicto con el gesto nativo
+    // En desktop: fade + desplazamiento vertical suave con popLayout superpuesto
     const variants = {
         initial: {
             opacity: 0,
-            x: esMovil ? 24 : 0,
-            y: esMovil ? 0 : 8,
+            x: esMovil ? (direccionNavegacion.current === "adelante" ? 20 : -20) : 0,
+            y: esMovil ? 0 : 12,
         },
         animate: {
             opacity: 1,
@@ -35,13 +44,13 @@ export default function PageTransition({ children }: PageTransitionProps) {
         },
         exit: {
             opacity: 0,
-            x: esMovil ? -24 : 0,
+            x: esMovil ? (direccionNavegacion.current === "adelante" ? -20 : 20) : 0,
             y: esMovil ? 0 : -8,
         }
     };
 
     return (
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
                 key={pathname}
                 variants={variants}
@@ -49,9 +58,9 @@ export default function PageTransition({ children }: PageTransitionProps) {
                 animate="animate"
                 exit="exit"
                 transition={{
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 32,
+                    type: "tween",
+                    duration: esMovil ? 0.15 : 0.25,
+                    ease: [0.25, 0.46, 0.45, 0.94],
                 }}
                 className="w-full"
             >
