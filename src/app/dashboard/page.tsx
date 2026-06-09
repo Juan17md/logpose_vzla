@@ -231,12 +231,7 @@ export default function DashboardPage() {
     const handleUpdateBalanceClick = (e: React.MouseEvent) => {
         e.stopPropagation();
 
-        const initialBalances: Record<string, string> = {};
-        cuentas.forEach(c => {
-            const roundedSaldo = Math.round(c.saldo * 100) / 100;
-            initialBalances[c.id] = roundedSaldo.toString();
-        });
-        setAdjustingBalances(initialBalances);
+        setAdjustingBalances({});
         setShowAdjustModal(true);
     };
 
