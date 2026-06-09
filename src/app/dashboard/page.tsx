@@ -1056,14 +1056,21 @@ export default function DashboardPage() {
                                 </div>
                             )}
                             renderValue={(opt) => (
-                                <div className="flex items-center justify-between w-full pr-2 text-left">
-                                    <div className="flex items-center gap-2 overflow-hidden mr-2">
-                                        <span className="truncate font-semibold">{opt.name}</span>
-                                        <span className="text-[10px] text-slate-500 shrink-0">({opt.banco as string})</span>
+                                <div className="flex flex-col text-left whitespace-normal w-full pr-2">
+                                    <div className="flex items-center justify-between w-full">
+                                        <span className="font-bold text-slate-100 truncate text-sm mr-2">{opt.name}</span>
+                                        <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md border border-slate-700/50 font-black shrink-0">
+                                            {opt.moneda as string}
+                                        </span>
                                     </div>
-                                    <span className="text-amber-500 font-black text-xs shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg ml-auto">
-                                        {obtenerSimboloMoneda(opt.moneda as any)} {(opt.saldo as number).toLocaleString("es-ES", { maximumFractionDigits: 2 })}
-                                    </span>
+                                    <div className="flex items-center justify-between w-full mt-1.5">
+                                        <span className="text-xs text-slate-400 truncate mr-2">
+                                            {opt.banco as string}
+                                        </span>
+                                        <span className="text-amber-500 font-black text-xs shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg ml-auto">
+                                            {obtenerSimboloMoneda(opt.moneda as any)} {(opt.saldo as number).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
                                 </div>
                             )}
                         />
