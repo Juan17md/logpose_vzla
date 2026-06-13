@@ -635,7 +635,8 @@ export default function TransactionForm() {
             id: c.nombre,
             name: c.nombre,
             value: c.nombre,
-            icono: Icono
+            icono: Icono,
+            color: c.color
         };
     });
 
@@ -1079,9 +1080,10 @@ export default function TransactionForm() {
                                             icon={<FiTag size={12} />}
                                             renderOption={(opt) => {
                                                 const Icono = opt.icono as IconType;
+                                                const color = (opt as any).color || "#8b5cf6";
                                                 return (
                                                     <div className="flex items-center gap-2">
-                                                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: `${color}20`, color, borderColor: `${color}40`, borderWidth: 1 }}>
                                                             <Icono size={12} />
                                                         </span>
                                                         <span className="font-semibold text-xs text-slate-100">{opt.name}</span>
@@ -1090,9 +1092,10 @@ export default function TransactionForm() {
                                             }}
                                             renderValue={(opt) => {
                                                 const Icono = opt.icono as IconType;
+                                                const color = (opt as any).color || "#8b5cf6";
                                                 return (
                                                     <div className="flex items-center gap-2">
-                                                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: `${color}20`, color, borderColor: `${color}40`, borderWidth: 1 }}>
                                                             <Icono size={12} />
                                                         </span>
                                                         <span className="font-semibold text-xs text-slate-100">{opt.name}</span>
