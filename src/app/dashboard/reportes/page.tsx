@@ -117,14 +117,16 @@ export default function ReportsPage() {
             }
         });
 
+        const incomeUsd = convertirAUsd(income);
+        const expenseUsd = convertirAUsd(expense);
         const categoryData = Object.entries(categoryExpenses).map(([name, value]) => ({
             name,
             value: convertirAUsd(value)
         })).sort((a, b) => b.value - a.value);
 
-        const balanceCalculado = Math.round((income - expense) * 100) / 100;
+        const balanceCalculado = Math.round((incomeUsd - expenseUsd) * 100) / 100;
         const balanceFinal = Object.is(balanceCalculado, -0) ? 0 : balanceCalculado;
-        return { income, expense, balance: balanceFinal, categoryData };
+        return { income: incomeUsd, expense: expenseUsd, balance: balanceFinal, categoryData };
     }, [filteredTransactions, monedaBase, tasasEnBsEfectivas, apiRates.usd]);
 
     const savingsStats = useMemo(() => {
@@ -145,10 +147,12 @@ export default function ReportsPage() {
             }
         });
 
+        const totalDepositedUsd = convertirAUsd(totalDeposited);
+        const totalWithdrawnUsd = convertirAUsd(totalWithdrawn);
         return {
-            totalDeposited,
-            totalWithdrawn,
-            netSavings: totalDeposited - totalWithdrawn
+            totalDeposited: totalDepositedUsd,
+            totalWithdrawn: totalWithdrawnUsd,
+            netSavings: totalDepositedUsd - totalWithdrawnUsd
         };
     }, [savingsTransactions, selectedMonth, selectedYear, monedaBase, apiRates]);
 
@@ -185,6 +189,7 @@ export default function ReportsPage() {
             daysInSelectedPeriod = now.getDate();
         }
         const dailyAverage = stats.expense / (daysInSelectedPeriod || 1);
+        const peakAmountUsd = convertirAUsd(peakAmount);
 
         // 3. Comparativa con el mes anterior (MoM)
         const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
@@ -221,14 +226,14 @@ export default function ReportsPage() {
 
         return {
             peakDay,
-            peakAmount,
+            peakAmount: peakAmountUsd,
             dailyAverage,
             incomeChangePct,
             expenseChangePct,
             expenseToIncomeRatio,
             savingRate
         };
-    }, [filteredTransactions, stats, transactions, selectedMonth, selectedYear, savingsStats, monedaBase, tasasEnBsEfectivas]);
+    }, [filteredTransactions, stats, transactions, selectedMonth, selectedYear, savingsStats, monedaBase, tasasEnBsEfectivas, apiRates.usd]);
 
     const MONTHS = [
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -314,7 +319,7 @@ export default function ReportsPage() {
                             <FiTrendingUp size={20} />
                         </div>
                         <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-1">Ingresos</p>
-                        <p className="text-2xl font-black text-white tracking-tight">{obtenerSimboloMoneda(monedaBase)} {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                        <p className="text-2xl font-black text-white tracking-tight">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
                     <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-red-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
@@ -323,7 +328,7 @@ export default function ReportsPage() {
                             <FiTrendingDown size={20} />
                         </div>
                         <p className="text-[10px] text-red-500 font-black uppercase tracking-widest mb-1">Gastos</p>
-                        <p className="text-2xl font-black text-white tracking-tight">{obtenerSimboloMoneda(monedaBase)} {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                        <p className="text-2xl font-black text-white tracking-tight">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
                     <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-amber-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
@@ -333,7 +338,7 @@ export default function ReportsPage() {
                         </div>
                         <p className="text-[10px] text-amber-500 font-black uppercase tracking-widest mb-1">Balance</p>
                         <p className={`text-2xl font-black tracking-tight ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
-                            {obtenerSimboloMoneda(monedaBase)} {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            $ {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
                     </div>
 
@@ -344,7 +349,7 @@ export default function ReportsPage() {
                         </div>
                         <p className="text-[10px] text-violet-500 font-black uppercase tracking-widest mb-1">Ahorro</p>
                         <p className={`text-2xl font-black tracking-tight ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
-                            {obtenerSimboloMoneda(monedaBase)} {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            $ {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
                     </div>
                 </motion.div>
@@ -464,7 +469,7 @@ export default function ReportsPage() {
                                 {advancedStats.peakDay ? `Día ${advancedStats.peakDay}` : 'N/A'}
                             </p>
                             <p className="text-[9px] text-slate-400 font-bold mt-1 truncate">
-                                {advancedStats.peakAmount > 0 ? `${obtenerSimboloMoneda(monedaBase)} ${Math.round(advancedStats.peakAmount)}` : 'Sin registros'}
+                                {advancedStats.peakAmount > 0 ? `$$ ${Math.round(advancedStats.peakAmount)}` : 'Sin registros'}
                             </p>
                         </div>
 
@@ -534,7 +539,7 @@ export default function ReportsPage() {
                             <div className="p-3 bg-emerald-500 text-slate-900 rounded-xl shadow-lg shadow-emerald-500/20"><FiTrendingUp size={20} /></div>
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-emerald-500">Ingresos</span>
                         </div>
-                        <p className="text-3xl font-black text-white">{obtenerSimboloMoneda(monedaBase)} {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-black text-white">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
                     <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-red-500/30 relative overflow-hidden group active:scale-95 transition-all">
@@ -543,7 +548,7 @@ export default function ReportsPage() {
                             <div className="p-3 bg-red-500 text-slate-900 rounded-xl shadow-lg shadow-red-500/20"><FiTrendingDown size={20} /></div>
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-red-500">Gastos</span>
                         </div>
-                        <p className="text-3xl font-black text-white">{obtenerSimboloMoneda(monedaBase)} {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-black text-white">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
                     <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-amber-500/30 relative overflow-hidden group active:scale-95 transition-all">
@@ -553,7 +558,7 @@ export default function ReportsPage() {
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-amber-500">Balance</span>
                         </div>
                         <p className={`text-3xl font-black ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
-                            {obtenerSimboloMoneda(monedaBase)} {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                            $ {stats.balance.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
 
@@ -564,7 +569,7 @@ export default function ReportsPage() {
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-violet-500">Ahorro</span>
                         </div>
                         <p className={`text-3xl font-black ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
-                            {obtenerSimboloMoneda(monedaBase)} {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                            $ {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                         </p>
                     </div>
                 </div>
@@ -665,7 +670,7 @@ export default function ReportsPage() {
                                 {advancedStats.peakDay ? `Día ${advancedStats.peakDay}` : 'N/A'}
                             </p>
                             <p className="text-[10px] text-red-400 font-bold mt-2">
-                                {advancedStats.peakAmount > 0 ? `${obtenerSimboloMoneda(monedaBase)} ${advancedStats.peakAmount.toLocaleString('es-ES', { maximumFractionDigits: 2 })} acumulados` : 'Sin registros de gastos'}
+                                {advancedStats.peakAmount > 0 ? `$$ ${advancedStats.peakAmount.toLocaleString('es-ES', { maximumFractionDigits: 2 })} acumulados` : 'Sin registros de gastos'}
                             </p>
                         </div>
 
