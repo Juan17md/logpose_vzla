@@ -77,7 +77,8 @@ export default function CuentasPage() {
 
     const handleEditarCuenta = async (data: any) => {
         if (!cuentaEditando) return;
-        const ok = await editarCuenta(cuentaEditando.id, data);
+        const { saldoInicial, ...rest } = data;
+        const ok = await editarCuenta(cuentaEditando.id, { ...rest, saldo: saldoInicial });
         if (ok) {
             toast.success("Cuenta actualizada");
             setCuentaEditando(null);

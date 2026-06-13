@@ -38,6 +38,7 @@ interface CuentaFormProps {
         banco: string;
         moneda: MonedaSoportada;
         color: string;
+        saldo?: number;
     };
     modoEdicion?: boolean;
 }
@@ -74,7 +75,7 @@ export default function CuentaForm({
                     : "otro",
                 bancoPersonalizado: !BANCOS_PREDEFINIDOS.some(b => b.nombre === datosIniciales.banco) ? datosIniciales.banco : "",
                 moneda: datosIniciales.moneda,
-                saldoInicial: "",
+                saldoInicial: datosIniciales.saldo != null ? String(datosIniciales.saldo) : "",
                 color: datosIniciales.color,
             });
         } else if (!isOpen) {
@@ -224,12 +225,11 @@ export default function CuentaForm({
                                     </div>
                                 </div>
 
-                                {/* Saldo Inicial */}
-                                {!modoEdicion && (
-                                    <div className="space-y-3">
-                                        <label className="block text-[10px] font-black uppercase tracking-[2px] text-slate-500 ml-1">
-                                            Saldo de Apertura
-                                        </label>
+                                {/* Saldo */}
+                                <div className="space-y-3">
+                                    <label className="block text-[10px] font-black uppercase tracking-[2px] text-slate-500 ml-1">
+                                        {modoEdicion ? "Saldo Actual" : "Saldo de Apertura"}
+                                    </label>
                                         <div className="relative group">
                                             <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                                                 <span className="text-violet-500 font-black text-lg">
@@ -248,10 +248,9 @@ export default function CuentaForm({
                                                         className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-5 text-white text-2xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-700"
                                                     />
                                                 )}
-                                            />
-                                        </div>
+                                        />
                                     </div>
-                                )}
+                                </div>
                             </div>
 
                             {/* Selector de Color y Botones */}

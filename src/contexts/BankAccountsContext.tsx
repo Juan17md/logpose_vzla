@@ -65,7 +65,7 @@ interface BankAccountsContextType {
     tasas: Record<MonedaSoportada, number>;
     tasasEnBs: Record<string, number>;
     crearCuenta: (input: CrearCuentaInput) => Promise<string | null>;
-    editarCuenta: (id: string, updates: Partial<Pick<CuentaBancaria, "nombre" | "banco" | "color">>) => Promise<boolean>;
+    editarCuenta: (id: string, updates: Partial<Pick<CuentaBancaria, "nombre" | "banco" | "color" | "saldo">>) => Promise<boolean>;
     eliminarCuenta: (id: string) => Promise<boolean>;
     realizarOperacion: (input: OperacionInput) => Promise<boolean>;
     obtenerCuenta: (id: string) => CuentaBancaria | undefined;
@@ -277,7 +277,7 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
 
     const editarCuenta = useCallback(async (
         id: string,
-        updates: Partial<Pick<CuentaBancaria, "nombre" | "banco" | "color">>
+        updates: Partial<Pick<CuentaBancaria, "nombre" | "banco" | "color" | "saldo">>
     ): Promise<boolean> => {
         if (!auth.currentUser) return false;
 
