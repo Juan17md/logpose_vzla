@@ -984,7 +984,7 @@ export default function DashboardPage() {
                     <BankAccountsWidget />
 
                     <BudgetAlertWidget
-                        currentExpense={stats.monthlyExpense}
+                        currentExpense={convertirMontoBaseAUsd(stats.monthlyExpense)}
                         userId={user?.uid ?? ''}
                     />
 
