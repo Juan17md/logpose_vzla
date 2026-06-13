@@ -199,10 +199,10 @@ export function convertirMontoParaCuenta(
         if (monedaTransaccion === "VES") return originalAmount || monto;
         return monto * (exchangeRate || 1);
     }
-    if (monedaTransaccion === "VES" && monedaCuenta !== "BS") {
+    if (monedaTransaccion === "VES") {
         return (originalAmount || monto) / (exchangeRate || 1);
     }
-    if (tasasEnBs && monedaTransaccion !== "VES" && monedaCuenta !== "BS") {
+    if (tasasEnBs && monedaTransaccion !== "VES") {
         const tasaTransaccionEnBs = tasasEnBs[monedaTransaccion] || 1;
         const tasaCuentaEnBs = tasasEnBs[monedaCuenta] || 1;
         if (tasaTransaccionEnBs > 0 && tasaCuentaEnBs > 0) {
