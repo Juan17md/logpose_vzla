@@ -158,6 +158,19 @@ export default function DashboardPage() {
         return () => unsubscribeAuth();
     }, [router]);
 
+    const convertirMontoBaseABs = (monto: number): number => {
+        if (monedaBase === "BS") return monto;
+        const tasaMonedaBase = tasasEnBs[monedaBase] || 0;
+        return monto * tasaMonedaBase;
+    };
+
+    const convertirMontoBaseAUsd = (monto: number): number => {
+        const montoEnBs = convertirMontoBaseABs(monto);
+        const tasaUsdEnBs = tasasEnBs.USD || 0;
+        if (!tasaUsdEnBs || tasaUsdEnBs <= 0) return 0;
+        return montoEnBs / tasaUsdEnBs;
+    };
+
     const stats = useMemo(() => {
         const now = new Date();
         const currentMonth = now.getMonth();
@@ -228,25 +241,16 @@ export default function DashboardPage() {
 
         const dailyAverage = daysPassed > 0 ? monthlyExpense / daysPassed : 0;
 
+        const categoryData = Object.entries(expensesByCategory)
+            .map(([name, value]) => ({ name, value: convertirMontoBaseAUsd(value) }))
+            .sort((a, b) => b.value - a.value);
+
         // Redondear a 2 decimales y eliminar -0 por errores de punto flotante
         const balanceRedondeado = Math.round(totalBalance * 100) / 100;
         const balanceFinal = Object.is(balanceRedondeado, -0) ? 0 : balanceRedondeado;
 
-        return { totalBalance: balanceFinal, monthlyIncome, monthlyExpense, topCategoryName, topCategoryAmount, dailyAverage };
+        return { totalBalance: balanceFinal, monthlyIncome, monthlyExpense, topCategoryName, topCategoryAmount, dailyAverage, categoryData };
     }, [transactions, calcularSaldoTotal, tasasEnBs, monedaBase]);
-
-    const convertirMontoBaseABs = (monto: number): number => {
-        if (monedaBase === "BS") return monto;
-        const tasaMonedaBase = tasasEnBs[monedaBase] || 0;
-        return monto * tasaMonedaBase;
-    };
-
-    const convertirMontoBaseAUsd = (monto: number): number => {
-        const montoEnBs = convertirMontoBaseABs(monto);
-        const tasaUsdEnBs = tasasEnBs.USD || 0;
-        if (!tasaUsdEnBs || tasaUsdEnBs <= 0) return 0;
-        return montoEnBs / tasaUsdEnBs;
-    };
 
     const handleUpdateBalanceClick = (e: React.MouseEvent, accountId?: string) => {
         e.stopPropagation();
@@ -714,7 +718,7 @@ export default function DashboardPage() {
                             <span className="text-white text-sm font-semibold">Gastos por Categoría</span>
                         </div>
                         <div className="h-52">
-                            <ExpensePieChart transactions={transactions} />
+                            <ExpensePieChart data={stats.categoryData} />
                         </div>
                     </motion.div>
                 </motion.div>
@@ -971,7 +975,7 @@ export default function DashboardPage() {
                             <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
                             Distribución de Gastos
                         </h3>
-                        <ExpensePieChart transactions={transactions} />
+                        <ExpensePieChart data={stats.categoryData} />
                     </div>
                 </div>
 

@@ -94,6 +94,14 @@ export default function ReportsPage() {
         });
     }, [transactions, selectedMonth, selectedYear]);
 
+    const convertirAUsd = (monto: number): number => {
+        if (monedaBase === "BS") {
+            const tasaUsd = apiRates.usd || 0;
+            return tasaUsd > 0 ? monto / tasaUsd : 0;
+        }
+        return monto;
+    };
+
     const stats = useMemo(() => {
         let income = 0;
         let expense = 0;
@@ -111,13 +119,13 @@ export default function ReportsPage() {
 
         const categoryData = Object.entries(categoryExpenses).map(([name, value]) => ({
             name,
-            value
+            value: convertirAUsd(value)
         })).sort((a, b) => b.value - a.value);
 
         const balanceCalculado = Math.round((income - expense) * 100) / 100;
         const balanceFinal = Object.is(balanceCalculado, -0) ? 0 : balanceCalculado;
         return { income, expense, balance: balanceFinal, categoryData };
-    }, [filteredTransactions, monedaBase, tasasEnBsEfectivas]);
+    }, [filteredTransactions, monedaBase, tasasEnBsEfectivas, apiRates.usd]);
 
     const savingsStats = useMemo(() => {
         const periodSavings = savingsTransactions.filter(t => {
@@ -389,7 +397,7 @@ export default function ReportsPage() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-white font-bold text-sm">{obtenerSimboloMoneda(monedaBase)} {item.value.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</p>
+                                        <p className="text-white font-bold text-sm">$ {item.value.toLocaleString("es-ES", { minimumFractionDigits: 0 })}</p>
                                         <p className="text-slate-500 text-xs">{((item.value / stats.expense) * 100).toFixed(1)}%</p>
                                     </div>
                                 </div>
@@ -586,7 +594,7 @@ export default function ReportsPage() {
                                         <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: ["#10b981", "#ef4444", "#06b6d4", "#f59e0b", "#8b5cf6", "#ec4899"][index % 6] }}></span>
                                         <span className="text-slate-300 capitalize font-medium">{item.name}</span>
                                     </div>
-                                    <span className="font-bold text-white">{obtenerSimboloMoneda(monedaBase)} {item.value.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className="font-bold text-white">$ {item.value.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                             ))}
                         </div>

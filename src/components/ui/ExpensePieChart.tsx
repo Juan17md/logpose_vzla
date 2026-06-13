@@ -9,8 +9,13 @@ interface ChartDataItem {
     value: number;
 }
 
+interface CategoryEntry {
+    name: string;
+    value: number;
+}
+
 interface ExpensePieChartProps {
-    transactions: Array<{
+    transactions?: Array<{
         id: string;
         amount: number;
         type: string;
@@ -18,6 +23,7 @@ interface ExpensePieChartProps {
         description: string;
         date: Date | { seconds: number };
     }>;
+    data?: CategoryEntry[];
 }
 
 const GRADIENTS = [
@@ -33,7 +39,7 @@ const GRADIENTS = [
     { id: 'grad-teal', from: '#14B8A6', to: '#0F766E' },    // Teal
 ];
 
-export default function ExpensePieChart({ transactions }: ExpensePieChartProps) {
+export default function ExpensePieChart({ transactions, data: propData }: ExpensePieChartProps) {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isMounted, setIsMounted] = useState(false);
 
@@ -42,30 +48,31 @@ export default function ExpensePieChart({ transactions }: ExpensePieChartProps) 
     }, []);
 
     const data = useMemo(() => {
+        if (propData) {
+            return propData.sort((a, b) => b.value - a.value);
+        }
+
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
 
-        // 1. Filtrar gastos del mes
-        const monthlyExpenses = transactions.filter(t => {
+        const monthlyExpenses = (transactions || []).filter(t => {
             const tDate = new Date(t.date instanceof Date ? t.date : t.date.seconds * 1000);
             return t.type === 'gasto' &&
                 tDate.getMonth() === currentMonth &&
                 tDate.getFullYear() === currentYear;
         });
 
-        // 2. Agrupar por categoría
         const grouped = monthlyExpenses.reduce((acc, curr) => {
             const category = curr.category || 'Otros';
             acc[category] = (acc[category] || 0) + Number(curr.amount);
             return acc;
         }, {} as Record<string, number>);
 
-        // 3. Formatear para D3
         return Object.entries(grouped)
             .map(([name, value]) => ({ name, value }))
-            .sort((a, b) => b.value - a.value); // Ordenar mayor a menor
-    }, [transactions]);
+            .sort((a, b) => b.value - a.value);
+    }, [transactions, propData]);
 
     const totalExpense = useMemo(() => {
         return data.reduce((acc, curr) => acc + curr.value, 0);
