@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiHome, FiList, FiPieChart, FiUser, FiLogOut, FiX, FiShoppingCart, FiBriefcase, FiCalendar, FiCreditCard, FiTag } from "react-icons/fi";
+import { FiHome, FiList, FiPieChart, FiUser, FiLogOut, FiX, FiShoppingCart, FiBriefcase, FiCalendar, FiCreditCard, FiTag, FiTarget } from "react-icons/fi";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -36,6 +36,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: "Listas", icon: <FiShoppingCart />, href: "/dashboard/listas" },
         { name: "Gastos Fijos", icon: <FiCalendar />, href: "/dashboard/gastos-fijos" },
         { name: "Deudas", icon: <FiCreditCard />, href: "/dashboard/deudas" },
+        { name: "Ahorros", icon: <FiTarget />, href: "/dashboard/ahorros" },
         { name: "Reportes", icon: <FiPieChart />, href: "/dashboard/reportes" },
         { name: "Categorías", icon: <FiTag />, href: "/dashboard/categorias" },
         { name: "Perfil", icon: <FiUser />, href: "/dashboard/perfil" },
