@@ -156,7 +156,7 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
 
     if (transactions.length === 0) {
         return (
-            <div className="h-64 flex flex-col items-center justify-center text-slate-500 bg-slate-800/20 rounded-xl border border-slate-700 border-dashed">
+            <div className="min-h-52 flex flex-col items-center justify-center text-slate-500 bg-slate-800/20 rounded-xl border border-slate-700 border-dashed">
                 <p>Sin transacciones recientes 📉</p>
             </div>
         );
