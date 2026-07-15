@@ -852,17 +852,17 @@ export default function DashboardPage() {
 
                 {/* Visual Analytics Section */}
                 <div className="order-3 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden">
-                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
+                    <div className="bg-slate-900/50 backdrop-blur-md p-4 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden">
+                        <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <span className="w-1 h-5 bg-violet-500 rounded-full"></span>
                             Flujo de Caja (Mes Actual)
                         </h3>
                         <CashFlowChart transactions={transactions} />
                     </div>
 
-                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden">
-                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
+                    <div className="bg-slate-900/50 backdrop-blur-md p-4 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden">
+                        <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <span className="w-1 h-5 bg-amber-500 rounded-full"></span>
                             Distribución de Gastos
                         </h3>
                         <ExpensePieChart data={stats.categoryData} />
