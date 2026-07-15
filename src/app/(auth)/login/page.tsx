@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, User } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { toast } from "sonner";
 import { FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiPieChart, FiTrendingUp, FiShield } from "react-icons/fi";
-import { FcGoogle } from "react-icons/fc";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,23 +31,12 @@ const card = {
   visible: { opacity:1, y:0,  scale:1,   transition:{ duration:.65, ease:[0.22,1,0.36,1] as [number,number,number,number] } }
 };
 
-import { isBiometricSupported, authenticateBiometric, obtenerCredenciales, obtenerEtiquetaBiometria } from "@/lib/biometrics";
 
-const FaceIdIcon = ({ className }: { className?: string }) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-        <path d="M8 7v2m8-2v2" />
-        <path d="M9 14s1 1 3 1 3-1 3-1" />
-        <path d="M12 11v2" />
-    </svg>
-);
 
 export default function LoginPage() {
     const router = useRouter();
     const [loading, setLoading]           = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [biometricSupported, setBiometricSupported] = useState(false);
-    const [etiquetaBiometria, setEtiquetaBiometria] = useState("Biometría");
 
     const { register, handleSubmit, formState:{errors} } = useForm({
         resolver: zodResolver(z.object({
@@ -56,15 +44,6 @@ export default function LoginPage() {
             password: z.string().min(1, "La contraseña es obligatoria"),
         })),
     });
-
-    useEffect(() => {
-        const checkBiometric = async () => {
-            const supported = await isBiometricSupported();
-            setBiometricSupported(supported);
-            setEtiquetaBiometria(obtenerEtiquetaBiometria());
-        };
-        checkBiometric();
-    }, []);
 
     const onSubmit = async (data:{email:string;password:string}) => {
         setLoading(true);
@@ -93,182 +72,7 @@ export default function LoginPage() {
         } finally { setLoading(false); }
     };
 
-    const handleBiometria = async () => {
-        setLoading(true);
-        try {
-            // Verificar que hay credenciales guardadas antes de pedir biometría
-            const credenciales = obtenerCredenciales();
-            if (!credenciales) {
-                toast.error(`${etiquetaBiometria} no configurada`, { 
-                    description: `Primero inicia sesión con tu correo y activa ${etiquetaBiometria} en tu perfil.` 
-                });
-                setLoading(false);
-                return;
-            }
 
-            // Verificar identidad biométrica
-            const assertion = await authenticateBiometric();
-            if (assertion) {
-                // Biometría verificada → iniciar sesión real con Firebase
-                toast.info("Verificado ✓", { description: "Iniciando sesión..." });
-                await signInWithEmailAndPassword(auth, credenciales.email, credenciales.password);
-                const snapBio = await getDoc(doc(db, "users", auth.currentUser!.uid));
-                const ocBio = snapBio.data()?.onboardingCompleted;
-                if (ocBio === undefined) {
-                    await updateDoc(doc(db, "users", auth.currentUser!.uid), { onboardingCompleted: true });
-                    toast.success("¡Bienvenido!", { description: `Sesión iniciada con ${etiquetaBiometria}.` });
-                    router.push("/dashboard");
-                } else if (ocBio === false) {
-                    router.push("/onboarding");
-                } else {
-                    toast.success("¡Bienvenido!", { description: `Sesión iniciada con ${etiquetaBiometria}.` });
-                    router.push("/dashboard");
-                }
-            }
-        } catch (error) {
-            console.error("Error de biometría:", error);
-            if (error instanceof FirebaseError) {
-                if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password") {
-                    toast.error("Credenciales caducadas", { 
-                        description: `Tu contraseña cambió. Inicia sesión manualmente y reactiva ${etiquetaBiometria}.` 
-                    });
-                } else {
-                    toast.error("Error de sesión", { description: `Código: ${error.code}` });
-                }
-            } else {
-                toast.error("Error de Biometría", { description: "No se pudo completar la verificación." });
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Lógica centralizada para procesar el usuario después del login (Popup o Redirect)
-    const procesarLoginUsuario = useCallback(async (usuario: User) => {
-        try {
-            const docRef = doc(db, "users", usuario.uid);
-            const docSnap = await getDoc(docRef);
-            const esNuevo = !docSnap.exists();
-
-            if (esNuevo) {
-                await setDoc(docRef, {
-                    uid: usuario.uid,
-                    displayName: usuario.displayName || "Usuario",
-                    email: usuario.email,
-                    plan: "free",
-                    onboardingCompleted: false,
-                    createdAt: serverTimestamp(),
-                });
-            }
-
-            const tienePassword = usuario.providerData.some(p => p.providerId === "password");
-
-            if (!tienePassword) {
-                toast.info("¡Un paso más!", { 
-                    description: "Crea una contraseña para acceder también con tu correo.",
-                    duration: 5000
-                });
-                router.push("/crear-contrasena");
-            } else if (esNuevo) {
-                router.push("/onboarding");
-            } else {
-                const userData = docSnap.data()!;
-                const oc = userData.onboardingCompleted;
-                if (oc === undefined) {
-                    await updateDoc(docRef, { onboardingCompleted: true });
-                    toast.success("¡Bienvenido!", { description: "Sesión iniciada correctamente." });
-                    router.push("/dashboard");
-                } else if (oc === false) {
-                    router.push("/onboarding");
-                } else {
-                    toast.success("¡Bienvenido!", { description: "Sesión iniciada correctamente." });
-                    router.push("/dashboard");
-                }
-            }
-        } catch (error) {
-            console.error("Error al procesar login:", error);
-            toast.error("Error", { description: "Error al sincronizar tu perfil." });
-        }
-    }, [router]);
-
-    // Ref para asegurar que checkRedirect solo se ejecute una vez (evita problemas en Strict Mode)
-    const checkRedirectEjecutado = useRef(false);
-
-    // Manejar el resultado del redirect al cargar la página
-    useEffect(() => {
-        if (typeof window === "undefined" || checkRedirectEjecutado.current) return;
-        
-        const checkRedirect = async () => {
-            if (!auth) return;
-            
-            // Ver si hay un hash o query de auth en la URL para dar feedback temprano
-            const hasAuthRedirect = window.location.hash.includes("access_token") || 
-                                  window.location.search.includes("code=") ||
-                                  window.location.search.includes("state=");
-
-            checkRedirectEjecutado.current = true;
-            
-            try {
-                // Si parece haber un redirect, mostrar feedback visual
-                let toastId: string | number | undefined;
-                if (hasAuthRedirect) {
-                    toastId = toast.loading("Procesando acceso con Google...");
-                }
-
-                const resultado = await getRedirectResult(auth, browserPopupRedirectResolver);
-                
-                if (resultado?.user) {
-                    setLoading(true);
-                    if (toastId) toast.dismiss(toastId);
-                    await procesarLoginUsuario(resultado.user);
-                } else if (hasAuthRedirect) {
-                    // Si había indicios de redirect pero no hay usuario, algo falló o se canceló
-                    if (toastId) toast.dismiss(toastId);
-                    console.log("Redirect detectado pero sin resultado de usuario.");
-                }
-            } catch (error) {
-                console.error("Error en Google Redirect:", error);
-                if (error instanceof FirebaseError) {
-                    if (error.code !== "auth/redirect-cancelled-by-user") {
-                        toast.error("Error de Autenticación", { 
-                            description: `Error: ${error.code}. Por favor, intenta de nuevo.` 
-                        });
-                    }
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-        
-        checkRedirect();
-    }, [procesarLoginUsuario]);
-
-    const handleGoogle = async () => {
-        // Ejecutar signInWithPopup INMEDIATAMENTE para evitar "auth/popup-blocked" en Safari/iOS PWA
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
-        
-        // Iniciamos la promesa sincrónicamente en el click handler
-        const popupPromise = signInWithPopup(auth, provider, browserPopupRedirectResolver);
-        
-        setLoading(true);
-        try {
-            const resultado = await popupPromise;
-            await procesarLoginUsuario(resultado.user);
-            setLoading(false);
-        } catch (error) {
-            setLoading(false);
-            console.error("Error completo de Google Auth:", error);
-            let msg = "Ocurrió un error al iniciar sesión con Google.";
-            if (error instanceof FirebaseError) {
-                if (error.code === "auth/popup-closed-by-user") msg = "Inicio de sesión cancelado.";
-                else if (error.code === "auth/account-exists-with-different-credential") msg = "Ya existe una cuenta con este correo vinculada a otro método.";
-                else if (error.code === "auth/popup-blocked") msg = "El navegador bloqueó la ventana emergente. Intenta de nuevo.";
-                else msg = `Error de Firebase: ${error.code}`;
-            }
-            toast.error("Error", { description: msg });
-        }
-    };
 
     const features = [
         { icon:<FiPieChart/>,    title:"Análisis Premium",  desc:"Visualiza tu progreso financiero",    from:"from-amber-500",  to:"to-amber-700",   glow:"shadow-amber-500/40",  accent:"group-hover/f:text-amber-400"  },
@@ -367,10 +171,7 @@ export default function LoginPage() {
                             {/* Header */}
                             <motion.div variants={stagger} initial="oculto" animate="visible">
                                 <motion.div variants={item} className="mb-8 relative z-10 text-center sm:text-left">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-500/20 bg-amber-500/[.06] mb-4">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                                        <span className="text-amber-400/80 text-xs font-medium tracking-wider uppercase">Acceso Biométrico</span>
-                                    </div>
+
                                     <h1 className="text-4xl sm:text-[2.6rem] font-extrabold text-white leading-tight" style={{fontFamily:"var(--font-outfit)"}}>
                                         Bienvenido<span className="grad-text">.</span>
                                     </h1>
@@ -406,34 +207,6 @@ export default function LoginPage() {
                                         </button>
                                     </motion.div>
                                 </form>
-
-                                {/* Métodos Alternativos */}
-                                <motion.div variants={item} className="relative my-7">
-                                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/[.06]"/></div>
-                                    <div className="relative flex justify-center text-xs">
-                                        <span className="px-4 bg-[#0B0F1A] text-slate-600 uppercase tracking-widest font-medium">Métodos Premium</span>
-                                    </div>
-                                </motion.div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <motion.div variants={item}>
-                                        <button onClick={handleGoogle} disabled={loading} type="button"
-                                            className="w-full group flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl border border-white/[.08] bg-white/[.03] hover:bg-white/[.07] hover:border-white/[.15] transition-all duration-300 text-white/85 font-medium text-xs cursor-pointer disabled:opacity-60">
-                                            <FcGoogle size={18} className="shrink-0 group-hover:scale-110 transition-transform duration-300"/>
-                                            Google
-                                        </button>
-                                    </motion.div>
-
-                                    {biometricSupported && (
-                                        <motion.div variants={item}>
-                                            <button onClick={handleBiometria} disabled={loading} type="button"
-                                                className="w-full group flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500/50 transition-all duration-300 text-violet-100 font-medium text-xs cursor-pointer disabled:opacity-60">
-                                                <FaceIdIcon className="w-5 h-5 text-violet-400 group-hover:scale-110 transition-transform duration-300"/>
-                                                {etiquetaBiometria}
-                                            </button>
-                                        </motion.div>
-                                    )}
-                                </div>
 
                                 <motion.p variants={item} className="mt-7 text-center text-sm text-slate-500 z-10 relative">
                                     ¿No tienes una cuenta?{" "}

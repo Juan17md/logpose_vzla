@@ -9,109 +9,18 @@ import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { FiUser, FiMail, FiShield, FiCalendar, FiEdit2, FiSave, FiLock, FiLogOut, FiAlertOctagon, FiTrash2 } from "react-icons/fi";
 
-import { isBiometricSupported, registerBiometric, guardarCredenciales, limpiarCredenciales, tieneCredencialesGuardadas, obtenerEtiquetaBiometria } from "@/lib/biometrics";
-import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
-const FaceIdIcon = ({ className }: { className?: string }) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-        <path d="M8 7v2m8-2v2" />
-        <path d="M9 14s1 1 3 1 3-1 3-1" />
-        <path d="M12 11v2" />
-    </svg>
-);
 
 export default function ProfilePage() {
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [user, setUser] = useState<User | null>(null);
-    const [userData, setUserData] = useState<{ createdAt?: { toDate: () => Date }, biometricEnabled?: boolean } | null>(null);
+    const [userData, setUserData] = useState<{ createdAt?: { toDate: () => Date } } | null>(null);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [newName, setNewName] = useState("");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [biometricSupported, setBiometricSupported] = useState(false);
-    const [isDeviceLinked, setIsDeviceLinked] = useState(false);
-    const [etiquetaBiometria, setEtiquetaBiometria] = useState("Biometría");
-    const [showBioPasswordModal, setShowBioPasswordModal] = useState(false);
-    const [bioPassword, setBioPassword] = useState("");
     const router = useRouter();
-
-    useEffect(() => {
-        const checkBiometric = async () => {
-            const supported = await isBiometricSupported();
-            setBiometricSupported(supported);
-            setIsDeviceLinked(tieneCredencialesGuardadas());
-            setEtiquetaBiometria(obtenerEtiquetaBiometria());
-        };
-        checkBiometric();
-    }, []);
-
-    const handleEnrollBiometric = async () => {
-        if (!user) return;
-        // Si ya tiene Face ID activo, desactivarlo
-        if (userData?.biometricEnabled) {
-            try {
-                limpiarCredenciales();
-                const userRef = doc(db, "users", user.uid);
-                await updateDoc(userRef, { biometricEnabled: false });
-                const docSnap = await getDoc(userRef);
-                if (docSnap.exists()) setUserData(docSnap.data());
-                toast.success(`${etiquetaBiometria} desactivada`, { description: "Se ha removido la biometría de este dispositivo." });
-            } catch (error) {
-                console.error("Error al desactivar:", error);
-                toast.error("Error", { description: `No se pudo desactivar ${etiquetaBiometria}.` });
-            }
-            return;
-        }
-        // Si no tiene, pedir contraseña para vincular
-        setShowBioPasswordModal(true);
-    };
-
-    const confirmarEnrolamiento = async () => {
-        if (!user || !bioPassword) return;
-        try {
-            // 1. Verificar que la contraseña es correcta
-            const credencial = EmailAuthProvider.credential(user.email!, bioPassword);
-            await reauthenticateWithCredential(user, credencial);
-
-            // 2. Registrar biometría del dispositivo
-            const credential = await registerBiometric(user.email!);
-            if (credential) {
-                // 3. Guardar credenciales protegidas por biometría
-                guardarCredenciales(user.email!, bioPassword);
-
-                // 4. Marcar en Firestore
-                const userRef = doc(db, "users", user.uid);
-                await updateDoc(userRef, { 
-                    biometricEnabled: true,
-                    lastDeviceEnrollment: serverTimestamp()
-                });
-                const docSnap = await getDoc(userRef);
-                if (docSnap.exists()) setUserData(docSnap.data());
-
-                toast.success(`¡${etiquetaBiometria} activada!`, { 
-                    description: "Ahora puedes iniciar sesión con biometría." 
-                });
-                setIsDeviceLinked(true);
-            }
-        } catch (error) {
-            console.error("Error al enrolar:", error);
-            if (error instanceof Error && 'code' in error) {
-                const fireError = error as { code: string };
-                if (fireError.code === "auth/wrong-password" || fireError.code === "auth/invalid-credential") {
-                    toast.error("Contraseña incorrecta", { description: "Verifica tu contraseña e intenta de nuevo." });
-                } else {
-                    toast.error("Error", { description: `No se pudo activar ${etiquetaBiometria}.` });
-                }
-            } else {
-                toast.error("Error", { description: `No se pudo activar ${etiquetaBiometria}.` });
-            }
-        } finally {
-            setBioPassword("");
-            setShowBioPasswordModal(false);
-        }
-    };
 
     const handleLogout = async () => {
         try {
@@ -352,32 +261,6 @@ export default function ProfilePage() {
                             <FiLock className="opacity-50 group-hover:opacity-100 group-hover:text-red-400 transition-colors" />
                         </button>
 
-                        {biometricSupported && (
-                            <button
-                                onClick={handleEnrollBiometric}
-                                className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all group border mb-3 ${userData?.biometricEnabled
-                                    ? (isDeviceLinked ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-200" : "bg-amber-500/10 border-amber-500/20 text-amber-200 hover:bg-amber-500/20")
-                                    : "bg-violet-500/10 border-violet-500/20 text-violet-200 hover:bg-violet-500/20"
-                                    }`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <FaceIdIcon className={`w-5 h-5 ${userData?.biometricEnabled ? (isDeviceLinked ? "text-emerald-400" : "text-amber-400") : "text-violet-400"}`} />
-                                    <div className="text-left">
-                                        <p className="font-medium text-sm">
-                                            {userData?.biometricEnabled 
-                                                ? (isDeviceLinked ? `${etiquetaBiometria} activada` : "Vincular este dispositivo") 
-                                                : `Activar ${etiquetaBiometria}`}
-                                        </p>
-                                        {userData?.biometricEnabled && !isDeviceLinked && (
-                                            <p className="text-[10px] opacity-70">Necesario para este dispositivo</p>
-                                        )}
-                                    </div>
-                                </div>
-                                {userData?.biometricEnabled && isDeviceLinked && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
-                                {userData?.biometricEnabled && !isDeviceLinked && <div className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" />}
-                            </button>
-                        )}
-
                         <button
                             onClick={handleLogout}
                             className="w-full flex items-center justify-between px-4 py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-200 hover:text-red-100 rounded-xl transition-all group border border-red-500/20 hover:border-red-500/40"
@@ -430,50 +313,6 @@ export default function ProfilePage() {
                 isLoading={isDeleting}
             />
 
-            {/* Modal para ingresar contraseña al activar biometría */}
-            {showBioPasswordModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-700/50 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 bg-violet-500/20 rounded-xl flex items-center justify-center">
-                                <FaceIdIcon className="w-5 h-5 text-violet-400" />
-                            </div>
-                            <div>
-                                <h3 className="text-white font-bold">{`Activar ${etiquetaBiometria}`}</h3>
-                                <p className="text-slate-500 text-xs">Confirma tu contraseña</p>
-                            </div>
-                        </div>
-                        <p className="text-slate-400 text-sm mb-4">
-                            {`Ingresa tu contraseña para vincular ${etiquetaBiometria} con tu cuenta. Solo necesitas hacerlo una vez.`}
-                        </p>
-                        <input
-                            type="password"
-                            placeholder="Tu contraseña"
-                            value={bioPassword}
-                            onChange={(e) => setBioPassword(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && confirmarEnrolamiento()}
-                            className="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-xl py-3 px-4 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all text-base mb-4"
-                            autoFocus
-                        />
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => { setShowBioPasswordModal(false); setBioPassword(""); }}
-                                className="flex-1 py-3 rounded-xl border border-slate-700/50 text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-sm font-medium"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={confirmarEnrolamiento}
-                                disabled={!bioPassword}
-                                className="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                            >
-                                <FaceIdIcon className="w-4 h-4" />
-                                Activar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

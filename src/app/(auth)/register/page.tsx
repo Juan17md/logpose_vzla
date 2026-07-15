@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState } from "react";
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, GoogleAuthProvider, User } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { FiUser, FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiPieChart, FiTrendingUp, FiShield } from "react-icons/fi";
-import { FcGoogle } from "react-icons/fc";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -110,8 +109,6 @@ export default function RegisterPage() {
     const router = useRouter();
     const [loading, setLoading]           = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const checkRedirectEjecutado = useRef(false);
-
     const { register, handleSubmit, formState:{errors} } = useForm({
         resolver: zodResolver(z.object({
             name:     z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -139,115 +136,6 @@ export default function RegisterPage() {
             }
             toast.error("Error", { description:msg });
         } finally { setLoading(false); }
-    };
-
-    const procesarLoginUsuario = useCallback(async (usuario: User) => {
-        try {
-            const docRef = doc(db, "users", usuario.uid);
-            const docSnap = await getDoc(docRef);
-            const esNuevo = !docSnap.exists();
-
-            if (esNuevo) {
-                await setDoc(docRef, {
-                    uid: usuario.uid,
-                    displayName: usuario.displayName || "Usuario",
-                    email: usuario.email,
-                    plan: "free",
-                    onboardingCompleted: false,
-                    createdAt: serverTimestamp(),
-                });
-            }
-
-            const tienePassword = usuario.providerData.some(p => p.providerId === "password");
-
-            if (!tienePassword) {
-                toast.info("¡Casi listo!", { description: "Crea una contraseña para completar tu perfil.", duration: 5000 });
-                router.push("/crear-contrasena");
-            } else if (esNuevo) {
-                router.push("/onboarding");
-            } else {
-                const userData = docSnap.data()!;
-                const oc = userData.onboardingCompleted;
-                if (oc === undefined) {
-                    await updateDoc(docRef, { onboardingCompleted: true });
-                    toast.success("¡Bienvenido!", { description: "Has iniciado sesión con Google." });
-                    router.push("/dashboard");
-                } else if (oc === false) {
-                    router.push("/onboarding");
-                } else {
-                    toast.success("¡Bienvenido!", { description: "Has iniciado sesión con Google." });
-                    router.push("/dashboard");
-                }
-            }
-        } catch (error) {
-            console.error("Error al procesar login Google:", error);
-            toast.error("Error", { description: "Error al sincronizar tu perfil." });
-        }
-    }, [router]);
-
-    useEffect(() => {
-        if (typeof window === "undefined" || checkRedirectEjecutado.current) return;
-        
-        const checkRedirect = async () => {
-            if (!auth) return;
-            
-            const hasAuthRedirect = window.location.hash.includes("access_token") || 
-                                  window.location.search.includes("code=") ||
-                                  window.location.search.includes("state=");
-
-            checkRedirectEjecutado.current = true;
-            
-            try {
-                let toastId: string | number | undefined;
-                if (hasAuthRedirect) {
-                    toastId = toast.loading("Procesando registro con Google...");
-                }
-
-                const resultado = await getRedirectResult(auth, browserPopupRedirectResolver);
-                
-                if (resultado?.user) {
-                    setLoading(true);
-                    if (toastId) toast.dismiss(toastId);
-                    await procesarLoginUsuario(resultado.user);
-                } else if (hasAuthRedirect) {
-                    if (toastId) toast.dismiss(toastId);
-                }
-            } catch (error) {
-                console.error("Error redirect registro:", error);
-                if (error instanceof FirebaseError && error.code !== "auth/redirect-cancelled-by-user") {
-                    toast.error("Error", { description: `Error: ${error.code}` });
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-        checkRedirect();
-    }, [procesarLoginUsuario]);
-
-    const handleGoogle = async () => {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
-
-        const popupPromise = signInWithPopup(auth, provider, browserPopupRedirectResolver);
-
-        setLoading(true);
-        try {
-            const resultado = await popupPromise;
-            await procesarLoginUsuario(resultado.user);
-            setLoading(false);
-        } catch (error) {
-            setLoading(false);
-            console.error("Error Google Auth:", error);
-            let msg = "Error al conectar con Google.";
-            if (error instanceof FirebaseError) {
-                if (error.code === "auth/account-exists-with-different-credential") {
-                    msg = "Ya existe una cuenta con este correo. Prueba iniciando sesión.";
-                } else if (error.code === "auth/popup-blocked") {
-                    msg = "El navegador bloqueó la ventana. Intenta de nuevo.";
-                }
-            }
-            toast.error("Error", { description: msg });
-        }
     };
 
     const features = [
@@ -394,23 +282,6 @@ export default function RegisterPage() {
                                         </button>
                                     </motion.div>
                                 </form>
-
-                                {/* Divider */}
-                                <motion.div variants={item} className="relative my-7">
-                                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/[.06]"/></div>
-                                    <div className="relative flex justify-center text-xs">
-                                        <span className="px-4 bg-[#0B0F1A] text-slate-600">o continúa con</span>
-                                    </div>
-                                </motion.div>
-
-                                {/* Google */}
-                                <motion.div variants={item}>
-                                    <button onClick={handleGoogle} disabled={loading} type="button"
-                                        className="w-full group flex items-center justify-center gap-3 py-3.5 px-6 rounded-2xl border border-white/[.08] bg-white/[.03] hover:bg-white/[.07] hover:border-white/[.15] transition-all duration-300 text-white/85 font-medium text-sm cursor-pointer disabled:opacity-60">
-                                        <FcGoogle size={20} className="shrink-0 group-hover:scale-110 transition-transform duration-300"/>
-                                        Registrarse con Google
-                                    </button>
-                                </motion.div>
 
                                 <motion.p variants={item} className="mt-7 text-center text-sm text-slate-500 z-10 relative">
                                     ¿Ya tienes una cuenta?{" "}
