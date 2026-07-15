@@ -100,7 +100,7 @@ export default function ExpensePieChart({ transactions, data: propData }: Expens
 
     if (data.length === 0) {
         return (
-            <div className="h-64 flex flex-col items-center justify-center text-slate-500 bg-slate-800/30 rounded-3xl border border-slate-700/50 border-dashed backdrop-blur-sm">
+            <div className="min-h-52 flex flex-col items-center justify-center text-slate-500 bg-slate-800/30 rounded-3xl border border-slate-700/50 border-dashed backdrop-blur-sm">
                 <FiPieChart className="text-4xl mb-3 opacity-50" />
                 <p className="font-medium">Sin gastos este mes</p>
                 <p className="text-xs opacity-60">Tus movimientos aparecerán aquí</p>

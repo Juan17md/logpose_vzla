@@ -607,7 +607,7 @@ export default function DashboardPage() {
                             </div>
                             <span className="text-white text-sm font-semibold">Gastos por Categoría</span>
                         </div>
-                        <div className="h-52">
+                        <div className="min-h-52">
                             <ExpensePieChart data={stats.categoryData} />
                         </div>
                     </motion.div>
