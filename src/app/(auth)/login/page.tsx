@@ -168,6 +168,14 @@ export default function LoginPage() {
                             <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-amber-500/40 to-transparent" />
                             <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-violet-500/20 to-transparent" />
                             
+                            {/* Icono móvil */}
+                            <motion.div variants={item} className="lg:hidden flex flex-col items-center mb-6 relative z-10">
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-amber-500/20 blur-[30px] rounded-full scale-110" />
+                                    <Logo variant="icon" width={72} height={72} className="relative" />
+                                </div>
+                            </motion.div>
+
                             {/* Header */}
                             <motion.div variants={stagger} initial="oculto" animate="visible">
                                 <motion.div variants={item} className="mb-8 relative z-10 text-center sm:text-left">
