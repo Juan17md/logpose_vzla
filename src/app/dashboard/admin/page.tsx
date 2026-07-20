@@ -508,7 +508,7 @@ export default function AdminPage() {
                         />
                       ) : (
                         <div className="w-[150px] flex items-center justify-center gap-2 mx-auto bg-slate-800/40 backdrop-blur-md border border-violet-500/30 text-white text-sm font-bold rounded-2xl py-4 px-5 shadow-lg select-none">
-                          <span>admin</span>
+                          <span>Admin</span>
                           <FiShield size={16} className="text-violet-500/60 shrink-0" />
                         </div>
                       )}
