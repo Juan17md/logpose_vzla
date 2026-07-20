@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiHome, FiList, FiPieChart, FiUser, FiLogOut, FiX, FiShoppingCart, FiBriefcase, FiCalendar, FiCreditCard, FiTag, FiTarget } from "react-icons/fi";
-import { auth } from "@/lib/firebase";
+import { FiHome, FiList, FiPieChart, FiUser, FiLogOut, FiX, FiShoppingCart, FiBriefcase, FiCalendar, FiCreditCard, FiTag, FiTarget, FiShield } from "react-icons/fi";
+import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { esAdmin } from "@/types/rbac";
 import Logo from "./Logo";
 import { Outfit } from "next/font/google";
 
@@ -21,12 +23,26 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
+    const [esAdminUser, setEsAdminUser] = useState(false);
 
     useEffect(() => {
+        let cancelado = false;
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
+            if (currentUser && !cancelado) {
+                getDoc(doc(db, "users", currentUser.uid)).then((snap) => {
+                    if (!cancelado) setEsAdminUser(esAdmin(snap.data()?.role));
+                }).catch(() => {
+                    if (!cancelado) setEsAdminUser(false);
+                });
+            } else {
+                setEsAdminUser(false);
+            }
         });
-        return () => unsubscribe();
+        return () => {
+            cancelado = true;
+            unsubscribe();
+        };
     }, []);
 
     const menuItems = [
@@ -40,6 +56,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: "Reportes", icon: <FiPieChart />, href: "/dashboard/reportes" },
         { name: "Categorías", icon: <FiTag />, href: "/dashboard/categorias" },
         { name: "Perfil", icon: <FiUser />, href: "/dashboard/perfil" },
+        ...(esAdminUser
+            ? [{ name: "Admin", icon: <FiShield />, href: "/dashboard/admin" }]
+            : []),
     ];
 
     const handleLogout = async () => {

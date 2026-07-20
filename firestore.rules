@@ -26,113 +26,90 @@ service cloud.firestore {
     }
 
     // ========================================
+    // 🛡️ HELPERS DE RBAC
+    // ========================================
+    function getUserData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+
+    function hasRole(userId, role) {
+      return isSignedIn() && getUserData(userId).role == role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && hasRole(request.auth.uid, "admin");
+    }
+
+    function getUserStatus(userId) {
+      return getUserData(userId).status;
+    }
+
+    function isNotExpired(userId) {
+      return getUserStatus(userId) != "expired";
+    }
+
+    // ========================================
     // 📋 REGLAS DE SEGURIDAD - CONTROL DE GASTOS
     // ========================================
-    // Estas reglas garantizan que cada usuario solo pueda
-    // acceder y modificar sus propios datos.
-
 
     // ----------------------------------------
     // 👤 USUARIOS - Documento principal del usuario
     // ----------------------------------------
     // Colección: users/{userId}
-    // Un usuario solo puede leer y escribir su propio documento.
+    // El propietario siempre puede leer/escribir su propio documento.
+    // Los administradores pueden leer todos los users para el panel admin.
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
 
-      // ----------------------------------------
-      // 💰 DEUDAS - Subcolección de deudas
-      // ----------------------------------------
-      // Colección: users/{userId}/debts/{debtId}
+      // Subcolecciones: ownership estricto
       match /debts/{debtId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) && isNotExpired(userId);
       }
 
-      // ----------------------------------------
-      // 📅 GASTOS FIJOS - Subcolección de gastos recurrentes
-      // ----------------------------------------
-      // Colección: users/{userId}/fixed_expenses/{expenseId}
       match /fixed_expenses/{expenseId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) && isNotExpired(userId);
       }
 
-      // ----------------------------------------
-      // 🎯 METAS DE AHORRO - Subcolección de metas
-      // ----------------------------------------
-      // Colección: users/{userId}/saving_goals/{goalId}
       match /saving_goals/{goalId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) && isNotExpired(userId);
       }
 
-      // ----------------------------------------
-      // 💳 TRANSACCIONES DE AHORRO - Historial de movimientos de ahorro
-      // ----------------------------------------
-      // Colección: users/{userId}/savings_transactions/{transactionId}
       match /savings_transactions/{transactionId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) && isNotExpired(userId);
       }
 
-      // ----------------------------------------
-      // 🏦 CUENTAS BANCARIAS - Cuentas multi-moneda del usuario
-      // ----------------------------------------
-      // Colección: users/{userId}/bank_accounts/{accountId}
       match /bank_accounts/{accountId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) && isNotExpired(userId);
       }
 
-      // ----------------------------------------
-      // 📊 TRANSACCIONES DE CUENTA - Movimientos entre cuentas
-      // ----------------------------------------
-      // Colección: users/{userId}/account_transactions/{transId}
       match /account_transactions/{transId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) && isNotExpired(userId);
       }
 
-      // ----------------------------------------
-      // 🏷️ CATEGORÍAS - Categorías y subcategorías personalizadas del usuario
-      // ----------------------------------------
-      // Colección: users/{userId}/categories/{categoryId}
       match /categories/{categoryId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) && isNotExpired(userId);
       }
     }
-
 
     // ----------------------------------------
     // 💵 TRANSACCIONES - Ingresos y gastos
     // ----------------------------------------
-    // Colección: transactions/{transactionId}
-    // Contiene un campo `userId` para identificar al propietario.
-    // Solo el propietario puede crear, leer, actualizar o eliminar.
     match /transactions/{transactionId} {
-      // Permitir lectura solo si el documento pertenece al usuario autenticado
       allow read: if isOwnerFromResource();
-      
-      // Permitir creación si el usuario está autenticado y establece su propio userId
       allow create: if isOwnerFromRequest();
-      
-      // Permitir actualización y eliminación solo si el documento pertenece al usuario.
-      // Además, en update se bloquea el cambio del campo userId.
       allow update: if isOwnerFromResource() && isOwnerFromRequest() && keepsSameUserId();
       allow delete: if isOwnerFromResource();
     }
 
-
     // ----------------------------------------
     // 🛒 LISTAS DE COMPRAS - Shopping lists
     // ----------------------------------------
-    // Colección: shopping_lists/{listId}
-    // Contiene un campo `userId` para identificar al propietario.
-    // Solo el propietario puede crear, leer, actualizar o eliminar.
     match /shopping_lists/{listId} {
-      // Permitir lectura solo si el documento pertenece al usuario autenticado
       allow read: if isOwnerFromResource();
-      
-      // Permitir creación si el usuario está autenticado y establece su propio userId
       allow create: if isOwnerFromRequest();
-      
-      // Permitir actualización y eliminación solo si el documento pertenece al usuario.
-      // Además, en update se bloquea el cambio del campo userId.
       allow update: if isOwnerFromResource() && isOwnerFromRequest() && keepsSameUserId();
       allow delete: if isOwnerFromResource();
     }

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
@@ -49,6 +48,13 @@ export default function LoginPage() {
         setLoading(true);
         try {
             await signInWithEmailAndPassword(auth, data.email, data.password);
+            const token = await auth.currentUser!.getIdToken();
+            await fetch("/api/auth/session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idToken: token }),
+            });
+
             const snap = await getDoc(doc(db, "users", auth.currentUser!.uid));
             const oc = snap.data()?.onboardingCompleted;
             if (oc === undefined) {
@@ -216,12 +222,7 @@ export default function LoginPage() {
                                     </motion.div>
                                 </form>
 
-                                <motion.p variants={item} className="mt-7 text-center text-sm text-slate-500 z-10 relative">
-                                    ¿No tienes una cuenta?{" "}
-                                    <Link href="/register" className="text-amber-500 hover:text-amber-400 font-semibold transition-colors duration-200 ml-0.5">
-                                        Regístrate aquí
-                                    </Link>
-                                </motion.p>
+
                             </motion.div>
                         </div>
                     </motion.div>

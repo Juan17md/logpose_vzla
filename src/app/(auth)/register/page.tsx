@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
+import { DIAS_PRUEBA } from "@/types/rbac";
 import { FiUser, FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiPieChart, FiTrendingUp, FiShield } from "react-icons/fi";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -122,11 +123,31 @@ export default function RegisterPage() {
         try {
             const { user } = await createUserWithEmailAndPassword(auth, data.email, data.password);
             await updateProfile(user, { displayName: data.name });
-            await setDoc(doc(db,"users",user.uid), {
-                uid:user.uid, displayName:data.name, email:data.email,
-                plan:"free", onboardingCompleted:false, createdAt:serverTimestamp(),
+
+            const ahora = Timestamp.now();
+            const sieteDias = new Date(ahora.toMillis() + DIAS_PRUEBA * 24 * 60 * 60 * 1000);
+
+            await setDoc(doc(db, "users", user.uid), {
+                uid: user.uid,
+                displayName: data.name,
+                email: data.email,
+                role: "prueba",
+                status: "active",
+                onboardingCompleted: false,
+                createdAt: ahora,
+                trialExpiresAt: Timestamp.fromDate(sieteDias),
             });
-            toast.success("¡Cuenta creada!", { description:"Ahora configura tu perfil financiero." });
+
+            const token = await user.getIdToken();
+            await fetch("/api/auth/session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idToken: token }),
+            });
+
+            toast.success("¡Cuenta creada!", {
+                description: "Tienes 7 días de prueba gratuita.",
+            });
             router.push("/onboarding");
         } catch (error) {
             let msg = "Ocurrió un error al registrarse.";
