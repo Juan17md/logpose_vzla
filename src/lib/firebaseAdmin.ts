@@ -104,24 +104,23 @@ export async function leerUsuario(uid: string) {
 }
 
 export async function listarUsuarios() {
-  const data = await requestFirestore(
-    "POST",
-    "/users:runQuery",
-    {
-      structuredQuery: {
-        from: [{ collectionId: "users" }],
-        orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
-      },
-    }
-  );
+  const token = await obtenerAccessToken();
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/users?pageSize=100`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Firestore API error (${res.status}): ${text}`);
+  }
+
+  const data = await res.json();
   const docs: Array<Record<string, any>> = [];
-  for (const result of data || []) {
-    if (result.document) {
-      const obj = docToObject(result.document);
-      obj.uid = result.document.name.split("/").pop();
-      docs.push(obj);
-    }
+  for (const doc of data.documents || []) {
+    const obj = docToObject(doc);
+    obj.uid = doc.name.split("/").pop();
+    docs.push(obj);
   }
   return docs;
 }
