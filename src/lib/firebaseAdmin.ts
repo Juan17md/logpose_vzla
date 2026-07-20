@@ -221,6 +221,31 @@ export async function eliminarUsuarioDoc(uid: string): Promise<void> {
   await requestFirestore("DELETE", `/users/${uid}`);
 }
 
+export async function actualizarAuthUser(
+  uid: string,
+  updates: { password?: string }
+): Promise<void> {
+  const token = await obtenerAccessToken();
+  const url = `https://identitytoolkit.googleapis.com/v1/projects/${PROJECT_ID}/accounts:update`;
+
+  const body: Record<string, any> = { localId: uid };
+  if (updates.password) body.password = updates.password;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Identity Toolkit error (${res.status}): ${text}`);
+  }
+}
+
 export async function eliminarAuthUser(uid: string): Promise<void> {
   const token = await obtenerAccessToken();
   const url = `https://identitytoolkit.googleapis.com/v1/projects/${PROJECT_ID}/accounts:delete`;

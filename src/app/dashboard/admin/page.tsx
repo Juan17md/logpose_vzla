@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { obtenerUsuarios, aprobarUsuario, eliminarUsuario } from "@/lib/admin";
+import {
+  obtenerUsuarios,
+  aprobarUsuario,
+  cambiarRolUsuario,
+  cambiarPasswordUsuario,
+  eliminarUsuario,
+} from "@/lib/admin";
 import { esAdmin } from "@/types/rbac";
 import { toast } from "sonner";
 import {
@@ -18,6 +24,8 @@ import {
   FiMail,
   FiCalendar,
   FiClock,
+  FiKey,
+  FiChevronDown,
 } from "react-icons/fi";
 
 type UsuarioRow = {
@@ -73,11 +81,39 @@ export default function AdminPage() {
     if (autorizado) cargarUsuarios();
   }, [autorizado, cargarUsuarios]);
 
+  const [cambiandoRol, setCambiandoRol] = useState<string | null>(null);
+
   const handleAprobar = async (uid: string) => {
     const res = await aprobarUsuario(uid);
     if (res.exito) {
       toast.success("Usuario aprobado correctamente");
       cargarUsuarios();
+    } else {
+      toast.error(res.error);
+    }
+  };
+
+  const handleCambiarRol = async (uid: string, nuevoRol: string) => {
+    setCambiandoRol(uid);
+    const res = await cambiarRolUsuario(uid, nuevoRol);
+    if (res.exito) {
+      toast.success(`Rol cambiado a ${nuevoRol}`);
+      cargarUsuarios();
+    } else {
+      toast.error(res.error);
+    }
+    setCambiandoRol(null);
+  };
+
+  const handleCambiarPassword = async (uid: string) => {
+    const password = prompt("Ingresa la nueva contraseña (mín. 6 caracteres):");
+    if (!password || password.length < 6) {
+      if (password) toast.error("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+    const res = await cambiarPasswordUsuario(uid, password);
+    if (res.exito) {
+      toast.success("Contraseña cambiada exitosamente");
     } else {
       toast.error(res.error);
     }
@@ -290,23 +326,40 @@ export default function AdminPage() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {u.role === "prueba" && (
-                          <button
-                            onClick={() => handleAprobar(u.uid)}
-                            className="p-2 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 rounded-xl transition-all border border-emerald-500/20"
-                            title="Aprobar usuario"
-                          >
-                            <FiCheckCircle size={16} />
-                          </button>
-                        )}
                         {u.role !== "admin" && (
-                          <button
-                            onClick={() => handleEliminar(u.uid)}
-                            className="p-2 bg-red-500/15 hover:bg-red-500/25 text-red-400 rounded-xl transition-all border border-red-500/20"
-                            title="Eliminar usuario"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
+                          <>
+                            <div className="relative">
+                              <select
+                                value={u.role}
+                                onChange={(e) =>
+                                  handleCambiarRol(u.uid, e.target.value)
+                                }
+                                disabled={cambiandoRol === u.uid}
+                                className="appearance-none bg-slate-800/80 text-xs text-slate-300 px-2.5 py-1.5 pr-6 rounded-lg border border-slate-600/50 focus:outline-none focus:border-violet-500/50 cursor-pointer disabled:opacity-50"
+                              >
+                                <option value="prueba">prueba</option>
+                                <option value="usuario">usuario</option>
+                              </select>
+                              <FiChevronDown
+                                size={12}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                              />
+                            </div>
+                            <button
+                              onClick={() => handleCambiarPassword(u.uid)}
+                              className="p-2 bg-violet-500/15 hover:bg-violet-500/25 text-violet-400 rounded-xl transition-all border border-violet-500/20"
+                              title="Cambiar contraseña"
+                            >
+                              <FiKey size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleEliminar(u.uid)}
+                              className="p-2 bg-red-500/15 hover:bg-red-500/25 text-red-400 rounded-xl transition-all border border-red-500/20"
+                              title="Eliminar usuario"
+                            >
+                              <FiTrash2 size={16} />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>

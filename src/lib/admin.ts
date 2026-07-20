@@ -5,13 +5,14 @@ import {
   leerUsuario,
   listarUsuarios,
   actualizarUsuario,
+  actualizarAuthUser,
   eliminarColeccion,
   eliminarDocumentosWhere,
   eliminarUsuarioDoc,
   eliminarAuthUser,
 } from "./firebaseAdmin";
 import { verificarCookieSesion } from "./authCookie";
-import { esAdmin } from "@/types/rbac";
+import { esAdmin, DIAS_PRUEBA } from "@/types/rbac";
 
 type ActionResult = { exito: true } | { exito: false; error: string };
 
@@ -78,6 +79,64 @@ export async function aprobarUsuario(uid: string): Promise<ActionResult> {
     return {
       exito: false,
       error: (e as Error).message || "Error al aprobar usuario",
+    };
+  }
+}
+
+export async function cambiarRolUsuario(
+  uid: string,
+  nuevoRol: string
+): Promise<ActionResult> {
+  try {
+    await verificarAdmin();
+    const userData = await leerUsuario(uid);
+    if (!userData) return { exito: false, error: "Usuario no encontrado" };
+
+    if (userData.role === "admin" || nuevoRol === "admin")
+      return { exito: false, error: "No puedes cambiar el rol de administradores" };
+
+    const updates: Record<string, any> = { role: nuevoRol };
+
+    if (nuevoRol === "usuario") {
+      updates.trialExpiresAt = null;
+    } else if (nuevoRol === "prueba") {
+      const fecha = new Date();
+      fecha.setDate(fecha.getDate() + DIAS_PRUEBA);
+      updates.trialExpiresAt = fecha.toISOString();
+    }
+
+    await actualizarUsuario(uid, updates);
+
+    return { exito: true };
+  } catch (e) {
+    return {
+      exito: false,
+      error: (e as Error).message || "Error al cambiar rol",
+    };
+  }
+}
+
+export async function cambiarPasswordUsuario(
+  uid: string,
+  nuevaPassword: string
+): Promise<ActionResult> {
+  try {
+    await verificarAdmin();
+
+    if (!nuevaPassword || nuevaPassword.length < 6) {
+      return {
+        exito: false,
+        error: "La contraseña debe tener al menos 6 caracteres",
+      };
+    }
+
+    await actualizarAuthUser(uid, { password: nuevaPassword });
+
+    return { exito: true };
+  } catch (e) {
+    return {
+      exito: false,
+      error: (e as Error).message || "Error al cambiar contraseña",
     };
   }
 }

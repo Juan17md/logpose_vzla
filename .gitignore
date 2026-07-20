@@ -59,3 +59,4 @@ docs-obsidian
 public/sw.js
 public/workbox-*.js
 public/fallback-*.js
+extraer.js
