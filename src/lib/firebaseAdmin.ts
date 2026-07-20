@@ -1,12 +1,6 @@
 const SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!;
 
-function getServiceAccount(): Record<string, string> {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT no está configurado");
-  return JSON.parse(raw);
-}
-
 let cachedToken: { token: string; exp: number } | null = null;
 
 async function obtenerAccessToken(): Promise<string> {
@@ -14,50 +8,26 @@ async function obtenerAccessToken(): Promise<string> {
     return cachedToken.token;
   }
 
-  const sa = getServiceAccount();
-  const { client_email, private_key } = sa;
+  const { GoogleAuth } = await import("google-auth-library");
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT no está configurado");
 
-  const header = { alg: "RS256", typ: "JWT" };
-  const now = Math.floor(Date.now() / 1000);
-  const claimSet = {
-    iss: client_email,
-    scope: SCOPE,
-    aud: "https://oauth2.googleapis.com/token",
-    exp: now + 3600,
-    iat: now,
-  };
-
-  function base64url(data: string) {
-    return Buffer.from(data)
-      .toString("base64")
-      .replace(/=/g, "")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_");
-  }
-
-  const { createPrivateKey } = await import("node:crypto");
-  const { sign } = await import("node:crypto");
-
-  const payload = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(claimSet))}`;
-
-  const key = createPrivateKey(private_key);
-  const sig = sign("RSA-SHA256", Buffer.from(payload), key);
-  const jwt = `${payload}.${base64url(sig.toString("base64"))}`;
-
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwt,
-    }),
+  const auth = new GoogleAuth({
+    credentials: JSON.parse(raw),
+    scopes: [SCOPE],
   });
 
-  const data = await res.json();
-  if (!data.access_token) throw new Error("No se pudo obtener token de acceso");
+  const client = await auth.getClient();
+  const token = await client.getAccessToken();
 
-  cachedToken = { token: data.access_token, exp: now + data.expires_in - 60 };
-  return data.access_token;
+  if (!token?.token) throw new Error("No se pudo obtener token de acceso");
+
+  const exp = token.res?.data?.expires_in
+    ? Math.floor(Date.now() / 1000) + token.res.data.expires_in - 60
+    : Math.floor(Date.now() / 1000) + 3540;
+
+  cachedToken = { token: token.token, exp };
+  return token.token;
 }
 
 async function requestFirestore(
