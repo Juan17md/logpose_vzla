@@ -26,8 +26,8 @@ type UsuarioRow = {
   displayName: string;
   role: string;
   status: string;
-  createdAt: { seconds: number; nanoseconds: number } | null;
-  trialExpiresAt: { seconds: number; nanoseconds: number } | null;
+  createdAt: string | null;
+  trialExpiresAt: string | null;
 };
 
 export default function AdminPage() {
@@ -95,11 +95,9 @@ export default function AdminPage() {
     }
   };
 
-  const formatearFecha = (
-    ts: { seconds: number; nanoseconds: number } | null
-  ) => {
+  const formatearFecha = (ts: string | null) => {
     if (!ts) return "—";
-    return new Date(ts.seconds * 1000).toLocaleDateString("es-ES", {
+    return new Date(ts).toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",

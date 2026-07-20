@@ -1,7 +1,15 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { getAdminDb, getAdminAuth } from "./firebaseAdmin";
+import {
+  leerUsuario,
+  listarUsuarios,
+  actualizarUsuario,
+  eliminarColeccion,
+  eliminarDocumentosWhere,
+  eliminarUsuarioDoc,
+  eliminarAuthUser,
+} from "./firebaseAdmin";
 import { verificarCookieSesion } from "./authCookie";
 import { esAdmin } from "@/types/rbac";
 
@@ -15,12 +23,12 @@ async function verificarAdmin(): Promise<string> {
   const sesion = await verificarCookieSesion(cookieVal);
   if (!sesion) throw new Error("Sesión inválida");
 
-  const db = await getAdminDb();
-  const callerDoc = await db.collection("users").doc(sesion.uid).get();
-  if (!callerDoc.exists) throw new Error("Usuario no encontrado");
+  const userData = await leerUsuario(sesion.uid);
+  if (!userData) throw new Error("Usuario no encontrado");
 
-  const role = callerDoc.data()?.role;
-  if (!esAdmin(role)) throw new Error("Se requieren permisos de administrador");
+  if (!esAdmin(userData.role)) {
+    throw new Error("Se requieren permisos de administrador");
+  }
 
   return sesion.uid;
 }
@@ -32,26 +40,22 @@ export async function obtenerUsuarios(): Promise<
     displayName: string;
     role: string;
     status: string;
-    createdAt: { seconds: number; nanoseconds: number } | null;
-    trialExpiresAt: { seconds: number; nanoseconds: number } | null;
+    createdAt: string | null;
+    trialExpiresAt: string | null;
   }>
 > {
   try {
     await verificarAdmin();
-    const db = await getAdminDb();
-    const snapshot = await db.collection("users").orderBy("createdAt", "desc").get();
-    return snapshot.docs.map((doc) => {
-      const d = doc.data();
-      return {
-        uid: doc.id,
-        email: d.email || "",
-        displayName: d.displayName || "",
-        role: d.role || "usuario",
-        status: d.status || "active",
-        createdAt: d.createdAt || null,
-        trialExpiresAt: d.trialExpiresAt || null,
-      };
-    });
+    const docs = await listarUsuarios();
+    return docs.map((d) => ({
+      uid: d.uid || "",
+      email: d.email || "",
+      displayName: d.displayName || "",
+      role: d.role || "usuario",
+      status: d.status || "active",
+      createdAt: d.createdAt || null,
+      trialExpiresAt: d.trialExpiresAt || null,
+    }));
   } catch (e) {
     throw e;
   }
@@ -60,13 +64,10 @@ export async function obtenerUsuarios(): Promise<
 export async function aprobarUsuario(uid: string): Promise<ActionResult> {
   try {
     await verificarAdmin();
-    const db = await getAdminDb();
+    const userData = await leerUsuario(uid);
+    if (!userData) return { exito: false, error: "Usuario no encontrado" };
 
-    const ref = db.collection("users").doc(uid);
-    const doc = await ref.get();
-    if (!doc.exists) return { exito: false, error: "Usuario no encontrado" };
-
-    await ref.update({
+    await actualizarUsuario(uid, {
       role: "usuario",
       status: "active",
       trialExpiresAt: null,
@@ -74,18 +75,18 @@ export async function aprobarUsuario(uid: string): Promise<ActionResult> {
 
     return { exito: true };
   } catch (e) {
-    return { exito: false, error: (e as Error).message || "Error al aprobar usuario" };
+    return {
+      exito: false,
+      error: (e as Error).message || "Error al aprobar usuario",
+    };
   }
 }
 
 export async function eliminarUsuario(uid: string): Promise<ActionResult> {
   try {
     await verificarAdmin();
-    const db = await getAdminDb();
-
-    const ref = db.collection("users").doc(uid);
-    const doc = await ref.get();
-    if (!doc.exists) return { exito: false, error: "Usuario no encontrado" };
+    const userData = await leerUsuario(uid);
+    if (!userData) return { exito: false, error: "Usuario no encontrado" };
 
     const subColecciones = [
       "bank_accounts",
@@ -98,44 +99,42 @@ export async function eliminarUsuario(uid: string): Promise<ActionResult> {
     ];
 
     for (const sub of subColecciones) {
-      const snap = await db
-        .collection("users")
-        .doc(uid)
-        .collection(sub)
-        .get();
-
-      const batch = db.batch();
-      snap.docs.forEach((d) => batch.delete(d.ref));
-      await batch.commit();
+      try {
+        await eliminarColeccion(uid, sub);
+      } catch {
+        // continuar si la subcolección no existe
+      }
     }
 
-    const transSnap = await db
-      .collection("transactions")
-      .where("userId", "==", uid)
-      .get();
-    const batch2 = db.batch();
-    transSnap.docs.forEach((d) => batch2.delete(d.ref));
-    await batch2.commit();
-
-    const listasSnap = await db
-      .collection("shopping_lists")
-      .where("userId", "==", uid)
-      .get();
-    const batch3 = db.batch();
-    listasSnap.docs.forEach((d) => batch3.delete(d.ref));
-    await batch3.commit();
-
-    await ref.delete();
+    try {
+      await eliminarDocumentosWhere("transactions", "userId", uid);
+    } catch {
+      // continuar
+    }
 
     try {
-      const auth = await getAdminAuth();
-      await auth.deleteUser(uid);
+      await eliminarDocumentosWhere("shopping_lists", "userId", uid);
     } catch {
-      // Si falla eliminar el auth user, continuamos
+      // continuar
+    }
+
+    try {
+      await eliminarUsuarioDoc(uid);
+    } catch {
+      // continuar
+    }
+
+    try {
+      await eliminarAuthUser(uid);
+    } catch {
+      // Si falla eliminar auth user, continuamos
     }
 
     return { exito: true };
   } catch (e) {
-    return { exito: false, error: (e as Error).message || "Error al eliminar usuario" };
+    return {
+      exito: false,
+      error: (e as Error).message || "Error al eliminar usuario",
+    };
   }
 }

@@ -30,13 +30,19 @@ export interface UserDoc {
   role: Role;
   status: UserStatus;
   onboardingCompleted: boolean;
-  createdAt: FirebaseFirestore.Timestamp | null;
-  trialExpiresAt: FirebaseFirestore.Timestamp | null;
+  createdAt: TimestampValue | null;
+  trialExpiresAt: TimestampValue | null;
   monthlyBudget?: number;
   monthlySalary?: number;
   savingsPhysical?: number;
   savingsUSDT?: number;
 }
+
+export type TimestampValue = {
+  _seconds: number;
+  _nanoseconds: number;
+  toMillis: () => number;
+};
 
 export function esAdmin(role: unknown): role is "admin" {
   return role === ROLES.ADMIN;
@@ -57,6 +63,8 @@ export function esPruebaExpirada(
       ? trialExpiresAt
       : trialExpiresAt instanceof Date
         ? trialExpiresAt.getTime()
-        : (trialExpiresAt as { toMillis?: () => number })?.toMillis?.() ?? 0;
+        : typeof trialExpiresAt === "string"
+          ? new Date(trialExpiresAt).getTime()
+          : (trialExpiresAt as { toMillis?: () => number })?.toMillis?.() ?? 0;
   return Date.now() > exp;
 }

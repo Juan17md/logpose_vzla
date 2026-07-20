@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb } from "@/lib/firebaseAdmin";
+import { leerUsuarioConToken } from "@/lib/firebaseAdmin";
 import { verificarTokenFirebase } from "@/lib/verificarAuthFirebase";
 import { crearCookieSesion, configCookie } from "@/lib/authCookie";
 import { esPrueba } from "@/types/rbac";
@@ -16,17 +16,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    const db = await getAdminDb();
-    const docSnap = await db.collection("users").doc(info.uid).get();
-    if (!docSnap.exists) {
-      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    const userData = await leerUsuarioConToken(info.uid, idToken);
+    if (!userData) {
+      return NextResponse.json(
+        { error: "Usuario no encontrado" },
+        { status: 404 }
+      );
     }
 
-    const userData = docSnap.data()!;
     const role = userData.role || "usuario";
     const status = userData.status || "active";
     const trialExpiresAt = esPrueba(role)
-      ? userData.trialExpiresAt?.toMillis() ?? null
+      ? userData.trialExpiresAt
+        ? new Date(userData.trialExpiresAt).getTime()
+        : null
       : null;
 
     const sessionData = {
@@ -49,7 +52,8 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch {
+  } catch (e) {
+    console.error("Error en sesión:", e);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
