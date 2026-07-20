@@ -521,7 +521,11 @@ export default function AdminPage() {
                         {u.status === "expired" && (
                           <FiAlertTriangle size={10} />
                         )}
-                        {u.status}
+                        {{
+                          active: "Activo",
+                          pending: "Pendiente",
+                          expired: "Expirado",
+                        }[u.status] || u.status}
                       </span>
                     </td>
                     <td className="p-4 text-slate-400 text-xs hidden lg:table-cell">
