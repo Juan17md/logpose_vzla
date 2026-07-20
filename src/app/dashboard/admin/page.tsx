@@ -11,6 +11,7 @@ import {
   cambiarRolUsuario,
   cambiarPasswordUsuario,
   eliminarUsuario,
+  actualizarExpiracion,
 } from "@/lib/admin";
 import { esAdmin } from "@/types/rbac";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ import {
   FiClock,
   FiKey,
   FiCheck,
+  FiEdit2,
 } from "react-icons/fi";
 import Select from "@/components/ui/forms/Select";
 import Modal from "@/components/ui/Modal";
@@ -90,6 +92,9 @@ export default function AdminPage() {
   const [cambiarPasswordUid, setCambiarPasswordUid] = useState<string | null>(null);
   const [nuevaPassword, setNuevaPassword] = useState("");
   const [cambiandoPassword, setCambiandoPassword] = useState(false);
+  const [expiracionUid, setExpiracionUid] = useState<string | null>(null);
+  const [expiracionFecha, setExpiracionFecha] = useState("");
+  const [guardandoExpiracion, setGuardandoExpiracion] = useState(false);
 
   const handleAprobar = async (uid: string) => {
     const res = await aprobarUsuario(uid);
@@ -130,6 +135,33 @@ export default function AdminPage() {
   const abrirCambiarPassword = (uid: string) => {
     setCambiarPasswordUid(uid);
     setNuevaPassword("");
+  };
+
+  const abrirExpiracion = (uid: string, fechaActual: string | null) => {
+    setExpiracionUid(uid);
+    if (fechaActual) {
+      setExpiracionFecha(fechaActual.split("T")[0]);
+    } else {
+      const defecto = new Date();
+      defecto.setDate(defecto.getDate() + 7);
+      setExpiracionFecha(defecto.toISOString().split("T")[0]);
+    }
+  };
+
+  const handleGuardarExpiracion = async () => {
+    if (!expiracionUid) return;
+    setGuardandoExpiracion(true);
+    const fechaISO = expiracionFecha ? new Date(expiracionFecha + "T23:59:59").toISOString() : null;
+    const res = await actualizarExpiracion(expiracionUid, fechaISO);
+    if (res.exito) {
+      toast.success("Fecha de expiración actualizada");
+      cargarUsuarios();
+    } else {
+      toast.error(res.error);
+    }
+    setGuardandoExpiracion(false);
+    setExpiracionUid(null);
+    setExpiracionFecha("");
   };
 
   const handleEliminarConfirm = async () => {
@@ -346,6 +378,64 @@ export default function AdminPage() {
         </div>
       </Modal>
 
+      {/* Modal cambiar expiración */}
+      <Modal
+        isOpen={expiracionUid !== null}
+        onClose={() => {
+          setExpiracionUid(null);
+          setExpiracionFecha("");
+        }}
+        title="Fecha de expiración"
+        maxWidth="sm"
+      >
+        <div className="space-y-5">
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-2.5 ml-0.5">
+              Fecha límite
+            </label>
+            <input
+              type="date"
+              value={expiracionFecha}
+              onChange={(e) => setExpiracionFecha(e.target.value)}
+              className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-5 pr-5 outline-none transition-all duration-300 [color-scheme:dark] hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-slate-800/80 focus:shadow-[0_0_20px_rgba(202,138,4,0.08)]"
+            />
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+            <button
+              onClick={() => {
+                setExpiracionUid(null);
+                setExpiracionFecha("");
+              }}
+              disabled={guardandoExpiracion}
+              className="px-6 py-3 font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                setExpiracionFecha("");
+              }}
+              disabled={guardandoExpiracion}
+              className="px-6 py-3 font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all disabled:opacity-50"
+            >
+              Sin expiración
+            </button>
+            <button
+              onClick={handleGuardarExpiracion}
+              disabled={guardandoExpiracion || !expiracionFecha}
+              className="px-6 py-3 font-semibold text-white bg-violet-600 hover:bg-violet-500 rounded-xl shadow-lg shadow-violet-900/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center"
+            >
+              {guardandoExpiracion ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                "Guardar"
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Tabla */}
       <div className="bg-slate-900/60 backdrop-blur-md rounded-3xl border border-slate-700/50 overflow-hidden">
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-700/50">
@@ -441,9 +531,22 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td className="p-4 text-slate-400 text-xs hidden lg:table-cell">
-                      {u.trialExpiresAt
-                        ? formatearFecha(u.trialExpiresAt)
-                        : "—"}
+                      <div className="flex items-center gap-2">
+                        <span>
+                          {u.trialExpiresAt
+                            ? formatearFecha(u.trialExpiresAt)
+                            : "—"}
+                        </span>
+                        {u.role !== "admin" && (
+                          <button
+                            onClick={() => abrirExpiracion(u.uid, u.trialExpiresAt)}
+                            className="p-1.5 bg-slate-800/60 hover:bg-violet-500/20 text-slate-500 hover:text-violet-400 rounded-lg transition-all border border-slate-700/30 hover:border-violet-500/30"
+                            title="Establecer expiración"
+                          >
+                            <FiEdit2 size={12} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">

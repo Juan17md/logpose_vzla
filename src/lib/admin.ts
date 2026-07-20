@@ -116,6 +116,29 @@ export async function cambiarRolUsuario(
   }
 }
 
+export async function actualizarExpiracion(
+  uid: string,
+  fecha: string | null
+): Promise<ActionResult> {
+  try {
+    await verificarAdmin();
+    const userData = await leerUsuario(uid);
+    if (!userData) return { exito: false, error: "Usuario no encontrado" };
+
+    await actualizarUsuario(uid, {
+      trialExpiresAt: fecha,
+      status: fecha && new Date(fecha) < new Date() ? "expired" : userData.status || "active",
+    });
+
+    return { exito: true };
+  } catch (e) {
+    return {
+      exito: false,
+      error: (e as Error).message || "Error al actualizar expiración",
+    };
+  }
+}
+
 export async function cambiarPasswordUsuario(
   uid: string,
   nuevaPassword: string
