@@ -25,8 +25,9 @@ import {
   FiCalendar,
   FiClock,
   FiKey,
-  FiChevronDown,
 } from "react-icons/fi";
+import Select from "@/components/ui/forms/Select";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 type UsuarioRow = {
   uid: string;
@@ -82,6 +83,8 @@ export default function AdminPage() {
   }, [autorizado, cargarUsuarios]);
 
   const [cambiandoRol, setCambiandoRol] = useState<string | null>(null);
+  const [eliminarUid, setEliminarUid] = useState<string | null>(null);
+  const [eliminando, setEliminando] = useState(false);
 
   const handleAprobar = async (uid: string) => {
     const res = await aprobarUsuario(uid);
@@ -119,17 +122,24 @@ export default function AdminPage() {
     }
   };
 
-  const handleEliminar = async (uid: string) => {
-    if (!confirm("¿Eliminar este usuario permanentemente? Esta acción no se puede deshacer."))
-      return;
-    const res = await eliminarUsuario(uid);
+  const handleEliminarConfirm = async () => {
+    if (!eliminarUid) return;
+    setEliminando(true);
+    const res = await eliminarUsuario(eliminarUid);
     if (res.exito) {
       toast.success("Usuario eliminado");
       cargarUsuarios();
     } else {
       toast.error(res.error);
     }
+    setEliminando(false);
+    setEliminarUid(null);
   };
+
+  const opcionesRol = [
+    { id: "prueba", name: "Prueba", value: "prueba" },
+    { id: "usuario", name: "Usuario", value: "usuario" },
+  ];
 
   const formatearFecha = (ts: string | null) => {
     if (!ts) return "—";
@@ -235,6 +245,19 @@ export default function AdminPage() {
         ))}
       </div>
 
+      {/* Confirmación de eliminación */}
+      <ConfirmDialog
+        isOpen={eliminarUid !== null}
+        onClose={() => setEliminarUid(null)}
+        onConfirm={handleEliminarConfirm}
+        title="Eliminar usuario"
+        message="¿Eliminar este usuario permanentemente? Esta acción no se puede deshacer. Se eliminarán todos sus datos financieros, cuentas, transacciones y su autenticación."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
+        isLoading={eliminando}
+      />
+
       {/* Tabla */}
       <div className="bg-slate-900/60 backdrop-blur-md rounded-3xl border border-slate-700/50 overflow-hidden">
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-700/50">
@@ -297,11 +320,21 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td className="p-4 text-center">
-                      <span
-                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeRole(u.role)}`}
-                      >
-                        {u.role}
-                      </span>
+                      {u.role !== "admin" ? (
+                        <Select<string>
+                          options={opcionesRol}
+                          value={u.role}
+                          onChange={(val) => handleCambiarRol(u.uid, val)}
+                          disabled={cambiandoRol === u.uid}
+                          className="min-w-[140px]"
+                        />
+                      ) : (
+                        <span
+                          className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeRole(u.role)}`}
+                        >
+                          admin
+                        </span>
+                      )}
                     </td>
                     <td className="p-4 text-center">
                       <span
@@ -328,23 +361,6 @@ export default function AdminPage() {
                       <div className="flex items-center justify-end gap-2">
                         {u.role !== "admin" && (
                           <>
-                            <div className="relative">
-                              <select
-                                value={u.role}
-                                onChange={(e) =>
-                                  handleCambiarRol(u.uid, e.target.value)
-                                }
-                                disabled={cambiandoRol === u.uid}
-                                className="appearance-none bg-slate-800/80 text-xs text-slate-300 px-2.5 py-1.5 pr-6 rounded-lg border border-slate-600/50 focus:outline-none focus:border-violet-500/50 cursor-pointer disabled:opacity-50"
-                              >
-                                <option value="prueba">prueba</option>
-                                <option value="usuario">usuario</option>
-                              </select>
-                              <FiChevronDown
-                                size={12}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
-                              />
-                            </div>
                             <button
                               onClick={() => handleCambiarPassword(u.uid)}
                               className="p-2 bg-violet-500/15 hover:bg-violet-500/25 text-violet-400 rounded-xl transition-all border border-violet-500/20"
@@ -353,7 +369,7 @@ export default function AdminPage() {
                               <FiKey size={16} />
                             </button>
                             <button
-                              onClick={() => handleEliminar(u.uid)}
+                              onClick={() => setEliminarUid(u.uid)}
                               className="p-2 bg-red-500/15 hover:bg-red-500/25 text-red-400 rounded-xl transition-all border border-red-500/20"
                               title="Eliminar usuario"
                             >
@@ -369,7 +385,6 @@ export default function AdminPage() {
             </table>
           </div>
         )}
-      </div>
     </div>
   );
 }
