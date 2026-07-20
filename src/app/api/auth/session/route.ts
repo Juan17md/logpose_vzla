@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebaseAdmin";
+import { getAdminDb } from "@/lib/firebaseAdmin";
 import { verificarTokenFirebase } from "@/lib/verificarAuthFirebase";
 import { crearCookieSesion, configCookie } from "@/lib/authCookie";
 import { esPrueba } from "@/types/rbac";
@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    const docSnap = await adminDb.collection("users").doc(info.uid).get();
+    const db = await getAdminDb();
+    const docSnap = await db.collection("users").doc(info.uid).get();
     if (!docSnap.exists) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
     }

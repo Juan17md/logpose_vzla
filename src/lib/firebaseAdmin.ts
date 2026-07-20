@@ -1,22 +1,43 @@
-import { initializeApp, getApps, cert } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
+let adminDb: FirebaseFirestore.Firestore | null = null;
+let adminAuth: import("firebase-admin/auth").Auth | null = null;
 
-function iniciarAdminApp() {
-  if (getApps().length > 0) return getApps()[0];
+async function iniciarAdminApp() {
+  if (adminDb) return { adminDb, adminAuth };
+
+  const { initializeApp, getApps, cert } = await import("firebase-admin/app");
+  const { getFirestore } = await import("firebase-admin/firestore");
+  const { getAuth } = await import("firebase-admin/auth");
+
+  if (getApps().length > 0) {
+    const app = getApps()[0];
+    adminDb = getFirestore(app);
+    adminAuth = getAuth(app);
+    return { adminDb, adminAuth };
+  }
 
   const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+  let app;
   if (serviceAccount) {
-    return initializeApp({
+    app = initializeApp({
       credential: cert(JSON.parse(serviceAccount)),
+    });
+  } else {
+    app = initializeApp({
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     });
   }
 
-  return initializeApp({
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  });
+  adminDb = getFirestore(app);
+  adminAuth = getAuth(app);
+  return { adminDb, adminAuth };
 }
 
-const adminApp = iniciarAdminApp();
-export const adminAuth = getAuth(adminApp);
-export const adminDb = getFirestore(adminApp);
+export async function getAdminDb() {
+  const instancia = await iniciarAdminApp();
+  return instancia.adminDb!;
+}
+
+export async function getAdminAuth() {
+  const instancia = await iniciarAdminApp();
+  return instancia.adminAuth!;
+}

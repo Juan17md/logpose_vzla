@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { adminDb } from "./firebaseAdmin";
+import { getAdminDb, getAdminAuth } from "./firebaseAdmin";
 import { verificarCookieSesion } from "./authCookie";
 import { esAdmin } from "@/types/rbac";
 
@@ -15,7 +15,8 @@ async function verificarAdmin(): Promise<string> {
   const sesion = await verificarCookieSesion(cookieVal);
   if (!sesion) throw new Error("Sesión inválida");
 
-  const callerDoc = await adminDb.collection("users").doc(sesion.uid).get();
+  const db = await getAdminDb();
+  const callerDoc = await db.collection("users").doc(sesion.uid).get();
   if (!callerDoc.exists) throw new Error("Usuario no encontrado");
 
   const role = callerDoc.data()?.role;
@@ -37,7 +38,8 @@ export async function obtenerUsuarios(): Promise<
 > {
   try {
     await verificarAdmin();
-    const snapshot = await adminDb.collection("users").orderBy("createdAt", "desc").get();
+    const db = await getAdminDb();
+    const snapshot = await db.collection("users").orderBy("createdAt", "desc").get();
     return snapshot.docs.map((doc) => {
       const d = doc.data();
       return {
@@ -58,8 +60,9 @@ export async function obtenerUsuarios(): Promise<
 export async function aprobarUsuario(uid: string): Promise<ActionResult> {
   try {
     await verificarAdmin();
+    const db = await getAdminDb();
 
-    const ref = adminDb.collection("users").doc(uid);
+    const ref = db.collection("users").doc(uid);
     const doc = await ref.get();
     if (!doc.exists) return { exito: false, error: "Usuario no encontrado" };
 
@@ -78,8 +81,9 @@ export async function aprobarUsuario(uid: string): Promise<ActionResult> {
 export async function eliminarUsuario(uid: string): Promise<ActionResult> {
   try {
     await verificarAdmin();
+    const db = await getAdminDb();
 
-    const ref = adminDb.collection("users").doc(uid);
+    const ref = db.collection("users").doc(uid);
     const doc = await ref.get();
     if (!doc.exists) return { exito: false, error: "Usuario no encontrado" };
 
@@ -94,37 +98,38 @@ export async function eliminarUsuario(uid: string): Promise<ActionResult> {
     ];
 
     for (const sub of subColecciones) {
-      const snap = await adminDb
+      const snap = await db
         .collection("users")
         .doc(uid)
         .collection(sub)
         .get();
 
-      const batch = adminDb.batch();
+      const batch = db.batch();
       snap.docs.forEach((d) => batch.delete(d.ref));
       await batch.commit();
     }
 
-    const transSnap = await adminDb
+    const transSnap = await db
       .collection("transactions")
       .where("userId", "==", uid)
       .get();
-    const batch2 = adminDb.batch();
+    const batch2 = db.batch();
     transSnap.docs.forEach((d) => batch2.delete(d.ref));
     await batch2.commit();
 
-    const listasSnap = await adminDb
+    const listasSnap = await db
       .collection("shopping_lists")
       .where("userId", "==", uid)
       .get();
-    const batch3 = adminDb.batch();
+    const batch3 = db.batch();
     listasSnap.docs.forEach((d) => batch3.delete(d.ref));
     await batch3.commit();
 
     await ref.delete();
 
     try {
-      await (await import("./firebaseAdmin")).adminAuth.deleteUser(uid);
+      const auth = await getAdminAuth();
+      await auth.deleteUser(uid);
     } catch {
       // Si falla eliminar el auth user, continuamos
     }
