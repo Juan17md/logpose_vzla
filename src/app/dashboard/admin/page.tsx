@@ -25,6 +25,7 @@ import {
   FiCalendar,
   FiClock,
   FiKey,
+  FiCheck,
 } from "react-icons/fi";
 import Select from "@/components/ui/forms/Select";
 import Modal from "@/components/ui/Modal";
@@ -286,15 +287,37 @@ export default function AdminPage() {
               type="password"
               value={nuevaPassword}
               onChange={(e) => setNuevaPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Escribe la nueva contraseña"
               autoFocus
               className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-5 pr-5 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-slate-800/80 focus:shadow-[0_0_20px_rgba(202,138,4,0.08)]"
             />
-            {nuevaPassword.length > 0 && nuevaPassword.length < 6 && (
-              <p className="text-red-400 text-xs mt-2 ml-0.5">
-                La contraseña debe tener al menos 6 caracteres
-              </p>
-            )}
+          </div>
+
+          <div className="space-y-2.5">
+            {[
+              { cumple: nuevaPassword.length > 6, texto: "Más de 6 caracteres" },
+              { cumple: /[A-Z]/.test(nuevaPassword), texto: "Al menos una mayúscula" },
+              { cumple: /\d/.test(nuevaPassword), texto: "Al menos un número" },
+              { cumple: /[!@#$%^&*(),.?":{}|<>`~\-_=+\\\/\[\];']/.test(nuevaPassword), texto: "Al menos un símbolo" },
+            ].map((req) => (
+              <div
+                key={req.texto}
+                className={`flex items-center gap-2.5 transition-all duration-300 ${
+                  req.cumple ? "text-emerald-400" : "text-slate-600"
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    req.cumple
+                      ? "bg-emerald-500/20 text-emerald-400"
+                      : "bg-slate-800/60 text-slate-600"
+                  }`}
+                >
+                  <FiCheck size={12} strokeWidth={3} />
+                </div>
+                <span className="text-sm font-medium">{req.texto}</span>
+              </div>
+            ))}
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
@@ -310,7 +333,7 @@ export default function AdminPage() {
             </button>
             <button
               onClick={handleCambiarPasswordConfirm}
-              disabled={cambiandoPassword || nuevaPassword.length < 6}
+              disabled={cambiandoPassword || nuevaPassword.length <= 6 || !/[A-Z]/.test(nuevaPassword) || !/\d/.test(nuevaPassword) || !/[!@#$%^&*(),.?":{}|<>`~\-_=+\\\/\[\];']/.test(nuevaPassword)}
               className="px-6 py-3 font-semibold text-white bg-violet-600 hover:bg-violet-500 rounded-xl shadow-lg shadow-violet-900/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center"
             >
               {cambiandoPassword ? (
