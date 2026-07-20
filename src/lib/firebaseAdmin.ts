@@ -127,7 +127,8 @@ export async function leerUsuario(uid: string) {
   try {
     const data = await requestFirestore("GET", `/users/${uid}`);
     return docToObject(data);
-  } catch {
+  } catch (e) {
+    console.error(`Error leyendo usuario ${uid}:`, e);
     return null;
   }
 }
