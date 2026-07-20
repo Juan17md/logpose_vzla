@@ -20,12 +20,11 @@ const BANCO_LOGOS_REALES: Record<string, string> = {
     reserve: "https://getreserve.com/favicon.ico",
     bofa: "https://www.bankofamerica.com/favicon.ico",
     chase: "https://www.chase.com/favicon.ico",
-    // Estas URLs de Wikimedia son muy estables y rara vez bloqueadas por AdBlockers
-    banesco: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Logo_Banesco.png",
-    mercantil: "https://upload.wikimedia.org/wikipedia/commons/d/df/Logo_Banco_Mercantil.png",
-    provincial: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_BBVA_Provincial.png",
-    venezuela: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Logo_Banco_de_Venezuela.png",
-    bdv: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Logo_Banco_de_Venezuela.png",
+    banesco: "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.banesco.com&size=64",
+    mercantil: "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.mercantilbanco.com&size=64",
+    provincial: "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.provincial.com&size=64",
+    venezuela: "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.bancodevenezuela.com&size=64",
+    bdv: "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.bancodevenezuela.com&size=64",
 };
 
 /**
