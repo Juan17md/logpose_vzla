@@ -507,11 +507,10 @@ export default function AdminPage() {
                           className="min-w-[140px]"
                         />
                       ) : (
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeRole(u.role)}`}
-                        >
-                          admin
-                        </span>
+                        <div className="min-w-[140px] inline-flex items-center justify-between gap-2 bg-slate-800/40 backdrop-blur-md border border-violet-500/30 text-white text-sm font-bold rounded-2xl py-4 pl-5 pr-4 shadow-lg select-none">
+                          <span>admin</span>
+                          <FiShield size={16} className="text-violet-500/60 shrink-0" />
+                        </div>
                       )}
                     </td>
                     <td className="p-4 text-center">
