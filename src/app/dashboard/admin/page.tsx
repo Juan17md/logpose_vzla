@@ -27,6 +27,7 @@ import {
   FiKey,
 } from "react-icons/fi";
 import Select from "@/components/ui/forms/Select";
+import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 type UsuarioRow = {
@@ -85,6 +86,9 @@ export default function AdminPage() {
   const [cambiandoRol, setCambiandoRol] = useState<string | null>(null);
   const [eliminarUid, setEliminarUid] = useState<string | null>(null);
   const [eliminando, setEliminando] = useState(false);
+  const [cambiarPasswordUid, setCambiarPasswordUid] = useState<string | null>(null);
+  const [nuevaPassword, setNuevaPassword] = useState("");
+  const [cambiandoPassword, setCambiandoPassword] = useState(false);
 
   const handleAprobar = async (uid: string) => {
     const res = await aprobarUsuario(uid);
@@ -108,18 +112,23 @@ export default function AdminPage() {
     setCambiandoRol(null);
   };
 
-  const handleCambiarPassword = async (uid: string) => {
-    const password = prompt("Ingresa la nueva contraseña (mín. 6 caracteres):");
-    if (!password || password.length < 6) {
-      if (password) toast.error("La contraseña debe tener al menos 6 caracteres");
-      return;
-    }
-    const res = await cambiarPasswordUsuario(uid, password);
+  const handleCambiarPasswordConfirm = async () => {
+    if (!cambiarPasswordUid || nuevaPassword.length < 6) return;
+    setCambiandoPassword(true);
+    const res = await cambiarPasswordUsuario(cambiarPasswordUid, nuevaPassword);
     if (res.exito) {
       toast.success("Contraseña cambiada exitosamente");
     } else {
       toast.error(res.error);
     }
+    setCambiandoPassword(false);
+    setCambiarPasswordUid(null);
+    setNuevaPassword("");
+  };
+
+  const abrirCambiarPassword = (uid: string) => {
+    setCambiarPasswordUid(uid);
+    setNuevaPassword("");
   };
 
   const handleEliminarConfirm = async () => {
@@ -258,6 +267,62 @@ export default function AdminPage() {
         isLoading={eliminando}
       />
 
+      {/* Modal cambiar contraseña */}
+      <Modal
+        isOpen={cambiarPasswordUid !== null}
+        onClose={() => {
+          setCambiarPasswordUid(null);
+          setNuevaPassword("");
+        }}
+        title="Cambiar contraseña"
+        maxWidth="sm"
+      >
+        <div className="space-y-5">
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-2.5 ml-0.5">
+              Nueva contraseña
+            </label>
+            <input
+              type="password"
+              value={nuevaPassword}
+              onChange={(e) => setNuevaPassword(e.target.value)}
+              placeholder="Mínimo 6 caracteres"
+              autoFocus
+              className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-5 pr-5 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-slate-800/80 focus:shadow-[0_0_20px_rgba(202,138,4,0.08)]"
+            />
+            {nuevaPassword.length > 0 && nuevaPassword.length < 6 && (
+              <p className="text-red-400 text-xs mt-2 ml-0.5">
+                La contraseña debe tener al menos 6 caracteres
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+            <button
+              onClick={() => {
+                setCambiarPasswordUid(null);
+                setNuevaPassword("");
+              }}
+              disabled={cambiandoPassword}
+              className="px-6 py-3 font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleCambiarPasswordConfirm}
+              disabled={cambiandoPassword || nuevaPassword.length < 6}
+              className="px-6 py-3 font-semibold text-white bg-violet-600 hover:bg-violet-500 rounded-xl shadow-lg shadow-violet-900/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center"
+            >
+              {cambiandoPassword ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                "Guardar"
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Tabla */}
       <div className="bg-slate-900/60 backdrop-blur-md rounded-3xl border border-slate-700/50 overflow-hidden">
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-700/50">
@@ -362,7 +427,7 @@ export default function AdminPage() {
                         {u.role !== "admin" && (
                           <>
                             <button
-                              onClick={() => handleCambiarPassword(u.uid)}
+                              onClick={() => abrirCambiarPassword(u.uid)}
                               className="p-2 bg-violet-500/15 hover:bg-violet-500/25 text-violet-400 rounded-xl transition-all border border-violet-500/20"
                               title="Cambiar contraseña"
                             >
