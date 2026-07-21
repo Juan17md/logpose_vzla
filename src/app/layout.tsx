@@ -3,6 +3,7 @@ import { Inter, Bungee } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import AvisosPWA from "@/components/pwa/AvisosPWA";
+import MotionProvider from "@/components/providers/MotionProvider";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const bungee = Bungee({ variable: "--font-bungee", weight: "400", subsets: ["latin"] });
@@ -41,7 +42,9 @@ export default function RootLayout({
         className={`${inter.variable} ${bungee.variable} antialiased`}
         suppressHydrationWarning
       >
-        {children}
+        <MotionProvider>
+          {children}
+        </MotionProvider>
         <Toaster position="top-right" richColors mobileOffset={{ top: 52 }} />
         <AvisosPWA />
       </body>
