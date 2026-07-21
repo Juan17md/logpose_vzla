@@ -2,7 +2,7 @@ import 'server-only';
 import { Groq } from 'groq-sdk';
 import { NextResponse } from 'next/server';
 import { verificarTokenFirebase } from '@/lib/verificarAuthFirebase';
-import { chatRateLimit } from '@/lib/rateLimit';
+import { obtenerChatRateLimit } from '@/lib/rateLimit';
 
 interface MensajeChat {
     role: "system" | "user" | "assistant";
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const { success } = await chatRateLimit.limit(`${sesion.uid}:${ip}`);
+    const { success } = await obtenerChatRateLimit().limit(`${sesion.uid}:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }, { status: 429 });
     }

@@ -4,12 +4,12 @@ import { leerUsuarioConToken } from "@/lib/firebaseAdmin";
 import { verificarTokenFirebase } from "@/lib/verificarAuthFirebase";
 import { crearCookieSesion, configCookie } from "@/lib/authCookie";
 import { esPrueba } from "@/types/rbac";
-import { authRateLimit } from "@/lib/rateLimit";
+import { obtenerAuthRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const { success } = await authRateLimit.limit(ip);
+    const { success } = await obtenerAuthRateLimit().limit(ip);
     if (!success) {
       return NextResponse.json(
         { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },
