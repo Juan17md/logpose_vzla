@@ -26,6 +26,7 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { getRates, type TasasCambio } from "@/lib/currency";
+import { cuentaBancariaSchema } from "@/lib/schemas";
 import type {
     CuentaBancaria,
     TransaccionCuenta,
@@ -254,16 +255,24 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
     const crearCuenta = useCallback(async (input: CrearCuentaInput): Promise<string | null> => {
         if (!auth.currentUser) return null;
 
+        const parsed = cuentaBancariaSchema.safeParse({
+            nombre: input.nombre,
+            banco: input.banco,
+            moneda: input.moneda,
+            saldo: input.saldoInicial || 0,
+            color: input.color || obtenerColorAleatorio(),
+            activa: true,
+        });
+        if (!parsed.success) {
+            console.error("Cuenta inválida:", parsed.error.flatten());
+            return null;
+        }
+
         try {
             const docRef = await addDoc(
                 collection(db, "users", auth.currentUser.uid, "bank_accounts"),
                 {
-                    nombre: input.nombre,
-                    banco: input.banco,
-                    moneda: input.moneda,
-                    saldo: input.saldoInicial || 0,
-                    color: input.color || obtenerColorAleatorio(),
-                    activa: true,
+                    ...parsed.data,
                     creadoEn: serverTimestamp(),
                     actualizadoEn: serverTimestamp(),
                 }

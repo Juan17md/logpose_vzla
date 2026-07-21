@@ -1,11 +1,22 @@
+import 'server-only';
 import { NextRequest, NextResponse } from "next/server";
 import { leerUsuarioConToken } from "@/lib/firebaseAdmin";
 import { verificarTokenFirebase } from "@/lib/verificarAuthFirebase";
 import { crearCookieSesion, configCookie } from "@/lib/authCookie";
 import { esPrueba } from "@/types/rbac";
+import { authRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const { success } = await authRateLimit.limit(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },
+        { status: 429 }
+      );
+    }
+
     const { idToken } = await request.json();
     if (!idToken) {
       return NextResponse.json({ error: "Token requerido" }, { status: 400 });

@@ -38,7 +38,7 @@ export default function AvisoCuentasFaltantes() {
                         animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 50, scale: 0.9 }}
                         transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                        className="w-full md:w-[400px] bg-slate-950/80 backdrop-blur-2xl border border-amber-500/30 rounded-4xl shadow-[0_30px_70px_rgba(0,0,0,0.6),0_0_40px_rgba(245,158,11,0.1)] overflow-hidden pointer-events-auto"
+                        className="w-full md:w-[400px] bg-slate-950/80 backdrop-blur-2xl border border-amber-500/30 rounded-[2.5rem] shadow-[0_30px_70px_rgba(0,0,0,0.6),0_0_40px_rgba(245,158,11,0.1)] overflow-hidden pointer-events-auto"
                     >
                         {/* Decorative background glow */}
                         <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />

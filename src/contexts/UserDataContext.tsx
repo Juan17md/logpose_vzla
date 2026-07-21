@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useMemo } fr
 import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { userDataSchema } from "@/lib/schemas";
 
 export interface UserData {
     monthlyBudget: number;
@@ -74,8 +75,13 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
 
     const updateUserData = async (updates: Partial<UserData>) => {
         if (!auth.currentUser) return;
+        const parsed = userDataSchema.safeParse(updates);
+        if (!parsed.success) {
+            console.error("Datos de usuario inválidos:", parsed.error.flatten());
+            return;
+        }
         try {
-            await updateDoc(doc(db, "users", auth.currentUser.uid), updates);
+            await updateDoc(doc(db, "users", auth.currentUser.uid), parsed.data);
         } catch (error) {
             console.error("Error updating user data:", error);
         }

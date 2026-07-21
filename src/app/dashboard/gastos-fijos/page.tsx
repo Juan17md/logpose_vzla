@@ -576,7 +576,7 @@ export default function FixedExpensesPage() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`group relative flex flex-col bg-slate-900/40 backdrop-blur-xl border-2 rounded-4xl p-5 transition-all hover:bg-slate-900/60 ${isPaid ? 'border-emerald-500/20 shadow-lg shadow-emerald-500/5' : 'border-slate-800 hover:border-slate-700'}`}
+                className={`group relative flex flex-col bg-slate-900/40 backdrop-blur-xl border-2 rounded-[2.5rem] p-5 transition-all hover:bg-slate-900/60 ${isPaid ? 'border-emerald-500/20 shadow-lg shadow-emerald-500/5' : 'border-slate-800 hover:border-slate-700'}`}
             >
                 {/* ... existing card content ... */}
                 <div className="flex justify-between items-start mb-6">

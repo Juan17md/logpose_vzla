@@ -6,7 +6,7 @@
   <img src="public/images/login-preview.png" alt="LogPose Vzla Hero" width="100%" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
 </p>
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestone-ffca28?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
@@ -39,11 +39,11 @@
 
 | Componente | Tecnología |
 | :--- | :--- |
-| **Frontend** | [Next.js 15](https://nextjs.org/) (App Router), [React 19](https://react.dev/) |
+| **Frontend** | [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/) |
 | **Estilizado** | [Tailwind CSS v4](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/) |
 | **Backend & Auth** | [Firebase](https://firebase.google.com/) (Firestore, Authentication) |
 | **Inteligencia Artificial** | [Groq Cloud SDK](https://groq.com/) |
-| **Gráficos** | [Recharts](https://recharts.org/) |
+| **Gráficos** | [D3.js](https://d3js.org/) (Rosen Charts) |
 | **Formularios** | [React Hook Form](https://react-hook-form.com/) con [Zod](https://zod.dev/) |
 
 ---

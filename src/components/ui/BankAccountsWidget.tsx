@@ -26,7 +26,7 @@ export default function BankAccountsWidget() {
 
     if (loading) {
         return (
-            <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden flex flex-col gap-4">
+            <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden flex flex-col gap-4">
                 <div className="flex items-center gap-2">
                     <Skeleton className="w-8 h-8 rounded-lg" />
                     <Skeleton className="w-24 h-4 rounded-md" />
@@ -47,7 +47,7 @@ export default function BankAccountsWidget() {
     const cuentasRestantes = cuentas.length - cuentasAMostrar.length;
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group hover:border-violet-500/30 transition-all">
+        <div className="bg-slate-900/50 backdrop-blur-md rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group hover:border-violet-500/30 transition-all">
             {/* Decoraciones */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-all" />
 

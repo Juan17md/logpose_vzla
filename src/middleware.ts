@@ -20,7 +20,7 @@ export async function middleware(request: NextRequest) {
 
   if (!cookieVal) {
     if (esRutaProtegida && !esRutaAuth) {
-      return NextResponse.next();
+      return NextResponse.redirect(new URL("/login", request.url));
     }
     return NextResponse.next();
   }
@@ -28,7 +28,9 @@ export async function middleware(request: NextRequest) {
   const sesion = await verificarCookieSesion(cookieVal);
   if (!sesion) {
     if (esRutaProtegida) {
-      return NextResponse.next();
+      const res = NextResponse.redirect(new URL("/login", request.url));
+      res.cookies.delete("session");
+      return res;
     }
     return NextResponse.next();
   }

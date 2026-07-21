@@ -10,6 +10,7 @@ import { getBCVRate } from "@/lib/currency";
 import { FixedExpense } from "@/hooks/useFixedExpenses";
 import { parseNumeroFlexible } from "@/lib/number";
 import Input from "../ui/forms/Input";
+import Textarea from "../ui/forms/Textarea";
 import CustomCurrencyInput from "../ui/forms/CurrencyInput";
 import Select from "../ui/forms/Select";
 
@@ -379,23 +380,19 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
                 <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-2.5 ml-0.5">
                     Descripción <span className="opacity-40">(Opcional)</span>
                 </label>
-                <div className="relative">
-                    <div className="absolute top-4 left-4 pointer-events-none text-slate-500">
-                        <FiFileText />
-                    </div>
-                    <Controller
-                        control={control}
-                        name="description"
-                        render={({ field }) => (
-                            <textarea
-                                {...field}
-                                className="w-full bg-[#0A0E1A]/80 border border-white/6 text-white text-sm font-medium rounded-xl py-3.5 pl-11 pr-4 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-white/12 hover:bg-[#0A0E1A] focus:ring-1 focus:ring-violet-500/30 focus:border-violet-500/40 focus:shadow-[0_0_20px_rgba(139,92,246,0.08)] resize-none h-28 custom-scrollbar"
-                                placeholder="Detalles sobre este gasto..."
-                                disabled={isLoading}
-                            />
-                        )}
-                    />
-                </div>
+                <Controller
+                    control={control}
+                    name="description"
+                    render={({ field }) => (
+                        <Textarea
+                            {...field}
+                            icon={<FiFileText />}
+                            placeholder="Detalles sobre este gasto..."
+                            disabled={isLoading}
+                            className="h-28 custom-scrollbar"
+                        />
+                    )}
+                />
             </div>
 
             {/* Action Buttons */}

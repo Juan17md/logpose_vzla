@@ -69,10 +69,10 @@ export default function Select<T extends string | number = string>({
                 {({ open }) => (
                     <div className="relative">
                         <Listbox.Button className={cn(
-                            "relative w-full cursor-pointer bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-5 pr-12 text-left outline-none transition-all duration-300 hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg",
-                            open && "border-amber-500/50 ring-4 ring-amber-500/10 bg-slate-800/80",
+                            "relative w-full cursor-pointer bg-[#0A0E1A]/80 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 h-[54px] pl-5 pr-12 text-left outline-none transition-all duration-300 hover:border-amber-500/30 hover:bg-[#0A0E1A] shadow-lg",
+                            open && "border-amber-500/50 ring-4 ring-amber-500/10 bg-[#0A0E1A]",
                             error && "border-red-500/50 focus:border-red-500/50 ring-red-500/10",
-                            disabled && "opacity-50 cursor-not-allowed hover:border-slate-700/50 hover:bg-slate-800/40"
+                            disabled && "opacity-50 cursor-not-allowed hover:border-slate-700/50 hover:bg-[#0A0E1A]/80"
                         )}>
                             <span className={cn(
                                 "block truncate transition-all duration-300",

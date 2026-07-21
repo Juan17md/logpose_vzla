@@ -74,7 +74,7 @@ export default function SavingsGoalsWidget() {
     if (loading) return <div className="h-48 bg-slate-900/50 rounded-3xl animate-pulse"></div>;
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group hover:bg-slate-900/70 transition-all duration-300">
+        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group hover:bg-slate-900/70 transition-all duration-300">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-all opacity-50"></div>
 
             <div className="flex justify-between items-center mb-6 relative z-10">

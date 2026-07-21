@@ -72,7 +72,7 @@ export default function HistorialCuenta({ cuenta }: HistorialCuentaProps) {
     }
 
     return (
-        <div className="bg-slate-900/40 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] border border-white/10 shadow-2xl relative overflow-hidden">
+        <div className="bg-slate-900/50 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] border border-slate-700/50 shadow-2xl relative overflow-hidden">
             {/* Decorative element */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">

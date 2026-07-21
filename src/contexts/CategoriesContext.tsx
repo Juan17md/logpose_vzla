@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { collection, query, orderBy, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { categoriaSchema } from "@/lib/schemas";
 import { IconType } from "react-icons";
 import {
     FiCoffee,
@@ -190,15 +191,17 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
 
     const agregarCategoria = useCallback(async (nombre: string, tipo: "ingreso" | "gasto" | "ambas", icono: string, subcategorias: string[], color?: string) => {
         if (!auth.currentUser) return false;
+        const parsed = categoriaSchema.safeParse({ nombre, tipo, icono, subcategorias, color, esPredeterminada: false });
+        if (!parsed.success) {
+            console.error("Categoría inválida:", parsed.error.flatten());
+            return false;
+        }
         try {
             const coleccionRef = collection(db, "users", auth.currentUser.uid, "categories");
             await addDoc(coleccionRef, {
-                nombre: nombre.trim(),
-                tipo,
-                icono,
-                subcategorias: subcategorias.map(s => s.trim()).filter(s => s !== ""),
-                esPredeterminada: false,
-                color: color || null,
+                ...parsed.data,
+                subcategorias: parsed.data.subcategorias.map(s => s.trim()).filter(s => s !== ""),
+                color: parsed.data.color || null,
                 creadoEn: serverTimestamp()
             });
             return true;
@@ -210,12 +213,14 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
 
     const actualizarCategoria = useCallback(async (id: string, updates: Partial<CategoriaUsuario>) => {
         if (!auth.currentUser) return false;
+        const parsed = categoriaSchema.partial().safeParse(updates);
+        if (!parsed.success) {
+            console.error("Categoría inválida:", parsed.error.flatten());
+            return false;
+        }
         try {
             const docRef = doc(db, "users", auth.currentUser.uid, "categories", id);
-            const limpioUpdates = Object.fromEntries(
-                Object.entries(updates).filter(([, v]) => v !== undefined)
-            );
-            await updateDoc(docRef, limpioUpdates);
+            await updateDoc(docRef, parsed.data);
             return true;
         } catch (error) {
             console.error("Error al actualizar categoría:", error);

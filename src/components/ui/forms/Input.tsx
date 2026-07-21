@@ -36,9 +36,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                         whileFocus={{ scale: 1.005 }}
                         transition={{ duration: 0.2 }}
                         className={cn(
-                            "w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 outline-none transition-all duration-300 placeholder:text-slate-600",
-                            "hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg",
-                            "focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-slate-800/80 focus:shadow-[0_0_20px_rgba(202,138,4,0.08)]",
+                            "w-full bg-[#0A0E1A]/80 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 h-[54px] outline-none transition-all duration-300 placeholder:text-slate-600",
+                            "hover:border-amber-500/30 hover:bg-[#0A0E1A] shadow-lg",
+                            "focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-[#0A0E1A] focus:shadow-[0_0_20px_rgba(202,138,4,0.08)]",
                             icon ? "pl-11" : "pl-5",
                             rightElement ? "pr-12" : "pr-5",
                             error && "border-red-500/40 focus:border-red-500/50 focus:ring-red-500/20",

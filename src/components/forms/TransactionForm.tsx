@@ -52,6 +52,7 @@ import { obtenerSimboloMoneda, convertirMontoParaCuenta, calcularTasaConversion 
 import { parseNumeroFlexible } from "@/lib/number";
 import { calcularComision } from "@/lib/comisiones";
 import Input from "../ui/forms/Input";
+import Textarea from "../ui/forms/Textarea";
 import CustomCurrencyInput from "../ui/forms/CurrencyInput";
 import Select, { SelectOption } from "../ui/forms/Select";
 import { motion, AnimatePresence } from "framer-motion";
@@ -650,7 +651,7 @@ export default function TransactionForm() {
     }));
 
     return (
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-4 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
             {/* Decorative Background Elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
 
@@ -1206,23 +1207,19 @@ export default function TransactionForm() {
                 {/* Description */}
                 <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Descripción</label>
-                    <div className="relative">
-                        <div className="absolute top-3.5 left-3.5 pointer-events-none text-slate-400">
-                            <FiFileText size={14} />
-                        </div>
-                        <Controller
-                            control={control}
-                            name="description"
-                            render={({ field }) => (
-                                <textarea
-                                    rows={2}
-                                    {...field}
-                                    className="w-full bg-slate-800/40 border border-slate-700/40 text-slate-200 text-xs font-semibold rounded-2xl py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/40 transition-all placeholder:text-slate-600 resize-none hover:border-slate-600 hover:bg-slate-800 min-h-[64px]"
-                                    placeholder="Detalles opcionales..."
-                                />
-                            )}
-                        />
-                    </div>
+                    <Controller
+                        control={control}
+                        name="description"
+                        render={({ field }) => (
+                            <Textarea
+                                rows={2}
+                                {...field}
+                                icon={<FiFileText size={14} />}
+                                className="min-h-[64px]"
+                                placeholder="Detalles opcionales..."
+                            />
+                        )}
+                    />
                 </div>
 
                 {/* Commission Section */}

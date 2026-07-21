@@ -9,6 +9,7 @@ import { parseNumeroFlexible } from "@/lib/number";
 import Select from "@/components/ui/forms/Select";
 import DateSelect from "@/components/ui/forms/DateSelect";
 import Input from "@/components/ui/forms/Input";
+import Textarea from "@/components/ui/forms/Textarea";
 import CustomCurrencyInput from "@/components/ui/forms/CurrencyInput";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -193,18 +194,14 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                         <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-2.5 ml-0.5">
                             Descripción <span className="opacity-40">(Opcional)</span>
                         </label>
-                        <div className="relative">
-                            <div className="absolute top-4 left-4 pointer-events-none text-slate-500">
-                                <FiFileText />
-                            </div>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                className="w-full bg-[#0A0E1A]/80 border border-white/6 text-white text-sm font-medium rounded-xl py-3.5 pl-11 pr-4 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-white/12 hover:bg-[#0A0E1A] focus:ring-1 focus:ring-amber-500/30 focus:border-amber-500/40 focus:shadow-[0_0_20px_rgba(202,138,4,0.08)] resize-none h-28 custom-scrollbar"
-                                placeholder="Detalles sobre por qué se generó la deuda..."
-                                disabled={isLoading}
-                            />
-                        </div>
+                        <Textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            icon={<FiFileText />}
+                            placeholder="Detalles sobre por qué se generó la deuda..."
+                            disabled={isLoading}
+                            className="h-28 custom-scrollbar"
+                        />
                     </div>
                 </div>
 

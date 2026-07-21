@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, runTransaction, increment, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { User } from "firebase/auth";
+import { metaAhorroSchema, contribucionAhorroSchema } from "@/lib/schemas";
 
 export interface Goal {
     id: string;
@@ -58,13 +59,18 @@ export const useGoals = () => {
 
     const addGoal = async (name: string, targetAmount: number, deadline?: string) => {
         if (!auth.currentUser) return;
+        const parsed = metaAhorroSchema.safeParse({
+            name, targetAmount, currentAmount: 0,
+            deadline: deadline ? new Date(deadline) : null,
+            color: "#10b981",
+        });
+        if (!parsed.success) {
+            console.error("Meta inválida:", parsed.error.flatten());
+            return;
+        }
         await addDoc(collection(db, "users", auth.currentUser.uid, "saving_goals"), {
             userId: auth.currentUser.uid,
-            name,
-            targetAmount,
-            currentAmount: 0,
-            deadline: deadline ? new Date(deadline) : null,
-            color: "#10b981", // Default color
+            ...parsed.data,
             createdAt: serverTimestamp()
         });
     };
@@ -83,6 +89,11 @@ export const useGoals = () => {
 
     const addContribution = async (goalId: string, goalName: string, amount: number, method: "physical" | "usdt") => {
         if (!auth.currentUser) return;
+        const parsed = contribucionAhorroSchema.safeParse({ amount, method, description: `Ahorro: ${goalName}` });
+        if (!parsed.success) {
+            console.error("Contribución inválida:", parsed.error.flatten());
+            return;
+        }
         const uid = auth.currentUser.uid;
 
         try {
@@ -125,10 +136,15 @@ export const useGoals = () => {
 
     const updateGoal = async (id: string, updates: Partial<Goal>) => {
         if (!auth.currentUser) return;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: _, createdAt, ...rest } = updates;
+        const parsed = metaAhorroSchema.partial().safeParse(rest);
+        if (!parsed.success) {
+            console.error("Meta inválida:", parsed.error.flatten());
+            return false;
+        }
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id: _, createdAt, ...validUpdates } = updates;
-            await updateDoc(doc(db, "users", auth.currentUser.uid, "saving_goals", id), validUpdates);
+            await updateDoc(doc(db, "users", auth.currentUser.uid, "saving_goals", id), parsed.data);
             return true;
         } catch (error) {
             console.error("Error updating goal:", error);

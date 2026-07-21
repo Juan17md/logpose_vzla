@@ -1,3 +1,5 @@
+import 'server-only';
+
 const SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!;
 

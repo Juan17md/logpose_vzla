@@ -40,7 +40,7 @@ export default function UpcomingPaymentsWidget() {
     const progreso = totalFijos > 0 ? (totalPagados / totalFijos) * 100 : 0;
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md p-5 rounded-3xl border border-cyan-500/20 shadow-lg relative overflow-hidden group hover:border-cyan-500/40 transition-all">
+        <div className="bg-slate-900/50 backdrop-blur-md p-5 rounded-[2.5rem] border border-cyan-500/20 shadow-lg relative overflow-hidden group hover:border-cyan-500/40 transition-all">
             {/* blur-3xl decorativo eliminado — widget aparece múltiples veces en el grid */}
 
             <div className="relative z-10">

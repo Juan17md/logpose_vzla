@@ -73,7 +73,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
 
     if (!budgetLimit || budgetLimit === 0) {
         return (
-            <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg flex flex-col justify-center items-center text-center group hover:bg-slate-900/70 transition-all hover:border-slate-600">
+            <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg flex flex-col justify-center items-center text-center group hover:bg-slate-900/70 transition-all hover:border-slate-600">
                 <div className="p-4 bg-slate-800/50 rounded-2xl mb-4 text-slate-400 group-hover:text-yellow-400 group-hover:bg-yellow-500/10 transition-all">
                     <FiAlertTriangle size={28} />
                 </div>
@@ -113,7 +113,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
     }
 
     return (
-        <div className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden transition-all duration-300 hover:bg-slate-900/70">
+        <div className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden transition-all duration-300 hover:bg-slate-900/70">
             <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-16 -mt-16 transition-all opacity-0 group-hover:opacity-100 ${statusColor.replace('bg-', 'bg-').replace('500', '500/20')}`} />
 
             <div className="flex justify-between items-start mb-2 relative z-10">

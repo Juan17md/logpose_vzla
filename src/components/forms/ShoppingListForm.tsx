@@ -23,7 +23,7 @@ export default function ShoppingListForm({ initialData, onSubmit, isLoading }: S
     };
 
     return (
-        <div className="max-w-xl mx-auto bg-slate-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        <div className="max-w-xl mx-auto bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-4 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
             {/* Decorative background glow */}
             <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[60px] pointer-events-none opacity-10 bg-amber-500" />
 

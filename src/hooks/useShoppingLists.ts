@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, arrayUnion, runTransaction, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { User } from "firebase/auth";
+import { listaComprasSchema, itemListaSchema } from "@/lib/schemas";
 
 export interface ShoppingItem {
     id: string;
@@ -74,9 +75,14 @@ export const useShoppingLists = () => {
 
     const createList = async (name: string) => {
         if (!auth.currentUser) return;
+        const parsed = listaComprasSchema.safeParse({ name });
+        if (!parsed.success) {
+            console.error("Lista inválida:", parsed.error.flatten());
+            return;
+        }
         return await addDoc(collection(db, "shopping_lists"), {
             userId: auth.currentUser.uid,
-            name,
+            ...parsed.data,
             items: [],
             createdAt: serverTimestamp()
         });
@@ -87,11 +93,16 @@ export const useShoppingLists = () => {
     };
 
     const addItem = async (listId: string, item: Omit<ShoppingItem, "id" | "completed" | "purchasedQuantity">) => {
+        const parsed = itemListaSchema.safeParse(item);
+        if (!parsed.success) {
+            console.error("Item inválido:", parsed.error.flatten());
+            return;
+        }
         const newItem: ShoppingItem = {
             id: crypto.randomUUID(),
             completed: false,
             purchasedQuantity: 0,
-            ...item
+            ...parsed.data
         };
         const listRef = doc(db, "shopping_lists", listId);
         await updateDoc(listRef, {
@@ -177,8 +188,13 @@ export const useShoppingLists = () => {
     };
 
     const updateListName = async (listId: string, newName: string) => {
+        const parsed = listaComprasSchema.safeParse({ name: newName });
+        if (!parsed.success) {
+            console.error("Nombre de lista inválido:", parsed.error.flatten());
+            return;
+        }
         const listRef = doc(db, "shopping_lists", listId);
-        await updateDoc(listRef, { name: newName });
+        await updateDoc(listRef, { name: parsed.data.name });
     };
 
     const updateItem = async (listId: string, _currentItems: ShoppingItem[], itemId: string, updates: Partial<ShoppingItem>) => {

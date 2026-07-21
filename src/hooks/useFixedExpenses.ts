@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { gastoFijoSchema } from "@/lib/schemas";
 
 export interface FixedExpense {
     id: string;
@@ -66,9 +67,14 @@ export function useFixedExpenses() {
 
     const addFixedExpense = async (expense: Omit<FixedExpense, "id" | "createdAt">) => {
         if (!auth.currentUser) return;
+        const parsed = gastoFijoSchema.safeParse(expense);
+        if (!parsed.success) {
+            console.error("Gasto fijo inválido:", parsed.error.flatten());
+            return false;
+        }
         try {
             await addDoc(collection(db, "users", auth.currentUser.uid, "fixed_expenses"), {
-                ...expense,
+                ...parsed.data,
                 createdAt: new Date(),
             });
             return true;
@@ -91,11 +97,16 @@ export function useFixedExpenses() {
 
     const updateFixedExpense = async (id: string, updates: Partial<FixedExpense>) => {
         if (!auth.currentUser) return;
+        const { id: _, createdAt, ...rest } = updates;
+        const parsed = gastoFijoSchema.partial().safeParse(rest);
+        if (!parsed.success) {
+            console.error("Gasto fijo inválido:", parsed.error.flatten());
+            return false;
+        }
         try {
-            const { id: _, createdAt, ...validUpdates } = updates;
-            const processedUpdates: Record<string, unknown> = { ...validUpdates };
-            if (validUpdates.lastPaidDate instanceof Date) {
-                processedUpdates.lastPaidDate = Timestamp.fromDate(validUpdates.lastPaidDate);
+            const processedUpdates: Record<string, unknown> = { ...parsed.data };
+            if (parsed.data.lastPaidDate instanceof Date) {
+                processedUpdates.lastPaidDate = Timestamp.fromDate(parsed.data.lastPaidDate);
             }
 
             await updateDoc(doc(db, "users", auth.currentUser.uid, "fixed_expenses", id), processedUpdates);

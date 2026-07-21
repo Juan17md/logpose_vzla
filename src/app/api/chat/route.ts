@@ -1,27 +1,12 @@
+import 'server-only';
 import { Groq } from 'groq-sdk';
 import { NextResponse } from 'next/server';
 import { verificarTokenFirebase } from '@/lib/verificarAuthFirebase';
+import { chatRateLimit } from '@/lib/rateLimit';
 
 interface MensajeChat {
     role: "system" | "user" | "assistant";
     content: string;
-}
-
-const RATE_LIMIT = 10;
-const RATE_WINDOW_MS = 60_000;
-
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return true;
-  }
-  if (entry.count >= RATE_LIMIT) return false;
-  entry.count++;
-  return true;
 }
 
 const client = new Groq({
@@ -42,8 +27,8 @@ export async function POST(req: Request) {
     }
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const claveRateLimit = `${sesion.uid}:${ip}`;
-    if (!checkRateLimit(claveRateLimit)) {
+    const { success } = await chatRateLimit.limit(`${sesion.uid}:${ip}`);
+    if (!success) {
       return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }, { status: 429 });
     }
 

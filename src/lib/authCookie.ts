@@ -1,3 +1,4 @@
+import 'server-only';
 import { type DatosSesion } from "@/types/rbac";
 
 const NOMBRE_COOKIE = "session";

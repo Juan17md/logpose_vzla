@@ -56,7 +56,7 @@ export default function CryptoCashWalletWidget({ userId }: { userId: string | un
     const totalSaved = userData.savingsPhysical + userData.savingsUSDT;
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden group hover:bg-slate-900/70 transition-all duration-300 flex flex-col justify-between">
+        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group hover:bg-slate-900/70 transition-all duration-300 flex flex-col justify-between">
             {/* Background Decoration */}
             <div className="absolute bottom-0 right-0 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mb-16 group-hover:bg-violet-500/20 transition-all opacity-50"></div>
 

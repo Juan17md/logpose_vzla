@@ -14,7 +14,7 @@ export default function PendingDebtsWidget() {
     const { monedaBase, apiRates } = useBankAccounts();
 
     if (loadingDebts) return (
-        <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-700/50 shadow-lg flex flex-col gap-6 h-full min-h-[340px]">
+        <div className="bg-slate-900/50 p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg flex flex-col gap-6 h-full min-h-[340px]">
             {/* Cabecera Esqueleto */}
             <div className="flex items-center gap-2">
                 <Skeleton className="w-8 h-8 rounded-lg" />
@@ -93,7 +93,7 @@ export default function PendingDebtsWidget() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-violet-500/30 transition-all duration-300 relative overflow-hidden flex flex-col h-full"
+            className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg hover:border-violet-500/30 transition-all duration-300 relative overflow-hidden flex flex-col h-full"
         >
             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-all"></div>
 

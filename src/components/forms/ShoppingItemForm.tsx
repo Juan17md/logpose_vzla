@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { FiSave, FiX, FiCheckCircle } from "react-icons/fi";
 import { ShoppingItem } from "@/hooks/useShoppingLists";
+import Input from "@/components/ui/forms/Input";
 
 interface ShoppingItemFormProps {
     initialData?: ShoppingItem | null;
@@ -39,32 +40,36 @@ export default function ShoppingItemForm({ initialData, onSubmit, onCancel, isLo
     };
 
     return (
-        <form onSubmit={handleSubmit} className="bg-slate-900/40 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-xl flex items-center gap-3 relative overflow-hidden">
+        <form onSubmit={handleSubmit} className="bg-slate-900/50 backdrop-blur-xl p-3 rounded-2xl border border-slate-700/50 shadow-xl flex items-center gap-3 relative overflow-hidden">
             {/* Decorative subtle background glow */}
             <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full blur-[30px] pointer-events-none opacity-5 bg-amber-500" />
 
             <div className="flex-1 grid grid-cols-4 gap-3 relative z-10">
-                <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="col-span-3 h-[46px] bg-[#0A0E1A]/80 border border-white/6 rounded-xl px-3 text-white text-sm font-medium outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-white/12 hover:bg-[#0A0E1A] focus:ring-1 focus:ring-amber-500/30 focus:border-amber-500/40 focus:shadow-[0_0_15px_rgba(202,138,4,0.05)]"
-                    placeholder="Artículo..."
-                    disabled={isLoading}
-                    autoFocus
-                />
+                <div className="col-span-3">
+                    <Input
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Artículo..."
+                        disabled={isLoading}
+                        autoFocus
+                        className="h-[46px]"
+                    />
+                </div>
                 
-                <input
-                    type="text"
-                    inputMode="numeric"
-                    required
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="col-span-1 h-[46px] bg-[#0A0E1A]/80 border border-white/6 rounded-xl px-3 text-white text-sm font-medium outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-white/12 hover:bg-[#0A0E1A] focus:ring-1 focus:ring-amber-500/30 focus:border-amber-500/40 focus:shadow-[0_0_15px_rgba(202,138,4,0.05)] text-center"
-                    placeholder="Cant."
-                    disabled={isLoading}
-                />
+                <div className="col-span-1">
+                    <Input
+                        type="text"
+                        inputMode="numeric"
+                        required
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        placeholder="Cant."
+                        disabled={isLoading}
+                        className="h-[46px] text-center"
+                    />
+                </div>
             </div>
 
             <div className="flex items-center gap-2 relative z-10">

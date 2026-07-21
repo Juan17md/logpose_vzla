@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, runTransaction } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { deudaSchema, pagoSchema } from "@/lib/schemas";
 
 export interface Payment {
     id: string;
@@ -93,14 +94,14 @@ export function useDebts() {
 
     const addDebt = async (debt: Omit<Debt, "id" | "createdAt" | "payments" | "isPaid">) => {
         if (!auth.currentUser) return;
+        const parsed = deudaSchema.safeParse(debt);
+        if (!parsed.success) {
+            console.error("Deuda inválida:", parsed.error.flatten());
+            return false;
+        }
         try {
-            // Remove undefined fields to avoid Firestore errors
-            const cleanDebt = Object.fromEntries(
-                Object.entries(debt).filter(([, v]) => v !== undefined)
-            );
-
             await addDoc(collection(db, "users", auth.currentUser.uid, "debts"), {
-                ...cleanDebt,
+                ...parsed.data,
                 payments: [],
                 isPaid: false,
                 createdAt: new Date(),
@@ -125,13 +126,15 @@ export function useDebts() {
 
     const updateDebt = async (id: string, updates: Partial<Debt>) => {
         if (!auth.currentUser) return;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: _unused, createdAt, ...rest } = updates;
+        const parsed = deudaSchema.partial().safeParse(rest);
+        if (!parsed.success) {
+            console.error("Deuda inválida:", parsed.error.flatten());
+            return false;
+        }
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id: _unused, createdAt, ...updatesToClean } = updates;
-            const validUpdates = Object.fromEntries(
-                Object.entries(updatesToClean).filter(([, v]) => v !== undefined)
-            );
-            await updateDoc(doc(db, "users", auth.currentUser.uid, "debts", id), validUpdates);
+            await updateDoc(doc(db, "users", auth.currentUser.uid, "debts", id), parsed.data);
             return true;
         } catch (error) {
             console.error("Error updating debt:", error);
@@ -141,6 +144,11 @@ export function useDebts() {
 
     const addPayment = async (debtId: string, payment: Omit<Payment, "id">) => {
         if (!auth.currentUser) return;
+        const parsed = pagoSchema.safeParse(payment);
+        if (!parsed.success) {
+            console.error("Pago inválido:", parsed.error.flatten());
+            return false;
+        }
         try {
             await runTransaction(db, async (transaction) => {
                 const debtRef = doc(db, "users", auth.currentUser!.uid, "debts", debtId);
@@ -152,10 +160,7 @@ export function useDebts() {
 
                 const currentData = debtDoc.data() as Debt;
 
-                // Clean undefined
-                const cleanPayment = Object.fromEntries(
-                    Object.entries(payment).filter(([, v]) => v !== undefined)
-                );
+                const cleanPayment = { ...parsed.data };
 
                 const newPayment = { ...cleanPayment, id: crypto.randomUUID() } as Payment;
 

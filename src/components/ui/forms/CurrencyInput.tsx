@@ -27,7 +27,7 @@ const CustomCurrencyInput = ({ className, label, error, ...props }: CustomCurren
                     intlConfig={{ locale: "es-VE" }}
                     inputMode="decimal"
                     className={cn(
-                        "w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-lg font-black rounded-2xl py-4 pl-5 pr-5 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-slate-800/80",
+                        "w-full bg-[#0A0E1A]/80 backdrop-blur-md border border-slate-700/50 text-white text-lg font-black rounded-2xl py-4 h-[54px] pl-5 pr-5 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-amber-500/30 hover:bg-[#0A0E1A] shadow-lg focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-[#0A0E1A]",
                         error && "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20",
                         className
                     )}

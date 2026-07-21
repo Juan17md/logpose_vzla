@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * Verifica el ID token de Firebase Auth usando la REST API (sin firebase-admin).
  */
