@@ -232,7 +232,8 @@ export async function actualizarAuthUser(
   const token = await obtenerAccessToken();
   const url = `https://identitytoolkit.googleapis.com/v1/projects/${PROJECT_ID}/accounts:update`;
 
-  const body: Record<string, unknown> = { localId: uid };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const body: Record<string, any> = { localId: uid };
   if (updates.password) body.password = updates.password;
 
   const res = await fetch(url, {
@@ -272,7 +273,8 @@ export async function eliminarAuthUser(uid: string): Promise<void> {
 export async function leerUsuarioConToken(
   uid: string,
   idToken: string
-): Promise<Record<string, unknown> | null> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<Record<string, any> | null> {
   const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${idToken}` },

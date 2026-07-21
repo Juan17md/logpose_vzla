@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, ReactNode } from "react";
+import { useEffect } from "react";
+import type { IconType } from "react-icons";
 import { useForm, Controller } from "react-hook-form";
 import {
     obtenerSimboloMoneda,
@@ -144,7 +145,7 @@ export default function OperacionForm({
         }
     };
 
-    const tipos: { id: TipoOperacion; label: string; icon: ReactNode; color: string }[] = [
+    const tipos: { id: TipoOperacion; label: string; icon: IconType; color: string }[] = [
         { id: "deposito", label: "Depósito", icon: FiArrowUpRight, color: "emerald" },
         { id: "retiro", label: "Retiro", icon: FiArrowDownLeft, color: "red" },
         { id: "transferencia", label: "Transferir", icon: FiRepeat, color: "violet" },

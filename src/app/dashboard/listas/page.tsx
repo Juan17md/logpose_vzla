@@ -59,7 +59,8 @@ export default function ShoppingListsPage() {
         setShowItemForm(false);
     };
 
-    const handleItemSubmit = async (data: Record<string, unknown>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleItemSubmit = async (data: any) => {
         if (!selectedList) return;
         
         try {

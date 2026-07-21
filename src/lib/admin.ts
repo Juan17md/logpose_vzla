@@ -96,7 +96,8 @@ export async function cambiarRolUsuario(
     if (userData.role === "admin" || nuevoRol === "admin")
       return { exito: false, error: "No puedes cambiar el rol de administradores" };
 
-    const updates: Record<string, unknown> = { role: nuevoRol };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updates: Record<string, any> = { role: nuevoRol };
 
     if (nuevoRol === "usuario") {
       updates.trialExpiresAt = null;

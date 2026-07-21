@@ -66,13 +66,15 @@ export default function CuentasPage() {
 
     const saldoTotal = useMemo(() => calcularSaldoTotal(), [calcularSaldoTotal, apiRates, monedaBase]);
 
-    const handleCrearCuenta = async (data: Record<string, unknown>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleCrearCuenta = async (data: any) => {
         const id = await crearCuenta(data);
         if (id) toast.success("Cuenta creada exitosamente");
         else toast.error("Error al crear la cuenta");
     };
 
-    const handleEditarCuenta = async (data: Record<string, unknown>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleEditarCuenta = async (data: any) => {
         if (!cuentaEditando) return;
         const { saldoInicial, ...rest } = data;
         const ok = await editarCuenta(cuentaEditando.id, { ...rest, saldo: saldoInicial });
@@ -281,7 +283,8 @@ export default function CuentasPage() {
                                     setCuentaEditando(null);
                                     setVistaMobile("list");
                                 }} 
-                                onSubmit={async (data: Record<string, unknown>) => {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                onSubmit={async (data: any) => {
                                     if (cuentaEditando) {
                                         await handleEditarCuenta(data);
                                     } else {

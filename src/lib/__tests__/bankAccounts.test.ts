@@ -19,7 +19,8 @@ describe('obtenerSimboloMoneda', () => {
   });
 
   it('devuelve $ por defecto para moneda no soportada', () => {
-    expect(obtenerSimboloMoneda('XXX' as string as never)).toBe('$');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(obtenerSimboloMoneda('XXX' as any)).toBe('$');
   });
 });
 

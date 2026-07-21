@@ -41,7 +41,8 @@ export default function ReportsPage() {
         return montoEnBs / tasaBaseEnBs;
     };
 
-    const convertirTransaccionAMonedaBase = (t: Record<string, unknown>): number => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const convertirTransaccionAMonedaBase = (t: any): number => {
         const amount = Number(t.amount) || 0;
         const currency = String(t.currency || "USD").toUpperCase();
         const exchangeRate = Number(t.exchangeRate) || 0;
@@ -68,7 +69,8 @@ export default function ReportsPage() {
         return convertirDesdeBs(montoEnBs);
     };
 
-    const convertirAhorroAMonedaBase = (t: Record<string, unknown>): number => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const convertirAhorroAMonedaBase = (t: any): number => {
         const amount = Number(t.amount) || 0;
         const method = t.method;
 

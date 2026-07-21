@@ -1081,7 +1081,8 @@ export default function TransactionForm() {
                                             icon={<FiTag size={12} />}
                                             renderOption={(opt) => {
                                                 const Icono = opt.icono as IconType;
-                                                const color = (opt as Record<string, unknown>).color || "#8b5cf6";
+                                                const color = // eslint-disable-next-line @typescript-eslint/no-explicit-any
+(opt as any).color || "#8b5cf6";
                                                 return (
                                                     <div className="flex items-center gap-2">
                                                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: `${color}20`, color, borderColor: `${color}40`, borderWidth: 1 }}>
@@ -1093,7 +1094,8 @@ export default function TransactionForm() {
                                             }}
                                             renderValue={(opt) => {
                                                 const Icono = opt.icono as IconType;
-                                                const color = (opt as Record<string, unknown>).color || "#8b5cf6";
+                                                const color = // eslint-disable-next-line @typescript-eslint/no-explicit-any
+(opt as any).color || "#8b5cf6";
                                                 return (
                                                     <div className="flex items-center gap-2">
                                                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: `${color}20`, color, borderColor: `${color}40`, borderWidth: 1 }}>

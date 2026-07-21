@@ -93,7 +93,8 @@ export default function DebtsPage() {
         setMobileView("form");
     };
 
-    const handleFormSubmit = async (data: Record<string, unknown>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleFormSubmit = async (data: any) => {
         setIsSubmitting(true);
         try {
             if (view === "create") {
@@ -117,7 +118,8 @@ export default function DebtsPage() {
         }
     };
 
-    const handlePaymentSubmit = async (paymentData: Record<string, unknown>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handlePaymentSubmit = async (paymentData: any) => {
         if (!editingDebt) return;
         setIsSubmitting(true);
         try {

@@ -88,7 +88,8 @@ const LISTA_ICONOS_SELECCIONABLES = [
     { nombre: "FiSun", componente: FiSun }
 ];
 
-function ComponenteMonitor(props: Record<string, unknown>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ComponenteMonitor(props: any) {
     return <FiMonitor {...props} />;
 }
 

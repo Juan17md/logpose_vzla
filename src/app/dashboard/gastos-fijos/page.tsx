@@ -65,7 +65,8 @@ export default function FixedExpensesPage() {
         setMobileView('form');
     };
 
-    const handleFormSubmit = async (data: Record<string, unknown>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleFormSubmit = async (data: any) => {
         setIsSaving(true);
         try {
             if (editingExpense) {

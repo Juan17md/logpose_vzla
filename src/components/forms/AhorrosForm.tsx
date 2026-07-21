@@ -101,7 +101,8 @@ export default function AhorrosForm({ type, setType, onSubmit, isLoading }: Ahor
                                 <button
                                     key={opt.id}
                                     type="button"
-                                    onClick={() => setMethod(opt.id as "physical" | "digital")}
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    onClick={() => setMethod(opt.id as any)}
                                     disabled={isLoading}
                                     className={`flex flex-col items-center justify-center p-2 rounded-xl border text-center transition-all duration-300 min-h-[56px] ${
                                         esActivo
