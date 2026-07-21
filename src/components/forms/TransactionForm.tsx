@@ -48,7 +48,7 @@ import { createVenezuelaDate } from "@/lib/timezone";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { useCategorias, MAPA_ICONOS } from "@/contexts/CategoriesContext";
-import { obtenerSimboloMoneda, convertirMontoParaCuenta, calcularTasaConversion } from "@/lib/bankAccounts";
+import { obtenerSimboloMoneda, convertirMontoParaCuenta, calcularTasaConversion, type MonedaSoportada } from "@/lib/bankAccounts";
 import { parseNumeroFlexible } from "@/lib/number";
 import { calcularComision } from "@/lib/comisiones";
 import Input from "../ui/forms/Input";
@@ -795,7 +795,7 @@ export default function TransactionForm() {
                                             </div>
                                             <div className="flex items-center gap-2 mt-0.5">
                                                 <span className="text-xs text-amber-500/80 font-medium">
-                                                    {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    {obtenerSimboloMoneda(opcionCuenta.moneda as MonedaSoportada)} {opcionCuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                                 <span className="text-[10px] text-slate-500 italic uppercase tracking-tighter">
                                                     • {opcionCuenta.banco}
@@ -813,7 +813,7 @@ export default function TransactionForm() {
                                                 <span className="text-[10px] text-slate-500 shrink-0">({opcionCuenta.banco})</span>
                                             </div>
                                             <span className="text-amber-500 font-black text-xs shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg ml-2">
-                                                {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { maximumFractionDigits: 2 })}
+                                                {obtenerSimboloMoneda(opcionCuenta.moneda as MonedaSoportada)} {opcionCuenta.saldo.toLocaleString("es-ES", { maximumFractionDigits: 2 })}
                                             </span>
                                         </div>
                                     );
@@ -854,7 +854,7 @@ export default function TransactionForm() {
                                                 </div>
                                                 <div className="flex items-center gap-2 mt-0.5">
                                                     <span className="text-xs text-amber-500/80 font-medium">
-                                                        {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        {obtenerSimboloMoneda(opcionCuenta.moneda as MonedaSoportada)} {opcionCuenta.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </span>
                                                     <span className="text-[10px] text-slate-500 italic uppercase tracking-tighter">
                                                         • {opcionCuenta.banco}
@@ -872,7 +872,7 @@ export default function TransactionForm() {
                                                     <span className="text-[10px] text-slate-500 shrink-0">({opcionCuenta.banco})</span>
                                                 </div>
                                                 <span className="text-amber-500 font-black text-xs shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg ml-2">
-                                                    {obtenerSimboloMoneda(opcionCuenta.moneda as any)} {opcionCuenta.saldo.toLocaleString("es-ES", { maximumFractionDigits: 2 })}
+                                                    {obtenerSimboloMoneda(opcionCuenta.moneda as MonedaSoportada)} {opcionCuenta.saldo.toLocaleString("es-ES", { maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
                                         );
@@ -1081,7 +1081,7 @@ export default function TransactionForm() {
                                             icon={<FiTag size={12} />}
                                             renderOption={(opt) => {
                                                 const Icono = opt.icono as IconType;
-                                                const color = (opt as any).color || "#8b5cf6";
+                                                const color = (opt as Record<string, unknown>).color || "#8b5cf6";
                                                 return (
                                                     <div className="flex items-center gap-2">
                                                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: `${color}20`, color, borderColor: `${color}40`, borderWidth: 1 }}>
@@ -1093,7 +1093,7 @@ export default function TransactionForm() {
                                             }}
                                             renderValue={(opt) => {
                                                 const Icono = opt.icono as IconType;
-                                                const color = (opt as any).color || "#8b5cf6";
+                                                const color = (opt as Record<string, unknown>).color || "#8b5cf6";
                                                 return (
                                                     <div className="flex items-center gap-2">
                                                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: `${color}20`, color, borderColor: `${color}40`, borderWidth: 1 }}>

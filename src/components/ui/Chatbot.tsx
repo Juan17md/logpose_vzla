@@ -970,7 +970,7 @@ export default function Chatbot() {
             case "shopping_item":
                 try {
                     const listName = data.listName || "Lista de compras";
-                    let listToAddTo = lists.find(l => l.name.toLowerCase().includes(listName.toLowerCase()));
+                    const listToAddTo = lists.find(l => l.name.toLowerCase().includes(listName.toLowerCase()));
                     let targetListId = "";
                     
                     if (listToAddTo) {
@@ -1192,7 +1192,7 @@ export default function Chatbot() {
                 });
                 // No retornamos aquí, dejamos que continúe el flujo normal de la API
             } else {
-                let idCuenta =
+                const idCuenta =
                     resolverIdCuenta(userMsg, cuentas) ||
                     (mensajePendiente.pendingTransaction.accountId
                         ? resolverIdCuenta(String(mensajePendiente.pendingTransaction.accountId), cuentas)

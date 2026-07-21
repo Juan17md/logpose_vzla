@@ -19,7 +19,7 @@ export default function MigracionCuentas() {
     const tieneSaldosLegacy = 
         (userData.savingsPhysical && userData.savingsPhysical > 0) ||
         (userData.savingsUSDT && userData.savingsUSDT > 0) ||
-        ((userData as any).savingsBs && (userData as any).savingsBs > 0);
+        ((userData as Record<string, unknown>).savingsBs && (userData as Record<string, unknown>).savingsBs > 0);
 
     useEffect(() => {
         if (tieneSaldosLegacy) {
@@ -51,12 +51,12 @@ export default function MigracionCuentas() {
                 });
             }
 
-            if ((userData as any).savingsBs && (userData as any).savingsBs > 0) {
+            if ((userData as Record<string, unknown>).savingsBs && (userData as Record<string, unknown>).savingsBs > 0) {
                 await crearCuenta({
                     nombre: "Cuenta Nacional",
                     banco: "Banco Local",
                     moneda: "BS",
-                    saldoInicial: (userData as any).savingsBs,
+                    saldoInicial: (userData as Record<string, unknown>).savingsBs as number,
                     color: "#3b82f6", // Blue
                 });
             }
@@ -65,7 +65,7 @@ export default function MigracionCuentas() {
             await updateUserData({
                 savingsPhysical: 0,
                 savingsUSDT: 0,
-                ...((userData as any).savingsBs ? { savingsBs: 0 } : {})
+                ...((userData as Record<string, unknown>).savingsBs ? { savingsBs: 0 } : {})
             });
 
             toast.success("¡Tus fondos han sido migrados exitosamente!");
@@ -96,11 +96,11 @@ export default function MigracionCuentas() {
                 
                 <h3 className="text-xl font-bold text-white mb-2">Modernizamos tus Ahorros</h3>
                 <p className="text-slate-300 text-sm mb-6">
-                    Hemos reemplazado el sistema de "Ahorros" por un nuevo <strong>Sistema de Cuentas Bancarias Multi-moneda</strong> más potente y flexible. Tus fondos actuales ({
+                    Hemos reemplazado el sistema de &quot;Ahorros&quot; por un nuevo <strong>Sistema de Cuentas Bancarias Multi-moneda</strong> más potente y flexible. Tus fondos actuales ({
                         [
                             userData.savingsPhysical ? "Efectivo" : "",
                             userData.savingsUSDT ? "Crypto" : "",
-                            (userData as any).savingsBs ? "Bolívares" : ""
+                            (userData as Record<string, unknown>).savingsBs ? "Bolívares" : ""
                         ].filter(Boolean).join(", ")
                     }) se moverán automáticamente a tus nuevas cuentas.
                 </p>
@@ -120,7 +120,7 @@ export default function MigracionCuentas() {
                             <span className="text-amber-400 font-bold">Nueva: Billetera Crypto</span>
                         </div>
                     ) : null}
-                    {(userData as any).savingsBs && (userData as any).savingsBs > 0 ? (
+                    {(userData as Record<string, unknown>).savingsBs && (userData as Record<string, unknown>).savingsBs > 0 ? (
                         <div className="flex justify-between text-sm items-center">
                             <span className="text-slate-400">Ahorro Bs</span>
                             <FiArrowRight className="text-slate-500 mx-2" />

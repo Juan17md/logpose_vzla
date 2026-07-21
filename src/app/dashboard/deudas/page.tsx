@@ -93,7 +93,7 @@ export default function DebtsPage() {
         setMobileView("form");
     };
 
-    const handleFormSubmit = async (data: any) => {
+    const handleFormSubmit = async (data: Record<string, unknown>) => {
         setIsSubmitting(true);
         try {
             if (view === "create") {
@@ -117,7 +117,7 @@ export default function DebtsPage() {
         }
     };
 
-    const handlePaymentSubmit = async (paymentData: any) => {
+    const handlePaymentSubmit = async (paymentData: Record<string, unknown>) => {
         if (!editingDebt) return;
         setIsSubmitting(true);
         try {

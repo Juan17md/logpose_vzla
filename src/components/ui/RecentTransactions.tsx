@@ -58,9 +58,9 @@ export default function RecentTransactions() {
         return filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredTransactions, startIndex, itemsPerPage]);
 
-    // Reset page on search
     useEffect(() => {
         if (currentPage > totalPages && totalPages > 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setCurrentPage(1);
         }
     }, [currentPage, totalPages]);

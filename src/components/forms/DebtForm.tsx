@@ -41,9 +41,9 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
         e.preventDefault();
         
         const amountVal = parseNumeroFlexible(amountStr);
-        let finalAmount = amountVal;
-        let originalAmount = amountVal;
-        let exchangeRateValue = bcvRate > 0 ? bcvRate : 1;
+        const finalAmount = amountVal;
+        const originalAmount = amountVal;
+        const exchangeRateValue = bcvRate > 0 ? bcvRate : 1;
 
         await onSubmit({
             personName,

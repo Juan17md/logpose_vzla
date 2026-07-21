@@ -19,7 +19,9 @@ export default function ShoppingItemForm({ initialData, onSubmit, onCancel, isLo
 
     useEffect(() => {
         if (!initialData) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setName("");
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setQuantity("");
         }
     }, [initialData]);

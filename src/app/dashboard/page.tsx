@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Modal from "@/components/ui/Modal";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
-import { obtenerSimboloMoneda, MONEDAS_SOPORTADAS } from "@/lib/bankAccounts";
+import { obtenerSimboloMoneda, MONEDAS_SOPORTADAS, type MonedaSoportada } from "@/lib/bankAccounts";
 import CurrencySelector from "@/components/ui/CurrencySelector";
 import Select from "@/components/ui/forms/Select";
 
@@ -250,7 +250,7 @@ export default function DashboardPage() {
         const balanceFinal = Object.is(balanceRedondeado, -0) ? 0 : balanceRedondeado;
 
         return { totalBalance: balanceFinal, monthlyIncome, monthlyExpense, topCategoryName, topCategoryAmount, dailyAverage, categoryData };
-    }, [transactions, calcularSaldoTotal, tasasEnBs, monedaBase]);
+    }, [transactions, calcularSaldoTotal, tasasEnBs, monedaBase, convertirMontoBaseAUsd]);
 
     const handleUpdateBalanceClick = (e: React.MouseEvent, accountId?: string) => {
         e.stopPropagation();
@@ -945,7 +945,7 @@ export default function DashboardPage() {
                                     </div>
                                     <div className="flex items-center justify-between gap-2 mt-1">
                                         <span className="text-xs text-amber-500/80 font-bold">
-                                            {obtenerSimboloMoneda(opt.moneda as any)} {(opt.saldo as number).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            {obtenerSimboloMoneda(opt.moneda as MonedaSoportada)} {(opt.saldo as number).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                         <span className="text-[10px] text-slate-500 italic uppercase tracking-tighter truncate max-w-[120px]">
                                             {opt.banco as string}
@@ -966,7 +966,7 @@ export default function DashboardPage() {
                                             {opt.banco as string}
                                         </span>
                                         <span className="text-amber-500 font-black text-xs shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg ml-auto">
-                                            {obtenerSimboloMoneda(opt.moneda as any)} {(opt.saldo as number).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            {obtenerSimboloMoneda(opt.moneda as MonedaSoportada)} {(opt.saldo as number).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                     </div>
                                 </div>

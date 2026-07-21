@@ -41,7 +41,7 @@ export default function ReportsPage() {
         return montoEnBs / tasaBaseEnBs;
     };
 
-    const convertirTransaccionAMonedaBase = (t: any): number => {
+    const convertirTransaccionAMonedaBase = (t: Record<string, unknown>): number => {
         const amount = Number(t.amount) || 0;
         const currency = String(t.currency || "USD").toUpperCase();
         const exchangeRate = Number(t.exchangeRate) || 0;
@@ -68,7 +68,7 @@ export default function ReportsPage() {
         return convertirDesdeBs(montoEnBs);
     };
 
-    const convertirAhorroAMonedaBase = (t: any): number => {
+    const convertirAhorroAMonedaBase = (t: Record<string, unknown>): number => {
         const amount = Number(t.amount) || 0;
         const method = t.method;
 
@@ -127,7 +127,7 @@ export default function ReportsPage() {
         const balanceCalculado = Math.round((incomeUsd - expenseUsd) * 100) / 100;
         const balanceFinal = Object.is(balanceCalculado, -0) ? 0 : balanceCalculado;
         return { income: incomeUsd, expense: expenseUsd, balance: balanceFinal, categoryData };
-    }, [filteredTransactions, monedaBase, tasasEnBsEfectivas, apiRates.usd]);
+    }, [filteredTransactions, monedaBase, tasasEnBsEfectivas, apiRates.usd, convertirAUsd, convertirTransaccionAMonedaBase]);
 
     const savingsStats = useMemo(() => {
         const periodSavings = savingsTransactions.filter(t => {
@@ -154,7 +154,7 @@ export default function ReportsPage() {
             totalWithdrawn: totalWithdrawnUsd,
             netSavings: totalDepositedUsd - totalWithdrawnUsd
         };
-    }, [savingsTransactions, selectedMonth, selectedYear, monedaBase, apiRates]);
+    }, [savingsTransactions, selectedMonth, selectedYear, monedaBase, apiRates, convertirAUsd, convertirAhorroAMonedaBase]);
 
     const balanceData = [
         { name: "Ingresos", value: stats.income, color: "#10b981" },
@@ -233,7 +233,7 @@ export default function ReportsPage() {
             expenseToIncomeRatio,
             savingRate
         };
-    }, [filteredTransactions, stats, transactions, selectedMonth, selectedYear, savingsStats, monedaBase, tasasEnBsEfectivas, apiRates.usd]);
+    }, [filteredTransactions, stats, transactions, selectedMonth, selectedYear, savingsStats, monedaBase, tasasEnBsEfectivas, apiRates.usd, convertirAUsd, convertirTransaccionAMonedaBase]);
 
     const MONTHS = [
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",

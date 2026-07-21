@@ -22,6 +22,7 @@ export default function EditarListaPage() {
         if (!loading) {
             const found = lists.find((l) => l.id === id);
             if (found) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setList(found);
             } else {
                 toast.error("No se encontró la lista.");

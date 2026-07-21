@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import {
     obtenerSimboloMoneda,
@@ -51,7 +51,10 @@ export default function CuentasPage() {
     
     // Estado para saber qué tasa estamos viendo/editando en el widget
     const [tasaAModificar, setTasaAModificar] = useState<"USD" | "EUR" | "USDT">("USD");
-    const [tempTasa, setTempTasa] = useState("");
+    const tempTasa = useMemo(() => {
+        const api = tasaAModificar === "USD" ? apiRates.usd : tasaAModificar === "EUR" ? apiRates.eur : apiRates.usdt;
+        return api > 0 ? api.toFixed(2) : "";
+    }, [tasaAModificar, apiRates]);
 
     const [mostrarFormCuenta, setMostrarFormCuenta] = useState(false);
     const [mostrarFormOperacion, setMostrarFormOperacion] = useState(false);
@@ -61,21 +64,15 @@ export default function CuentasPage() {
     const [cuentaOperacion, setCuentaOperacion] = useState<CuentaBancaria | undefined>(undefined);
     const [vistaMobile, setVistaMobile] = useState<"list" | "form">("list");
 
-    // Mostrar en UI la tasa oficial actual según moneda seleccionada
-    useEffect(() => {
-        const api = tasaAModificar === "USD" ? apiRates.usd : tasaAModificar === "EUR" ? apiRates.eur : apiRates.usdt;
-        setTempTasa(api > 0 ? api.toFixed(2) : "");
-    }, [tasaAModificar, apiRates]);
-
     const saldoTotal = useMemo(() => calcularSaldoTotal(), [calcularSaldoTotal, apiRates, monedaBase]);
 
-    const handleCrearCuenta = async (data: any) => {
+    const handleCrearCuenta = async (data: Record<string, unknown>) => {
         const id = await crearCuenta(data);
         if (id) toast.success("Cuenta creada exitosamente");
         else toast.error("Error al crear la cuenta");
     };
 
-    const handleEditarCuenta = async (data: any) => {
+    const handleEditarCuenta = async (data: Record<string, unknown>) => {
         if (!cuentaEditando) return;
         const { saldoInicial, ...rest } = data;
         const ok = await editarCuenta(cuentaEditando.id, { ...rest, saldo: saldoInicial });
@@ -284,7 +281,7 @@ export default function CuentasPage() {
                                     setCuentaEditando(null);
                                     setVistaMobile("list");
                                 }} 
-                                onSubmit={async (data: any) => {
+                                onSubmit={async (data: Record<string, unknown>) => {
                                     if (cuentaEditando) {
                                         await handleEditarCuenta(data);
                                     } else {

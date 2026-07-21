@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
-import { collection, query, orderBy, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, serverTimestamp, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { categoriaSchema } from "@/lib/schemas";
@@ -51,7 +51,7 @@ export interface CategoriaUsuario {
     subcategorias: string[];
     esPredeterminada: boolean;
     color?: string; // Color hexadecimal de la categoría
-    creadoEn?: any;
+    creadoEn?: Timestamp;
 }
 
 // Mapa para restaurar los componentes de iconos en la UI

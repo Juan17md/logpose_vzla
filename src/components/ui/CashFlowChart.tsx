@@ -23,6 +23,7 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydration guard
         setIsMounted(true);
     }, []);
 

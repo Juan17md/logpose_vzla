@@ -144,7 +144,7 @@ export default function OperacionForm({
         }
     };
 
-    const tipos: { id: TipoOperacion; label: string; icon: any; color: string }[] = [
+    const tipos: { id: TipoOperacion; label: string; icon: ReactNode; color: string }[] = [
         { id: "deposito", label: "Depósito", icon: FiArrowUpRight, color: "emerald" },
         { id: "retiro", label: "Retiro", icon: FiArrowDownLeft, color: "red" },
         { id: "transferencia", label: "Transferir", icon: FiRepeat, color: "violet" },

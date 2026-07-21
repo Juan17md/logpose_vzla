@@ -52,8 +52,8 @@ export default function BankLogo({ bankId, className, size = 32 }: BankLogoProps
     const domain = getBankDomain(bankId);
     const realLogoUrl = BANCO_LOGOS_REALES[bankId.toLowerCase()];
     
-    // Reset attempt when bankId changes
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setImgAttempt(0);
     }, [bankId]);
 
@@ -136,8 +136,10 @@ export default function BankLogo({ bankId, className, size = 32 }: BankLogoProps
 
     useEffect(() => {
         if (imgAttempt === 0 && !realLogoUrl && domain) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setImgAttempt(1); 
         } else if (imgAttempt === 0 && !realLogoUrl && !domain) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setImgAttempt(3);
         }
     }, [imgAttempt, realLogoUrl, domain]);

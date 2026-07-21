@@ -59,7 +59,7 @@ export default function ShoppingListsPage() {
         setShowItemForm(false);
     };
 
-    const handleItemSubmit = async (data: any) => {
+    const handleItemSubmit = async (data: Record<string, unknown>) => {
         if (!selectedList) return;
         
         try {

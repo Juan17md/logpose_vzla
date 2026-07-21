@@ -13,16 +13,18 @@ export default function AvisoCuentasFaltantes() {
     const router = useRouter();
 
     useEffect(() => {
-        // Mostrar con retardo si no hay cuentas y no ha sido descartado
         if (!loading && cuentas.length === 0 && !dismissed) {
-            const timer = setTimeout(() => setIsVisible(true), 1500);
+            const timer = setTimeout(() => {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setIsVisible(true);
+            }, 1500);
             return () => clearTimeout(timer);
         }
     }, [cuentas.length, loading, dismissed]);
 
-    // Cerrar inmediatamente si aparecen cuentas
     useEffect(() => {
         if (cuentas.length > 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsVisible(false);
         }
     }, [cuentas.length]);

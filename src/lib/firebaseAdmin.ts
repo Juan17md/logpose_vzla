@@ -57,13 +57,15 @@ async function requestFirestore(
   return res.json();
 }
 
-function docToObject(doc: Record<string, any>): Record<string, any> {
-  const obj: Record<string, any> = {};
-  if (!doc.fields) return obj;
+type FirestoreValue = Record<string, unknown>;
+
+function docToObject(doc: FirestoreValue): FirestoreValue {
+  const obj: FirestoreValue = {};
+  if (!doc.fields || typeof doc.fields !== 'object') return obj;
   for (const [key, val] of Object.entries(doc.fields)) {
-    const v = val as Record<string, any>;
+    const v = val as FirestoreValue;
     if (v.stringValue !== undefined) obj[key] = v.stringValue;
-    else if (v.integerValue !== undefined) obj[key] = parseInt(v.integerValue, 10);
+    else if (v.integerValue !== undefined) obj[key] = parseInt(v.integerValue as string, 10);
     else if (v.doubleValue !== undefined) obj[key] = v.doubleValue;
     else if (v.booleanValue !== undefined) obj[key] = v.booleanValue;
     else if (v.timestampValue) obj[key] = v.timestampValue;
@@ -73,8 +75,8 @@ function docToObject(doc: Record<string, any>): Record<string, any> {
   return obj;
 }
 
-function jsonToFields(obj: Record<string, any>): Record<string, any> {
-  const fields: Record<string, any> = {};
+function jsonToFields(obj: FirestoreValue): FirestoreValue {
+  const fields: FirestoreValue = {};
   for (const [key, val] of Object.entries(obj)) {
     if (val === null || val === undefined) {
       fields[key] = { nullValue: null };
@@ -118,7 +120,7 @@ export async function listarUsuarios() {
   }
 
   const data = await res.json();
-  const docs: Array<Record<string, any>> = [];
+  const docs: Array<Record<string, unknown>> = [];
   for (const doc of data.documents || []) {
     const obj = docToObject(doc);
     obj.uid = doc.name.split("/").pop();
@@ -129,7 +131,7 @@ export async function listarUsuarios() {
 
 export async function actualizarUsuario(
   uid: string,
-  updates: Record<string, any>
+  updates: Record<string, unknown>
 ) {
   const fields = jsonToFields(updates);
   const mask = Object.keys(updates)
@@ -230,7 +232,7 @@ export async function actualizarAuthUser(
   const token = await obtenerAccessToken();
   const url = `https://identitytoolkit.googleapis.com/v1/projects/${PROJECT_ID}/accounts:update`;
 
-  const body: Record<string, any> = { localId: uid };
+  const body: Record<string, unknown> = { localId: uid };
   if (updates.password) body.password = updates.password;
 
   const res = await fetch(url, {
@@ -270,7 +272,7 @@ export async function eliminarAuthUser(uid: string): Promise<void> {
 export async function leerUsuarioConToken(
   uid: string,
   idToken: string
-): Promise<Record<string, any> | null> {
+): Promise<Record<string, unknown> | null> {
   const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${idToken}` },

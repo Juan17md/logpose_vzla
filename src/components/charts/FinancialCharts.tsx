@@ -27,6 +27,7 @@ export function ExpenseCategoryChart({ data }: { data: ChartData[] }) {
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydration guard
         setIsMounted(true);
     }, []);
 

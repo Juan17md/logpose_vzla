@@ -35,8 +35,10 @@ function MovimientosContent() {
     // Sincroniza la vista móvil automáticamente al cambiar parámetros en la URL o editar transacción
     useEffect(() => {
         if (viewParam === "form" || transactionToEdit) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setMobileView('form');
         } else {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setMobileView('list');
         }
     }, [viewParam, transactionToEdit]);

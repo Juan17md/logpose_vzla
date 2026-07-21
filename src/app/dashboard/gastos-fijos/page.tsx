@@ -65,7 +65,7 @@ export default function FixedExpensesPage() {
         setMobileView('form');
     };
 
-    const handleFormSubmit = async (data: any) => {
+    const handleFormSubmit = async (data: Record<string, unknown>) => {
         setIsSaving(true);
         try {
             if (editingExpense) {

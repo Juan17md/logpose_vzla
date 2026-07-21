@@ -22,8 +22,8 @@ export default function Modal({
 }: ModalProps) {
     const [mounted, setMounted] = useState(false);
 
-    // Solo ejecutar createPortal en el lado del cliente
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydration guard
         setMounted(true);
     }, []);
 

@@ -88,7 +88,7 @@ const LISTA_ICONOS_SELECCIONABLES = [
     { nombre: "FiSun", componente: FiSun }
 ];
 
-function ComponenteMonitor(props: any) {
+function ComponenteMonitor(props: Record<string, unknown>) {
     return <FiMonitor {...props} />;
 }
 
@@ -321,7 +321,7 @@ export default function CategoriasPage() {
                                         <button
                                             key={opt.id}
                                             type="button"
-                                            onClick={() => setTipo(opt.id as any)}
+                                            onClick={() => setTipo(opt.id as "ingreso" | "gasto" | "ambas")}
                                             className={cn(
                                                 "flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-300 text-center border border-transparent cursor-pointer",
                                                 tipo === opt.id

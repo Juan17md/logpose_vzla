@@ -19,7 +19,7 @@ describe('obtenerSimboloMoneda', () => {
   });
 
   it('devuelve $ por defecto para moneda no soportada', () => {
-    expect(obtenerSimboloMoneda('XXX' as any)).toBe('$');
+    expect(obtenerSimboloMoneda('XXX' as string as never)).toBe('$');
   });
 });
 
