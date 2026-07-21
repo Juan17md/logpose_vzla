@@ -270,6 +270,39 @@ export async function eliminarAuthUser(uid: string): Promise<void> {
   }
 }
 
+export async function crearLog(
+  data: Record<string, unknown>
+): Promise<void> {
+  await requestFirestore("POST", `/admin_logs`, {
+    fields: jsonToFields({
+      ...data,
+      timestamp: new Date().toISOString(),
+    }),
+  });
+}
+
+export async function listarLogs(): Promise<Array<Record<string, unknown>>> {
+  const token = await obtenerAccessToken();
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/admin_logs?orderBy=timestamp%20desc&pageSize=100`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Firestore API error (${res.status}): ${text}`);
+  }
+
+  const data = await res.json();
+  const docs: Array<Record<string, unknown>> = [];
+  for (const doc of data.documents || []) {
+    const obj = docToObject(doc);
+    obj.id = doc.name.split("/").pop();
+    docs.push(obj);
+  }
+  return docs;
+}
+
 export async function leerUsuarioConToken(
   uid: string,
   idToken: string

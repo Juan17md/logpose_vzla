@@ -340,6 +340,7 @@ export default function FixedExpensesPage() {
                                 
                                 {/* Floating Button — Elevado para no tapar a Nami */}
                                 <motion.button
+                                    aria-label="Agregar gasto fijo"
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     whileTap={{ scale: 0.9 }}

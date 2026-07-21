@@ -556,6 +556,7 @@ export default function ShoppingListsPage() {
 
             {/* Floating Action Button for Mobile — Elevado para no tapar a Nami */}
             <motion.button
+                aria-label={selectedList ? "Agregar artículo" : "Nueva lista"}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 whileTap={{ scale: 0.9 }}

@@ -14,6 +14,7 @@ import {
 } from "./firebaseAdmin";
 import { verificarCookieSesion } from "./authCookie";
 import { esAdmin, DIAS_PRUEBA } from "@/types/rbac";
+import { registrarLogAdmin } from "./adminLogs";
 
 type ActionResult = { exito: true } | { exito: false; error: string };
 
@@ -76,6 +77,8 @@ export async function aprobarUsuario(uid: string): Promise<ActionResult> {
       trialExpiresAt: null,
     });
 
+    registrarLogAdmin("aprobar_usuario", uid, userData.email as string, "Usuario aprobado");
+
     return { exito: true };
   } catch (e) {
     return {
@@ -110,6 +113,8 @@ export async function cambiarRolUsuario(
 
     await actualizarUsuario(uid, updates);
 
+    registrarLogAdmin("cambiar_rol", uid, userData.email as string, `Rol cambiado a ${nuevoRol}`);
+
     return { exito: true };
   } catch (e) {
     return {
@@ -133,6 +138,8 @@ export async function actualizarExpiracion(
       status: fecha && new Date(fecha) < new Date() ? "expired" : userData.status || "active",
     });
 
+    registrarLogAdmin("actualizar_expiracion", uid, userData.email as string, fecha ? `Expiración establecida: ${fecha}` : "Expiración removida");
+
     return { exito: true };
   } catch (e) {
     return {
@@ -148,6 +155,8 @@ export async function cambiarPasswordUsuario(
 ): Promise<ActionResult> {
   try {
     await verificarAdmin();
+    const userData = await leerUsuario(uid);
+    if (!userData) return { exito: false, error: "Usuario no encontrado" };
 
     if (!nuevaPassword || nuevaPassword.length < 6) {
       return {
@@ -157,6 +166,8 @@ export async function cambiarPasswordUsuario(
     }
 
     await actualizarAuthUser(uid, { password: nuevaPassword });
+
+    registrarLogAdmin("cambiar_password", uid, userData.email as string, "Contraseña cambiada por administrador");
 
     return { exito: true };
   } catch (e) {
@@ -214,6 +225,8 @@ export async function eliminarUsuario(uid: string): Promise<ActionResult> {
     } catch {
       // Si falla eliminar auth user, continuamos
     }
+
+    registrarLogAdmin("eliminar_usuario", uid, userData.email as string, "Usuario eliminado permanentemente");
 
     return { exito: true };
   } catch (e) {

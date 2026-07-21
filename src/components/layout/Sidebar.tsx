@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiHome, FiList, FiPieChart, FiUser, FiLogOut, FiX, FiShoppingCart, FiBriefcase, FiCalendar, FiCreditCard, FiTag, FiTarget, FiShield } from "react-icons/fi";
+import { FiHome, FiList, FiPieChart, FiUser, FiLogOut, FiX, FiShoppingCart, FiBriefcase, FiCalendar, FiCreditCard, FiTag, FiTarget, FiShield, FiClock } from "react-icons/fi";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -57,7 +57,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { name: "Categorías", icon: <FiTag />, href: "/dashboard/categorias" },
         { name: "Perfil", icon: <FiUser />, href: "/dashboard/perfil" },
         ...(esAdminUser
-            ? [{ name: "Admin", icon: <FiShield />, href: "/dashboard/admin" }]
+            ? [
+                { name: "Panel Admin", icon: <FiShield />, href: "/dashboard/admin" },
+                { name: "Registro Actividad", icon: <FiClock />, href: "/dashboard/admin/logs" },
+              ]
             : []),
     ];
 

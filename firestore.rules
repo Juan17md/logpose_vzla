@@ -210,6 +210,14 @@ service cloud.firestore {
     }
 
     // ----------------------------------------
+    // 📋 LOGS DE ADMINISTRACIÓN - Auditoría
+    // ----------------------------------------
+    match /admin_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+    }
+
+    // ----------------------------------------
     // 🛒 LISTAS DE COMPRAS - Shopping lists
     // ----------------------------------------
     match /shopping_lists/{listId} {
