@@ -75,6 +75,19 @@
   animation: gtext 5s ease infinite;
 }
 
+.grid-pattern {
+  background-image: linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);
+  background-size: 80px 80px;
+}
+
+.glow-left {
+  background: radial-gradient(ellipse 70% 60% at 15% 50%,rgba(202,138,4,.12) 0%,transparent 70%);
+}
+
+.glow-right {
+  background: radial-gradient(ellipse 60% 55% at 85% 50%,rgba(124,58,237,.10) 0%,transparent 70%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .orb1,.orb2,.orb3,.orb4 { animation:none; }
   .shimmer-btn::after { animation:none; }

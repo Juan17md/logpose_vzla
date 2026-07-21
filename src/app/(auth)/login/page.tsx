@@ -96,12 +96,9 @@ export default function LoginPage() {
                 <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-sky-500/12 blur-[90px]" />
                 <div className="orb4 absolute top-[60%] left-[5%] w-[400px] h-[400px] rounded-full bg-amber-400/10 blur-[80px]" />
 
-                <div className="grid-anim absolute inset-0"
-                    style={{backgroundImage:"linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px)",backgroundSize:"80px 80px"}}
-                />
-
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_15%_50%,rgba(202,138,4,.12)_0%,transparent_70%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_85%_50%,rgba(124,58,237,.10)_0%,transparent_70%)]" />
+                <div className="grid-anim grid-pattern absolute inset-0" />
+                <div className="glow-left absolute inset-0" />
+                <div className="glow-right absolute inset-0" />
 
                 {[
                     {top:"12%",left:"8%",  sz:"w-1.5 h-1.5", color:"bg-amber-400/60",  spd:"6s",  del:"0s"},

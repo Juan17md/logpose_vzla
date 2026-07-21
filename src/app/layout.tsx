@@ -3,6 +3,7 @@ import { Inter, Bungee } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import AvisosPWA from "@/components/pwa/AvisosPWA";
+import IOSSplash from "@/components/pwa/IOSSplash";
 import MotionProvider from "@/components/providers/MotionProvider";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -45,6 +46,7 @@ export default function RootLayout({
         <MotionProvider>
           {children}
         </MotionProvider>
+        <IOSSplash />
         <Toaster position="top-right" richColors mobileOffset={{ top: 52 }} />
         <AvisosPWA />
       </body>

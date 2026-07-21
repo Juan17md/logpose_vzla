@@ -228,6 +228,9 @@ export default function DebtsPage() {
                                 <motion.div
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => setActiveTab('por_cobrar')}
+                                    onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('por_cobrar'); } }}
+                                    role="button"
+                                    tabIndex={0}
                                     className={`flex-none w-44 p-5 rounded-3xl border transition-all relative overflow-hidden ${activeTab === 'por_cobrar'
                                         ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10'
                                         : 'bg-slate-900/50 border-slate-700/30'
@@ -248,6 +251,9 @@ export default function DebtsPage() {
                                 <motion.div
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => setActiveTab('por_pagar')}
+                                    onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('por_pagar'); } }}
+                                    role="button"
+                                    tabIndex={0}
                                     className={`flex-none w-44 p-5 rounded-3xl border transition-all relative overflow-hidden ${activeTab === 'por_pagar'
                                         ? 'bg-red-500/10 border-red-500/50 shadow-lg shadow-red-500/10'
                                         : 'bg-slate-900/50 border-slate-700/30'
@@ -556,6 +562,9 @@ export default function DebtsPage() {
                                 <div className="flex gap-4">
                                     <div 
                                         onClick={() => setActiveTab("por_cobrar")}
+                                        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab("por_cobrar"); } }}
+                                        role="button"
+                                        tabIndex={0}
                                         className={`px-6 py-4 rounded-3xl border transition-all cursor-pointer group/stat ${activeTab === "por_cobrar" ? "bg-emerald-500/10 border-emerald-500/50 shadow-2xl shadow-emerald-500/10" : "bg-slate-950/40 border-white/5 hover:border-emerald-500/20"}`}
                                     >
                                         <div className="flex items-center gap-4">
@@ -571,6 +580,9 @@ export default function DebtsPage() {
 
                                     <div 
                                         onClick={() => setActiveTab("por_pagar")}
+                                        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab("por_pagar"); } }}
+                                        role="button"
+                                        tabIndex={0}
                                         className={`px-6 py-4 rounded-3xl border transition-all cursor-pointer group/stat ${activeTab === "por_pagar" ? "bg-red-500/10 border-red-500/50 shadow-2xl shadow-red-500/10" : "bg-slate-950/40 border-white/5 hover:border-red-500/20"}`}
                                     >
                                         <div className="flex items-center gap-4">

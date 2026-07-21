@@ -91,6 +91,7 @@ export default function CuentaCard({
             ref={cardRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onVerDetalle(cuenta); } }}
             style={{
                 rotateX,
                 rotateY,
@@ -98,6 +99,8 @@ export default function CuentaCard({
             }}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            role="button"
+            tabIndex={0}
             className={cn(outfit.className, "group relative h-56 w-full cursor-pointer perspective-1000")}
             onClick={() => onVerDetalle(cuenta)}
         >

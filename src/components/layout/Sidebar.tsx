@@ -66,6 +66,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const handleLogout = async () => {
         try {
+            await fetch("/api/auth/session", { method: "DELETE" });
             await auth.signOut();
             router.push("/login");
         } catch (error) {

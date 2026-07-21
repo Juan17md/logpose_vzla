@@ -281,6 +281,9 @@ export default function ShoppingListsPage() {
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: index * 0.05 }}
                                         onClick={() => setSelectedList(list)}
+                                        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedList(list); } }}
+                                        role="button"
+                                        tabIndex={0}
                                         className={`group relative p-4 md:p-6 rounded-3xl border-2 cursor-pointer transition-all flex justify-between items-center overflow-hidden active:scale-[0.98] ${selectedList?.id === list.id
                                             ? "bg-slate-800/80 border-amber-500 shadow-[0_20px_50px_-12px_rgba(245,158,11,0.15)]"
                                             : "bg-slate-900/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/60 shadow-lg"
