@@ -49,7 +49,8 @@ export async function obtenerUsuarios(): Promise<
   try {
     await verificarAdmin();
     const docs = await listarUsuarios();
-    return docs.map((d) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return docs.map((d: any) => ({
       uid: d.uid || "",
       email: d.email || "",
       displayName: d.displayName || "",
