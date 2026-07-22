@@ -28,12 +28,12 @@ export default function ConfirmDialog({
 }: ConfirmDialogProps) {
     const config = {
         danger: {
-            icon: <FiAlertTriangle className="text-4xl text-red-500 mb-4 mx-auto" />,
+            icon: <FiAlertTriangle className="text-6xl text-red-500 mb-4 mx-auto" />,
             buttonBg: "bg-red-600 hover:bg-red-500",
             buttonShadow: "shadow-red-900/20",
         },
         warning: {
-            icon: <FiAlertTriangle className="text-4xl text-amber-500 mb-4 mx-auto" />,
+            icon: <FiAlertTriangle className="text-6xl text-amber-500 mb-4 mx-auto" />,
             buttonBg: "bg-amber-600 hover:bg-amber-500",
             buttonShadow: "shadow-amber-900/20",
         },
@@ -52,7 +52,7 @@ export default function ConfirmDialog({
                 {currentConfig.icon}
                 <p className="text-slate-300 mb-8">{message}</p>
 
-                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 w-full">
+                <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 w-full">
                     <button
                         onClick={onClose}
                         disabled={isLoading}
