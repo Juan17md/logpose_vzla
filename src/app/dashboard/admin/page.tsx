@@ -386,7 +386,7 @@ export default function AdminPage() {
           setExpiracionFecha("");
         }}
         title="Fecha de expiración"
-        maxWidth="sm"
+        maxWidth="md"
       >
         <div className="space-y-5">
           <div>
