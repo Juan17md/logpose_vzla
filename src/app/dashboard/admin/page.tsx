@@ -28,6 +28,8 @@ import {
   FiKey,
   FiCheck,
   FiEdit2,
+  FiEye,
+  FiEyeOff,
 } from "react-icons/fi";
 import Select from "@/components/ui/forms/Select";
 import Modal from "@/components/ui/Modal";
@@ -91,6 +93,9 @@ export default function AdminPage() {
   const [eliminando, setEliminando] = useState(false);
   const [cambiarPasswordUid, setCambiarPasswordUid] = useState<string | null>(null);
   const [nuevaPassword, setNuevaPassword] = useState("");
+  const [confirmarPassword, setConfirmarPassword] = useState("");
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarConfirmarPassword, setMostrarConfirmarPassword] = useState(false);
   const [cambiandoPassword, setCambiandoPassword] = useState(false);
   const [expiracionUid, setExpiracionUid] = useState<string | null>(null);
   const [expiracionFecha, setExpiracionFecha] = useState("");
@@ -306,6 +311,9 @@ export default function AdminPage() {
         onClose={() => {
           setCambiarPasswordUid(null);
           setNuevaPassword("");
+          setConfirmarPassword("");
+          setMostrarPassword(false);
+          setMostrarConfirmarPassword(false);
         }}
         title="Cambiar contraseña"
         maxWidth="sm"
@@ -315,14 +323,47 @@ export default function AdminPage() {
             <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-2.5 ml-0.5">
               Nueva contraseña
             </label>
-            <input
-              type="password"
-              value={nuevaPassword}
-              onChange={(e) => setNuevaPassword(e.target.value)}
-              placeholder="Escribe la nueva contraseña"
-              autoFocus
-              className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-5 pr-5 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-slate-800/80 focus:shadow-[0_0_20px_rgba(202,138,4,0.08)]"
-            />
+            <div className="relative">
+              <input
+                type={mostrarPassword ? "text" : "password"}
+                value={nuevaPassword}
+                onChange={(e) => setNuevaPassword(e.target.value)}
+                placeholder="Escribe la nueva contraseña"
+                autoFocus
+                className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-5 pr-12 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-slate-800/80 focus:shadow-[0_0_20px_rgba(202,138,4,0.08)]"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarPassword(!mostrarPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                tabIndex={-1}
+              >
+                {mostrarPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-2.5 ml-0.5">
+              Confirmar contraseña
+            </label>
+            <div className="relative">
+              <input
+                type={mostrarConfirmarPassword ? "text" : "password"}
+                value={confirmarPassword}
+                onChange={(e) => setConfirmarPassword(e.target.value)}
+                placeholder="Repite la nueva contraseña"
+                className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-5 pr-12 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-slate-800/80 focus:shadow-[0_0_20px_rgba(202,138,4,0.08)]"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarConfirmarPassword(!mostrarConfirmarPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                tabIndex={-1}
+              >
+                {mostrarConfirmarPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2.5">
@@ -352,20 +393,27 @@ export default function AdminPage() {
             ))}
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+          {confirmarPassword && nuevaPassword !== confirmarPassword && (
+            <p className="text-xs text-red-400 font-medium">Las contraseñas no coinciden</p>
+          )}
+
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
             <button
               onClick={() => {
                 setCambiarPasswordUid(null);
                 setNuevaPassword("");
+                setConfirmarPassword("");
+                setMostrarPassword(false);
+                setMostrarConfirmarPassword(false);
               }}
               disabled={cambiandoPassword}
-              className="px-6 py-3 font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors disabled:opacity-50"
+              className="px-6 py-3 font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors disabled:opacity-50 self-start"
             >
               Cancelar
             </button>
             <button
               onClick={handleCambiarPasswordConfirm}
-              disabled={cambiandoPassword || nuevaPassword.length <= 6 || !/[A-Z]/.test(nuevaPassword) || !/\d/.test(nuevaPassword) || !/[!@#$%^&*(),.?":{}|<>`~\-_=+\\\/\[\];']/.test(nuevaPassword)}
+              disabled={cambiandoPassword || nuevaPassword.length <= 6 || !/[A-Z]/.test(nuevaPassword) || !/\d/.test(nuevaPassword) || !/[!@#$%^&*(),.?":{}|<>`~\-_=+\\\/\[\];']/.test(nuevaPassword) || nuevaPassword !== confirmarPassword}
               className="px-6 py-3 font-semibold text-white bg-violet-600 hover:bg-violet-500 rounded-xl shadow-lg shadow-violet-900/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center"
             >
               {cambiandoPassword ? (
