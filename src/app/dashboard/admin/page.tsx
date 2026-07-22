@@ -366,6 +366,22 @@ export default function AdminPage() {
             </div>
           </div>
 
+          <div className="flex gap-1.5">
+            {[
+              nuevaPassword.length > 6,
+              /[A-Z]/.test(nuevaPassword),
+              /\d/.test(nuevaPassword),
+              /[!@#$%^&*(),.?":{}|<>`~\-_=+\\\/\[\];']/.test(nuevaPassword),
+            ].map((cumple, i) => (
+              <div
+                key={i}
+                className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
+                  cumple ? "bg-emerald-500" : "bg-slate-700/50"
+                }`}
+              />
+            ))}
+          </div>
+
           <div className="space-y-2.5">
             {[
               { cumple: nuevaPassword.length > 6, texto: "Más de 6 caracteres" },
