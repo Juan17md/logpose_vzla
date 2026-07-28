@@ -48,11 +48,15 @@ CLAUDE.md
 .agents/
 .agent/
 .claude/
+.cursor/
 skills-lock.json
 
 #docs-obsidian
 docs-obsidian/
 docs-obsidian
+
+# Project files
+Planteamiento.txt
 
 # PWA files
 public/sw.js
