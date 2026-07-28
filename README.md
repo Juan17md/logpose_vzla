@@ -9,6 +9,10 @@
 [![PWA](https://img.shields.io/badge/PWA-iOS%20%7C%20Android-5A0FC8?style=for-the-badge&logo=pwa)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
 [![Groq](https://img.shields.io/badge/IA-Groq%20Llama%203.3-orange?style=for-the-badge)](https://groq.com/)
 
+<p align="center">
+  <img src="public/images/login-preview.png" alt="LogPose Vzla Hero" width="100%" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+</p>
+
 ---
 
 ## Características
