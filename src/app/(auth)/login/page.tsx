@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { FirebaseError } from "firebase/app";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
@@ -15,7 +16,7 @@ import Input from "@/components/ui/forms/Input";
 import Logo from "@/components/layout/Logo";
 import { motion } from "framer-motion";
 import { Outfit, IBM_Plex_Sans } from "next/font/google";
-import "./aurora.css";
+import "../aurora.css";
 
 const outfit = Outfit({ variable: "--font-outfit", weight: ["400","500","600","700","800"], subsets: ["latin"] });
 const ibmPlexSans = IBM_Plex_Sans({ variable: "--font-ibm", weight: ["300","400","500","600","700"], subsets: ["latin"] });
@@ -220,13 +221,23 @@ export default function LoginPage() {
                                 </form>
 
 
-                            </motion.div>
-                        </div>
-                    </motion.div>
+                                                                    </motion.div>
+                                                        </div>
+                                                    </motion.div>
 
-                    <motion.p variants={item} className="text-center text-xs text-slate-700 mt-5 hidden lg:block">
-                        © {new Date().getFullYear()} LogPose Vzla Project. Designed by: Juan17md
-                    </motion.p>
+                                                    <motion.div variants={item} className="mt-6 flex items-center justify-center gap-4 z-10 relative">
+                                                        <Link href="/terminos" className="text-xs text-slate-600 hover:text-amber-400 transition-colors duration-200">
+                                                            Términos
+                                                        </Link>
+                                                        <span className="text-slate-700/50">·</span>
+                                                        <Link href="/privacidad" className="text-xs text-slate-600 hover:text-amber-400 transition-colors duration-200">
+                                                            Privacidad
+                                                        </Link>
+                                                    </motion.div>
+
+                                                    <motion.p variants={item} className="text-center text-xs text-slate-700 mt-5 hidden lg:block">
+                                                        © {new Date().getFullYear()} LogPose Vzla Project. Designed by: Juan17md
+                                                    </motion.p>
                 </motion.div>
             </div>
         </div>

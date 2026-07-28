@@ -310,6 +310,16 @@ export default function RegisterPage() {
                                         Inicia sesión
                                     </Link>
                                 </motion.p>
+
+                                <motion.div variants={item} className="mt-5 flex items-center justify-center gap-4 z-10 relative">
+                                    <Link href="/terminos" className="text-xs text-slate-600 hover:text-amber-400 transition-colors duration-200">
+                                        Términos
+                                    </Link>
+                                    <span className="text-slate-700/50">·</span>
+                                    <Link href="/privacidad" className="text-xs text-slate-600 hover:text-amber-400 transition-colors duration-200">
+                                        Privacidad
+                                    </Link>
+                                </motion.div>
                             </motion.div>
                         </div>
                     </motion.div>
