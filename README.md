@@ -1,89 +1,93 @@
-# LogPose Vzla 💰
+# LogPose Vzla
 
-> **LogPose Vzla** es una avanzada plataforma de gestión financiera personal diseñada para ofrecer una experiencia visual premium y una funcionalidad robusta. Inspirada en la estética *Glassmorphism* y el diseño moderno, esta aplicación permite un control total sobre tus finanzas con la ayuda de un asistente inteligente basado en IA.
-
-<p align="center">
-  <img src="public/images/login-preview.png" alt="LogPose Vzla Hero" width="100%" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-</p>
+> Plataforma de gestión financiera personal **mobile-first** con estética *Quiet Luxury*, asistente IA y soporte multi-moneda para el ecosistema financiero venezolano.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![Firebase](https://img.shields.io/badge/Firebase-Firestone-ffca28?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
-[![Groq](https://img.shields.io/badge/IA_Asistente-Groq-orange?style=for-the-badge)](https://groq.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore-ffca28?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
+[![PWA](https://img.shields.io/badge/PWA-iOS%20%7C%20Android-5A0FC8?style=for-the-badge&logo=pwa)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
+[![Groq](https://img.shields.io/badge/IA-Groq%20Llama%203.3-orange?style=for-the-badge)](https://groq.com/)
 
 ---
 
-## ✨ Características Principales
+## Características
 
-### 🖥️ Dashboard Inteligente & UI Premium
-*   **Diseño Glassmorphism**: Una interfaz moderna y translúcida que proporciona una experiencia de usuario fluida y profesional.
-*   **Widgets Dinámicos**: Visualización en tiempo real de ingresos, gastos, ahorros y metas financieras.
-*   **Conversión en Tiempo Real**: Sincronización automática con la tasa oficial del BCV (caché de 15 min).
+### Dashboard Inteligente
+- **12 widgets dinámicos** con layouts duales móvil/desktop: Balance Hero, Health Score, Flujo de Caja, Presupuesto, Metas, Deudas y más
+- **Gráficos D3.js** (Rosen Charts): donut interactivo de gastos, área chart de flujo mensual, bar charts en reportes
+- **Conversión BCV en tiempo real** con caché de 15 minutos y toggle de privacidad (oculta montos)
 
-### 🤖 Asistente Financiero "Nami"
-*   **IA Personalizada**: Integramos el SDK de Groq para ofrecer recomendaciones financieras basadas en tus datos reales.
-*   **Análisis Predictivo**: Consulta tu situación financiera y recibe consejos sobre cómo optimizar tus ahorros.
+### Asistente Financiero — Nami
+- **16 intents**: registro de transacciones, deudas, metas, gastos fijos, listas de compras y consultas analíticas
+- **Pre-ruteo local** sin latencia para consultas comunes (balance, gastos, deudas, metas)
+- **Entrada por voz** vía Web Speech API
+- **Resolución inteligente de cuentas** con sistema de puntuación y filtrado contextual
 
-### 🎯 Gestión de Metas y Ahorros
-*   **Objetivos Claros**: Establece metas de ahorro con barras de progreso visuales.
-*   **Billetera Multi-Divisa**: Soporte completo para Efectivo en $ y BS, además de activos digitales como USDT.
+### Multi-moneda
+- Soporte para **USD, VES, USDT, EUR** con tasa histórica congelada al momento de la transacción
+- Comisiones automáticas venezolanas: Pago Móvil P2P (0.30%), P2C (1.50%),Transferencia Interbancaria (0.30%)
+- Deudas nominales selectivas sin conversión forzada
 
-### 📋 Herramientas de Control
-*   **Listas de Compras**: Calculadora integrada con tasas de cambio y seguimiento de artículos.
-*   **Deudas y Gastos Fijos**: Registro organizado de compromisos financieros recurrentes.
+### PWA Mobile-first
+- **Offline-first**: persistencia IndexedDB + Firestore offline cache con `persistentMultipleTabManager`
+- **iOS Splash Screens**: 46 resoluciones cubriendo todos los dispositivos (iPhone SE hasta iPad Pro 12.9")
+- **Avisos de instalación y actualización** con `SKIP_WAITING`
+- Safe area para notch y home indicator
 
----
+### Categorías Personalizadas
+- CRUD completo con 17 categorías predeterminadas al primer login
+- Selector inteligente de dos niveles (categoría → subcategoría) con colores dinámicos
+- Paleta de 10 colores premium con micro-animaciones
 
-## 🛠️ Stack Tecnológico
+### Seguridad
+- Firestore Security Rules con validación de tipos, roles (RBAC) y protección multi-colección
+- Rate limiting con Redis/Upstash (10 req/min chat, 5 req/min auth)
+- Headers de seguridad OWASP (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
+- Validación Zod en todas las escrituras Firestore (15+ esquemas)
+- `server-only` para módulos sensibles del backend
+
+## Stack Tecnológico
 
 | Componente | Tecnología |
 | :--- | :--- |
-| **Frontend** | [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/) |
-| **Estilizado** | [Tailwind CSS v4](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/) |
-| **Backend & Auth** | [Firebase](https://firebase.google.com/) (Firestore, Authentication) |
-| **Inteligencia Artificial** | [Groq Cloud SDK](https://groq.com/) |
-| **Gráficos** | [D3.js](https://d3js.org/) (Rosen Charts) |
-| **Formularios** | [React Hook Form](https://react-hook-form.com/) con [Zod](https://zod.dev/) |
+| **Frontend** | Next.js 16 (App Router), React 19 |
+| **Estilizado** | Tailwind CSS v4, Framer Motion, Glassmorphism |
+| **Backend & Auth** | Firebase Auth + Firestore |
+| **Inteligencia Artificial** | Groq Cloud (Llama 3.3 70B) |
+| **Gráficos** | D3.js (Rosen Charts — SVG nativo) |
+| **Formularios** | React Hook Form + Zod |
+| **PWA** | @ducanh2912/next-pwa, Workbox |
+| **Testing** | Vitest (129 tests, 9 suites) |
+| **CI/CD** | GitHub Actions (lint, typegen, typecheck, test, build) |
+
+## Estructura del Proyecto
+
+```
+src/
+├── app/
+│   ├── (auth)/           # Login, registro, términos, privacidad
+│   ├── api/              # Route handlers (chat, sesión)
+│   ├── dashboard/        # 12 secciones de la app
+│   ├── onboarding/       # Wizard de 6 pasos post-registro
+│   └── layout.tsx        # Layout raíz con PWA y splash
+├── components/
+│   ├── charts/           # Gráficos D3.js
+│   ├── forms/            # Formularios homogeneizados
+│   ├── layout/           # Sidebar, navegación, logo
+│   ├── pwa/              # Avisos PWA, IOSSplash
+│   └── ui/               # Sistema de diseño: Modal, Input, Select, etc.
+├── contexts/             # Context API como caché reactiva (6 contextos)
+└── lib/                  # Utilidades, schemas Zod, Firebase, Nami
+```
+
+## Arquitectura
+
+- **Transacciones atómicas** con `runTransaction` de Firestore para operaciones multi-documento
+- **Context API como caché reactiva** eliminando ~80% de lecturas duplicadas a Firestore
+- **Onboarding wizard** de 6 pasos con migración automática de usuarios legacy
+- **Lazy loading** en todos los widgets del dashboard y chatbot (59KB)
 
 ---
 
-## 🚀 Instalación y Configuración
-
-Sigue estos pasos para ejecutar el proyecto localmente:
-
-### 1. Clonar el repositorio
-```bash
-git clone https://github.com/Juan17md/logpose_vzla.git
-cd logpose_vzla
-```
-
-### 2. Instalar dependencias
-```bash
-npm install
-```
-
-### 3. Configurar variables de entorno
-Crea un archivo `.env.local` en la raíz del proyecto y añade tus credenciales:
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=tu_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu_dominio
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tu_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=tu_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=tu_app_id
-GROQ_API_KEY=tu_groq_api_key
-```
-
-### 4. Iniciar el servidor de desarrollo
-```bash
-npm run dev
-```
-Accede a [http://localhost:3000](http://localhost:3000) para ver la aplicación en acción.
-
----
-
-## 👤 Desarrollado por
-
-**Juan17md** - *Full Stack Developer*
----
+*LogPose Vzla — Navegando el Grand Line de tus finanzas.*
