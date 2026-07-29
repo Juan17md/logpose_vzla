@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { esPruebaExpirada } from "@/types/rbac";
 import { obtenerCookieSesion, configCookie } from "@/lib/authCookie";
 import Sidebar from "@/components/layout/Sidebar";
 
@@ -51,11 +50,6 @@ function OnboardingGuard({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          if (esPruebaExpirada(data.role, data.trialExpiresAt)) {
-            await updateDoc(doc(db, "users", user.uid), { status: "expired" });
-            router.replace("/prueba-expirada");
-            return;
-          }
         }
       } catch {
         // Si falla la lectura, dejar pasar

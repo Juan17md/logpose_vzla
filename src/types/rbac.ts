@@ -1,7 +1,6 @@
 export const ROLES = {
   ADMIN: "admin",
   USUARIO: "usuario",
-  PRUEBA: "prueba",
 } as const;
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
@@ -14,11 +13,19 @@ export const STATUS = {
 
 export type UserStatus = (typeof STATUS)[keyof typeof STATUS];
 
-export const DIAS_PRUEBA = 7;
+export const PLANES = {
+  FREE: "free",
+  PREMIUM: "premium",
+} as const;
+
+export type Plan = (typeof PLANES)[keyof typeof PLANES];
+
+export const DIAS_PRUEBA = 14;
 
 export interface DatosSesion {
   uid: string;
   role: Role;
+  plan: Plan;
   status: UserStatus;
   trialExpiresAt: number | null;
 }
@@ -28,6 +35,7 @@ export interface UserDoc {
   displayName?: string;
   email: string;
   role: Role;
+  plan: Plan;
   status: UserStatus;
   onboardingCompleted: boolean;
   createdAt: TimestampValue | null;
@@ -48,23 +56,23 @@ export function esAdmin(role: unknown): role is "admin" {
   return role === ROLES.ADMIN;
 }
 
-export function esPrueba(role: unknown): role is "prueba" {
-  return role === ROLES.PRUEBA;
+export function esPremium(plan: unknown): plan is "premium" {
+  return plan === PLANES.PREMIUM;
 }
 
-export function esPruebaExpirada(
-  role: unknown,
-  trialExpiresAt: unknown
+function extraerMillis(ts: unknown): number {
+  if (!ts) return 0;
+  if (typeof ts === "number") return ts;
+  if (ts instanceof Date) return ts.getTime();
+  if (typeof ts === "string") return new Date(ts).getTime();
+  return (ts as { toMillis?: () => number })?.toMillis?.() ?? 0;
+}
+
+export function esTrialActivo(
+  trialExpiresAt: unknown,
+  plan?: unknown
 ): boolean {
-  if (role !== ROLES.PRUEBA) return false;
+  if (plan === PLANES.PREMIUM) return true;
   if (!trialExpiresAt) return false;
-  const exp =
-    typeof trialExpiresAt === "number"
-      ? trialExpiresAt
-      : trialExpiresAt instanceof Date
-        ? trialExpiresAt.getTime()
-        : typeof trialExpiresAt === "string"
-          ? new Date(trialExpiresAt).getTime()
-          : (trialExpiresAt as { toMillis?: () => number })?.toMillis?.() ?? 0;
-  return Date.now() > exp;
+  return Date.now() < extraerMillis(trialExpiresAt);
 }

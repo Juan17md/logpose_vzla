@@ -3,7 +3,6 @@ import {
   obtenerCookieSesion,
   verificarCookieSesion,
 } from "@/lib/authCookie";
-import { esPruebaExpirada } from "@/types/rbac";
 
 const RUTAS_PROTEGIDAS = ["/dashboard"];
 const RUTAS_ADMIN = ["/dashboard/admin"];
@@ -33,16 +32,6 @@ export async function middleware(request: NextRequest) {
       return res;
     }
     return NextResponse.next();
-  }
-
-  if (esPruebaExpirada(sesion.role, sesion.trialExpiresAt)) {
-    if (
-      pathname.startsWith("/prueba-expirada") ||
-      esRutaAuth
-    ) {
-      return NextResponse.next();
-    }
-    return NextResponse.redirect(new URL("/prueba-expirada", request.url));
   }
 
   if (esRutaAdmin && sesion.role !== "admin") {

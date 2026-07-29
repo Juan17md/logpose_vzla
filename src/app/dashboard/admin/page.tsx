@@ -40,6 +40,7 @@ type UsuarioRow = {
   email: string;
   displayName: string;
   role: string;
+  plan: string;
   status: string;
   createdAt: string | null;
   trialExpiresAt: string | null;
@@ -184,7 +185,6 @@ export default function AdminPage() {
   };
 
   const opcionesRol = [
-    { id: "prueba", name: "Prueba", value: "prueba" },
     { id: "usuario", name: "Usuario", value: "usuario" },
   ];
 
@@ -201,7 +201,6 @@ export default function AdminPage() {
     const estilos: Record<string, string> = {
       admin: "bg-violet-500/20 text-violet-300 border-violet-500/30",
       usuario: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-      prueba: "bg-amber-500/20 text-amber-300 border-amber-500/30",
     };
     return estilos[role] || "bg-slate-500/20 text-slate-300 border-slate-500/30";
   };
@@ -267,8 +266,8 @@ export default function AdminPage() {
             color: "text-emerald-400 bg-emerald-500/20 border-emerald-500/30",
           },
           {
-            label: "En Prueba",
-            value: usuarios.filter((u) => u.role === "prueba").length,
+            label: "Plan Gratuito",
+            value: usuarios.filter((u) => u.plan === "free" || !u.plan).length,
             icon: FiClock,
             color: "text-amber-400 bg-amber-500/20 border-amber-500/30",
           },

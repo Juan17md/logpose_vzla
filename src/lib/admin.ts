@@ -42,6 +42,7 @@ export async function obtenerUsuarios(): Promise<
     email: string;
     displayName: string;
     role: string;
+    plan: string;
     status: string;
     createdAt: string | null;
     trialExpiresAt: string | null;
@@ -56,6 +57,7 @@ export async function obtenerUsuarios(): Promise<
       email: d.email || "",
       displayName: d.displayName || "",
       role: d.role || "usuario",
+      plan: d.plan || "free",
       status: d.status || "active",
       createdAt: d.createdAt || null,
       trialExpiresAt: d.trialExpiresAt || null,
@@ -101,14 +103,10 @@ export async function cambiarRolUsuario(
       return { exito: false, error: "No puedes cambiar el rol de administradores" };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: Record<string, any> = { role: nuevoRol };
+    const updates: Record<string, any> = { role: nuevoRol, plan: "free" };
 
     if (nuevoRol === "usuario") {
       updates.trialExpiresAt = null;
-    } else if (nuevoRol === "prueba") {
-      const fecha = new Date();
-      fecha.setDate(fecha.getDate() + DIAS_PRUEBA);
-      updates.trialExpiresAt = fecha.toISOString();
     }
 
     await actualizarUsuario(uid, updates);

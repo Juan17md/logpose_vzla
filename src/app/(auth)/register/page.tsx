@@ -131,7 +131,8 @@ export default function RegisterPage() {
                 uid: user.uid,
                 displayName: data.name,
                 email: data.email,
-                role: "prueba",
+                role: "usuario",
+                plan: "free",
                 status: "active",
                 onboardingCompleted: false,
                 createdAt: ahora,
@@ -146,7 +147,7 @@ export default function RegisterPage() {
             });
 
             toast.success("¡Cuenta creada!", {
-                description: "Tienes 7 días de prueba gratuita.",
+                description: "Tienes 14 días de prueba gratuita con todas las funciones.",
             });
             router.push("/onboarding");
         } catch (error) {

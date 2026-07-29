@@ -3,6 +3,8 @@ import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, d
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { gastoFijoSchema } from "@/lib/schemas";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { toast } from "sonner";
 
 export interface FixedExpense {
     id: string;
@@ -19,6 +21,7 @@ export interface FixedExpense {
 export function useFixedExpenses() {
     const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
     const [loadingFixedExpenses, setLoadingFixedExpenses] = useState(true);
+    const { limites } = usePlanLimits();
 
     useEffect(() => {
         let unsubscribeSnapshot: (() => void) | null = null;
@@ -67,6 +70,12 @@ export function useFixedExpenses() {
 
     const addFixedExpense = async (expense: Omit<FixedExpense, "id" | "createdAt">) => {
         if (!auth.currentUser) return;
+        if (fixedExpenses.length >= limites.maxFixedExpenses) {
+            toast.error("Límite de gastos fijos alcanzado", {
+                description: `El plan gratuito permite hasta ${limites.maxFixedExpenses} gastos fijos. Actualiza a Premium para ilimitados.`,
+            });
+            return false;
+        }
         const parsed = gastoFijoSchema.safeParse(expense);
         if (!parsed.success) {
             console.error("Gasto fijo inválido:", parsed.error.flatten());

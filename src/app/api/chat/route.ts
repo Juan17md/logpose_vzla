@@ -2,7 +2,9 @@ import 'server-only';
 import { Groq } from 'groq-sdk';
 import { NextResponse } from 'next/server';
 import { verificarTokenFirebase } from '@/lib/verificarAuthFirebase';
-import { obtenerChatRateLimit } from '@/lib/rateLimit';
+import { leerUsuario } from '@/lib/firebaseAdmin';
+import { obtenerChatRateLimit, obtenerNamiDailyLimit } from '@/lib/rateLimit';
+import { PLANES } from '@/types/rbac';
 
 interface MensajeChat {
     role: "system" | "user" | "assistant";
@@ -30,6 +32,18 @@ export async function POST(req: Request) {
     const { success } = await obtenerChatRateLimit().limit(`${sesion.uid}:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }, { status: 429 });
+    }
+
+    const userData = await leerUsuario(sesion.uid);
+    const plan = userData?.plan || PLANES.FREE;
+    if (plan !== PLANES.PREMIUM) {
+      const { success: dailySuccess } = await obtenerNamiDailyLimit().limit(sesion.uid);
+      if (!dailySuccess) {
+        return NextResponse.json({
+          operations: [],
+          message: 'Has alcanzado tu límite diario de 15 consultas en el plan gratuito. **Actualiza a Premium** para consultas ilimitadas con Nami. 🌟',
+        });
+      }
     }
 
     let message = "";

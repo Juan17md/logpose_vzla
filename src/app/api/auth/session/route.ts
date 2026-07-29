@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { leerUsuarioConToken } from "@/lib/firebaseAdmin";
 import { verificarTokenFirebase } from "@/lib/verificarAuthFirebase";
 import { crearCookieSesion, configCookie } from "@/lib/authCookie";
-import { esPrueba } from "@/types/rbac";
+import { PLANES } from "@/types/rbac";
 import { obtenerAuthRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
@@ -36,16 +36,16 @@ export async function POST(request: NextRequest) {
     }
 
     const role = userData.role || "usuario";
+    const plan = userData.plan || PLANES.FREE;
     const status = userData.status || "active";
-    const trialExpiresAt = esPrueba(role)
-      ? userData.trialExpiresAt
-        ? new Date(userData.trialExpiresAt).getTime()
-        : null
+    const trialExpiresAt = userData.trialExpiresAt
+      ? new Date(userData.trialExpiresAt).getTime()
       : null;
 
     const sessionData = {
       uid: info.uid,
       role,
+      plan,
       status,
       trialExpiresAt,
     };
