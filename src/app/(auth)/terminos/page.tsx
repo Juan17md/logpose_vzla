@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FiArrowLeft, FiFileText, FiShield, FiUserCheck, FiLock, FiGlobe, FiMail, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
+import { FiAlertTriangle, FiAward, FiArrowLeft, FiBookOpen, FiCheckCircle, FiCreditCard, FiDollarSign, FiFileText, FiGlobe, FiHeadphones, FiLock, FiServer, FiShield, FiShieldOff, FiUserCheck, FiUsers, FiXCircle } from "react-icons/fi";
 import Logo from "@/components/layout/Logo";
 import { Outfit, IBM_Plex_Sans } from "next/font/google";
 import "../aurora.css";
@@ -34,40 +34,88 @@ const secciones = [
       "Para acceder a las funcionalidades de la Aplicación, debes registrarte proporcionando tu nombre completo, dirección de correo electrónico y una contraseña segura. Eres el único responsable de mantener la confidencialidad de tus credenciales de acceso. LogPose VZLA no será responsable por pérdidas o daños derivados del uso no autorizado de tu cuenta. Te comprometes a notificar inmediatamente cualquier uso no autorizado de tu cuenta a través de los canales de soporte habilitados.",
   },
   {
-    icon: <FiShield />,
-    titulo: "3. Período de Prueba y Suscripción",
+    icon: <FiUsers />,
+    titulo: "3. Edad Mínima y Capacidad Legal",
     contenido:
-      "Al registrarte, obtienes un período de prueba gratuito de 7 días con acceso completo a todas las funcionalidades. Transcurrido dicho período, deberás adquirir una suscripción para continuar utilizando la Aplicación. LogPose VZLA se reserva el derecho de modificar los precios y planes de suscripción, notificando los cambios con al menos 30 días de anticipación. El incumplimiento en el pago de la suscripción resultará en la restricción del acceso a tu cuenta hasta regularizar tu situación.",
+      "La Aplicación está dirigida exclusivamente a personas mayores de 18 años con plena capacidad legal. Al registrarte, declaras bajo juramento que eres mayor de edad y que cuentas con la capacidad legal para aceptar los presentes Términos y obligarte a su cumplimiento. Queda estrictamente prohibido el registro de menores de edad o de personas sin capacidad legal, incluso con la autorización de sus representantes legales.",
+  },
+  {
+    icon: <FiShield />,
+    titulo: "4. Período de Prueba y Suscripción",
+    contenido:
+      "Al registrarte, obtienes un período de prueba gratuito de 14 días con acceso completo a todas las funcionalidades. Transcurrido dicho período, tu cuenta continuará operando con el plan gratuito, y podrás adquirir la suscripción Premium para acceder a todas las funcionalidades de forma ilimitada. LogPose VZLA se reserva el derecho de modificar los precios y planes de suscripción, notificando los cambios con al menos 30 días de anticipación.",
+  },
+  {
+    icon: <FiCreditCard />,
+    titulo: "5. Suscripción Premium, Pagos y Reembolsos",
+    contenido:
+      "La suscripción Premium tiene un costo mensual de US$ 3,99 (o su equivalente en bolívares conforme a la tasa de cambio del BCV publicada en la Aplicación). El procesamiento de pagos se encuentra actualmente en proceso de integración con una pasarela de pago autorizada; una vez disponible, los pagos se procesarán exclusivamente a través de dicha pasarela y LogPose VZLA no almacenará ni tendrá acceso a los datos de tu instrumento de pago. Salvo que la legislación aplicable disponga lo contrario, los pagos efectuados no son reembolsables. El impago o incumplimiento del pago podrá resultar en la suspensión de las funcionalidades Premium hasta que regularices tu situación. Los impuestos y comisiones aplicables al pago serán de cargo del usuario.",
   },
   {
     icon: <FiLock />,
-    titulo: "4. Privacidad y Protección de Datos",
+    titulo: "6. Privacidad y Protección de Datos",
     contenido:
       "LogPose VZLA recopila y procesa tus datos personales y financieros de acuerdo con lo establecido en nuestra Política de Privacidad. Los datos financieros que ingreses en la Aplicación son almacenados de forma segura en Firebase Firestore con cifrado en reposo y en tránsito. No compartimos tus datos financieros con terceros sin tu consentimiento explícito. Puedes solicitar la eliminación completa de tus datos en cualquier momento contactando a nuestro equipo de soporte.",
   },
   {
     icon: <FiGlobe />,
-    titulo: "5. Uso del Asistente IA (Nami)",
+    titulo: "7. Uso del Asistente IA (Nami)",
     contenido:
-      "El asistente financiero Nami utiliza inteligencia artificial a través de la API de Groq (modelo Llama 3.3) para procesar comandos en lenguaje natural. Nami puede registrar transacciones, crear metas de ahorro, gestionar deudas y proporcionar análisis financieros basados en tus datos. Si bien Nami está diseñado para ser preciso, no garantizamos que todas las interpretaciones sean correctas. Es tu responsabilidad revisar y confirmar cualquier operación realizada a través del asistente. Las conversaciones con Nami no se utilizan para entrenar modelos de IA externos.",
+      "El asistente financiero Nami utiliza inteligencia artificial a través de la API de Groq (modelo Llama 3.3) para procesar comandos en lenguaje natural. Nami puede registrar transacciones, crear metas de ahorro, gestionar deudas y proporcionar análisis financieros basados en tus datos. Para procesar tus solicitudes, junto con tu mensaje se envía un resumen del contexto financiero de tu cuenta (saldos, movimientos recientes, metas, deudas y gastos fijos), tal como se describe en la Política de Privacidad. Si bien Nami está diseñado para ser preciso, no garantizamos que todas las interpretaciones sean correctas. Es tu responsabilidad revisar y confirmar cualquier operación realizada a través del asistente. Las conversaciones con Nami no se utilizan para entrenar modelos de IA externos.",
+  },
+  {
+    icon: <FiDollarSign />,
+    titulo: "8. Uso de Criptomonedas (USDT)",
+    contenido:
+      "La Aplicación permite registrar saldos y transacciones en criptomonedas estables (USDT) con fines exclusivos de registro y organización financiera. LogPose VZLA NO es una casa de cambio, billetera digital (wallet), exchange ni custodio de criptoactivos. La Aplicación no almacena, transfiere, custodia ni intercambia criptomonedas, y no interviene en operaciones de compra, venta o cambio. Cualquier pérdida derivada de operaciones con criptoactivos es responsabilidad exclusiva del usuario.",
+  },
+  {
+    icon: <FiShieldOff />,
+    titulo: "9. Conducta Prohibida",
+    contenido:
+      "Te comprometes a no utilizar la Aplicación para: (a) realizar actividades ilícitas, fraudulentas o vinculadas con el blanqueo de capitales o la financiación del terrorismo; (b) registrar transacciones ficticias o manipular tus datos con fines de engaño o fraude; (c) intentar acceder a cuentas de terceros o vulnerar la seguridad de la plataforma; (d) introducir malware, virus o cualquier código dañino; (e) realizar ingeniería inversa, copiar o explotar comercialmente la Aplicación sin autorización previa; (f) acosar, amenazar o vulnerar los derechos de terceros. El incumplimiento de esta cláusula facultará a LogPose VZLA a suspender o eliminar tu cuenta de forma inmediata, sin perjuicio de las acciones legales que correspondan.",
+  },
+  {
+    icon: <FiServer />,
+    titulo: "10. Disponibilidad, Suspensión y Fuerza Mayor",
+    contenido:
+      "LogPose VZLA hará sus mejores esfuerzos para mantener la Aplicación disponible, pero no garantiza un acceso ininterrumpido ni libre de errores. La Aplicación podrá suspenderse temporalmente por mantenimientos programados, actualizaciones o fallos de los servicios de terceros de los que depende (Google Cloud/Firebase, Groq, entre otros). No seremos responsables ante el usuario por la suspensión, interrupción o indisponibilidad del servicio, ni por incumplimientos derivados de causas de fuerza mayor o caso fortuito, incluyendo fallos de conectividad, cortes eléctricos, desastres naturales o actos de autoridades.",
+  },
+  {
+    icon: <FiAward />,
+    titulo: "11. Propiedad Intelectual",
+    contenido:
+      "La Aplicación, incluyendo su código fuente, diseño, marcas, logotipos, gráficos, textos y demás contenidos, es propiedad exclusiva de LogPose VZLA o de sus licenciantes y está protegida por las leyes de propiedad intelectual. Al utilizar la Aplicación obtienes una licencia limitada, personal, no exclusiva, no transferible y revocable para su uso. Queda prohibida su reproducción, distribución, modificación, ingeniería inversa o explotación comercial sin autorización previa por escrito.",
   },
   {
     icon: <FiAlertTriangle />,
-    titulo: "6. Limitación de Responsabilidad",
+    titulo: "12. Limitación de Responsabilidad",
     contenido:
       "LogPose VZLA es una herramienta de registro y visualización financiera. No somos una institución financiera, ni ofrecemos asesoría financiera profesional. Los datos presentados en la Aplicación tienen fines informativos y de organización personal. No nos hacemos responsables por decisiones financieras tomadas basándose en la información proporcionada por la Aplicación. La exactitud de los datos ingresados es responsabilidad exclusiva del usuario. LogPose VZLA no garantiza que la Aplicación esté libre de errores, interrupciones o vulnerabilidades de seguridad.",
   },
   {
+    icon: <FiXCircle />,
+    titulo: "13. Terminación por Incumplimiento",
+    contenido:
+      "LogPose VZLA podrá suspender o terminar tu cuenta de forma inmediata si incumples cualquiera de los presentes Términos, si utilizas la Aplicación para actividades ilícitas o si tu conducta pone en riesgo la seguridad, integridad o disponibilidad del servicio. En caso de terminación por causa imputable al usuario, no habrá derecho a reembolso de las cantidades pagadas. Podrás solicitar la exportación o eliminación de tus datos conforme a lo establecido en la Política de Privacidad.",
+  },
+  {
     icon: <FiCheckCircle />,
-    titulo: "7. Cancelación y Eliminación de Cuenta",
+    titulo: "14. Cancelación y Eliminación de Cuenta",
     contenido:
       "Puedes cancelar tu suscripción y eliminar tu cuenta en cualquier momento desde la sección de Perfil dentro de la Aplicación. Al eliminar tu cuenta, todos tus datos financieros (transacciones, cuentas, deudas, metas, listas, categorías personalizadas y gastos fijos) serán eliminados permanentemente de nuestros servidores en un plazo máximo de 30 días. Las cuentas con suscripción activa no tendrán derecho a reembolso parcial por cancelación anticipada, salvo que la legislación aplicable disponga lo contrario.",
   },
   {
-    icon: <FiMail />,
-    titulo: "8. Contacto",
+    icon: <FiBookOpen />,
+    titulo: "15. Ley Aplicable y Jurisdicción",
     contenido:
-      "Para cualquier consulta, reclamación o solicitud relacionada con estos Términos y Condiciones, puedes contactarnos a través de los canales oficiales del proyecto LogPose VZLA. Responderemos a tu solicitud en un plazo máximo de 5 días hábiles.",
+      "Estos Términos y Condiciones se rigen e interpretan conforme a las leyes de la República Bolivariana de Venezuela. Cualquier controversia, discrepancia o reclamación derivada de los presentes Términos o del uso de la Aplicación será sometida a la jurisdicción de los tribunales competentes de la República Bolivariana de Venezuela, renunciando las partes a cualquier otro fuero que pudiera corresponderles. En materia de protección de datos personales, será de aplicación la Ley Orgánica de Protección de Datos Personales (2022) y demás normas concordantes.",
+  },
+  {
+    icon: <FiHeadphones />,
+    titulo: "16. Soporte y Contacto",
+    contenido:
+      "Para cualquier consulta, reclamación, sugerencia o solicitud de soporte relacionada con la Aplicación o con los presentes Términos, puedes contactarnos a través del correo electrónico juan9182morales@gmail.com. Atenderemos tu solicitud en un plazo máximo de 5 días hábiles.",
   },
 ];
 
@@ -107,7 +155,7 @@ export default function TerminosPage() {
                 </motion.div>
 
                 <motion.p variants={item} className="text-slate-500 text-sm mb-10 border-b border-slate-800/60 pb-6">
-                  Última actualización: 28 de julio de 2026
+                  Última actualización: 2 de agosto de 2026
                 </motion.p>
 
                 <div className="space-y-10">
@@ -134,7 +182,25 @@ export default function TerminosPage() {
                   <p className="text-xs text-slate-600">
                     © {new Date().getFullYear()} LogPose Vzla Project. Designed by: Juan17md
                   </p>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center justify-center gap-4">
+                    <Link
+                      href="/reembolsos"
+                      className="text-xs text-slate-500 hover:text-amber-400 transition-colors duration-200"
+                    >
+                      Reembolsos
+                    </Link>
+                    <Link
+                      href="/aviso-legal"
+                      className="text-xs text-slate-500 hover:text-amber-400 transition-colors duration-200"
+                    >
+                      Aviso Legal
+                    </Link>
+                    <Link
+                      href="/derechos"
+                      className="text-xs text-slate-500 hover:text-amber-400 transition-colors duration-200"
+                    >
+                      Derechos ARCO
+                    </Link>
                     <Link
                       href="/privacidad"
                       className="text-xs text-slate-500 hover:text-amber-400 transition-colors duration-200"
