@@ -1,9 +1,8 @@
 export type AdminLogAction =
-  | "aprobar_usuario"
   | "cambiar_rol"
   | "cambiar_password"
   | "eliminar_usuario"
-  | "actualizar_expiracion";
+  | "actualizar_nombre";
 
 export interface AdminLogEntry {
   id: string;

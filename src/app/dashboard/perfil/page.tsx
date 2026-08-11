@@ -245,7 +245,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {/* Plan & Security Sidebar */}
+                {/* Seguridad y acciones de cuenta */}
                 <div className="space-y-6">
                     {/* Security Actions */}
                     <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden">

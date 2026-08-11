@@ -3,8 +3,6 @@ import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, 
 import { db, auth } from "@/lib/firebase";
 import { User } from "firebase/auth";
 import { listaComprasSchema, itemListaSchema } from "@/lib/schemas";
-import { usePlanLimits } from "@/hooks/usePlanLimits";
-import { toast } from "sonner";
 
 export interface ShoppingItem {
     id: string;
@@ -26,7 +24,6 @@ export interface ShoppingList {
 export const useShoppingLists = () => {
     const [lists, setLists] = useState<ShoppingList[]>([]);
     const [loading, setLoading] = useState(true);
-    const { limites } = usePlanLimits();
 
     useEffect(() => {
         let unsubscribeSnapshot: (() => void) | null = null;
@@ -78,12 +75,6 @@ export const useShoppingLists = () => {
 
     const createList = async (name: string) => {
         if (!auth.currentUser) return;
-        if (lists.length >= limites.maxShoppingLists) {
-            toast.error("Límite de listas alcanzado", {
-                description: `El plan gratuito permite hasta ${limites.maxShoppingLists} listas. Actualiza a Premium para ilimitadas.`,
-            });
-            return;
-        }
         const parsed = listaComprasSchema.safeParse({ name });
         if (!parsed.success) {
             console.error("Lista inválida:", parsed.error.flatten());
@@ -232,12 +223,6 @@ export const useShoppingLists = () => {
 
     const duplicateList = async (listId: string) => {
         if (!auth.currentUser) return;
-        if (lists.length >= limites.maxShoppingLists) {
-            toast.error("Límite de listas alcanzado", {
-                description: `El plan gratuito permite hasta ${limites.maxShoppingLists} listas. Actualiza a Premium para ilimitadas.`,
-            });
-            return;
-        }
         const sourceList = lists.find(l => l.id === listId);
         if (!sourceList) return;
 

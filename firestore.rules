@@ -40,28 +40,12 @@ service cloud.firestore {
       return value is bool;
     }
 
-    function isTimestamp(value) {
-      return value is timestamp;
-    }
-
-    function isValidRole(role) {
-      return role == "user" || role == "admin";
-    }
-
-    function isValidStatus(status) {
-      return status == "active" || status == "expired" || status == "pending";
-    }
-
     function isValidType(type) {
       return type == "income" || type == "expense";
     }
 
     function isValidCurrency(currency) {
       return currency == "VES" || currency == "USD";
-    }
-
-    function fieldsMatch(expected, actual) {
-      return expected.keys().hasAll(actual.keys());
     }
 
     // ========================================
@@ -79,14 +63,6 @@ service cloud.firestore {
       return isSignedIn() && hasRole(request.auth.uid, "admin");
     }
 
-    function getUserStatus(userId) {
-      return getUserData(userId).status;
-    }
-
-    function isNotExpired(userId) {
-      return getUserStatus(userId) != "expired";
-    }
-
     // ========================================
     // 📋 REGLAS DE SEGURIDAD - CONTROL DE GASTOS
     // ========================================
@@ -102,90 +78,88 @@ service cloud.firestore {
       allow create: if isOwner(userId)
         && isString(request.resource.data.email)
         && isString(request.resource.data.displayName)
-        && isValidRole(request.resource.data.role)
-        && isValidStatus(request.resource.data.status);
+        && request.resource.data.role == "usuario";
       allow update: if (isOwner(userId)
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.status == resource.data.status)
+        && request.resource.data.role == resource.data.role)
         || isAdmin();
       allow delete: if isAdmin();
 
       // Subcolecciones: ownership estricto
       match /debts/{debtId} {
-        allow read: if isOwner(userId) && isNotExpired(userId);
-        allow create: if isOwner(userId) && isNotExpired(userId)
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
           && isString(request.resource.data.personName)
           && isNumber(request.resource.data.amount);
-        allow update: if isOwner(userId) && isNotExpired(userId)
+        allow update: if isOwner(userId)
           && isString(request.resource.data.personName)
           && isNumber(request.resource.data.amount);
-        allow delete: if isOwner(userId) && isNotExpired(userId);
+        allow delete: if isOwner(userId);
       }
 
       match /fixed_expenses/{expenseId} {
-        allow read: if isOwner(userId) && isNotExpired(userId);
-        allow create: if isOwner(userId) && isNotExpired(userId)
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
           && isString(request.resource.data.name)
           && isNumber(request.resource.data.amount)
           && isNumber(request.resource.data.dueDay);
-        allow update: if isOwner(userId) && isNotExpired(userId)
+        allow update: if isOwner(userId)
           && isString(request.resource.data.name)
           && isNumber(request.resource.data.amount)
           && isNumber(request.resource.data.dueDay);
-        allow delete: if isOwner(userId) && isNotExpired(userId);
+        allow delete: if isOwner(userId);
       }
 
       match /saving_goals/{goalId} {
-        allow read: if isOwner(userId) && isNotExpired(userId);
-        allow create: if isOwner(userId) && isNotExpired(userId)
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
           && isString(request.resource.data.name)
           && isNumber(request.resource.data.targetAmount);
-        allow update: if isOwner(userId) && isNotExpired(userId)
+        allow update: if isOwner(userId)
           && isString(request.resource.data.name)
           && isNumber(request.resource.data.targetAmount);
-        allow delete: if isOwner(userId) && isNotExpired(userId);
+        allow delete: if isOwner(userId);
       }
 
       match /savings_transactions/{transactionId} {
-        allow read: if isOwner(userId) && isNotExpired(userId);
-        allow create: if isOwner(userId) && isNotExpired(userId)
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
           && isNumber(request.resource.data.amount);
-        allow update: if isOwner(userId) && isNotExpired(userId)
+        allow update: if isOwner(userId)
           && isNumber(request.resource.data.amount);
-        allow delete: if isOwner(userId) && isNotExpired(userId);
+        allow delete: if isOwner(userId);
       }
 
       match /bank_accounts/{accountId} {
-        allow read: if isOwner(userId) && isNotExpired(userId);
-        allow create: if isOwner(userId) && isNotExpired(userId)
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
           && isString(request.resource.data.name)
           && isString(request.resource.data.currency)
           && isValidCurrency(request.resource.data.currency)
           && isNumber(request.resource.data.balance);
-        allow update: if isOwner(userId) && isNotExpired(userId)
+        allow update: if isOwner(userId)
           && isString(request.resource.data.name)
           && isString(request.resource.data.currency)
           && isValidCurrency(request.resource.data.currency)
           && isNumber(request.resource.data.balance);
-        allow delete: if isOwner(userId) && isNotExpired(userId);
+        allow delete: if isOwner(userId);
       }
 
       match /account_transactions/{transId} {
-        allow read: if isOwner(userId) && isNotExpired(userId);
-        allow create: if isOwner(userId) && isNotExpired(userId)
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
           && isNumber(request.resource.data.amount);
-        allow update: if isOwner(userId) && isNotExpired(userId)
+        allow update: if isOwner(userId)
           && isNumber(request.resource.data.amount);
-        allow delete: if isOwner(userId) && isNotExpired(userId);
+        allow delete: if isOwner(userId);
       }
 
       match /categories/{categoryId} {
-        allow read: if isOwner(userId) && isNotExpired(userId);
-        allow create: if isOwner(userId) && isNotExpired(userId)
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
           && isString(request.resource.data.name);
-        allow update: if isOwner(userId) && isNotExpired(userId)
+        allow update: if isOwner(userId)
           && isString(request.resource.data.name);
-        allow delete: if isOwner(userId) && isNotExpired(userId);
+        allow delete: if isOwner(userId);
       }
     }
 

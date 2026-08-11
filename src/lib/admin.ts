@@ -13,7 +13,7 @@ import {
   eliminarAuthUser,
 } from "./firebaseAdmin";
 import { verificarCookieSesion } from "./authCookie";
-import { esAdmin, DIAS_PRUEBA } from "@/types/rbac";
+import { esAdmin } from "@/types/rbac";
 import { registrarLogAdmin } from "./adminLogs";
 
 type ActionResult = { exito: true } | { exito: false; error: string };
@@ -42,10 +42,7 @@ export async function obtenerUsuarios(): Promise<
     email: string;
     displayName: string;
     role: string;
-    plan: string;
-    status: string;
     createdAt: string | null;
-    trialExpiresAt: string | null;
   }>
 > {
   try {
@@ -57,36 +54,10 @@ export async function obtenerUsuarios(): Promise<
       email: d.email || "",
       displayName: d.displayName || "",
       role: d.role || "usuario",
-      plan: d.plan || "free",
-      status: d.status || "active",
       createdAt: d.createdAt || null,
-      trialExpiresAt: d.trialExpiresAt || null,
     }));
   } catch (e) {
     throw e;
-  }
-}
-
-export async function aprobarUsuario(uid: string): Promise<ActionResult> {
-  try {
-    await verificarAdmin();
-    const userData = await leerUsuario(uid);
-    if (!userData) return { exito: false, error: "Usuario no encontrado" };
-
-    await actualizarUsuario(uid, {
-      role: "usuario",
-      status: "active",
-      trialExpiresAt: null,
-    });
-
-    registrarLogAdmin("aprobar_usuario", uid, userData.email as string, "Usuario aprobado");
-
-    return { exito: true };
-  } catch (e) {
-    return {
-      exito: false,
-      error: (e as Error).message || "Error al aprobar usuario",
-    };
   }
 }
 
@@ -102,14 +73,7 @@ export async function cambiarRolUsuario(
     if (userData.role === "admin" || nuevoRol === "admin")
       return { exito: false, error: "No puedes cambiar el rol de administradores" };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: Record<string, any> = { role: nuevoRol, plan: "free" };
-
-    if (nuevoRol === "usuario") {
-      updates.trialExpiresAt = null;
-    }
-
-    await actualizarUsuario(uid, updates);
+    await actualizarUsuario(uid, { role: nuevoRol });
 
     registrarLogAdmin("cambiar_rol", uid, userData.email as string, `Rol cambiado a ${nuevoRol}`);
 
@@ -122,27 +86,29 @@ export async function cambiarRolUsuario(
   }
 }
 
-export async function actualizarExpiracion(
+export async function actualizarNombreUsuario(
   uid: string,
-  fecha: string | null
+  nuevoNombre: string
 ): Promise<ActionResult> {
   try {
     await verificarAdmin();
     const userData = await leerUsuario(uid);
     if (!userData) return { exito: false, error: "Usuario no encontrado" };
 
-    await actualizarUsuario(uid, {
-      trialExpiresAt: fecha,
-      status: fecha && new Date(fecha) < new Date() ? "expired" : userData.status || "active",
-    });
+    const nombre = nuevoNombre?.trim();
+    if (!nombre || nombre.length < 2) {
+      return { exito: false, error: "El nombre debe tener al menos 2 caracteres" };
+    }
 
-    registrarLogAdmin("actualizar_expiracion", uid, userData.email as string, fecha ? `Expiración establecida: ${fecha}` : "Expiración removida");
+    await actualizarUsuario(uid, { displayName: nombre });
+
+    registrarLogAdmin("actualizar_nombre", uid, userData.email as string, `Nombre actualizado a "${nombre}"`);
 
     return { exito: true };
   } catch (e) {
     return {
       exito: false,
-      error: (e as Error).message || "Error al actualizar expiración",
+      error: (e as Error).message || "Error al actualizar el nombre",
     };
   }
 }

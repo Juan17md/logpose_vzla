@@ -3,8 +3,6 @@ import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateD
 import { db, auth } from "@/lib/firebase";
 import { User } from "firebase/auth";
 import { metaAhorroSchema, contribucionAhorroSchema } from "@/lib/schemas";
-import { usePlanLimits } from "@/hooks/usePlanLimits";
-import { toast } from "sonner";
 
 export interface Goal {
     id: string;
@@ -20,7 +18,6 @@ export interface Goal {
 export const useGoals = () => {
     const [goals, setGoals] = useState<Goal[]>([]);
     const [loading, setLoading] = useState(true);
-    const { limites } = usePlanLimits();
 
     useEffect(() => {
         let unsubscribeSnapshot: (() => void) | null = null;
@@ -62,12 +59,6 @@ export const useGoals = () => {
 
     const addGoal = async (name: string, targetAmount: number, deadline?: string) => {
         if (!auth.currentUser) return;
-        if (goals.length >= limites.maxGoals) {
-            toast.error("Límite de metas alcanzado", {
-                description: `El plan gratuito permite hasta ${limites.maxGoals} meta de ahorro. Actualiza a Premium para ilimitadas.`,
-            });
-            return;
-        }
         const parsed = metaAhorroSchema.safeParse({
             name, targetAmount, currentAmount: 0,
             deadline: deadline ? new Date(deadline) : null,

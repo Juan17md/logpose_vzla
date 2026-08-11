@@ -6,9 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
-import { DIAS_PRUEBA } from "@/types/rbac";
 import { FiUser, FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiPieChart, FiTrendingUp, FiShield } from "react-icons/fi";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -124,19 +123,13 @@ export default function RegisterPage() {
             const { user } = await createUserWithEmailAndPassword(auth, data.email, data.password);
             await updateProfile(user, { displayName: data.name });
 
-            const ahora = Timestamp.now();
-            const sieteDias = new Date(ahora.toMillis() + DIAS_PRUEBA * 24 * 60 * 60 * 1000);
-
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 displayName: data.name,
                 email: data.email,
                 role: "usuario",
-                plan: "free",
-                status: "active",
                 onboardingCompleted: false,
-                createdAt: ahora,
-                trialExpiresAt: Timestamp.fromDate(sieteDias),
+                createdAt: serverTimestamp(),
             });
 
             const token = await user.getIdToken();
@@ -147,7 +140,7 @@ export default function RegisterPage() {
             });
 
             toast.success("¡Cuenta creada!", {
-                description: "Tienes 14 días de prueba gratuita con todas las funciones.",
+                description: "Bienvenido a LogPose VZLA.",
             });
             router.push("/onboarding");
         } catch (error) {

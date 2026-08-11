@@ -34,7 +34,6 @@ import type {
     TipoOperacion,
 } from "@/lib/bankAccounts";
 import { obtenerColorAleatorio } from "@/lib/bankAccounts";
-import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { toast } from "sonner";
 
 // ─── Tipos del Context ────────────────────────────────────────
@@ -89,7 +88,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
     const [loadingTransacciones, setLoadingTransacciones] = useState(true);
     const [apiRates, setApiRates] = useState<TasasCambio>({ usd: 0, eur: 0, usdt: 0, lastUpdated: "" });
     const [monedaBase, setMonedaBase] = useState<MonedaSoportada>("BS");
-    const { limites } = usePlanLimits();
 
     // Cargar preferencias de sesión
     useEffect(() => {
@@ -257,13 +255,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
 
     const crearCuenta = useCallback(async (input: CrearCuentaInput): Promise<string | null> => {
         if (!auth.currentUser) return null;
-
-        if (cuentas.length >= limites.maxAccounts) {
-            toast.error("Límite de cuentas alcanzado", {
-                description: `El plan gratuito permite hasta ${limites.maxAccounts} cuentas. Actualiza a Premium para ilimitadas.`,
-            });
-            return null;
-        }
 
         const parsed = cuentaBancariaSchema.safeParse({
             nombre: input.nombre,

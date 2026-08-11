@@ -49,7 +49,7 @@ const secciones = [
     icon: <FiGlobe />,
     titulo: "5. Enlaces Externos",
     contenido:
-      "La Aplicación puede contener enlaces a sitios web de terceros (como el proveedor de IA, la pasarela de pago o el sistema de tasas del BCV). El titular no controla dichos sitios ni responde por sus contenidos, políticas o prácticas. La presencia de un enlace no implica relación, recomendación o respaldo alguno. El acceso a sitios de terceros se realiza bajo el riesgo y responsabilidad del usuario, y se sujeta a las propias políticas de cada sitio.",
+      "La Aplicación puede contener enlaces a sitios web de terceros (como el proveedor de IA o el sistema de tasas del BCV). El titular no controla dichos sitios ni responde por sus contenidos, políticas o prácticas. La presencia de un enlace no implica relación, recomendación o respaldo alguno. El acceso a sitios de terceros se realiza bajo el riesgo y responsabilidad del usuario, y se sujeta a las propias políticas de cada sitio.",
   },
   {
     icon: <FiShield />,

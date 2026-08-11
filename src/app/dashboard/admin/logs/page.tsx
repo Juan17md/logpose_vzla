@@ -11,19 +11,17 @@ import type { AdminLogEntry, AdminLogAction } from "@/types/adminLogs";
 import { FiShield, FiClock, FiRefreshCw, FiUser, FiActivity } from "react-icons/fi";
 
 const ETIQUETAS_ACCION: Record<AdminLogAction, string> = {
-  aprobar_usuario: "Aprobación",
   cambiar_rol: "Cambio de Rol",
   cambiar_password: "Cambio de Contraseña",
   eliminar_usuario: "Eliminación",
-  actualizar_expiracion: "Expiración",
+  actualizar_nombre: "Edición de Nombre",
 };
 
 const COLORES_ACCION: Record<AdminLogAction, string> = {
-  aprobar_usuario: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
   cambiar_rol: "bg-amber-500/20 text-amber-300 border-amber-500/30",
   cambiar_password: "bg-violet-500/20 text-violet-300 border-violet-500/30",
   eliminar_usuario: "bg-red-500/20 text-red-300 border-red-500/30",
-  actualizar_expiracion: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  actualizar_nombre: "bg-sky-500/20 text-sky-300 border-sky-500/30",
 };
 
 function formatearFecha(ts: string) {

@@ -3,7 +3,6 @@ import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, d
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { deudaSchema, pagoSchema } from "@/lib/schemas";
-import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { toast } from "sonner";
 
 export interface Payment {
@@ -44,7 +43,6 @@ export interface Debt {
 export function useDebts() {
     const [debts, setDebts] = useState<Debt[]>([]);
     const [loadingDebts, setLoadingDebts] = useState(true);
-    const { limites } = usePlanLimits();
 
     useEffect(() => {
         let unsubscribeSnapshot: (() => void) | null = null;
@@ -97,12 +95,6 @@ export function useDebts() {
 
     const addDebt = async (debt: Omit<Debt, "id" | "createdAt" | "payments" | "isPaid">) => {
         if (!auth.currentUser) return;
-        if (debts.length >= limites.maxDebts) {
-            toast.error("Límite de deudas alcanzado", {
-                description: `El plan gratuito permite hasta ${limites.maxDebts} deudas. Actualiza a Premium para ilimitadas.`,
-            });
-            return false;
-        }
         const parsed = deudaSchema.safeParse(debt);
         if (!parsed.success) {
             console.error("Deuda inválida:", parsed.error.flatten());
