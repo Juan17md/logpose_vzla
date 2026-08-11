@@ -1,0 +1,31 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Extraer variables de entorno preview
+        run: npx vercel@latest pull --yes --environment=preview --token=${{ secrets.VERCEL_OIDC_TOKEN }}
+
+      - name: Construir proyecto
+        run: npx vercel@latest build
+
+      - name: Desplegar preview y fijar dominio dev
+        run: |
+          URL="$(npx vercel@latest deploy --prebuilt --token=${{ secrets.VERCEL_OIDC_TOKEN }})"
+          npx vercel@latest alias set "$URL" logpose-vzla-dev.vercel.app --token=${{ secrets.VERCEL_OIDC_TOKEN }}
