@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  VERCEL_OIDC_TOKEN: ${{ secrets.VERCEL_OIDC_TOKEN }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
 jobs:
   deploy:
@@ -23,15 +23,15 @@ jobs:
       - run: npm ci
 
       - name: Vincular proyecto Vercel
-        run: npx vercel@latest link --yes --project logpose-vzla --team juan17md-projects
+        run: npx vercel@latest link --yes --project logpose-vzla --team juan17md-projects --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Extraer variables de entorno preview
-        run: npx vercel@latest pull --yes --environment=preview
+        run: npx vercel@latest pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Construir proyecto
-        run: npx vercel@latest build
+        run: npx vercel@latest build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Desplegar preview y fijar dominio dev
         run: |
-          URL="$(npx vercel@latest deploy --prebuilt)"
-          npx vercel@latest alias set "$URL" logpose-vzla-dev.vercel.app
+          URL="$(npx vercel@latest deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})"
+          npx vercel@latest alias set "$URL" logpose-vzla-dev.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
