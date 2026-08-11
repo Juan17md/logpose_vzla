@@ -37,7 +37,7 @@ service cloud.firestore {
     }
 
     function isBoolean(value) {
-      return value is boolean;
+      return value is bool;
     }
 
     function isTimestamp(value) {
