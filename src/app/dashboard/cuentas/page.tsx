@@ -135,7 +135,7 @@ export default function CuentasPage() {
                             Mis <span className="text-transparent bg-clip-text bg-linear-to-r from-violet-400 to-indigo-400">Cuentas</span>
                         </h1>
                         <p className="text-slate-400 text-lg font-medium max-w-md">
-                            Gestiona tus billeteras y cuentas bancarias con el LogPose Premium.
+                            Gestiona tus billeteras y cuentas bancarias con LogPose.
                         </p>
                     </div>
 
@@ -196,7 +196,7 @@ export default function CuentasPage() {
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-2xl font-bold text-white tracking-tight">Mis Cuentas</h1>
-                        <p className="text-slate-500 text-xs">Gestión Premium</p>
+                        <p className="text-slate-500 text-xs">Gestión Financiera</p>
                     </div>
                     <div className="p-3 bg-violet-500/10 rounded-2xl border border-violet-500/20">
                         <FiCreditCard className="text-violet-400 text-xl" />

@@ -131,7 +131,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     LogPose <span className="sidebar-grad-text">Vzla</span>
                                 </h2>
                                 <p className="text-[10px] text-violet-400 font-bold tracking-widest uppercase mt-1">
-                                    Premium Dashboard
+                                    Finanzas Personales
                                 </p>
                             </div>
                         </div>

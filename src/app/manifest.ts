@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/",
     name: 'LogPose Vzla',
     short_name: 'LogPose',
-    description: 'Tu sistema financiero personal premium.',
+    description: 'Tu sistema financiero personal.',
     start_url: '/',
     scope: '/',
     display: 'standalone',

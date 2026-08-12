@@ -16,7 +16,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "LogPose Vzla",
-  description: "Tu sistema financiero personal premium.",
+  description: "Tu sistema financiero personal.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

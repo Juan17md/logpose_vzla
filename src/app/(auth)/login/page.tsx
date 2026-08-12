@@ -82,7 +82,7 @@ export default function LoginPage() {
 
 
     const features = [
-        { icon:<FiPieChart/>,    title:"Análisis Premium",  desc:"Visualiza tu progreso financiero",    from:"from-amber-500",  to:"to-amber-700",   glow:"shadow-amber-500/40",  accent:"group-hover/f:text-amber-400"  },
+        { icon:<FiPieChart/>,    title:"Análisis Financiero",  desc:"Visualiza tu progreso financiero",    from:"from-amber-500",  to:"to-amber-700",   glow:"shadow-amber-500/40",  accent:"group-hover/f:text-amber-400"  },
         { icon:<FiTrendingUp/>,  title:"Control Total",     desc:"Ahorros y deudas en un solo lugar",   from:"from-violet-500", to:"to-violet-700",  glow:"shadow-violet-500/40", accent:"group-hover/f:text-violet-400" },
         { icon:<FiShield/>,      title:"Seguridad Máxima",  desc:"Protección total de tus datos",       from:"from-sky-500",    to:"to-sky-700",     glow:"shadow-sky-500/40",    accent:"group-hover/f:text-sky-400"    },
     ];

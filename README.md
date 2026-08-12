@@ -39,7 +39,7 @@
 ### Categorías Personalizadas
 - CRUD completo con 17 categorías predeterminadas al primer login
 - Selector inteligente de dos niveles (categoría → subcategoría) con colores dinámicos
-- Paleta de 10 colores premium con micro-animaciones
+- Paleta de 10 colores con micro-animaciones
 
 ### Seguridad
 - Firestore Security Rules con validación de tipos, roles (RBAC) y protección multi-colección

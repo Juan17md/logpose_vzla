@@ -97,7 +97,7 @@ export default function GlobalError({
             className="absolute bottom-8 left-0 right-0 text-center"
           >
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
-              LogPose VZLA • Premium Financial Hub
+              LogPose VZLA • Tu sistema financiero personal
             </span>
           </motion.div>
         </div>

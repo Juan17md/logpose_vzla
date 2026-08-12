@@ -43,7 +43,7 @@ const secciones = [
     icon: <FiShield />,
     titulo: "4. Costo del Servicio",
     contenido:
-      "LogPose VZLA se ofrece actualmente de forma gratuita y todas las funcionalidades disponibles están habilitadas para todos los usuarios registrados, sin planes de suscripción, períodos de prueba ni pagos. El servicio no genera cargos, comisiones ni reembolsos. LogPose VZLA se reserva el derecho de introducir en el futuro modelos de monetización o planes de suscripción, notificando los cambios con al menos 30 días de anticipación; en tal caso, las funcionalidades existentes que no dependan de dichos planes permanecerán accesibles de forma gratuita.",
+      "LogPose VZLA se ofrece de forma gratuita y todas las funcionalidades disponibles están habilitadas para todos los usuarios registrados, sin planes de suscripción, períodos de prueba ni pagos. El servicio no genera cargos, comisiones ni reembolsos.",
   },
   {
     icon: <FiLock />,

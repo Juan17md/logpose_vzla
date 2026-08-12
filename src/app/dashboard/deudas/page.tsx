@@ -544,7 +544,7 @@ export default function DebtsPage() {
 
                     {/* RIGHT COLUMN: Content (2/3) */}
                     <div className="flex-1 space-y-8 w-full">
-                        {/* Header Modern / Urban Premium */}
+                        {/* Header Modern / Urban */}
                         <div className="relative overflow-hidden bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem] group min-h-[160px] flex items-center">
                         {/* blur decorativo eliminado — radio 100px/80px costoso en GPU móvil */}
                             
