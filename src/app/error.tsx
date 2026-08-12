@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { motion } from "framer-motion";
 import { FiAlertTriangle, FiRefreshCw, FiHome } from "react-icons/fi";
 import Link from "next/link";
@@ -14,6 +15,7 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error("Error capturado:", error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (
