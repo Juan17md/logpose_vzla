@@ -174,6 +174,19 @@ export default function TransactionForm() {
     // Ref para evitar bucles en la sincronización bidireccional monto ↔ montoDestino
     const sincronizandoDestino = useRef(false);
 
+    // Auto-foco en el monto al abrir el formulario (solo en móvil, no al editar)
+    useEffect(() => {
+        if (transactionToEdit) return;
+        if (typeof window === "undefined") return;
+        if (!window.matchMedia("(max-width: 767px)").matches) return;
+        const id = currency === "VES" ? "campo-monto-ves" : "campo-monto-usd";
+        const timer = setTimeout(() => {
+            document.getElementById(id)?.focus();
+        }, 300);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // Fetch Rate on Mount
     useEffect(() => {
         getBCVRate().then(r => {
@@ -651,7 +664,8 @@ export default function TransactionForm() {
     }));
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-4 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        <>
+        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-4 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden pb-28 md:pb-8">
             {/* Decorative Background Elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
 
@@ -685,7 +699,7 @@ export default function TransactionForm() {
                 )}
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 relative z-10">
+            <form id="formulario-movimiento" onSubmit={handleSubmit(onSubmit)} className="space-y-4 relative z-10">
 
                 {/* Type Toggle */}
                 <div className="grid grid-cols-3 gap-2 p-1 bg-slate-950/60 rounded-2xl border border-slate-800/80 text-sm shadow-inner relative z-10">
@@ -950,6 +964,7 @@ export default function TransactionForm() {
                             name={currency === "VES" ? "vesAmount" : "amount"}
                             render={({ field }) => (
                                 <CustomCurrencyInput
+                                    id={currency === "VES" ? "campo-monto-ves" : "campo-monto-usd"}
                                     label={`Monto ${currency === "VES" ? "(Bolívares)" : "(Dólares)"}`}
                                     placeholder="0.00"
                                     prefix={currency === "VES" ? "Bs. " : "$ "}
@@ -1064,7 +1079,7 @@ export default function TransactionForm() {
                     {type !== "transferencia" ? (
                         <>
                             {/* Categoría Principal */}
-                            <div className="col-span-6">
+                            <div className="col-span-12 md:col-span-6">
                                 <Controller
                                     control={control}
                                     name="category"
@@ -1112,7 +1127,7 @@ export default function TransactionForm() {
 
                             {/* Subcategoría (Condicional) */}
                             {tieneSubcategorias && (
-                                <div className="col-span-6">
+                                <div className="col-span-12 md:col-span-6">
                                     <Controller
                                         control={control}
                                         name="subcategory"
@@ -1131,7 +1146,7 @@ export default function TransactionForm() {
                             )}
 
                             {/* Fecha */}
-                            <div className={tieneSubcategorias ? "col-span-12" : "col-span-6"}>
+                            <div className={tieneSubcategorias ? "col-span-12" : "col-span-12 md:col-span-6"}>
                                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Fecha</label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 transition-colors">
@@ -1370,13 +1385,13 @@ export default function TransactionForm() {
                     </div>
                 )}
 
-                {/* Action Button */}
+                {/* Action Button - Desktop (en flujo) */}
                 <motion.button
                     whileHover={{ scale: 1.01, translateY: -2 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={loading}
-                    className="w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+                    className="hidden md:flex w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
                 >
                     <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                     {loading ? (
@@ -1391,5 +1406,29 @@ export default function TransactionForm() {
 
             </form>
         </div>
+
+            {/* Barra de acciones fija en móvil (thumb zone) — fuera de la tarjeta para evitar que backdrop-blur rompa el fixed */}
+            <div
+                className="md:hidden fixed left-0 right-0 z-40 px-4 pb-3 pt-3 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent"
+                style={{ bottom: "calc(0px + env(safe-area-inset-bottom, 0px))" }}
+            >
+                <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    form="formulario-movimiento"
+                    disabled={loading}
+                    className="w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 active:from-violet-500 active:to-indigo-500 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+                >
+                    {loading ? (
+                        <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin z-10"></span>
+                    ) : (
+                        <div className="flex items-center space-x-2 z-10 text-shadow-sm">
+                            <FiSave size={18} />
+                            <span className="tracking-wide">{transactionToEdit ? "ACTUALIZAR MOVIMIENTO" : "GUARDAR MOVIMIENTO"}</span>
+                        </div>
+                    )}
+                </motion.button>
+            </div>
+        </>
     );
 }

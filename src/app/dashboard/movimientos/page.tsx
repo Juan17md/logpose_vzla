@@ -43,6 +43,16 @@ function MovimientosContent() {
         }
     }, [viewParam, transactionToEdit]);
 
+    // Oculta la bottom nav y el FAB de Nami mientras se llena el formulario en móvil
+    useEffect(() => {
+        if (mobileView === 'form') {
+            document.body.classList.add('form-mobile-open');
+        } else {
+            document.body.classList.remove('form-mobile-open');
+        }
+        return () => document.body.classList.remove('form-mobile-open');
+    }, [mobileView]);
+
     // Retorna a la vista de lista y limpia la URL de forma reactiva
     const handleBackToList = () => {
         clearEditing();

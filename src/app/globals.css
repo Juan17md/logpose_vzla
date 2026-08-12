@@ -107,6 +107,14 @@ body {
   }
 }
 
+/* Oculta la bottom nav y el FAB de Nami mientras se llena el formulario de movimientos en móvil */
+@media (max-width: 767px) {
+  body.form-mobile-open .mobile-bottom-nav,
+  body.form-mobile-open .bottom-safe-fab {
+    display: none !important;
+  }
+}
+
 /* Smooth scroll behavior for touch devices */
 @media (pointer: coarse) {
   .overflow-x-auto {
