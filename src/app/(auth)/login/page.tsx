@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { FirebaseError } from "firebase/app";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithCustomToken } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { toast } from "sonner";
@@ -47,7 +47,16 @@ export default function LoginPage() {
     const onSubmit = async (data:{email:string;password:string}) => {
         setLoading(true);
         try {
-            await signInWithEmailAndPassword(auth, data.email, data.password);
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: data.email, password: data.password }),
+            });
+            const payload = await res.json().catch(() => null) as { customToken?: string; error?: string } | null;
+            if (!res.ok || !payload?.customToken) {
+                throw new Error(payload?.error ?? "Ocurrió un error al iniciar sesión.");
+            }
+            await signInWithCustomToken(auth, payload.customToken);
             const token = await auth.currentUser!.getIdToken();
             await fetch("/api/auth/session", {
                 method: "POST",
@@ -69,8 +78,10 @@ export default function LoginPage() {
             }
         } catch (error) {
             let msg = "Ocurrió un error al iniciar sesión.";
-            if (error instanceof FirebaseError) {
-                if (["auth/user-not-found","auth/wrong-password","auth/invalid-credential"].includes(error.code)) msg="Credenciales incorrectas.";
+            if (error instanceof Error && error.message !== "Ocurrió un error al iniciar sesión.") {
+                msg = error.message;
+            } else if (error instanceof FirebaseError) {
+                if (error.code==="auth/invalid-credential") msg="Credenciales incorrectas.";
                 else if (error.code==="auth/invalid-email") msg="El correo electrónico no es válido.";
                 else if (error.code==="auth/too-many-requests") msg="Demasiados intentos fallidos. Intenta más tarde.";
             }
