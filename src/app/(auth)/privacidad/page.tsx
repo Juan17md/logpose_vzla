@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { FiAlertOctagon, FiArrowLeft, FiDatabase, FiEdit, FiEye, FiFileText, FiGlobe, FiLock, FiMail, FiServer, FiShield, FiSliders, FiTrash2, FiUsers } from "react-icons/fi";
 import Logo from "@/components/layout/Logo";
@@ -114,17 +113,17 @@ export default function PrivacidadPage() {
       </div>
 
       <div className="w-full min-h-screen flex items-center justify-center px-4 py-12 sm:p-10 z-10 relative">
-        <motion.div className="w-full max-w-[820px]" initial="oculto" animate="visible" variants={stagger}>
-          <motion.div variants={card} className="card-glow">
-            <div className="relative bg-[#0B0F1A] rounded-[1.75rem] p-8 sm:p-12 shadow-[0_30px_80px_-10px_rgba(0,0,0,.8),0_0_0_1px_rgba(255,255,255,.06)] overflow-hidden">
+        <div className="w-full max-w-[820px]">
+          <div className="card-glow">
+            <div className="relative bg-[#0B0F1A] rounded-[1.75rem] p-8 sm:p-12 shadow-lg overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-violet-500/40 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-amber-500/20 to-transparent" />
 
-              <motion.div variants={stagger} initial="oculto" animate="visible">
-                <motion.div variants={item} className="flex items-center gap-4 mb-8">
+              <div>
+                <div className="flex items-center gap-4 mb-8">
                   <Link
                     href="/login"
-                    className="flex items-center justify-center w-10 h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 hover:bg-slate-700/40 text-slate-400 hover:text-amber-400 transition-all duration-200 cursor-pointer"
+                    className="flex items-center justify-center w-10 h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 hover:bg-slate-700/40 text-slate-400 hover:text-amber-400 transition-colors duration-200 cursor-pointer"
                   >
                     <FiArrowLeft size={18} />
                   </Link>
@@ -134,15 +133,15 @@ export default function PrivacidadPage() {
                       Política de <span className="grad-text">Privacidad</span>
                     </h1>
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.p variants={item} className="text-slate-500 text-sm mb-10 border-b border-slate-800/60 pb-6">
+                <p className="text-slate-500 text-sm mb-10 border-b border-slate-800/60 pb-6">
                   Última actualización: 2 de agosto de 2026
-                </motion.p>
+                </p>
 
                 <div className="space-y-10">
                   {secciones.map((s, i) => (
-                    <motion.div key={i} variants={item} className="group">
+                    <div key={i} className="group">
                       <div className="flex items-start gap-4">
                         <div className="w-10 h-10 rounded-xl bg-linear-to-br from-violet-500/20 to-violet-700/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform duration-300">
                           {s.icon}
@@ -156,11 +155,11 @@ export default function PrivacidadPage() {
                           </p>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
 
-                <motion.div variants={item} className="mt-12 pt-8 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="mt-12 pt-8 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <p className="text-xs text-slate-600">
                     © {new Date().getFullYear()} LogPose Vzla Project. Designed by: Juan17md
                   </p>
@@ -190,11 +189,11 @@ export default function PrivacidadPage() {
                       Volver al inicio
                     </Link>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </div>
   );

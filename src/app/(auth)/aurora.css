@@ -1,97 +1,63 @@
-@keyframes aurora-move {
-  0%   { transform: translate(0px, 0px)   scale(1);    }
-  33%  { transform: translate(40px,-30px) scale(1.08); }
-  66%  { transform: translate(-30px,20px) scale(0.94); }
-  100% { transform: translate(0px, 0px)   scale(1);    }
+/* ============================================================
+   Aurora — Fondo y elementos decorativos de las páginas de auth
+   Versión estática: sin keyframes ni animaciones infinitas
+   (ver ADR 11 — eliminación de framer-motion/animaciones)
+   ============================================================ */
+
+/* Orbes de aurora — reposo estático (posiciones iniciales de las
+   antiguas keyframes aurora-move para conservar el aspecto) */
+.orb1 {
+  background: radial-gradient(circle at 30% 30%, rgba(202, 138, 4, 0.16), transparent 70%);
 }
-@keyframes aurora-move2 {
-  0%   { transform: translate(0px,0px)    scale(1);    }
-  33%  { transform: translate(-50px,30px) scale(1.12); }
-  66%  { transform: translate(30px,-40px) scale(0.92); }
-  100% { transform: translate(0px,0px)    scale(1);    }
+.orb2 {
+  background: radial-gradient(circle at 60% 20%, rgba(124, 58, 237, 0.13), transparent 70%);
 }
-@keyframes aurora-move3 {
-  0%   { transform: translate(0px,0px)   scale(1);    }
-  50%  { transform: translate(20px,50px) scale(1.06); }
-  100% { transform: translate(0px,0px)   scale(1);    }
+.orb3 {
+  background: radial-gradient(circle at 70% 60%, rgba(14, 165, 233, 0.10), transparent 70%);
 }
-@keyframes float-particle {
-  0%,100% { transform:translateY(0px);  opacity:0.5; }
-  50%      { transform:translateY(-24px); opacity:1;   }
-}
-@keyframes spin-slow {
-  from { transform: rotate(0deg);   }
-  to   { transform: rotate(360deg); }
-}
-@keyframes shimmer {
-  0%   { transform: translateX(-150%); }
-  100% { transform: translateX(150%);  }
-}
-@keyframes border-pulse {
-  0%,100% { opacity:.5; }
-  50%      { opacity:1;  }
-}
-@keyframes gtext {
-  0%,100% { background-position:0% 50%;   }
-  50%      { background-position:100% 50%; }
-}
-@keyframes grid-fade {
-  0%,100% { opacity:.04; }
-  50%      { opacity:.07; }
+.orb4 {
+  background: radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.12), transparent 70%);
 }
 
-.orb1 { animation: aurora-move  22s ease-in-out infinite; }
-.orb2 { animation: aurora-move2 28s ease-in-out infinite; }
-.orb3 { animation: aurora-move3 18s ease-in-out infinite; }
-.orb4 { animation: aurora-move  35s ease-in-out infinite reverse; }
+.grid-anim { opacity: 0.05; }
 
-.grid-anim { animation: grid-fade 8s ease-in-out infinite; }
-
-.shimmer-btn { overflow:hidden; }
-.shimmer-btn::after {
-  content:''; position:absolute; inset:0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.28) 50%, transparent 100%);
-  animation: shimmer 2.8s ease-in-out infinite;
-}
+.shimmer-btn { overflow: hidden; }
 
 .card-glow {
-  position:relative;
+  position: relative;
 }
 .card-glow::before {
-  content:'';
-  position:absolute; inset:-1px; border-radius:1.75rem; z-index:0;
-  background: conic-gradient(from var(--angle,0deg), #CA8A04 0%, #7C3AED 25%, #0EA5E9 50%, #7C3AED 75%, #CA8A04 100%);
-  animation: border-pulse 3s ease-in-out infinite;
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 1.75rem;
+  z-index: 0;
+  background: conic-gradient(from var(--angle, 0deg), #CA8A04 0%, #7C3AED 25%, #0EA5E9 50%, #7C3AED 75%, #CA8A04 100%);
+  opacity: 0.75;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude; -webkit-mask-composite: xor;
-  padding:1px; pointer-events:none;
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1px;
+  pointer-events: none;
 }
 
 .grad-text {
-  background: linear-gradient(135deg,#FBBF24,#F59E0B,#CA8A04,#FBBF24);
-  background-size:300% 300%;
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  background-clip:text;
-  animation: gtext 5s ease infinite;
+  background: linear-gradient(135deg, #FBBF24, #F59E0B, #CA8A04, #FBBF24);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .grid-pattern {
-  background-image: linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
   background-size: 80px 80px;
 }
 
 .glow-left {
-  background: radial-gradient(ellipse 70% 60% at 15% 50%,rgba(202,138,4,.12) 0%,transparent 70%);
+  background: radial-gradient(ellipse 70% 60% at 15% 50%, rgba(202, 138, 4, 0.12) 0%, transparent 70%);
 }
 
 .glow-right {
-  background: radial-gradient(ellipse 60% 55% at 85% 50%,rgba(124,58,237,.10) 0%,transparent 70%);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .orb1,.orb2,.orb3,.orb4 { animation:none; }
-  .shimmer-btn::after { animation:none; }
-  .card-glow::before  { animation:none; opacity:.7; }
-  .grad-text          { animation:none; }
-  .grid-anim          { animation:none; }
+  background: radial-gradient(ellipse 60% 55% at 85% 50%, rgba(124, 58, 237, 0.10) 0%, transparent 70%);
 }

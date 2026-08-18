@@ -5,8 +5,6 @@ import { FiSave, FiX, FiTag } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { ShoppingList } from "@/hooks/useShoppingLists";
 import Input from "@/components/ui/forms/Input";
-import { motion } from "framer-motion";
-
 interface ShoppingListFormProps {
     initialData?: ShoppingList | null;
     onSubmit: (name: string) => Promise<void>;
@@ -23,7 +21,7 @@ export default function ShoppingListForm({ initialData, onSubmit, isLoading }: S
     };
 
     return (
-        <div className="max-w-xl mx-auto bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-4 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        <div className="max-w-xl mx-auto bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-4 md:p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden">
             {/* Decorative background glow */}
             <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[60px] pointer-events-none opacity-10 bg-amber-500" />
 
@@ -44,17 +42,15 @@ export default function ShoppingListForm({ initialData, onSubmit, isLoading }: S
                         type="button"
                         onClick={() => router.back()}
                         disabled={isLoading}
-                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         <FiX size={16} />
                         CANCELAR
                     </button>
-                    <motion.button
-                        whileHover={{ scale: 1.02, translateY: -2 }}
-                        whileTap={{ scale: 0.98 }}
+                    <button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-amber-500/20 disabled:opacity-50 flex items-center justify-center gap-2 transition-all border border-white/10"
+                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isLoading ? (
                             <div className="w-5 h-5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin"></div>
@@ -64,7 +60,7 @@ export default function ShoppingListForm({ initialData, onSubmit, isLoading }: S
                                 GUARDAR LISTA
                             </>
                         )}
-                    </motion.button>
+                    </button>
                 </div>
             </form>
         </div>

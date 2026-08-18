@@ -89,7 +89,7 @@ export default function LogsAdminPage() {
 
   return (
     <div className="space-y-8 pb-32 md:pb-10">
-      <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-6 md:p-8 rounded-3xl shadow-xl relative overflow-hidden">
+      <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-6 md:p-8 rounded-3xl shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-10">
           <FiActivity className="text-8xl text-violet-400" />
         </div>

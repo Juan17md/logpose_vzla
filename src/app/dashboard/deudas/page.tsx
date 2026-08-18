@@ -8,7 +8,6 @@ import PaginationControls from "@/components/ui/PaginationControls";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { getBCVRate } from "@/lib/currency";
-import { motion, AnimatePresence } from "framer-motion";
 import DebtForm from "@/components/forms/DebtForm";
 import DebtPaymentForm from "@/components/forms/DebtPaymentForm";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
@@ -171,23 +170,7 @@ export default function DebtsPage() {
         }
     };
 
-    // Variantes tween — más livianas que spring en CPU de gama baja
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.07, delayChildren: 0.05 }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 12, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: { type: "tween", duration: 0.25, ease: "easeOut" } as const
-        }
-    };
+    // Variantes de animación eliminadas — se prioriza la fluidez (ver ADR 11)
 
     if (loadingDebts) {
         return (
@@ -200,20 +183,12 @@ export default function DebtsPage() {
     return (
         <>
             {/* MOBILE VIEW */}
-            <motion.div
+            <div
                 className="md:hidden flex flex-col gap-6 pb-32"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
             >
-                <AnimatePresence mode="wait">
-                    {mobileView === 'list' ? (
-                        <motion.div
+{mobileView === 'list' ? (
+                        <div
                             key="mobile-list"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ duration: 0.3 }}
                             className="space-y-6"
                         >
                             {/* Mobile Header */}
@@ -225,14 +200,13 @@ export default function DebtsPage() {
                             {/* Mobile Stats Horizontal Scroll */}
                             <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
                                 {/* Card: Por Cobrar */}
-                                <motion.div
-                                    whileTap={{ scale: 0.95 }}
+                                <div
                                     onClick={() => setActiveTab('por_cobrar')}
                                     onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('por_cobrar'); } }}
                                     role="button"
                                     tabIndex={0}
-                                    className={`flex-none w-44 p-5 rounded-3xl border transition-all relative overflow-hidden ${activeTab === 'por_cobrar'
-                                        ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10'
+                                    className={`flex-none w-44 p-5 rounded-3xl border transition-colors relative overflow-hidden ${activeTab === 'por_cobrar'
+                                        ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg '
                                         : 'bg-slate-900/50 border-slate-700/30'
                                         }`}
                                 >
@@ -245,17 +219,16 @@ export default function DebtsPage() {
                                             <h3 className="text-xl font-black text-white">{obtenerSimboloMoneda(monedaBase)} {totalReceivable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h3>
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
 
                                 {/* Card: Por Pagar */}
-                                <motion.div
-                                    whileTap={{ scale: 0.95 }}
+                                <div
                                     onClick={() => setActiveTab('por_pagar')}
                                     onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('por_pagar'); } }}
                                     role="button"
                                     tabIndex={0}
-                                    className={`flex-none w-44 p-5 rounded-3xl border transition-all relative overflow-hidden ${activeTab === 'por_pagar'
-                                        ? 'bg-red-500/10 border-red-500/50 shadow-lg shadow-red-500/10'
+                                    className={`flex-none w-44 p-5 rounded-3xl border transition-colors relative overflow-hidden ${activeTab === 'por_pagar'
+                                        ? 'bg-red-500/10 border-red-500/50 shadow-lg '
                                         : 'bg-slate-900/50 border-slate-700/30'
                                         }`}
                                 >
@@ -268,7 +241,7 @@ export default function DebtsPage() {
                                             <h3 className="text-xl font-black text-white">{obtenerSimboloMoneda(monedaBase)} {totalPayable.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</h3>
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
                             </div>
 
                             {/* Search Bar Mobile */}
@@ -279,7 +252,7 @@ export default function DebtsPage() {
                                     placeholder="Buscar por nombre..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full bg-slate-900/50 border border-slate-700/30 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-violet-500/50 transition-all placeholder-slate-600"
+                                    className="w-full bg-slate-900/50 border border-slate-700/30 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-violet-500/50 transition-colors placeholder-slate-600"
                                 />
                             </div>
 
@@ -314,9 +287,8 @@ export default function DebtsPage() {
                                             const montoRestanteDeuda = remaining;
 
                                             return (
-                                                <motion.div
+                                                <div
                                                     key={debt.id}
-                                                    whileTap={{ scale: 0.98 }}
                                                     className="bg-slate-900/60 backdrop-blur-md border border-white/5 rounded-3xl p-5 relative overflow-hidden"
                                                 >
                                                     <div className="flex justify-between items-start mb-4">
@@ -343,7 +315,7 @@ export default function DebtsPage() {
                                                     <div className="flex items-center gap-3 mb-5">
                                                         <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                                                             <div
-                                                                className={`h-full rounded-full transition-all duration-1000 ${isFullyPaid ? 'bg-emerald-500' : (debt.type === 'por_cobrar' ? 'bg-emerald-500' : 'bg-red-500')}`}
+                                                                className={`h-full rounded-full transition-colors duration-1000 ${isFullyPaid ? 'bg-emerald-500' : (debt.type === 'por_cobrar' ? 'bg-emerald-500' : 'bg-red-500')}`}
                                                                 style={{ width: `${Math.min(progress, 100)}%` }}
                                                             />
                                                         </div>
@@ -380,7 +352,7 @@ export default function DebtsPage() {
                                                             Vence: {new Date(debt.dueDate).toLocaleDateString()}
                                                         </div>
                                                     )}
-                                                </motion.div>
+                                                </div>
                                             );
                                         })}
                                     </div>
@@ -411,23 +383,17 @@ export default function DebtsPage() {
                             </div>
 
                             {/* FAB Button Fixed */}
-                            <motion.button
-                                initial={{ scale: 0, rotate: -180 }}
-                                animate={{ scale: 1, rotate: 0 }}
-                                whileTap={{ scale: 0.9 }}
+                            <button
                                 onClick={handleAddDebtClick}
                                 aria-label="Nueva deuda"
-                                className="fixed right-4 z-40 bottom-safe-fab-above w-14 h-14 bg-linear-to-br from-violet-600 to-indigo-700 text-white rounded-2xl shadow-2xl shadow-violet-900/50 flex items-center justify-center border border-white/20 active:from-violet-700"
+                                className="fixed right-4 z-40 bottom-safe-fab-above w-14 h-14 bg-linear-to-br from-violet-600 to-indigo-700 text-white rounded-2xl shadow-lg  flex items-center justify-center border border-white/20 active:from-violet-700"
                             >
                                 <FiPlus size={28} />
-                            </motion.button>
-                        </motion.div>
+                            </button>
+                        </div>
                     ) : (
-                        <motion.div
+                        <div
                             key="mobile-form"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 20 }}
                             className="space-y-6"
                         >
                             {/* Form Header Mobile */}
@@ -446,7 +412,7 @@ export default function DebtsPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden">
+                            <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 shadow-lg relative overflow-hidden">
                                 <div className="absolute -top-24 -left-24 w-48 h-48 bg-violet-500/10 rounded-full blur-[80px]" />
                                 
                                 <div className="relative z-10">
@@ -475,10 +441,9 @@ export default function DebtsPage() {
                             >
                                 Volver al Listado
                             </button>
-                        </motion.div>
+                        </div>
                     )}
-                </AnimatePresence>
-            </motion.div>
+</div>
 
 
             {/* DESKTOP VIEW */}
@@ -487,9 +452,9 @@ export default function DebtsPage() {
                     
                     {/* LEFT COLUMN: Sticky Form (1/3) */}
                     <div className="w-full lg:w-[380px] lg:sticky lg:top-8 flex-none">
-                        <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden group">
+                        <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 shadow-lg relative overflow-hidden group">
                             {/* Decorative background circle */}
-                            <div className="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-[80px] group-hover:bg-amber-500/20 transition-all duration-700" />
+                            <div className="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-[80px] group-hover:bg-amber-500/20 transition-colors duration-700" />
                             
                             <div className="relative z-10">
                                 <div className="flex justify-between items-center mb-6">
@@ -511,14 +476,8 @@ export default function DebtsPage() {
                                         </button>
                                     )}
                                 </div>
-                                
-                                <AnimatePresence mode="wait">
-                                    <motion.div
+<div
                                         key={view + (editingDebt?.id || "")}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 10 }}
-                                        transition={{ duration: 0.2 }}
                                     >
                                         {view === "payment" && editingDebt ? (
                                             <DebtPaymentForm 
@@ -536,9 +495,8 @@ export default function DebtsPage() {
                                                 defaultType={activeTab}
                                             />
                                         )}
-                                    </motion.div>
-                                </AnimatePresence>
-                            </div>
+                                    </div>
+</div>
                         </div>
                     </div>
 
@@ -565,7 +523,7 @@ export default function DebtsPage() {
                                         onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab("por_cobrar"); } }}
                                         role="button"
                                         tabIndex={0}
-                                        className={`px-6 py-4 rounded-3xl border transition-all cursor-pointer group/stat ${activeTab === "por_cobrar" ? "bg-emerald-500/10 border-emerald-500/50 shadow-2xl shadow-emerald-500/10" : "bg-slate-950/40 border-white/5 hover:border-emerald-500/20"}`}
+                                        className={`px-6 py-4 rounded-3xl border transition-colors cursor-pointer group/stat ${activeTab === "por_cobrar" ? "bg-emerald-500/10 border-emerald-500/50 shadow-lg " : "bg-slate-950/40 border-white/5 hover:border-emerald-500/20"}`}
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${activeTab === "por_cobrar" ? "bg-emerald-500 text-slate-950" : "bg-slate-900 text-slate-500 group-hover/stat:text-emerald-400"}`}>
@@ -583,7 +541,7 @@ export default function DebtsPage() {
                                         onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab("por_pagar"); } }}
                                         role="button"
                                         tabIndex={0}
-                                        className={`px-6 py-4 rounded-3xl border transition-all cursor-pointer group/stat ${activeTab === "por_pagar" ? "bg-red-500/10 border-red-500/50 shadow-2xl shadow-red-500/10" : "bg-slate-950/40 border-white/5 hover:border-red-500/20"}`}
+                                        className={`px-6 py-4 rounded-3xl border transition-colors cursor-pointer group/stat ${activeTab === "por_pagar" ? "bg-red-500/10 border-red-500/50 shadow-lg " : "bg-slate-950/40 border-white/5 hover:border-red-500/20"}`}
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${activeTab === "por_pagar" ? "bg-red-500 text-slate-950" : "bg-slate-900 text-slate-500 group-hover/stat:text-red-400"}`}>
@@ -613,7 +571,7 @@ export default function DebtsPage() {
                                             setSearchTerm(e.target.value);
                                             setCurrentPage(1);
                                         }}
-                                        className="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-amber-500/30 placeholder-slate-600 transition-all font-medium"
+                                        className="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-amber-500/30 placeholder-slate-600 transition-colors font-medium"
                                     />
                                 </div>
                                 
@@ -647,21 +605,20 @@ export default function DebtsPage() {
                                         const montoRestanteDeuda = remaining;
 
                                         return (
-                                            <motion.div 
+                                            <div 
                                                 key={debt.id} 
-                                                layout
-                                                className={`bg-slate-950/40 border transition-all duration-300 rounded-[2.5rem] p-6 relative group/card flex flex-col ${isFullyPaid ? 'border-emerald-500/10' : (editingDebt?.id === debt.id ? 'border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/20' : 'border-white/5 hover:border-white/10')}`}
+                                                className={`bg-slate-950/40 border transition-colors duration-300 rounded-[2.5rem] p-6 relative group/card flex flex-col ${isFullyPaid ? 'border-emerald-500/10' : (editingDebt?.id === debt.id ? 'border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/20' : 'border-white/5 hover:border-white/10')}`}
                                             >
                                                 {isFullyPaid && (
                                                     <div className="absolute top-6 right-6">
-                                                        <div className="bg-emerald-500/10 text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-full border border-emerald-500/20 flex items-center gap-1 uppercase tracking-widest shadow-lg shadow-emerald-500/10">
+                                                        <div className="bg-emerald-500/10 text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-full border border-emerald-500/20 flex items-center gap-1 uppercase tracking-widest shadow-lg ">
                                                             <FiCheckCircle size={14} /> Saldado
                                                         </div>
                                                     </div>
                                                 )}
 
                                                 <div className="flex items-start gap-5 mb-6">
-                                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-transform group-hover/card:scale-110 duration-500 ${debt.type === 'por_cobrar' ? 'bg-emerald-500/10 text-emerald-400 shadow-lg shadow-emerald-500/5' : 'bg-red-500/10 text-red-400 shadow-lg shadow-red-500/5'}`}>
+                                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-transform group-hover/card:scale-110 duration-500 ${debt.type === 'por_cobrar' ? 'bg-emerald-500/10 text-emerald-400 shadow-lg ' : 'bg-red-500/10 text-red-400 shadow-lg '}`}>
                                                         <FiUser />
                                                     </div>
                                                     <div className="flex-1 overflow-hidden">
@@ -697,7 +654,7 @@ export default function DebtsPage() {
                                                     ) : (
                                                         <button
                                                             onClick={() => handleAddPaymentClick(debt)}
-                                                            className="flex-1 py-3 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl font-bold text-xs transition-all shadow-xl shadow-emerald-500/10 border border-white/10 flex items-center justify-center gap-2 group-hover/card:scale-[1.02]"
+                                                            className="flex-1 py-3 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl font-bold text-xs transition-colors shadow-xl shadow-emerald-500/10 border border-white/10 flex items-center justify-center gap-2 group-hover/card:scale-[1.02]"
                                                         >
                                                             <FiDollarSign size={14} /> Registrar Abono
                                                         </button>
@@ -706,14 +663,14 @@ export default function DebtsPage() {
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={() => handleEditDebtClick(debt)}
-                                                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-2xl border border-white/5 transition-all"
+                                                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-2xl border border-white/5 transition-colors"
                                                             title="Editar"
                                                         >
                                                             <FiEdit2 size={16} />
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteClick(debt.id)}
-                                                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-red-500 bg-slate-900/50 hover:bg-red-500/10 rounded-2xl border border-white/5 transition-all"
+                                                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-red-500 bg-slate-900/50 hover:bg-red-500/10 rounded-2xl border border-white/5 transition-colors"
                                                             title="Eliminar"
                                                         >
                                                             <FiTrash2 size={16} />
@@ -737,7 +694,7 @@ export default function DebtsPage() {
                                                         </div>
                                                     )}
                                                 </div>
-                                            </motion.div>
+                                            </div>
                                         );
                                     })
                                 )}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { FiX } from "react-icons/fi";
 
 interface ModalProps {
@@ -57,20 +57,21 @@ export default function Modal({
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
                     {/* Backdrop */}
                     <motion.div
+                        onClick={onClose}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
                     />
 
                     {/* Modal Content */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 12 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-                        className={`relative w-full ${maxWidthClasses[maxWidth]} bg-slate-900 border border-slate-700 shadow-2xl shadow-violet-900/20 rounded-2xl overflow-hidden max-h-[90vh] flex flex-col`}
+                        exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className={`relative w-full ${maxWidthClasses[maxWidth]} bg-slate-900 border border-slate-700 shadow-lg rounded-2xl overflow-hidden max-h-[90vh] flex flex-col`}
                     >
                         {/* Brillo superior decorativo */}
                         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />

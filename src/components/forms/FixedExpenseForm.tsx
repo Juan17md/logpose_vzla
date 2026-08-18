@@ -5,7 +5,6 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FiSave, FiX, FiCalendar, FiTag, FiFileText, FiDollarSign, FiLayers, FiAlertCircle } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
 import { getBCVRate } from "@/lib/currency";
 import { FixedExpense } from "@/hooks/useFixedExpenses";
 import { parseNumeroFlexible } from "@/lib/number";
@@ -216,10 +215,10 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
                                             setValue("amount", "");
                                             setValue("bsAmount", "");
                                         }}
-                                        className={`flex-1 py-1 text-[11px] font-black tracking-tighter rounded-lg transition-all duration-300 ${field.value === curr
+                                        className={`flex-1 py-1 text-[11px] font-black tracking-tighter rounded-lg transition-colors duration-300 ${field.value === curr
                                             ? curr === "USD" 
-                                                ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]" 
-                                                : "bg-slate-800 text-amber-400 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+                                                ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-lg" 
+                                                : "bg-slate-800 text-amber-400 border border-amber-500/30 shadow-lg"
                                             : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 border border-transparent"
                                             }`}
                                     >
@@ -247,7 +246,7 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
                                 rightElement={
                                     <div className="group/info relative cursor-help">
                                         <FiAlertCircle className="text-slate-500 hover:text-violet-400 transition-colors" size={14} />
-                                        <div className="absolute bottom-full right-0 mb-3 w-48 p-2 bg-slate-900 border border-slate-700 rounded-xl text-[10px] text-slate-400 opacity-0 group-hover/info:opacity-100 pointer-events-none transition-all shadow-2xl z-50 leading-tight">
+                                        <div className="absolute bottom-full right-0 mb-3 w-48 p-2 bg-slate-900 border border-slate-700 rounded-xl text-[10px] text-slate-400 opacity-0 group-hover/info:opacity-100 pointer-events-none transition-colors shadow-2xl z-50 leading-tight">
                                             Se proyectará en tu flujo de caja este día del mes.
                                         </div>
                                     </div>
@@ -262,12 +261,8 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
 
             {/* Amount Section */}
             <div className="space-y-4">
-                <AnimatePresence>
-                    {currency === "BS" && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
+{currency === "BS" && (
+                        <div
                             className="grid grid-cols-3 gap-4"
                         >
                             <div className="col-span-1">
@@ -304,11 +299,9 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
                                     )}
                                 />
                             </div>
-                        </motion.div>
+                        </div>
                     )}
-                </AnimatePresence>
-
-                <div className="relative">
+<div className="relative">
                     <Controller
                         control={control}
                         name="amount"
@@ -351,12 +344,8 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
                         />
                     )}
                 />
-                <AnimatePresence>
-                    {category === "Otros" && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                            animate={{ opacity: 1, height: "auto", marginTop: 12 }}
-                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+{category === "Otros" && (
+                        <div
                         >
                             <Controller
                                 control={control}
@@ -370,10 +359,9 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
                                     />
                                 )}
                             />
-                        </motion.div>
+                        </div>
                     )}
-                </AnimatePresence>
-            </div>
+</div>
 
             {/* Description */}
             <div>
@@ -401,17 +389,15 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
                     type="button"
                     onClick={onCancel}
                     disabled={isLoading}
-                    className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                     <FiX size={16} />
                     CANCELAR
                 </button>
-                <motion.button
-                    whileHover={{ scale: 1.02, translateY: -2 }}
-                    whileTap={{ scale: 0.98 }}
+                <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex-2 py-4 px-6 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black rounded-2xl text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all border border-white/10"
+                    className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                     {isLoading ? (
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -421,7 +407,7 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
                             <span>GUARDAR GASTO</span>
                         </>
                     )}
-                </motion.button>
+                </button>
             </div>
         </form>
     );

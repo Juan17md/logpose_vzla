@@ -10,8 +10,6 @@ import PaginationControls from "@/components/ui/PaginationControls";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { getBCVRate } from "@/lib/currency";
-import { motion, AnimatePresence } from "framer-motion";
-
 export default function ShoppingListsPage() {
     const router = useRouter();
     const { lists, loading, createList, deleteList, addItem, toggleItem, deleteItem, updateItemProgress, updateListName, duplicateList, updateItem } = useShoppingLists();
@@ -166,7 +164,7 @@ export default function ShoppingListsPage() {
     return (
         <div className="space-y-8 pb-32 md:pb-10">
             {/* Desktop Header */}
-            <div className="hidden md:block bg-slate-900/40 border border-slate-700/50 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden backdrop-blur-xl group">
+            <div className="hidden md:block bg-slate-900/40 border border-slate-700/50 p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl group">
                 <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-10 -translate-y-10 group-hover:translate-x-5 group-hover:-translate-y-5 transition-transform duration-700">
                     <FiShoppingCart className="text-9xl text-amber-500" />
                 </div>
@@ -182,12 +180,8 @@ export default function ShoppingListsPage() {
 
             {/* Mobile Header & Summary */}
             <div className="md:hidden space-y-4">
-                <AnimatePresence mode="wait">
-                    {!selectedList && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
+{!selectedList && (
+                        <div
                             className="space-y-4"
                         >
                             <div className="flex justify-between items-center">
@@ -200,7 +194,7 @@ export default function ShoppingListsPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 shadow-2xl flex justify-between items-center relative overflow-hidden">
+                            <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 shadow-lg flex justify-between items-center relative overflow-hidden">
                                 <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-amber-500/5 to-transparent pointer-events-none"></div>
                                 <div className="relative z-10">
                                     <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">Items Totales</p>
@@ -213,17 +207,16 @@ export default function ShoppingListsPage() {
                                     </p>
                                 </div>
                             </div>
-                        </motion.div>
+                        </div>
                     )}
-                </AnimatePresence>
-            </div>
+</div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
                 {/* Lists Sidebar */}
                 <div className={`lg:col-span-1 space-y-6 ${selectedList ? 'hidden lg:block' : 'block'}`}>
                     <button
                         onClick={handleAddListClick}
-                        className="hidden md:flex w-full bg-linear-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-900 font-bold py-4 px-6 rounded-2xl items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/20 transform hover:-translate-y-1"
+                        className="hidden md:flex w-full bg-linear-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-900 font-bold py-4 px-6 rounded-2xl items-center justify-center gap-2 transition-colors shadow-lg shadow-amber-500/20 transform hover:-translate-y-1"
                     >
                         <FiPlus size={24} /> Nueva Lista
                     </button>
@@ -236,26 +229,26 @@ export default function ShoppingListsPage() {
                                 placeholder="Buscar listas..."
                                 value={filterText}
                                 onChange={(e) => setFilterText(e.target.value)}
-                                className="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 placeholder-slate-600 transition-all"
+                                className="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 placeholder-slate-600 transition-colors"
                             />
                         </div>
 
                         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                             <button
                                 onClick={() => setSortBy("newest")}
-                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all border-2 active:scale-95 ${sortBy === "newest" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg shadow-amber-500/20" : "bg-slate-900/40 text-slate-500 border-slate-800 hover:border-slate-700"}`}
+                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-[transform,color] border-2 active:scale-95 ${sortBy === "newest" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg " : "bg-slate-900/40 text-slate-500 border-slate-800 hover:border-slate-700"}`}
                             >
                                 Recientes
                             </button>
                             <button
                                 onClick={() => setSortBy("az")}
-                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all border-2 active:scale-95 ${sortBy === "az" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg shadow-amber-500/20" : "bg-slate-900/40 text-slate-500 border-slate-800 hover:border-slate-700"}`}
+                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-[transform,color] border-2 active:scale-95 ${sortBy === "az" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg " : "bg-slate-900/40 text-slate-500 border-slate-800 hover:border-slate-700"}`}
                             >
                                 A-Z
                             </button>
                             <button
                                 onClick={() => setSortBy("za")}
-                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all border-2 active:scale-95 ${sortBy === "za" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg shadow-amber-500/20" : "bg-slate-900/40 text-slate-500 border-slate-800 hover:border-slate-700"}`}
+                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-[transform,color] border-2 active:scale-95 ${sortBy === "za" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg " : "bg-slate-900/40 text-slate-500 border-slate-800 hover:border-slate-700"}`}
                             >
                                 Z-A
                             </button>
@@ -263,34 +256,28 @@ export default function ShoppingListsPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <AnimatePresence mode="popLayout">
-                            {paginatedLists.length === 0 ? (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
+{paginatedLists.length === 0 ? (
+                                <div
                                     className="bg-slate-900/30 border-2 border-dashed border-slate-800 p-10 rounded-[2rem] text-center text-slate-600 flex flex-col items-center"
                                 >
                                     <FiList size={40} className="mb-4 opacity-20" />
                                     <p className="font-bold text-sm uppercase tracking-wider">Cero resultados</p>
-                                </motion.div>
+                                </div>
                             ) : (
                                 paginatedLists.map((list, index) => (
-                                    <motion.div
+                                    <div
                                         key={list.id}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.05 }}
                                         onClick={() => setSelectedList(list)}
                                         onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedList(list); } }}
                                         role="button"
                                         tabIndex={0}
-                                        className={`group relative p-4 md:p-6 rounded-3xl border-2 cursor-pointer transition-all flex justify-between items-center overflow-hidden active:scale-[0.98] ${selectedList?.id === list.id
-                                            ? "bg-slate-800/80 border-amber-500 shadow-[0_20px_50px_-12px_rgba(245,158,11,0.15)]"
+                                        className={`group relative p-4 md:p-6 rounded-3xl border-2 cursor-pointer transition-[transform,color] flex justify-between items-center overflow-hidden active:scale-[0.98] ${selectedList?.id === list.id
+                                            ? "bg-slate-800/80 border-amber-500 shadow-lg"
                                             : "bg-slate-900/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/60 shadow-lg"
                                             }`}
                                     >
                                         <div className="flex items-center gap-5 relative z-10">
-                                            <div className={`p-4 rounded-2xl transition-all ${selectedList?.id === list.id ? 'bg-amber-500 text-slate-900 shadow-xl' : 'bg-slate-800 text-slate-500'}`}>
+                                            <div className={`p-4 rounded-2xl transition-colors ${selectedList?.id === list.id ? 'bg-amber-500 text-slate-900 shadow-lg' : 'bg-slate-800 text-slate-500'}`}>
                                                 <FiShoppingCart size={22} />
                                             </div>
                                             <div>
@@ -317,7 +304,7 @@ export default function ShoppingListsPage() {
                                                         e.stopPropagation();
                                                         setConfirmConfig({ type: "duplicate", listId: list.id });
                                                     }}
-                                                    className="p-2.5 text-slate-500 hover:text-violet-400 hover:bg-violet-400/10 rounded-xl transition-all"
+                                                    className="p-2.5 text-slate-500 hover:text-violet-400 hover:bg-violet-400/10 rounded-xl transition-colors"
                                                 >
                                                     <FiCopy size={18} />
                                                 </button>
@@ -326,18 +313,16 @@ export default function ShoppingListsPage() {
                                                         e.stopPropagation();
                                                         setConfirmConfig({ type: "delete", listId: list.id });
                                                     }}
-                                                    className="p-2.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all"
+                                                    className="p-2.5 text-slate-500 hover:text-violet-400 hover:bg-violet-400/10 rounded-xl transition-colors"
                                                 >
                                                     <FiTrash2 size={18} />
                                                 </button>
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 ))
                             )}
-                        </AnimatePresence>
-
-                        <div className="pt-4">
+<div className="pt-4">
                             <PaginationControls
                                 currentPage={listPage}
                                 totalPages={totalListPages}
@@ -349,14 +334,10 @@ export default function ShoppingListsPage() {
 
                 {/* List Detail View */}
                 <div className={`lg:col-span-2 ${selectedList ? 'block' : 'hidden lg:block'}`} ref={detailRef}>
-                    <AnimatePresence mode="wait">
-                        {selectedList ? (
-                            <motion.div
+{selectedList ? (
+                            <div
                                 key={selectedList.id}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
-                                className="bg-slate-900/50 backdrop-blur-xl rounded-3xl md:rounded-[2.5rem] border-2 border-slate-800 shadow-2xl p-5 md:p-10 min-h-[600px] flex flex-col relative overflow-hidden"
+                                className="bg-slate-900/50 backdrop-blur-xl rounded-3xl md:rounded-[2.5rem] border-2 border-slate-800 shadow-lg p-5 md:p-10 min-h-[600px] flex flex-col relative overflow-hidden"
                             >
                                 <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -385,14 +366,14 @@ export default function ShoppingListsPage() {
                                                             <h2 className="text-2xl md:text-4xl font-bold text-white tracking-tight">{currentList.name}</h2>
                                                             <button
                                                                 onClick={handleEditListNameClick}
-                                                                className="p-3 bg-slate-800/80 text-slate-400 hover:text-amber-400 rounded-2xl transition-all border border-slate-700/50 hover:border-amber-500/30 active:scale-90"
+                                                                className="p-3 bg-slate-800/80 text-slate-400 hover:text-amber-400 rounded-2xl transition-[transform,color] border border-slate-700/50 hover:border-amber-500/30 active:scale-90"
                                                             >
                                                                 <FiEdit2 size={20} />
                                                             </button>
                                                         </div>
 
                                                         <div className="flex flex-wrap items-center gap-3">
-                                                            <div className="bg-emerald-500/10 px-5 py-2.5 rounded-2xl border border-emerald-500/20 text-emerald-400 font-black text-xl shadow-lg shadow-emerald-500/5">
+                                                            <div className="bg-emerald-500/10 px-5 py-2.5 rounded-2xl border border-emerald-500/20 text-emerald-400 font-black text-xl shadow-lg ">
                                                                 ${total.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                             </div>
                                                             <div className="bg-slate-800/40 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-slate-700/30 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
@@ -403,7 +384,7 @@ export default function ShoppingListsPage() {
 
                                                     <button
                                                         onClick={handleAddItemClick}
-                                                        className="hidden md:flex items-center gap-3 px-8 py-5 bg-amber-500 text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.15em] hover:bg-amber-400 transition-all shadow-2xl shadow-amber-500/30 active:scale-95"
+                                                        className="hidden md:flex items-center gap-3 px-8 py-5 bg-amber-500 text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.15em] hover:bg-amber-400 transition-[transform,color] shadow-2xl shadow-amber-500/30 active:scale-95"
                                                     >
                                                         <FiPlus size={22} /> Agregar Artículo
                                                     </button>
@@ -416,13 +397,12 @@ export default function ShoppingListsPage() {
                                                         <span className="text-emerald-500 bg-emerald-500/5 px-3 py-1 rounded-full border border-emerald-500/10">{completedItems} / {totalItemsCount}</span>
                                                     </div>
                                                     <div className="h-3 w-full bg-slate-800/50 rounded-full overflow-hidden border border-slate-700/30 p-0.5">
-                                                        <motion.div
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: `${progressPercent}%` }}
+                                                        <div
+                                                            style={{ width: `${progressPercent}%` }}
                                                             className="h-full bg-linear-to-r from-emerald-500 via-teal-400 to-emerald-400 rounded-full relative overflow-hidden"
                                                         >
                                                             <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }}></div>
-                                                        </motion.div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -434,7 +414,7 @@ export default function ShoppingListsPage() {
                                                     placeholder="Filtrar productos..."
                                                     value={itemFilterText}
                                                     onChange={(e) => setItemFilterText(e.target.value)}
-                                                    className="w-full bg-slate-800/40 border-2 border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-amber-500/30 placeholder-slate-600 transition-all"
+                                                    className="w-full bg-slate-800/40 border-2 border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-amber-500/30 placeholder-slate-600 transition-colors"
                                                 />
                                             </div>
 
@@ -457,13 +437,9 @@ export default function ShoppingListsPage() {
                                                         displayedItems.sort((a, b) => Number(a.completed) - Number(b.completed));
 
                                                         return displayedItems.map((item, idx) => (
-                                                            <motion.div
-                                                                layout
+                                                            <div
                                                                 key={item.id}
-                                                                initial={{ opacity: 0, scale: 0.95 }}
-                                                                animate={{ opacity: 1, scale: 1 }}
-                                                                transition={{ delay: idx * 0.03 }}
-                                                                className={`group flex flex-col p-3.5 md:p-6 rounded-2xl md:rounded-[2rem] border-2 transition-all relative overflow-hidden ${item.completed
+                                                                className={`group flex flex-col p-3.5 md:p-6 rounded-2xl md:rounded-[2rem] border-2 transition-colors relative overflow-hidden ${item.completed
                                                                     ? "bg-slate-900/40 border-slate-800/50 opacity-60"
                                                                     : "bg-slate-800/40 border-slate-800/80 hover:border-amber-500/30 active:scale-[0.98] shadow-lg"
                                                                     }`}
@@ -472,7 +448,7 @@ export default function ShoppingListsPage() {
                                                                 <div className="flex items-center gap-4 mb-4">
                                                                     <button
                                                                         onClick={() => toggleItem(currentList.id, currentList.items, item.id)}
-                                                                        className={`p-3 rounded-xl transition-all active:scale-90 ${item.completed ? "bg-emerald-500 text-white" : "bg-slate-800 text-slate-500 hover:text-amber-400"}`}
+                                                                        className={`p-3 rounded-xl transition-[transform,color] active:scale-90 ${item.completed ? "bg-emerald-500 text-white" : "bg-slate-800 text-slate-500 hover:text-amber-400"}`}
                                                                     >
                                                                         {item.completed ? <FiCheckCircle size={24} /> : <FiSquare size={24} />}
                                                                     </button>
@@ -531,7 +507,7 @@ export default function ShoppingListsPage() {
                                                                         <FiTrash2 size={16} />
                                                                     </button>
                                                                 </div>
-                                                            </motion.div>
+                                                            </div>
                                                         ));
                                                     })()
                                                 )}
@@ -539,35 +515,29 @@ export default function ShoppingListsPage() {
                                         </>
                                     );
                                 })()}
-                            </motion.div>
+                            </div>
                         ) : (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
+                            <div
                                 className="hidden md:flex bg-slate-900/20 rounded-[3rem] border-2 border-dashed border-slate-800 h-[600px] flex-col items-center justify-center text-slate-600 p-10"
                             >
-                                <div className="w-24 h-24 bg-slate-900/50 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl">
+                                <div className="w-24 h-24 bg-slate-900/50 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-lg">
                                     <FiShoppingCart size={40} className="opacity-20" />
                                 </div>
                                 <h3 className="text-2xl font-black text-white tracking-tight mb-2">Nada seleccionado</h3>
                                 <p className="text-sm font-bold text-center max-w-xs uppercase tracking-widest leading-relaxed">Escoge una lista del menú lateral para comenzar a gestionar tus compras.</p>
-                            </motion.div>
+                            </div>
                         )}
-                    </AnimatePresence>
-                </div>
+</div>
             </div>
 
             {/* Floating Action Button for Mobile — Elevado para no tapar a Nami */}
-            <motion.button
+            <button
                 aria-label={selectedList ? "Agregar artículo" : "Nueva lista"}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                whileTap={{ scale: 0.9 }}
                 onClick={selectedList ? handleAddItemClick : handleAddListClick}
-                className="md:hidden fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-amber-500 text-slate-900 rounded-2xl shadow-2xl shadow-amber-500/40 flex items-center justify-center z-50 border-2 border-slate-900 transition-all"
+                className="md:hidden fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-amber-500 text-slate-900 rounded-2xl shadow-2xl shadow-amber-500/40 flex items-center justify-center z-50 border-2 border-slate-900 transition-colors"
             >
                 <FiPlus size={28} />
-            </motion.button>
+            </button>
         </div>
     );
 }

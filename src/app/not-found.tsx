@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { FiHome, FiMap, FiArrowLeft } from "react-icons/fi";
 
 export default function NotFound() {
@@ -12,41 +11,20 @@ export default function NotFound() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-md w-full relative z-10 text-center">
-        {/* Animated Icon */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex justify-center mb-8"
-        >
+        {/* Icon */}
+        <div className="flex justify-center mb-8">
           <div className="relative">
             <div className="absolute inset-0 bg-violet-500/20 blur-3xl rounded-full" />
-            <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl">
-              <motion.div
-                animate={{ 
-                  rotate: [0, 5, -5, 0],
-                  scale: [1, 1.05, 0.95, 1]
-                }}
-                transition={{ 
-                  duration: 6, 
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="text-violet-400"
-              >
+            <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-lg">
+              <div className="text-violet-400">
                 <FiMap size={64} />
-              </motion.div>
+              </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Text Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="space-y-4"
-        >
+        <div className="space-y-4">
           <h1 className="text-6xl md:text-8xl font-black text-white font-bungee tracking-tighter">
             404
           </h1>
@@ -56,50 +34,32 @@ export default function NotFound() {
           <p className="text-slate-400 text-lg leading-relaxed max-w-[280px] mx-auto">
             La ruta que buscas no existe o ha sido movida a otra dimensión financiera.
           </p>
-        </motion.div>
+        </div>
 
         {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          className="mt-12 grid grid-cols-1 gap-4"
-        >
+        <div className="mt-12 grid grid-cols-1 gap-4">
           <Link href="/dashboard" className="w-full">
-            <motion.button
-              whileHover={{ scale: 1.02, translateY: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-linear-to-r from-violet-600 to-indigo-600 text-white font-black py-4 px-6 rounded-2xl shadow-xl border border-white/10 flex items-center justify-center gap-3 transition-all"
-            >
+            <button className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-black py-3 px-6 rounded-2xl hover:from-violet-500 hover:to-indigo-500 hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-[transform,color] duration-200 flex items-center justify-center gap-2 w-full">
               <FiHome size={20} />
               <span>IR AL DASHBOARD</span>
-            </motion.button>
+            </button>
           </Link>
 
           <Link href="/" className="w-full">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-slate-900/50 backdrop-blur-md text-slate-300 font-bold py-4 px-6 rounded-2xl border border-white/5 flex items-center justify-center gap-3 hover:bg-slate-800 hover:text-white transition-all"
-            >
+            <button className="bg-slate-800/80 text-slate-200 font-black py-3 px-6 rounded-2xl hover:bg-slate-700/80 hover:scale-[1.02] active:scale-[0.98] border border-slate-700/50 transition-[transform,color] duration-200 flex items-center justify-center gap-2 w-full">
               <FiArrowLeft size={20} />
               <span>VOLVER AL INICIO</span>
-            </motion.button>
+            </button>
           </Link>
-        </motion.div>
+        </div>
       </div>
 
       {/* Footer Branding */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 1 }}
-        className="absolute bottom-8 left-0 right-0 text-center"
-      >
+      <div className="absolute bottom-8 left-0 right-0 text-center">
         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
           LogPose VZLA • Tu sistema financiero personal
         </span>
-      </motion.div>
+      </div>
     </div>
   );
 }

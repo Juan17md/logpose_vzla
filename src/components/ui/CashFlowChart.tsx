@@ -210,19 +210,19 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
                 <path
                     d={paths.areaIngresos}
                     fill="url(#colorIngresos)"
-                    className="transition-all duration-300"
+                    className="transition-colors duration-300"
                 />
                 <path
                     d={paths.areaGastos}
                     fill="url(#colorGastos)"
-                    className="transition-all duration-300"
+                    className="transition-colors duration-300"
                 />
 
                 {/* Líneas de contorno */}
                 <path
                     d={paths.lineIngresos}
                     fill="none"
-                    className="text-emerald-500 transition-all duration-300"
+                    className="text-emerald-500 transition-colors duration-300"
                     stroke="currentColor"
                     strokeWidth="2"
                     vectorEffect="non-scaling-stroke"
@@ -230,7 +230,7 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
                 <path
                     d={paths.lineGastos}
                     fill="none"
-                    className="text-red-500 transition-all duration-300"
+                    className="text-emerald-500 transition-colors duration-300"
                     stroke="currentColor"
                     strokeWidth="2"
                     vectorEffect="non-scaling-stroke"
@@ -284,7 +284,7 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
                         left: `${tooltipPos.x}px`,
                         top: `${tooltipPos.y}px`,
                     }}
-                    className="absolute bg-slate-900/95 border border-slate-700/80 backdrop-blur-md text-white p-2.5 rounded-xl shadow-xl flex flex-col gap-1 pointer-events-none transition-all duration-75 z-55"
+                    className="absolute bg-slate-900/95 border border-slate-700/80 backdrop-blur-md text-white p-2.5 rounded-xl shadow-xl flex flex-col gap-1 pointer-events-none transition-colors duration-75 z-55"
                 >
                     <p className="text-[10px] font-bold text-slate-400">Día {hoveredData.day}</p>
                     <div className="flex items-center gap-4 justify-between">

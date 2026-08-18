@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { toast } from "sonner";
 import { FiArrowLeft, FiDatabase, FiEdit, FiEye, FiEyeOff, FiLock, FiMail, FiSend, FiTrash2, FiUser } from "react-icons/fi";
@@ -92,17 +91,17 @@ export default function DerechosPage() {
       </div>
 
       <div className="w-full min-h-screen flex items-center justify-center px-4 py-12 sm:p-10 z-10 relative">
-        <motion.div className="w-full max-w-[820px]" initial="oculto" animate="visible" variants={stagger}>
-          <motion.div variants={card} className="card-glow">
-            <div className="relative bg-[#0B0F1A] rounded-[1.75rem] p-8 sm:p-12 shadow-[0_30px_80px_-10px_rgba(0,0,0,.8),0_0_0_1px_rgba(255,255,255,.06)] overflow-hidden">
+        <div className="w-full max-w-[820px]">
+          <div className="card-glow">
+            <div className="relative bg-[#0B0F1A] rounded-[1.75rem] p-8 sm:p-12 shadow-lg overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-violet-500/40 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-teal-500/20 to-transparent" />
 
-              <motion.div variants={stagger} initial="oculto" animate="visible">
-                <motion.div variants={item} className="flex items-center gap-4 mb-8">
+              <div>
+                <div className="flex items-center gap-4 mb-8">
                   <Link
                     href="/privacidad"
-                    className="flex items-center justify-center w-10 h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 hover:bg-slate-700/40 text-slate-400 hover:text-amber-400 transition-all duration-200 cursor-pointer"
+                    className="flex items-center justify-center w-10 h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 hover:bg-slate-700/40 text-slate-400 hover:text-amber-400 transition-colors duration-200 cursor-pointer"
                   >
                     <FiArrowLeft size={18} />
                   </Link>
@@ -112,14 +111,14 @@ export default function DerechosPage() {
                       Ejercicio de <span className="grad-text">Derechos de Datos</span>
                     </h1>
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.p variants={item} className="text-slate-500 text-sm mb-10 border-b border-slate-800/60 pb-6">
+                <p className="text-slate-500 text-sm mb-10 border-b border-slate-800/60 pb-6">
                   Formulario de solicitud de derechos ARCO — Respuesta en un plazo máximo de 30 días. Última actualización: 2 de agosto de 2026.
-                </motion.p>
+                </p>
 
-                <motion.form variants={stagger} onSubmit={handleSubmit} className="space-y-8">
-                  <motion.div variants={item}>
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-400/80 mb-4">Derechos que deseas ejercer</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {derechosDisponibles.map((d) => {
@@ -131,9 +130,9 @@ export default function DerechosPage() {
                             onClick={() => toggleDerecho(d.id)}
                             role="checkbox"
                             aria-checked={activo}
-                            className={`text-left flex items-start gap-3 p-4 rounded-2xl border transition-all duration-300 cursor-pointer ${
+                            className={`text-left flex items-start gap-3 p-4 rounded-2xl border transition-colors duration-300 cursor-pointer ${
                               activo
-                                ? "border-amber-500/50 bg-amber-500/10 shadow-[0_0_20px_rgba(202,138,4,0.06)]"
+                                ? "border-amber-500/50 bg-amber-500/10 shadow-lg"
                                 : "border-slate-700/50 bg-[#0A0E1A]/60 hover:border-slate-600/60 hover:bg-[#0A0E1A]"
                             }`}
                           >
@@ -148,9 +147,9 @@ export default function DerechosPage() {
                         );
                       })}
                     </div>
-                  </motion.div>
+                  </div>
 
-                  <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <Input
                       label="Nombre completo"
                       placeholder="Ej. María Pérez"
@@ -166,9 +165,9 @@ export default function DerechosPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       icon={<FiMail size={16} />}
                     />
-                  </motion.div>
+                  </div>
 
-                  <motion.div variants={item}>
+                  <div>
                     <Textarea
                       label="Describe tu solicitud"
                       placeholder="Ej. Deseo que elimines todos mis datos personales y financieros de la plataforma..."
@@ -177,24 +176,24 @@ export default function DerechosPage() {
                       onChange={(e) => setDescripcion(e.target.value)}
                       icon={<FiLock size={16} />}
                     />
-                  </motion.div>
+                  </div>
 
-                  <motion.div variants={item} className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
                     <p className="text-xs text-slate-600 leading-relaxed">
                       Al enviar, se abrirá tu cliente de correo con la solicitud prellenada hacia{" "}
                       <span className="text-slate-400">juan9182morales@gmail.com</span>. Te responderemos en un plazo máximo de 30 días.
                     </p>
                     <button
                       type="submit"
-                      className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-linear-to-br from-violet-500 to-indigo-600 text-white text-sm font-bold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:brightness-110 active:scale-[0.98] transition-all duration-300 cursor-pointer"
+                      className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-linear-to-br from-violet-500 to-indigo-600 text-white text-sm font-bold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:brightness-110 active:scale-[0.98] transition-[transform,color] duration-300 cursor-pointer"
                     >
                       <FiSend size={15} />
                       Enviar solicitud
                     </button>
-                  </motion.div>
-                </motion.form>
+                  </div>
+                </form>
 
-                <motion.div variants={item} className="mt-12 pt-8 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="mt-12 pt-8 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <p className="text-xs text-slate-600">
                     © {new Date().getFullYear()} LogPose Vzla Project. Designed by: Juan17md
                   </p>
@@ -218,11 +217,11 @@ export default function DerechosPage() {
                       Privacidad
                     </Link>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </div>
   );

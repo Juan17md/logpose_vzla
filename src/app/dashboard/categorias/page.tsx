@@ -48,7 +48,6 @@ import {
     FiCamera,
     FiSun
 } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Input from "@/components/ui/forms/Input";
 import Select from "@/components/ui/forms/Select";
@@ -231,7 +230,7 @@ export default function CategoriasPage() {
     return (
         <div className="space-y-8 pb-32 md:pb-10">
             {/* Banner superior de escritorio */}
-            <div className="hidden md:block bg-linear-to-br from-slate-950 to-slate-900/40 border border-slate-900/40 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden backdrop-blur-2xl">
+            <div className="hidden md:block bg-linear-to-br from-slate-950 to-slate-900/40 border border-slate-900/40 p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-2xl">
                 <div className="absolute top-0 right-0 p-8 opacity-[0.03] transform translate-x-10 -translate-y-10">
                     <FiTag className="text-9xl text-violet-400 rotate-12" />
                 </div>
@@ -240,7 +239,7 @@ export default function CategoriasPage() {
                 <div className="relative z-10 flex justify-between items-end">
                     <div>
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="w-2 h-2 rounded-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.6)]" />
+                            <div className="w-2 h-2 rounded-full bg-violet-500 shadow-lg" />
                             <span className="text-[10px] text-slate-500 font-black uppercase tracking-[3px]">Estructura de Negocio</span>
                         </div>
                         <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight mb-3">
@@ -279,10 +278,10 @@ export default function CategoriasPage() {
                         </button>
                     )}
 
-                    <div className="sticky top-6 bg-slate-950/40 backdrop-blur-2xl border border-slate-900/40 p-6 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] relative overflow-hidden group hover:border-slate-800/45 transition-all duration-500">
+                    <div className="sticky top-6 bg-slate-950/40 backdrop-blur-2xl border border-slate-900/40 p-6 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] relative overflow-hidden group hover:border-slate-800/45 transition-colors duration-500">
                         {/* Glow decorativo de fondo dinámico */}
                         <div 
-                            className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-all duration-500" 
+                            className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-colors duration-500" 
                             style={{ backgroundColor: `${colorSeleccionado}0c` }}
                         />
                         
@@ -315,16 +314,16 @@ export default function CategoriasPage() {
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Tipo de Movimiento</label>
                                 <div className="flex p-1.5 bg-slate-950/80 rounded-2xl border border-slate-900 shadow-inner">
                                     {[
-                                        { id: "gasto", label: "Gasto", color: "text-red-400 bg-red-500/10 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.15)]" },
-                                        { id: "ingreso", label: "Ingreso", color: "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]" },
-                                        { id: "ambas", label: "Ambas", color: "text-violet-400 bg-violet-500/10 border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.15)]" }
+                                        { id: "gasto", label: "Gasto", color: "text-red-400 bg-red-500/10 border border-red-500/20 shadow-lg" },
+                                        { id: "ingreso", label: "Ingreso", color: "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-lg" },
+                                        { id: "ambas", label: "Ambas", color: "text-violet-400 bg-violet-500/10 border border-violet-500/20 shadow-lg" }
                                     ].map((opt) => (
                                         <button
                                             key={opt.id}
                                             type="button"
                                             onClick={() => setTipo(opt.id as "ingreso" | "gasto" | "ambas")}
                                             className={cn(
-                                                "flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-300 text-center border border-transparent cursor-pointer",
+                                                "flex-1 py-2 text-xs font-bold rounded-xl transition-colors duration-300 text-center border border-transparent cursor-pointer",
                                                 tipo === opt.id
                                                     ? opt.color
                                                     : "text-slate-500 hover:text-slate-350"
@@ -343,13 +342,11 @@ export default function CategoriasPage() {
                                     {PALETA_COLORES.map((c) => {
                                         const esSeleccionado = colorSeleccionado === c.hex;
                                         return (
-                                            <motion.button
+                                            <button
                                                 key={c.hex}
                                                 type="button"
-                                                whileHover={{ scale: 1.2 }}
-                                                whileTap={{ scale: 0.9 }}
                                                 onClick={() => setColorSeleccionado(c.hex)}
-                                                className="w-6 h-6 rounded-full cursor-pointer relative flex items-center justify-center transition-all duration-300 border border-transparent"
+                                                className="w-6 h-6 rounded-full cursor-pointer relative flex items-center justify-center transition-colors duration-300 border border-transparent"
                                                 style={{ 
                                                     backgroundColor: c.hex,
                                                     boxShadow: esSeleccionado ? `0 0 12px ${c.hex}cc` : "none",
@@ -360,7 +357,7 @@ export default function CategoriasPage() {
                                                 {esSeleccionado && (
                                                     <div className="w-1.5 h-1.5 rounded-full bg-white" />
                                                 )}
-                                            </motion.button>
+                                            </button>
                                         );
                                     })}
                                 </div>
@@ -374,16 +371,14 @@ export default function CategoriasPage() {
                                         const IconComp = ico.componente;
                                         const esSeleccionado = iconoSeleccionado === ico.nombre;
                                         return (
-                                            <motion.button
+                                            <button
                                                 key={ico.nombre}
                                                 type="button"
-                                                whileHover={{ scale: 1.15, rotate: 5 }}
-                                                whileTap={{ scale: 0.95 }}
                                                 onClick={() => setIconoSeleccionado(ico.nombre)}
                                                 className={cn(
-                                                    "p-2.5 rounded-xl flex items-center justify-center border transition-all duration-300 cursor-pointer",
+                                                    "p-2.5 rounded-xl flex items-center justify-center border transition-colors duration-300 cursor-pointer",
                                                     esSeleccionado
-                                                        ? "bg-violet-500/20 border-violet-500/50 text-violet-300 shadow-[0_0_15px_rgba(139,92,246,0.25)] scale-110 z-10"
+                                                        ? "bg-violet-500/20 border-violet-500/50 text-violet-300 shadow-lg scale-110 z-10"
                                                         : "bg-slate-950/40 border-slate-900 hover:border-slate-800 hover:bg-slate-900 text-slate-500 hover:text-slate-300"
                                                 )}
                                                 style={{
@@ -395,18 +390,16 @@ export default function CategoriasPage() {
                                                 title={ico.nombre}
                                             >
                                                 <IconComp size={16} />
-                                            </motion.button>
+                                            </button>
                                         );
                                     })}
                                 </div>
                             </div>
 
                             <div className="space-y-2 mt-4">
-                                <motion.button
-                                    whileHover={{ scale: 1.02, boxShadow: `0 0 25px ${colorSeleccionado}44` }}
-                                    whileTap={{ scale: 0.98 }}
+                                <button
                                     type="submit"
-                                    className="w-full py-4 text-white font-black rounded-2xl shadow-lg transition-all border border-violet-500/10 flex items-center justify-center gap-2 cursor-pointer"
+                                    className="w-full py-4 text-white font-black rounded-2xl shadow-lg transition-colors border border-violet-500/10 flex items-center justify-center gap-2 cursor-pointer"
                                     style={{ backgroundColor: colorSeleccionado }}
                                 >
                                     {editandoCategoria ? (
@@ -420,19 +413,17 @@ export default function CategoriasPage() {
                                             CREAR CATEGORÍA
                                         </>
                                     )}
-                                </motion.button>
+                                </button>
 
                                 {editandoCategoria && (
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
+                                    <button
                                         type="button"
                                         onClick={handleLimpiarFormulario}
-                                        className="w-full py-3 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white font-bold rounded-2xl transition-all border border-slate-800/40 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                                        className="w-full py-3 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white font-bold rounded-2xl transition-colors border border-slate-800/40 flex items-center justify-center gap-2 cursor-pointer text-sm"
                                     >
                                         <FiX size={16} />
                                         CANCELAR EDICIÓN
-                                    </motion.button>
+                                    </button>
                                 )}
                             </div>
                         </form>
@@ -448,23 +439,20 @@ export default function CategoriasPage() {
                             </div>
                             <h3 className="text-sm font-black text-white uppercase tracking-widest">Ecosistema de Categorías</h3>
                         </div>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                        <button
                             onClick={() => {
                                 handleLimpiarFormulario();
                                 setVistaMobile("form");
                             }}
-                            className="md:hidden flex items-center justify-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-indigo-500 transition-all border border-violet-500/10"
+                            className="md:hidden flex items-center justify-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-indigo-500 transition-colors border border-violet-500/10"
                         >
                             <FiPlus className="text-sm" />
                             Nueva
-                        </motion.button>
+                        </button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <AnimatePresence mode="popLayout">
-                            {categorias.map((cat) => {
+{categorias.map((cat) => {
                                 const IconoCat = MAPA_ICONOS[cat.icono] || FiTag;
                                 const esGasto = cat.tipo === "gasto";
                                 const esIngreso = cat.tipo === "ingreso";
@@ -473,21 +461,16 @@ export default function CategoriasPage() {
                                 const colorCat = cat.color || (esIngreso ? "#10b981" : esGasto ? "#ef4444" : "#3b82f6");
 
                                 return (
-                                    <motion.div
+                                    <div
                                         key={cat.id}
-                                        layout
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.9 }}
-                                        transition={{ duration: 0.4, ease: "easeOut" }}
-                                        className="bg-slate-950/30 border border-slate-900/40 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between group hover:border-slate-800/50 hover:bg-slate-900/40 hover:-translate-y-1 transition-all duration-500 min-h-[330px]"
+                                        className="bg-slate-950/30 border border-slate-900/40 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between group hover:border-slate-800/50 hover:bg-slate-900/40 hover:-translate-y-1 transition-colors duration-500 min-h-[330px]"
                                         style={{
                                             borderColor: editandoCategoria?.id === cat.id ? `${colorCat}66` : ""
                                         }}
                                     >
                                         {/* Halo decorativo de fondo dinámico */}
                                         <div 
-                                            className="blur-3xl w-32 h-32 absolute -bottom-10 -right-10 rounded-full pointer-events-none group-hover:scale-120 transition-all duration-500" 
+                                            className="blur-3xl w-32 h-32 absolute -bottom-10 -right-10 rounded-full pointer-events-none group-hover:scale-120 transition-transform duration-500" 
                                             style={{ backgroundColor: `${colorCat}12` }}
                                         />
 
@@ -496,7 +479,7 @@ export default function CategoriasPage() {
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-center gap-3.5">
                                                     <div 
-                                                        className="p-3 rounded-2xl border transition-all duration-350"
+                                                        className="p-3 rounded-2xl border transition-colors duration-350"
                                                         style={{ 
                                                             backgroundColor: `${colorCat}14`, 
                                                             borderColor: `${colorCat}28`, 
@@ -525,14 +508,14 @@ export default function CategoriasPage() {
                                                 <div className="flex items-center gap-0.5">
                                                     <button
                                                         onClick={() => handleIniciarEdicion(cat)}
-                                                        className="p-2 text-slate-500 hover:text-white hover:bg-slate-900/60 rounded-xl transition-all duration-300 cursor-pointer"
+                                                        className="p-2 text-slate-500 hover:text-white hover:bg-slate-900/60 rounded-xl transition-colors duration-300 cursor-pointer"
                                                         title="Editar Categoría"
                                                     >
                                                         <FiEdit2 size={15} />
                                                     </button>
                                                     <button
                                                         onClick={() => setCategoriaAEliminar(cat)}
-                                                        className="p-2 text-slate-500 hover:text-red-450 hover:bg-red-500/10 rounded-xl transition-all duration-300 cursor-pointer"
+                                                        className="p-2 text-slate-500 hover:text-red-450 hover:bg-red-500/10 rounded-xl transition-colors duration-300 cursor-pointer"
                                                         title="Eliminar Categoría"
                                                     >
                                                         <FiTrash2 size={15} />
@@ -547,28 +530,22 @@ export default function CategoriasPage() {
                                                     <p className="text-slate-650 text-xs italic py-1">Sin subcategorías agregadas.</p>
                                                 ) : (
                                                     <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                                                        <AnimatePresence>
-                                                            {cat.subcategorias.map(sub => (
-                                                                <motion.div 
+{cat.subcategorias.map(sub => (
+                                                                <div 
                                                                     key={sub}
-                                                                    initial={{ opacity: 0, scale: 0.8 }}
-                                                                    animate={{ opacity: 1, scale: 1 }}
-                                                                    exit={{ opacity: 0, scale: 0.8 }}
-                                                                    transition={{ duration: 0.2 }}
-                                                                    className="flex items-center gap-1.5 bg-slate-900/50 hover:bg-slate-800/70 text-slate-300 hover:text-white text-xs py-1.5 pl-3 pr-2.5 rounded-xl border border-slate-900/30 hover:border-slate-800/40 shadow-xs transition-all duration-300 group/chip"
+                                                                    className="flex items-center gap-1.5 bg-slate-900/50 hover:bg-slate-800/70 text-slate-300 hover:text-white text-xs py-1.5 pl-3 pr-2.5 rounded-xl border border-slate-900/30 hover:border-slate-800/40 shadow-xs transition-colors duration-300 group/chip"
                                                                 >
                                                                     <span>{sub}</span>
                                                                     <button
                                                                         onClick={() => setSubcategoriaAEliminar({ categoriaId: cat.id, sub })}
-                                                                        className="p-0.5 rounded-md text-slate-500 hover:text-red-450 hover:bg-red-550/10 transition-all duration-200 cursor-pointer"
+                                                                        className="p-0.5 rounded-md text-slate-500 hover:text-red-450 hover:bg-red-550/10 transition-colors duration-200 cursor-pointer"
                                                                         title={`Eliminar ${sub}`}
                                                                     >
                                                                         <FiX size={12} />
                                                                     </button>
-                                                                </motion.div>
+                                                                </div>
                                                             ))}
-                                                        </AnimatePresence>
-                                                    </div>
+</div>
                                                 )}
                                             </div>
                                         </div>
@@ -587,16 +564,14 @@ export default function CategoriasPage() {
                                                             handleAgregarSubcategoria(cat.id);
                                                         }
                                                     }}
-                                                    className="flex-1 bg-slate-950/80 border border-slate-900/40 text-slate-205 text-xs font-semibold rounded-xl py-2.5 px-3 outline-none focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-600 transition-all hover:bg-slate-900/20"
+                                                    className="flex-1 bg-slate-950/80 border border-slate-900/40 text-slate-205 text-xs font-semibold rounded-xl py-2.5 px-3 outline-none focus:ring-4 focus:ring-violet-500/10 placeholder:text-slate-600 transition-colors hover:bg-slate-900/20"
                                                     style={{
                                                         borderColor: editandoCategoria?.id === cat.id ? `${colorCat}33` : ""
                                                     }}
                                                 />
-                                                <motion.button
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
+                                                <button
                                                     onClick={() => handleAgregarSubcategoria(cat.id)}
-                                                    className="p-2.5 text-white rounded-xl shadow-md transition-all duration-300 cursor-pointer"
+                                                    className="p-2.5 text-white rounded-xl shadow-md transition-colors duration-300 cursor-pointer"
                                                     style={{ 
                                                         backgroundColor: colorCat,
                                                         boxShadow: `0 0 12px ${colorCat}22`
@@ -604,14 +579,13 @@ export default function CategoriasPage() {
                                                     title="Agregar"
                                                 >
                                                     <FiPlus size={16} />
-                                                </motion.button>
+                                                </button>
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 );
                             })}
-                        </AnimatePresence>
-                    </div>
+</div>
                 </div>
             </div>
 

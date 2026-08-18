@@ -72,7 +72,7 @@ export default function HistorialCuenta({ cuenta }: HistorialCuentaProps) {
     }
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] border border-slate-700/50 shadow-2xl relative overflow-hidden">
+        <div className="bg-slate-900/50 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden">
             {/* Decorative element */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
@@ -86,7 +86,7 @@ export default function HistorialCuenta({ cuenta }: HistorialCuentaProps) {
                         placeholder="Buscar operación..."
                         value={busqueda}
                         onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1); }}
-                        className="w-full bg-slate-950/40 border border-white/5 rounded-2xl py-3 pl-11 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 placeholder-slate-600 transition-all"
+                        className="w-full bg-slate-950/40 border border-white/5 rounded-2xl py-3 pl-11 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 placeholder-slate-600 transition-colors"
                     />
                 </div>
             </div>
@@ -106,7 +106,7 @@ export default function HistorialCuenta({ cuenta }: HistorialCuentaProps) {
                         return (
                             <div
                                 key={t.id}
-                                className="flex items-center justify-between p-4 bg-slate-950/20 hover:bg-slate-950/40 border border-white/5 rounded-2xl transition-all group relative overflow-hidden"
+                                className="flex items-center justify-between p-4 bg-slate-950/20 hover:bg-slate-950/40 border border-white/5 rounded-2xl transition-colors group relative overflow-hidden"
                             >
                                 <div className="flex items-center gap-4 min-w-0 flex-1">
                                     <div className="relative">

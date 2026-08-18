@@ -13,7 +13,6 @@ import CuentaCard from "@/components/cuentas/CuentaCard";
 import Link from "next/link";
 import { FiCreditCard, FiChevronRight, FiPlus, FiTrendingUp, FiTrendingDown } from "react-icons/fi";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import CurrencySelector from "@/components/ui/CurrencySelector";
 import { MONEDAS_SOPORTADAS } from "@/lib/bankAccounts";
 import Skeleton from "./Skeleton";
@@ -47,9 +46,9 @@ export default function BankAccountsWidget() {
     const cuentasRestantes = cuentas.length - cuentasAMostrar.length;
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group hover:border-violet-500/30 transition-all">
+        <div className="bg-slate-900/50 backdrop-blur-md rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group hover:border-violet-500/30 transition-colors">
             {/* Decoraciones */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-all" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-colors" />
 
             <div className="p-6 relative z-10">
                 {/* Header */}
@@ -85,9 +84,7 @@ export default function BankAccountsWidget() {
 
                 {/* Lista compacta de cuentas */}
                 {cuentas.length === 0 ? (
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                    <div
                         className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3"
                     >
                         <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400 shrink-0">
@@ -99,7 +96,7 @@ export default function BankAccountsWidget() {
                                 No puedes registrar movimientos sin una cuenta de destino. Configura una en la sección de cuentas.
                             </p>
                         </div>
-                    </motion.div>
+                    </div>
                 ) : (
                     <div className="space-y-1.5">
                         {cuentasAMostrar.map((cuenta) => (

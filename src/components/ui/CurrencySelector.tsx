@@ -17,7 +17,7 @@ export default function CurrencySelector({ value, onChange, compact = false }: C
         <Menu as="div" className="relative inline-block text-left">
             <div>
                 <Menu.Button className={cn(
-                    "flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-slate-700/50 bg-slate-800/40 hover:bg-slate-800/80 transition-all focus:outline-none focus:ring-1 focus:ring-amber-500/30",
+                    "flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-slate-700/50 bg-slate-800/40 hover:bg-slate-800/80 transition-colors focus:outline-none focus:ring-1 focus:ring-amber-500/30",
                     compact ? "h-5" : "h-6"
                 )}>
                     <span className="text-[10px] font-black text-amber-500 tracking-tighter">{value}</span>
@@ -34,7 +34,7 @@ export default function CurrencySelector({ value, onChange, compact = false }: C
                 leaveFrom="transform opacity-100 scale-100"
                 leaveTo="transform opacity-0 scale-95"
             >
-                <Menu.Items className="absolute right-0 mt-1 w-24 origin-top-right divide-y divide-slate-800 rounded-xl bg-slate-900 border border-slate-700/50 shadow-2xl focus:outline-none z-50">
+                <Menu.Items className="absolute right-0 mt-1 w-24 origin-top-right divide-y divide-slate-800 rounded-xl bg-slate-900 border border-slate-700/50 shadow-lg focus:outline-none z-50">
                     <div className="p-1">
                         {MONEDAS_SOPORTADAS.map((moneda) => (
                             <Menu.Item key={moneda.id}>

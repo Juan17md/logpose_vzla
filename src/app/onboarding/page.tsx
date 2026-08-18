@@ -8,16 +8,13 @@ import PasoMetas from "@/components/onboarding/PasoMetas";
 import PasoDeudas from "@/components/onboarding/PasoDeudas";
 import PasoGastosFijos from "@/components/onboarding/PasoGastosFijos";
 import PasoResumen from "@/components/onboarding/PasoResumen";
-import { AnimatePresence } from "framer-motion";
-
 export default function OnboardingPage() {
   const { pasoActual, siguientePaso, pasoAnterior } = useOnboarding();
 
   return (
     <div>
       <ProgressBar />
-      <AnimatePresence mode="wait">
-        {pasoActual === 1 && (
+{pasoActual === 1 && (
           <PasoPerfilFinanciero key="paso1" onSiguiente={siguientePaso} />
         )}
         {pasoActual === 2 && (
@@ -35,7 +32,6 @@ export default function OnboardingPage() {
         {pasoActual === 6 && (
           <PasoResumen key="paso6" onAnterior={pasoAnterior} />
         )}
-      </AnimatePresence>
-    </div>
+</div>
   );
 }

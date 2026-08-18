@@ -3,8 +3,6 @@
 import { useState, useMemo } from "react";
 import { FixedExpense } from "@/hooks/useFixedExpenses";
 import { FiChevronLeft, FiChevronRight, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
-import { motion } from "framer-motion";
-
 interface FixedExpensesCalendarProps {
     expenses: FixedExpense[];
     onPayExpense: (expense: FixedExpense) => void;
@@ -79,7 +77,7 @@ export default function FixedExpensesCalendar({ expenses, onPayExpense }: FixedE
     const totalSlots = [...blanks, ...days];
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-[2.5rem] p-6 shadow-xl">
+        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-[2.5rem] p-6 shadow-lg">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                     <span className="bg-clip-text text-transparent bg-linear-to-r from-emerald-400 to-cyan-400">
@@ -112,7 +110,7 @@ export default function FixedExpensesCalendar({ expenses, onPayExpense }: FixedE
                         <div
                             key={index}
                             className={`
-                                min-h-[100px] rounded-xl border p-2 relative flex flex-col gap-1 transition-all
+                                min-h-[100px] rounded-xl border p-2 relative flex flex-col gap-1 transition-colors
                                 ${!day ? 'bg-transparent border-transparent' : 'bg-slate-800/30 border-slate-700/30 hover:border-slate-600 hover:bg-slate-800/50'}
                                 ${isDayToday ? 'ring-2 ring-emerald-500/50 bg-emerald-500/5' : ''}
                             `}
@@ -130,10 +128,8 @@ export default function FixedExpensesCalendar({ expenses, onPayExpense }: FixedE
                                         {dayExpenses.map(expense => {
                                             const paid = isPaidCurrentMonth(expense);
                                             return (
-                                                <motion.button
+                                                <button
                                                     key={expense.id}
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
                                                     onClick={() => onPayExpense(expense)}
                                                     className={`
                                                         text-[10px] px-2 py-1 rounded-md text-left flex items-start gap-1 w-full wrap-break-word leading-tight
@@ -145,7 +141,7 @@ export default function FixedExpensesCalendar({ expenses, onPayExpense }: FixedE
                                                 >
                                                     {paid ? <FiCheckCircle className="shrink-0 mt-0.5" /> : <FiAlertCircle className="shrink-0 mt-0.5" />}
                                                     <span>{expense.title}</span>
-                                                </motion.button>
+                                                </button>
                                             );
                                         })}
                                     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,8 +56,6 @@ import Input from "../ui/forms/Input";
 import Textarea from "../ui/forms/Textarea";
 import CustomCurrencyInput from "../ui/forms/CurrencyInput";
 import Select, { SelectOption } from "../ui/forms/Select";
-import { motion, AnimatePresence } from "framer-motion";
-
 // Interfaz tipada para las opciones del selector de cuentas
 interface OpcionCuenta extends SelectOption<string> {
     moneda: string;
@@ -665,7 +664,7 @@ export default function TransactionForm() {
 
     return (
         <>
-        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-4 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden pb-28 md:pb-8">
+        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-4 md:p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden pb-28 md:pb-8">
             {/* Decorative Background Elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
 
@@ -692,7 +691,7 @@ export default function TransactionForm() {
                                 tasaCambio: "", montoDestino: "",
                             });
                         }}
-                        className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-xl transition-all"
+                        className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-xl transition-colors"
                     >
                         <FiX size={24} />
                     </button>
@@ -710,19 +709,19 @@ export default function TransactionForm() {
                             <>
                                 <motion.div
                                     layout
-                                    className={`absolute top-1 h-[calc(100%-8px)] rounded-xl border shadow-[0_0_15px_rgba(0,0,0,0.25)] ${
+                                    transition={{ layout: { type: "tween", duration: 0.2, ease: "easeOut" } }}
+                                    className={`absolute top-1 h-[calc(100%-8px)] rounded-xl border shadow-lg ${
                                         field.value === "ingreso"
                                             ? "left-[4px] w-[calc(33.333%-6px)] bg-emerald-500/15 border-emerald-500/30"
                                             : field.value === "gasto"
                                             ? "left-[calc(33.333%+2px)] w-[calc(33.333%-6px)] bg-red-500/15 border-red-500/30"
                                             : "left-[calc(66.666%+0px)] w-[calc(33.333%-6px)] bg-blue-500/15 border-blue-500/30"
                                     }`}
-                                    transition={{ type: "spring", stiffness: 320, damping: 28 }}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("ingreso")}
-                                    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-colors duration-300 text-xs md:text-sm ${
                                         field.value === "ingreso"
                                             ? "text-emerald-300 font-extrabold"
                                             : "text-slate-500 hover:text-slate-300"
@@ -733,7 +732,7 @@ export default function TransactionForm() {
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("gasto")}
-                                    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-colors duration-300 text-xs md:text-sm ${
                                         field.value === "gasto"
                                             ? "text-red-300 font-extrabold"
                                             : "text-slate-500 hover:text-slate-300"
@@ -744,7 +743,7 @@ export default function TransactionForm() {
                                 <button
                                     type="button"
                                     onClick={() => field.onChange("transferencia")}
-                                    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                                    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-colors duration-300 text-xs md:text-sm ${
                                         field.value === "transferencia"
                                             ? "text-blue-300 font-extrabold"
                                             : "text-slate-500 hover:text-slate-300"
@@ -759,9 +758,7 @@ export default function TransactionForm() {
 
                 {/* Advertencia de falta de cuentas */}
                 {cuentas.length === 0 && (
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                    <div
                         className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3"
                     >
                         <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400 shrink-0">
@@ -773,7 +770,7 @@ export default function TransactionForm() {
                                 No puedes registrar movimientos sin una cuenta de destino. Configure una en la sección de cuentas para continuar.
                             </p>
                         </div>
-                    </motion.div>
+                    </div>
                 )}
 
                 {/* Cuenta Bancaria - OBLIGATORIO */}
@@ -916,7 +913,7 @@ export default function TransactionForm() {
                                                 setValue("amount", "");
                                                 setValue("vesAmount", "");
                                             }}
-                                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-300 ${field.value === curr
+                                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors duration-300 ${field.value === curr
                                                 ? curr === "USD" 
                                                     ? "bg-slate-800 text-emerald-400 border border-emerald-500/20 shadow-md" 
                                                     : "bg-slate-800 text-cyan-400 border border-cyan-500/20 shadow-md"
@@ -931,12 +928,8 @@ export default function TransactionForm() {
                         />
                     </div>
                     {/* Rate Input */}
-                    <AnimatePresence>
-                         {currency === "VES" && (
-                             <motion.div
-                                 initial={{ opacity: 0, scale: 0.95 }}
-                                 animate={{ opacity: 1, scale: 1 }}
-                                 exit={{ opacity: 0, scale: 0.95 }}
+{currency === "VES" && (
+                             <div
                                  className="col-span-6 overflow-hidden"
                              >
                                  <Controller
@@ -954,10 +947,9 @@ export default function TransactionForm() {
                                          />
                                      )}
                                  />
-                             </motion.div>
+                             </div>
                          )}
-                    </AnimatePresence>
-                    {/* Amount Input */}
+{/* Amount Input */}
                     <div className="col-span-12 relative">
                         <Controller
                             control={control}
@@ -976,26 +968,20 @@ export default function TransactionForm() {
                             )}
                         />
                         {currency === "VES" && amount && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
+                            <div
                                 className="absolute top-8.5 right-3 pointer-events-none"
                             >
                                 <span className="text-emerald-400 font-bold text-xs bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20">
                                     ≈ ${amount}
                                 </span>
-                            </motion.div>
+                            </div>
                         )}
                     </div>
                 </div>
 
                 {/* Sección de Transferencia: tasa de cambio y monto destino */}
-                <AnimatePresence>
-                    {monedasDiferentes && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
+{monedasDiferentes && (
+                        <div
                             className="space-y-3 overflow-hidden"
                         >
                             <div className="bg-blue-500/5 border border-blue-500/20 p-4 rounded-2xl space-y-3 backdrop-blur-md relative">
@@ -1070,11 +1056,9 @@ export default function TransactionForm() {
                                     />
                                 </div>
                             </div>
-                        </motion.div>
+                        </div>
                     )}
-                </AnimatePresence>
-
-                {/* Category & Date (Grid) */}
+{/* Category & Date (Grid) */}
                 <div className="grid grid-cols-12 gap-3 items-start">
                     {type !== "transferencia" ? (
                         <>
@@ -1161,10 +1145,10 @@ export default function TransactionForm() {
                                                 onChange={(date: Date | null) => field.onChange(date)}
                                                 locale="es"
                                                 dateFormat="dd/MM/yyyy"
-                                                className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-9 pr-3 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all duration-300 cursor-pointer hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg"
+                                                className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-9 pr-3 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-colors duration-300 cursor-pointer hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg"
                                                 wrapperClassName="w-full"
-                                                calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-xl !rounded-2xl overflow-hidden"
-                                                dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-all"}
+                                                calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-lg !rounded-2xl overflow-hidden"
+                                                dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-colors"}
                                                 weekDayClassName={() => "!text-slate-500 !uppercase !text-[10px] !tracking-wider"}
                                                 popperClassName="!z-50"
                                             />
@@ -1207,10 +1191,10 @@ export default function TransactionForm() {
                                             onChange={(date: Date | null) => field.onChange(date)}
                                             locale="es"
                                             dateFormat="dd/MM/yyyy"
-                                            className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-9 pr-3 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all duration-300 cursor-pointer hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg"
+                                            className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-9 pr-3 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-colors duration-300 cursor-pointer hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg"
                                             wrapperClassName="w-full"
-                                            calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-xl !rounded-2xl overflow-hidden"
-                                            dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-all"}
+                                            calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-lg !rounded-2xl overflow-hidden"
+                                            dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-colors"}
                                             weekDayClassName={() => "!text-slate-500 !uppercase !text-[10px] !tracking-wider"}
                                             popperClassName="!z-50"
                                         />
@@ -1264,17 +1248,12 @@ export default function TransactionForm() {
                                             />
                                         )}
                                     />
-                                    <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-violet-500 border border-slate-600/50"></div>
+                                    <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-colors peer-checked:bg-violet-500 border border-slate-600/50"></div>
                                 </div>
                                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-300 transition-colors">¿Incluye comisión?</span>
                             </label>
-
-                            <AnimatePresence>
-                                {hasCommission && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: "auto" }}
-                                        exit={{ opacity: 0, height: 0 }}
+{hasCommission && (
+                                    <div
                                         className="space-y-3 overflow-hidden"
                                     >
                                         {/* Botones de Selección Rápida de Comisión */}
@@ -1300,9 +1279,9 @@ export default function TransactionForm() {
                                                                     key={opt.id}
                                                                     type="button"
                                                                     onClick={() => field.onChange(opt.id)}
-                                                                    className={`flex items-center gap-2.5 p-2 rounded-xl border text-left transition-all duration-300 min-h-[48px] ${
+                                                                    className={`flex items-center gap-2.5 p-2 rounded-xl border text-left transition-colors duration-300 min-h-[48px] ${
                                                                         esActivo
-                                                                            ? "bg-slate-800 border-violet-500/40 shadow-[0_0_15px_rgba(139,92,246,0.15)] ring-2 ring-violet-500/10"
+                                                                            ? "bg-slate-800 border-violet-500/40 shadow-lg ring-2 ring-violet-500/10"
                                                                             : "bg-slate-900/30 border-slate-800/80 hover:bg-slate-800/20 text-slate-400 hover:text-slate-300"
                                                                     }`}
                                                                 >
@@ -1353,45 +1332,38 @@ export default function TransactionForm() {
                                                 )}
                                             />
                                             {currency === "VES" && commissionAmount && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 5 }}
-                                                    animate={{ opacity: 1, y: 0 }}
+                                                <div
                                                     className="absolute top-8 right-3 pointer-events-none"
                                                 >
                                                     <span className="text-red-400 font-bold text-xs bg-red-500/10 px-1.5 py-0.5 rounded-md border border-red-500/20">
                                                         ≈ ${commissionAmount}
                                                     </span>
-                                                </motion.div>
+                                                </div>
                                             )}
                                         </div>
 
                                         {/* Indicador informativo de cálculo con mínimos */}
                                         {commissionType !== "custom" && (
-                                            <motion.p 
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
+                                            <p
                                                 className="text-[9px] text-slate-500 italic ml-1 mt-0.5 flex items-center gap-1"
                                             >
                                                 <span>✨</span>
                                                 <span>
                                                     Calculado: {commissionType === "p2c" ? "1.50%" : "0.30%"} del monto (mínimo de Bs. 2.00).
                                                 </span>
-                                            </motion.p>
+                                            </p>
                                         )}
-                                    </motion.div>
+                                    </div>
                                 )}
-                            </AnimatePresence>
-                        </div>
+</div>
                     </div>
                 )}
 
                 {/* Action Button - Desktop (en flujo) */}
-                <motion.button
-                    whileHover={{ scale: 1.01, translateY: -2 }}
-                    whileTap={{ scale: 0.98 }}
+                <button
                     type="submit"
                     disabled={loading}
-                    className="hidden md:flex w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+                    className="hidden md:flex w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
                 >
                     <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                     {loading ? (
@@ -1402,7 +1374,7 @@ export default function TransactionForm() {
                             <span className="tracking-wide">{transactionToEdit ? "ACTUALIZAR MOVIMIENTO" : "GUARDAR MOVIMIENTO"}</span>
                         </div>
                     )}
-                </motion.button>
+                </button>
 
             </form>
         </div>
@@ -1412,12 +1384,11 @@ export default function TransactionForm() {
                 className="md:hidden fixed left-0 right-0 z-40 px-4 pb-3 pt-3 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent"
                 style={{ bottom: "calc(0px + env(safe-area-inset-bottom, 0px))" }}
             >
-                <motion.button
-                    whileTap={{ scale: 0.98 }}
+                <button
                     type="submit"
                     form="formulario-movimiento"
                     disabled={loading}
-                    className="w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 active:from-violet-500 active:to-indigo-500 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+                    className="w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
                 >
                     {loading ? (
                         <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin z-10"></span>
@@ -1427,7 +1398,7 @@ export default function TransactionForm() {
                             <span className="tracking-wide">{transactionToEdit ? "ACTUALIZAR MOVIMIENTO" : "GUARDAR MOVIMIENTO"}</span>
                         </div>
                     )}
-                </motion.button>
+                </button>
             </div>
         </>
     );

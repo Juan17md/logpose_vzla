@@ -22,7 +22,6 @@ import AvisoCuentasFaltantes from "@/components/cuentas/AvisoCuentasFaltantes";
 
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import dynamic from "next/dynamic";
-import PageTransition from "@/components/layout/PageTransition";
 
 // Chatbot cargado de forma diferida — 59KB que solo se necesitan cuando el usuario lo abre
 // El layout es visible y funcional sin esperar a que este bundle descargue
@@ -99,9 +98,7 @@ export default function DashboardLayout({
                 
                                 <div className="flex-1 p-4 md:p-8 overflow-x-hidden">
                                   <div className="max-w-7xl mx-auto">
-                                    <PageTransition>
-                                      {children}
-                                    </PageTransition>
+                                    {children}
                                   </div>
                                 </div>
                               </div>

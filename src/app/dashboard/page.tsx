@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { auth, db } from "@/lib/firebase";
@@ -73,8 +72,8 @@ const FinancialHealthWidget = dynamic(() => import("@/components/ui/FinancialHea
     loading: () => <SkeletonWidget />,
 });
 
-// MotionLink creado fuera del componente para evitar recrearlo en cada render
-const MotionLink = motion.create(Link);
+// Enlaces del dashboard (antiguo MotionLink con animaciones de framer-motion)
+const MotionLink = Link;
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -95,48 +94,7 @@ export default function DashboardPage() {
     const [cuentaAjustando, setCuentaAjustando] = useState<string>("");
     const [ajustandoBalance, setAjustandoBalance] = useState("");
 
-    // Variantes de animación simplificadas — tween es más ligero que spring physics
-    // Spring requiere múltiples frames de cálculo; tween es una curva predefinida
-    // haAnimado: variable a nivel módulo para evitar repetir animaciones al volver atrás
-    // desde otra página (el swipe-back de iOS mostraba el dashboard, luego las animaciones
-    // de entrada lo "recargaban" visualmente)
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.07,
-                delayChildren: 0.05
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 12, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                type: "tween",
-                duration: 0.25,
-                ease: "easeOut"
-            } as const
-        }
-    };
-
-    // Persiste entre montajes del componente durante la sesión.
-    // Evita que al volver al dashboard desde otra página se re-ejecuten las
-    // animaciones de entrada (stagger), lo cual causaba una falsa sensación de recarga.
-    const [haAnimado] = useState(() => {
-        if (typeof window !== "undefined") {
-            const yaVisito = sessionStorage.getItem("dashboard_animado");
-            if (yaVisito === "1") return true;
-            sessionStorage.setItem("dashboard_animado", "1");
-        }
-        return false;
-    });
-
-    const estadoAnimacion = haAnimado ? "visible" : "hidden";
+    // Variantes de animación eliminadas — se prioriza la fluidez (ver ADR 11)
 
     useEffect(() => {
         // En PWA, el estado puede tardar unos milisegundos extra en restaurarse
@@ -331,17 +289,14 @@ export default function DashboardPage() {
     return (
         <>
             {/* ===== MOBILE-FIRST LAYOUT ===== */}
-            <motion.div
+            <div
                 className="md:hidden flex flex-col gap-4 pb-32"
-                variants={containerVariants}
-                initial={estadoAnimacion}
-                animate="visible"
             >
 
                 {/* Privacidad - Removido saludo y botón externo */}
 
                 {/* Balance Card Principal - Hero */}
-                <motion.div variants={itemVariants} className="relative bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-500/30 p-5 rounded-3xl shadow-2xl overflow-hidden">
+                <div className="relative bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-500/30 p-5 rounded-3xl shadow-lg overflow-hidden">
                     {/* Decoración de fondo */}
                     <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl -ml-16 -mb-16"></div>
@@ -373,13 +328,12 @@ export default function DashboardPage() {
                             )}>
                                 {isPrivacyMode ? `${obtenerSimboloMoneda(monedaBase)} ••••••` : `${obtenerSimboloMoneda(monedaBase)} ${stats.totalBalance.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                             </h2>
-                            <motion.button
-                                whileTap={{ scale: 0.9 }}
+                            <button
                                 onClick={() => setIsPrivacyMode(!isPrivacyMode)}
                                 className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 transition-colors"
                             >
                                 {isPrivacyMode ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                            </motion.button>
+                            </button>
                         </div>
 
                         <p className="text-slate-500 text-sm font-medium">
@@ -415,10 +369,10 @@ export default function DashboardPage() {
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Acciones Rápidas - Horizontal Scroll */}
-                <motion.div variants={itemVariants} className="-mx-4">
+                <div className="-mx-4">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-4 pl-5">Acceso Rápido</h3>
                     <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                         {/* Spacer inicial */}
@@ -426,7 +380,6 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/movimientos?view=form"
-                            whileTap={{ scale: 0.9 }}
                             className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-amber-500/30 rounded-xl flex items-center justify-center">
@@ -437,7 +390,6 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/reportes"
-                            whileTap={{ scale: 0.9 }}
                             className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-violet-500/20 to-violet-600/10 border border-violet-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-violet-500/30 rounded-xl flex items-center justify-center">
@@ -448,7 +400,6 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/ahorros"
-                            whileTap={{ scale: 0.9 }}
                             className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-indigo-500/20 to-indigo-600/10 border border-indigo-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-indigo-500/30 rounded-xl flex items-center justify-center">
@@ -459,7 +410,6 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/listas"
-                            whileTap={{ scale: 0.9 }}
                             className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-emerald-500/30 rounded-xl flex items-center justify-center">
@@ -470,7 +420,6 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/gastos-fijos"
-                            whileTap={{ scale: 0.9 }}
                             className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-cyan-500/30 rounded-xl flex items-center justify-center">
@@ -481,7 +430,6 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/deudas"
-                            whileTap={{ scale: 0.9 }}
                             className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-red-500/20 to-red-600/10 border border-red-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-red-500/30 rounded-xl flex items-center justify-center">
@@ -492,7 +440,6 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/cuentas"
-                            whileTap={{ scale: 0.9 }}
                             className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-sky-500/20 to-sky-600/10 border border-sky-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-sky-500/30 rounded-xl flex items-center justify-center">
@@ -503,7 +450,6 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/categorias"
-                            whileTap={{ scale: 0.9 }}
                             className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-pink-500/20 to-pink-600/10 border border-pink-500/30 rounded-2xl transition-colors"
                         >
                             <div className="w-10 h-10 bg-pink-500/30 rounded-xl flex items-center justify-center">
@@ -515,10 +461,10 @@ export default function DashboardPage() {
                         {/* Spacer final */}
                         <div className="flex-none w-4"></div>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Últimos Movimientos - Preview Compacta */}
-                <motion.div variants={itemVariants} className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden">
+                <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden">
                     <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-slate-700/50 rounded-xl flex items-center justify-center">
@@ -539,10 +485,9 @@ export default function DashboardPage() {
                             </div>
                         ) : (
                             recentThree.map((t) => (
-                                <motion.div
+                                <div
                                     key={t.id}
                                     className="flex items-center justify-between p-4 active:bg-slate-800/50 transition-colors"
-                                    whileTap={{ scale: 0.98, backgroundColor: "rgba(30, 41, 59, 0.8)" }}
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.type === 'ingreso' ? 'bg-emerald-500/20' : 'bg-red-500/20'
@@ -568,21 +513,20 @@ export default function DashboardPage() {
                                         } 
                                         {isPrivacyMode ? '••••' : Number(t.currency === 'VES' && t.originalAmount ? t.originalAmount : t.amount).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
-                                </motion.div>
+                                </div>
                             ))
                         )}
                     </div>
-                </motion.div>
+                </div>
 
 
 
                 {/* Gráficas compactas para móvil */}
-                <motion.div variants={itemVariants} className="space-y-4">
+                <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider pl-1">Análisis del Mes</h3>
 
                     {/* Gráfico de Flujo de Caja */}
-                    <motion.div
-                        whileTap={{ scale: 0.98 }}
+                    <div
                         className="bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
                     >
                         <div className="flex items-center gap-2 mb-3">
@@ -594,11 +538,10 @@ export default function DashboardPage() {
                         <div className="h-44">
                             <CashFlowChart transactions={transactions} />
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Gráfico de Gastos por Categoría */}
-                    <motion.div
-                        whileTap={{ scale: 0.98 }}
+                    <div
                         className="bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50"
                     >
                         <div className="flex items-center gap-2 mb-3">
@@ -610,19 +553,17 @@ export default function DashboardPage() {
                         <div className="min-h-52">
                             <ExpensePieChart data={stats.categoryData} />
                         </div>
-                    </motion.div>
-                </motion.div>
+                    </div>
+                </div>
 
                 {/* Widgets: Salud Financiera + Próximos Pagos */}
-                <motion.div variants={itemVariants} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4">
                     <FinancialHealthWidget />
                     <UpcomingPaymentsWidget />
-                </motion.div>
+                </div>
 
                 {/* CTA Ajustar Saldo */}
-                <motion.button
-                    variants={itemVariants}
-                    whileTap={{ scale: 0.95 }}
+                <button
                     onClick={handleUpdateBalanceClick}
                     className="w-full py-4 px-5 bg-slate-800/80 border border-slate-700/50 rounded-2xl flex items-center justify-between transition-colors"
                 >
@@ -636,13 +577,13 @@ export default function DashboardPage() {
                         </div>
                     </div>
                     <FiChevronRight className="text-slate-500" size={20} />
-                </motion.button>
-            </motion.div>
+                </button>
+            </div>
 
             {/* ===== DESKTOP LAYOUT (Original) ===== */}
             <div className="hidden md:flex flex-col gap-8 pb-10">
                 {/* Header */}
-                <div className="order-1 bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+                <div className="order-1 bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl">
                     <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                         <FiActivity className="text-7xl md:text-9xl text-amber-400" />
                     </div>
@@ -654,7 +595,7 @@ export default function DashboardPage() {
                                 <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">Dashboard</h1>
                                 <button
                                     onClick={() => setIsPrivacyMode(!isPrivacyMode)}
-                                    className="p-1.5 md:p-2 rounded-full bg-slate-800/50 border border-slate-700 hover:bg-slate-700 hover:border-slate-600 text-slate-400 hover:text-white transition-all backdrop-blur-sm group"
+                                    className="p-1.5 md:p-2 rounded-full bg-slate-800/50 border border-slate-700 hover:bg-slate-700 hover:border-slate-600 text-slate-400 hover:text-white transition-colors backdrop-blur-sm group"
                                     title={isPrivacyMode ? "Mostrar montos" : "Ocultar montos"}
                                 >
                                     {isPrivacyMode ? <FiEyeOff size={16} className="md:w-5 md:h-5" /> : <FiEye size={16} className="md:w-5 md:h-5" />}
@@ -677,8 +618,8 @@ export default function DashboardPage() {
                         Accesos Rápidos
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <Link href="/dashboard/movimientos?view=form" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-amber-500/50 p-4 rounded-2xl transition-all flex items-center gap-4 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-amber-500/20 transition-all"></div>
+                        <Link href="/dashboard/movimientos?view=form" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-amber-500/50 p-4 rounded-2xl transition-colors flex items-center gap-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-amber-500/20 transition-colors"></div>
                             <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl group-hover:scale-110 transition-transform shadow-inner border border-amber-500/10">
                                 <FiPlusCircle size={24} />
                             </div>
@@ -688,8 +629,8 @@ export default function DashboardPage() {
                             </div>
                         </Link>
 
-                        <Link href="/dashboard/reportes" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-violet-500/50 p-4 rounded-2xl transition-all flex items-center gap-4 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-violet-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-violet-500/20 transition-all"></div>
+                        <Link href="/dashboard/reportes" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-violet-500/50 p-4 rounded-2xl transition-colors flex items-center gap-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-violet-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-violet-500/20 transition-colors"></div>
                             <div className="p-3 bg-violet-500/10 text-violet-400 rounded-xl group-hover:scale-110 transition-transform shadow-inner border border-violet-500/10">
                                 <FiPieChart size={24} />
                             </div>
@@ -699,8 +640,8 @@ export default function DashboardPage() {
                             </div>
                         </Link>
 
-                        <Link href="/dashboard/ahorros" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/50 p-4 rounded-2xl transition-all flex items-center gap-4 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-indigo-500/20 transition-all"></div>
+                        <Link href="/dashboard/ahorros" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/50 p-4 rounded-2xl transition-colors flex items-center gap-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-indigo-500/20 transition-colors"></div>
                             <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl group-hover:scale-110 transition-transform shadow-inner border border-indigo-500/10">
                                 <FiTarget size={24} />
                             </div>
@@ -710,8 +651,8 @@ export default function DashboardPage() {
                             </div>
                         </Link>
 
-                        <Link href="/dashboard/listas" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/50 p-4 rounded-2xl transition-all flex items-center gap-4 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-emerald-500/20 transition-all"></div>
+                        <Link href="/dashboard/listas" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/50 p-4 rounded-2xl transition-colors flex items-center gap-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-emerald-500/20 transition-colors"></div>
                             <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl group-hover:scale-110 transition-transform shadow-inner border border-emerald-500/10">
                                 <FiShoppingCart size={24} />
                             </div>
@@ -721,8 +662,8 @@ export default function DashboardPage() {
                             </div>
                         </Link>
 
-                        <Link href="/dashboard/gastos-fijos" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-cyan-500/50 p-4 rounded-2xl transition-all flex items-center gap-4 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-cyan-500/20 transition-all"></div>
+                        <Link href="/dashboard/gastos-fijos" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-cyan-500/50 p-4 rounded-2xl transition-colors flex items-center gap-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-cyan-500/20 transition-colors"></div>
                             <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl group-hover:scale-110 transition-transform shadow-inner border border-cyan-500/10">
                                 <FiCalendar size={24} />
                             </div>
@@ -743,9 +684,9 @@ export default function DashboardPage() {
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/dashboard/reportes'); }}
-                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-all duration-300 relative overflow-hidden cursor-pointer active:scale-95"
+                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-[transform,color] duration-300 relative overflow-hidden cursor-pointer active:scale-95"
                     >
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-all"></div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-colors"></div>
                         <div className="flex justify-between items-start mb-4 relative z-10">
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
@@ -781,9 +722,9 @@ export default function DashboardPage() {
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/dashboard/movimientos'); }}
-                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-all duration-300 relative overflow-hidden cursor-pointer active:scale-95"
+                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-[transform,color] duration-300 relative overflow-hidden cursor-pointer active:scale-95"
                     >
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-all"></div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-colors"></div>
                         <div className="flex justify-between items-start mb-4 relative z-10">
                             <div>
                                 <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Ingresos (Mes)</p>
@@ -813,9 +754,9 @@ export default function DashboardPage() {
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/dashboard/reportes'); }}
-                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-red-500/30 hover:bg-slate-900/70 transition-all duration-300 relative overflow-hidden cursor-pointer active:scale-95"
+                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-[transform,color] duration-300 relative overflow-hidden cursor-pointer active:scale-95"
                     >
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-red-500/20 transition-all"></div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-colors"></div>
                         <div className="flex justify-between items-start mb-4 relative z-10">
                             <div>
                                 <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Gastos (Mes)</p>
@@ -837,7 +778,7 @@ export default function DashboardPage() {
                         {stats.monthlyIncome > 0 && (
                             <div className="w-full bg-slate-800 rounded-full h-2 mt-2 border border-slate-700/50 overflow-hidden">
                                 <div
-                                    className="bg-linear-to-r from-red-500 to-orange-500 h-full rounded-full transition-all duration-500"
+                                    className="bg-linear-to-r from-red-500 to-orange-500 h-full rounded-full transition-colors duration-500"
                                     style={{ width: `${Math.min((stats.monthlyExpense / stats.monthlyIncome) * 100, 100)}%` }}
                                 ></div>
                             </div>
@@ -982,7 +923,7 @@ export default function DashboardPage() {
                             <div className="bg-slate-800/40 p-4 rounded-2xl border border-amber-500/20">
                                 <div className="flex justify-between items-center mb-3">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
+                                        <div className="w-2 h-2 rounded-full bg-amber-500 shadow-lg"></div>
                                         <span className="text-sm font-bold text-white uppercase tracking-wide">{cuenta.nombre}</span>
                                     </div>
                                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border text-amber-400 border-amber-500/20 bg-amber-500/10">
@@ -1004,7 +945,7 @@ export default function DashboardPage() {
                                         inputMode="decimal"
                                         value={ajustandoBalance}
                                         onChange={(e) => setAjustandoBalance(e.target.value)}
-                                        className="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white font-bold text-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all placeholder:text-slate-700"
+                                        className="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white font-bold text-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-colors placeholder:text-slate-700"
                                         placeholder="0.00"
                                     />
                                 </div>
@@ -1023,7 +964,7 @@ export default function DashboardPage() {
                         <button
                             type="submit"
                             disabled={!cuentaAjustando || cuentas.length === 0}
-                            className="px-8 py-2.5 bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                            className="px-8 py-2.5 bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold rounded-xl transition-transform shadow-lg shadow-amber-500/20 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                         >
                             Actualizar Saldo
                         </button>

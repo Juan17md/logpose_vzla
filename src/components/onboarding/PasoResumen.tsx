@@ -7,7 +7,6 @@ import { useUserData } from "@/contexts/UserDataContext";
 import { auth, db } from "@/lib/firebase";
 import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 import {
   FiTrendingUp, FiTarget, FiCreditCard, FiUsers, FiCalendar, FiCheckCircle,
 } from "react-icons/fi";
@@ -125,11 +124,7 @@ export default function PasoResumen({ onAnterior }: PasoResumenProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+    <div
     >
       <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/[.06] mb-3">
@@ -234,7 +229,7 @@ export default function PasoResumen({ onAnterior }: PasoResumenProps) {
           type="button"
           onClick={finalizar}
           disabled={finalizando}
-          className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {finalizando ? (
             <>
@@ -253,12 +248,12 @@ export default function PasoResumen({ onAnterior }: PasoResumenProps) {
           type="button"
           onClick={onAnterior}
           disabled={finalizando}
-          className="w-full py-3 rounded-2xl border border-slate-700/50 text-slate-300 hover:bg-slate-800/50 transition-all duration-300 text-sm font-medium disabled:opacity-40"
+          className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           Volver atrás
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }
 

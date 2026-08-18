@@ -2,7 +2,6 @@
 
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { FiRefreshCw, FiInfo, FiChevronDown, FiAlertCircle } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import type { MonedaSoportada } from "@/lib/bankAccounts";
@@ -36,17 +35,15 @@ export default function ExchangeRateWidget() {
                     <span className="text-[8px] md:text-[9px] text-slate-500 font-bold uppercase tracking-widest">{label}</span>
                 </div>
                 <div className="flex items-baseline gap-1 overflow-hidden">
-                    <motion.span 
+                    <span 
                         key={value}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
                         className="text-base md:text-lg font-black text-white tracking-tighter"
                     >
                         {value > 0
                             ? value.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                             : "---"
                         }
-                    </motion.span>
+                    </span>
                     <span className="text-[8px] md:text-[9px] text-slate-500 font-black uppercase tracking-tighter">{symbol}/BS</span>
                 </div>
             </div>
@@ -67,7 +64,7 @@ export default function ExchangeRateWidget() {
                 <div className="flex items-center gap-3 md:gap-4 pl-3 md:pl-4 pr-1 h-full">
                     <div className="hidden lg:flex flex-col items-end">
                         <div className="flex items-center gap-1.5 text-[7px] md:text-[8px] text-emerald-400 font-black uppercase tracking-widest bg-emerald-500/10 px-1.5 md:px-2 py-0.5 rounded-full border border-emerald-500/20">
-                            <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.8)]"></span>
+                            <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse shadow-lg"></span>
                             EN VIVO
                         </div>
                     </div>
@@ -75,7 +72,7 @@ export default function ExchangeRateWidget() {
                     <button
                         onClick={handleRefresh}
                         disabled={loading || isRefreshing}
-                        className="p-2 text-slate-500 hover:text-white bg-white/0 hover:bg-white/5 rounded-lg transition-all active:scale-95 disabled:opacity-50"
+                        className="p-2 text-slate-500 hover:text-white bg-white/0 hover:bg-white/5 rounded-lg transition-[transform,color] active:scale-95 disabled:opacity-50"
                         title="Actualizar Tasas"
                     >
                         <FiRefreshCw 
@@ -90,16 +87,11 @@ export default function ExchangeRateWidget() {
             </div>
 
             {/* Progress Bar (Visible during refresh) */}
-            <AnimatePresence>
-                {(loading || isRefreshing) && (
-                    <motion.div 
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: 1 }}
-                        exit={{ opacity: 0 }}
+{(loading || isRefreshing) && (
+                    <div
                         className="absolute bottom-0 left-0 right-0 h-[2px] bg-linear-to-r from-transparent via-amber-500 to-transparent origin-left z-20"
                     />
                 )}
-            </AnimatePresence>
-        </div>
+</div>
     );
 }

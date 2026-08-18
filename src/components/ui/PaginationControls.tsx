@@ -18,7 +18,7 @@ export default function PaginationControls({
             <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-xl transition-all ${currentPage === 1
+                className={`p-2 rounded-xl transition-colors ${currentPage === 1
                         ? "text-slate-600 bg-slate-800/50 cursor-not-allowed"
                         : "text-slate-400 bg-slate-800 hover:bg-slate-700 hover:text-white shadow-lg"
                     }`}
@@ -34,7 +34,7 @@ export default function PaginationControls({
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-xl transition-all ${currentPage === totalPages
+                className={`p-2 rounded-xl transition-colors ${currentPage === totalPages
                         ? "text-slate-600 bg-slate-800/50 cursor-not-allowed"
                         : "text-slate-400 bg-slate-800 hover:bg-slate-700 hover:text-white shadow-lg"
                     }`}

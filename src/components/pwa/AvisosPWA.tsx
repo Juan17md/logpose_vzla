@@ -93,7 +93,7 @@ export default function AvisosPWA() {
     <>
       {mostrarInstalacionIos && (
         <div className="fixed inset-x-4 bottom-safe-fab z-[70] md:inset-x-auto md:right-8 md:w-[360px]">
-          <div className="rounded-2xl border border-amber-400/40 bg-slate-900/95 p-4 shadow-2xl backdrop-blur-xl">
+          <div className="rounded-2xl border border-amber-400/40 bg-slate-900/95 p-4 shadow-lg backdrop-blur-xl">
             <p className="text-sm font-semibold text-amber-300">Instala LogPose en tu iPhone</p>
             <p className="mt-2 text-sm text-slate-200">
               Pulsa <strong>Compartir</strong> en Safari y luego <strong>Añadir a pantalla de inicio</strong>.
@@ -113,7 +113,7 @@ export default function AvisosPWA() {
 
       {mostrarActualizacion && puedeActualizar && (
         <div className="fixed inset-x-4 bottom-safe-fab z-[71] md:inset-x-auto md:right-8 md:w-[360px]">
-          <div className="rounded-2xl border border-emerald-400/40 bg-slate-900/95 p-4 shadow-2xl backdrop-blur-xl">
+          <div className="rounded-2xl border border-emerald-400/40 bg-slate-900/95 p-4 shadow-lg backdrop-blur-xl">
             <p className="text-sm font-semibold text-emerald-300">Nueva version disponible</p>
             <p className="mt-2 text-sm text-slate-200">
               Hay mejoras listas. Actualiza para aplicar la version mas reciente.

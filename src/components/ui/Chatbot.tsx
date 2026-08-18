@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- AI data handling requires dynamic typing */
 
 import { useState, useRef, useEffect, useMemo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { FiMic, FiSend, FiX, FiCpu } from "react-icons/fi";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useDebts } from "@/hooks/useDebts";
@@ -18,7 +19,6 @@ import { ejecutarConsultaNami } from "@/lib/consultasNami";
 import { aplicarCuentaAPendiente, filtrarCuentasParaBotones, esMensajeCorrectivo } from "@/lib/namiPendiente";
 import { auth } from "@/lib/firebase";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import dynamic from "next/dynamic";
 
@@ -1640,12 +1640,10 @@ export default function Chatbot() {
     return (
         <>
             {/* Floating Button */}
-            <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+            <button
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label={isOpen ? "Cerrar asistente Nami" : "Abrir asistente Nami"}
-                className={`fixed right-4 md:right-8 bottom-safe-fab bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-indigo-600 dark:to-purple-700 text-white p-4 rounded-full shadow-[0_8px_30px_rgb(139,92,246,0.3)] z-[60] border border-violet-400/30 items-center justify-center transition-all duration-300 ${isOpen ? 'hidden md:flex' : 'flex'}`}
+                className={`fixed right-4 md:right-8 bottom-safe-fab bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-indigo-600 dark:to-purple-700 text-white p-4 rounded-full shadow-lg z-[60] border border-violet-400/30 items-center justify-center transition-colors duration-300 ${isOpen ? 'hidden md:flex' : 'flex'}`}
             >
                 <FiCpu size={26} />
                 {/* Badge de alertas */}
@@ -1654,16 +1652,17 @@ export default function Chatbot() {
                         {alertasProactivas.length}
                     </span>
                 )}
-            </motion.button>
+            </button>
 
             {/* Chat Window */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 100, scale: 0.9 }}
+                        initial={{ opacity: 0, y: 24, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 100, scale: 0.9 }}
-                        className="fixed bottom-0 right-0 md:bottom-24 md:right-8 w-full md:w-96 h-[80vh] md:h-[600px] bg-slate-900 border border-slate-700/50 rounded-t-3xl md:rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden backdrop-blur-xl pb-safe"
+                        exit={{ opacity: 0, y: 24, scale: 0.98 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                        className="fixed bottom-0 right-0 md:bottom-24 md:right-8 w-full md:w-96 h-[80vh] md:h-[600px] bg-slate-900 border border-slate-700/50 rounded-t-3xl md:rounded-3xl shadow-lg z-50 flex flex-col overflow-hidden backdrop-blur-xl pb-safe"
                     >
                         {/* Header */}
                         <div className="p-4 bg-slate-800/80 border-b border-slate-700 flex justify-between items-center backdrop-blur-md">
@@ -1686,14 +1685,9 @@ export default function Chatbot() {
 
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/50">
-
-                            <AnimatePresence mode="popLayout">
-                                {messages.map((msg, i) => (
-                                    <motion.div
+{messages.map((msg, i) => (
+                                    <div
                                         key={i}
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        transition={{ duration: 0.3, ease: "easeOut" }}
                                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                     >
                                         <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm shadow-sm ${msg.role === 'user'
@@ -1728,7 +1722,7 @@ export default function Chatbot() {
                                                                 key={cuenta.id}
                                                                 onClick={() => handleSelectPendingAccount(i, cuenta.id, cuenta.nombre)}
                                                                 disabled={isLoading}
-                                                                className="px-3 py-1.5 bg-slate-700 hover:bg-violet-600/30 active:scale-[0.97] border border-slate-600/50 rounded-xl text-xs font-semibold text-slate-200 hover:text-violet-300 hover:border-violet-500/30 transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                                                                className="px-3 py-1.5 bg-slate-700 hover:bg-violet-600/30 active:scale-[0.97] border border-slate-600/50 rounded-xl text-xs font-semibold text-slate-200 hover:text-violet-300 hover:border-violet-500/30 transition-[transform,color] flex items-center gap-1.5 shadow-sm disabled:opacity-50"
                                                             >
                                                                 <span>{obtenerSimboloMoneda(cuenta.moneda)}</span>
                                                                 <span>{cuenta.nombre}</span>
@@ -1738,35 +1732,29 @@ export default function Chatbot() {
                                                 )}
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 ))}
-                            </AnimatePresence>
-                            {isLoading && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
+{isLoading && (
+                                <div
                                     className="flex justify-start"
                                 >
                                     <div className="bg-slate-800 p-4 rounded-2xl rounded-tl-sm border border-slate-700/50 flex gap-2 items-center">
                                         <div className="p-1.5 bg-violet-500/20 rounded-lg">
                                             <FiCpu size={14} className="text-violet-400 animate-spin" style={{ animationDuration: '3s' }} />
                                         </div>
-                                        <motion.span
+                                        <span
                                             key={indicadorTexto}
-                                            initial={{ opacity: 0, y: 4 }}
-                                            animate={{ opacity: 1, y: 0 }}
                                             className="text-xs text-slate-400"
                                         >
                                             {indicadorTexto}
-                                        </motion.span>
+                                        </span>
                                         <span className="flex gap-1 ml-1">
                                             <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                                             <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                                             <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                                         </span>
                                     </div>
-                                </motion.div>
+                                </div>
                             )}
                             <div ref={messagesEndRef} />
                         </div>
@@ -1778,7 +1766,7 @@ export default function Chatbot() {
                                     key={`${action.text}-${i}`}
                                     onClick={() => handleSend(action.query)}
                                     disabled={isLoading}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-full text-xs text-slate-300 hover:bg-violet-600/20 hover:text-violet-300 hover:border-violet-500/30 transition-all whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-full text-xs text-slate-300 hover:bg-violet-600/20 hover:text-violet-300 hover:border-violet-500/30 transition-colors whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none"
                                 >
                                     <span>{action.icon}</span>
                                     <span>{action.text}</span>
@@ -1796,12 +1784,12 @@ export default function Chatbot() {
                                     onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
                                     placeholder={isListening && interimTranscript ? interimTranscript : "Escribe un gasto..."}
                                     disabled={isLoading}
-                                    className="flex-1 bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-violet-500/50 focus:bg-slate-900 transition-all placeholder:text-slate-500 disabled:opacity-50"
+                                    className="flex-1 bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-violet-500/50 focus:bg-slate-900 transition-colors placeholder:text-slate-500 disabled:opacity-50"
                                 />
                                 <button
                                     onClick={toggleListening}
-                                    className={`p-3 rounded-xl transition-all shadow-lg ${isListening
-                                        ? 'bg-red-500 text-white animate-pulse shadow-red-500/20'
+                                    className={`p-3 rounded-xl transition-colors shadow-lg ${isListening
+                                        ? 'bg-red-500 text-white animate-pulse '
                                         : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-700/50'
                                         }`}
                                 >
@@ -1810,7 +1798,7 @@ export default function Chatbot() {
                                 <button
                                     onClick={() => handleSend()}
                                     disabled={isLoading || !input.trim()}
-                                    className="p-3 bg-violet-600 text-white rounded-xl hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-violet-500/20"
+                                    className="p-3 bg-violet-600 text-white rounded-xl hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg "
                                 >
                                     <FiSend size={20} />
                                 </button>

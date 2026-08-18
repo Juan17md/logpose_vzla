@@ -157,7 +157,7 @@ export default function ProfilePage() {
     return (
         <div className="space-y-6 pb-32 md:pb-10">
             {/* Desktop Header */}
-            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiUser className="text-9xl text-violet-400" />
                 </div>
@@ -195,8 +195,8 @@ export default function ProfilePage() {
                                 if (editing) handleUpdateProfile();
                                 else setEditing(true);
                             }}
-                            className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all shadow-lg ${editing
-                                ? "bg-violet-500 text-white hover:bg-violet-600 shadow-violet-500/20"
+                            className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-colors shadow-lg ${editing
+                                ? "bg-violet-500 text-white hover:bg-violet-600 "
                                 : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/50"
                                 }`}
                         >
@@ -213,7 +213,7 @@ export default function ProfilePage() {
                                     disabled={!editing}
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value)}
-                                    className={`w-full bg-slate-800/50 border text-white rounded-xl py-3 px-4 outline-none transition-all text-base ${editing
+                                    className={`w-full bg-slate-800/50 border text-white rounded-xl py-3 px-4 outline-none transition-colors text-base ${editing
                                         ? "border-violet-500 focus:ring-2 focus:ring-violet-500/20"
                                         : "border-slate-700/50 text-slate-400 cursor-not-allowed"
                                         }`}
@@ -256,7 +256,7 @@ export default function ProfilePage() {
                         </h3>
                         <button
                             onClick={handlePasswordReset}
-                            className="w-full flex items-center justify-between px-4 py-3.5 bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl transition-all group border border-slate-700/50 hover:border-red-500/30 mb-3"
+                            className="w-full flex items-center justify-between px-4 py-3.5 bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl transition-colors group border border-slate-700/50 hover:border-red-500/30 mb-3"
                         >
                             <span className="font-medium text-sm">Cambiar Contraseña</span>
                             <FiLock className="opacity-50 group-hover:opacity-100 group-hover:text-red-400 transition-colors" />
@@ -264,7 +264,7 @@ export default function ProfilePage() {
 
                         <button
                             onClick={handleLogout}
-                            className="w-full flex items-center justify-between px-4 py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-200 hover:text-red-100 rounded-xl transition-all group border border-red-500/20 hover:border-red-500/40"
+                            className="w-full flex items-center justify-between px-4 py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-200 hover:text-red-100 rounded-xl transition-colors group border border-red-500/20 hover:border-red-500/40"
                         >
                             <span className="font-medium text-sm">Cerrar Sesión</span>
                             <FiLogOut className="opacity-70 group-hover:opacity-100 transition-colors" />
@@ -283,7 +283,7 @@ export default function ProfilePage() {
                         </p>
                         <button
                             onClick={() => setShowDeleteConfirm(true)}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl transition-all shadow-lg shadow-red-900/20 active:scale-95 font-bold text-sm"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl transition-[transform,color] shadow-lg shadow-red-900/20 active:scale-95 font-bold text-sm"
                         >
                             <FiTrash2 />
                             Reiniciar Todos los Datos

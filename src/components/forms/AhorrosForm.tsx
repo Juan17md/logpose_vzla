@@ -4,7 +4,6 @@ import { useState } from "react";
 import { FiDollarSign, FiPlus, FiBriefcase, FiFileText, FiSave, FiTrendingUp, FiTrendingDown } from "react-icons/fi";
 import { SiTether } from "react-icons/si";
 import { TbCoinFilled } from "react-icons/tb";
-import { motion } from "framer-motion";
 import Input from "../ui/forms/Input";
 
 interface AhorrosFormProps {
@@ -27,7 +26,7 @@ export default function AhorrosForm({ type, setType, onSubmit, isLoading }: Ahor
     };
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-4 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-4 md:p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden">
             {/* Decorative Background Elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
 
@@ -48,19 +47,17 @@ export default function AhorrosForm({ type, setType, onSubmit, isLoading }: Ahor
                 {/* Type Toggle */}
                 <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-950/60 rounded-2xl border border-slate-800/80 text-sm shadow-inner relative z-10">
                     <div className="relative flex w-full col-span-2">
-                        <motion.div
-                            layout
-                            className={`absolute top-1 h-[calc(100%-8px)] rounded-xl border shadow-[0_0_15px_rgba(0,0,0,0.25)] ${
+                        <div
+                            className={`absolute top-1 h-[calc(100%-8px)] rounded-xl border shadow-lg ${
                                 type === "deposit"
                                     ? "left-[4px] w-[calc(50%-6px)] bg-amber-500/15 border-amber-500/30"
                                     : "left-[calc(50%+2px)] w-[calc(50%-6px)] bg-red-500/15 border-red-500/30"
                             }`}
-                            transition={{ type: "spring", stiffness: 320, damping: 28 }}
                         />
                         <button
                             type="button"
                             onClick={() => setType("deposit")}
-                            className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                            className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-colors duration-300 text-xs md:text-sm ${
                                 type === "deposit"
                                     ? "text-amber-300 font-extrabold"
                                     : "text-slate-500 hover:text-slate-300"
@@ -72,7 +69,7 @@ export default function AhorrosForm({ type, setType, onSubmit, isLoading }: Ahor
                         <button
                             type="button"
                             onClick={() => setType("withdrawal")}
-                            className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-all duration-300 text-xs md:text-sm ${
+                            className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold transition-colors duration-300 text-xs md:text-sm ${
                                 type === "withdrawal"
                                     ? "text-red-300 font-extrabold"
                                     : "text-slate-500 hover:text-slate-300"
@@ -104,9 +101,9 @@ export default function AhorrosForm({ type, setType, onSubmit, isLoading }: Ahor
                                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     onClick={() => setMethod(opt.id as any)}
                                     disabled={isLoading}
-                                    className={`flex flex-col items-center justify-center p-2 rounded-xl border text-center transition-all duration-300 min-h-[56px] ${
+                                    className={`flex flex-col items-center justify-center p-2 rounded-xl border text-center transition-colors duration-300 min-h-[56px] ${
                                         esActivo
-                                            ? "bg-slate-800 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-2 ring-amber-500/10"
+                                            ? "bg-slate-800 border-amber-500/40 shadow-lg ring-2 ring-amber-500/10"
                                             : "bg-slate-900/30 border-slate-800/80 hover:bg-slate-800/20 text-slate-400 hover:text-slate-300"
                                     }`}
                                 >
@@ -155,12 +152,10 @@ export default function AhorrosForm({ type, setType, onSubmit, isLoading }: Ahor
                 </div>
 
                 {/* Action Button */}
-                <motion.button
-                    whileHover={{ scale: 1.01, translateY: -2 }}
-                    whileTap={{ scale: 0.98 }}
+                <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full relative group overflow-hidden bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.25)] border border-amber-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+                    className="w-full relative group overflow-hidden bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.25)] border border-amber-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
                 >
                     <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                     {isLoading ? (
@@ -171,7 +166,7 @@ export default function AhorrosForm({ type, setType, onSubmit, isLoading }: Ahor
                             <span className="tracking-wide uppercase">Guardar Ahorro</span>
                         </div>
                     )}
-                </motion.button>
+                </button>
             </form>
         </div>
     );

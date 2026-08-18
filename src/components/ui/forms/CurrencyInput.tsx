@@ -5,8 +5,6 @@ import CurrencyInput, { CurrencyInputProps } from "react-currency-input-field";
 import { cn } from "@/lib/utils";
 import { FieldError } from "react-hook-form";
 import { FiAlertCircle } from "react-icons/fi";
-import { motion } from "framer-motion";
-
 interface CustomCurrencyInputProps extends CurrencyInputProps {
     label?: string;
     error?: FieldError | undefined;
@@ -27,7 +25,7 @@ const CustomCurrencyInput = ({ className, label, error, ...props }: CustomCurren
                     intlConfig={{ locale: "es-VE" }}
                     inputMode="decimal"
                     className={cn(
-                        "w-full bg-[#0A0E1A]/80 backdrop-blur-md border border-slate-700/50 text-white text-lg font-black rounded-2xl py-4 h-[54px] pl-5 pr-5 outline-none transition-all duration-300 placeholder:text-slate-600 hover:border-amber-500/30 hover:bg-[#0A0E1A] shadow-lg focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-[#0A0E1A]",
+                        "w-full bg-[#0A0E1A]/80 backdrop-blur-md border border-slate-700/50 text-white text-lg font-black rounded-2xl py-4 h-[54px] pl-5 pr-5 outline-none transition-colors duration-300 placeholder:text-slate-600 hover:border-amber-500/30 hover:bg-[#0A0E1A] shadow-lg focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 focus:bg-[#0A0E1A]",
                         error && "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20",
                         className
                     )}
@@ -35,14 +33,12 @@ const CustomCurrencyInput = ({ className, label, error, ...props }: CustomCurren
                 />
             </div>
             {error && (
-                <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
+                <div
                     className="flex items-center gap-1 mt-1 ml-1 text-red-400 text-xs"
                 >
                     <FiAlertCircle />
                     <span>{error.message}</span>
-                </motion.div>
+                </div>
             )}
         </div>
     );

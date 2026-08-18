@@ -4,7 +4,6 @@ import { obtenerTipoBanco, obtenerSimboloMoneda, type CuentaBancaria } from "@/l
 import { FiEdit2, FiTrash2, FiArrowRight, FiEye, FiEyeOff } from "react-icons/fi";
 import { useRef } from "react";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import BankLogo from "@/components/ui/BankLogo";
 import { cn } from "@/lib/utils";
 import { Outfit } from "next/font/google";
@@ -35,32 +34,8 @@ export default function CuentaCard({
         await toggleExclusionCuenta(cuenta.id, !cuenta.excluirDelTotal);
     };
     
-    // Tilt Effect (More subtle)
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
-    const mouseXSpring = useSpring(x, { stiffness: 150, damping: 20 });
-    const mouseYSpring = useSpring(y, { stiffness: 150, damping: 20 });
-    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["5deg", "-5deg"]);
-    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-5deg", "5deg"]);
-
-
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!cardRef.current) return;
-        const rect = cardRef.current.getBoundingClientRect();
-        const width = rect.width;
-        const height = rect.height;
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        const xPct = mouseX / width - 0.5;
-        const yPct = mouseY / height - 0.5;
-        x.set(xPct);
-        y.set(yPct);
-    };
-
-    const handleMouseLeave = () => {
-        x.set(0);
-        y.set(0);
-    };
+    // Tilt Effect eliminado — dependía de useMotionValue/useSpring de framer-motion
+    // (ver ADR 11): se prioriza la fluidez en CPUs de gama baja
 
     if (compact) {
         return (
@@ -68,7 +43,7 @@ export default function CuentaCard({
                 onClick={() => onVerDetalle(cuenta)}
                 className={cn(
                     outfit.className,
-                    "flex items-center gap-3 p-3 bg-slate-800/40 hover:bg-slate-800/60 rounded-xl border border-slate-700/30 transition-all cursor-pointer w-full text-left group"
+                    "flex items-center gap-3 p-3 bg-slate-800/40 hover:bg-slate-800/60 rounded-xl border border-slate-700/30 transition-colors cursor-pointer w-full text-left group"
                 )}
             >
                 <BankLogo bankId={cuenta.banco} size={24} />
@@ -87,38 +62,27 @@ export default function CuentaCard({
     }
 
     return (
-        <motion.div
+        <div
             ref={cardRef}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onVerDetalle(cuenta); } }}
-            style={{
-                rotateX,
-                rotateY,
-                transformStyle: "preserve-3d",
-            }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
             role="button"
             tabIndex={0}
-            className={cn(outfit.className, "group relative h-56 w-full cursor-pointer perspective-1000")}
+            className={cn(outfit.className, "group relative h-56 w-full cursor-pointer")}
             onClick={() => onVerDetalle(cuenta)}
         >
             {/* Card Body - Restore slate-900/40 aesthetic from Sidebar */}
             <div className={cn(
-                "absolute inset-0 bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl transition-all duration-500 group-hover:border-violet-500/30 group-hover:bg-slate-900/80",
+                "absolute inset-0 bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] border border-white/10 overflow-hidden shadow-lg transition-colors duration-500 group-hover:border-violet-500/30 group-hover:bg-slate-900/80",
                 cuenta.excluirDelTotal && "grayscale opacity-60 contrast-[0.8] bg-slate-950/40"
             )}>
                 
                 {/* Subtle Brand Glow */}
                 <div 
-                    className="absolute -top-12 -right-12 w-48 h-48 rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-all duration-700" 
+                    className="absolute -top-12 -right-12 w-48 h-48 rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-colors duration-700" 
                     style={{ backgroundColor: cuenta.color }}
                 />
 
                 <div 
                     className="relative h-full flex flex-col p-6 z-10"
-                    style={{ transform: "translateZ(30px)" }}
                 >
                     {/* Header: Logo and Info */}
                     <div className="flex justify-between items-start mb-4">
@@ -177,16 +141,16 @@ export default function CuentaCard({
                         <div className="flex gap-2">
                             <button
                                 onClick={(e) => { e.stopPropagation(); onEditar(cuenta); }}
-                                className="p-2.5 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-all border border-slate-700/50"
+                                className="p-2.5 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors border border-slate-700/50"
                             >
                                 <FiEdit2 size={12} />
                             </button>
                             <button
                                 onClick={handleToggleExclusion}
                                 className={cn(
-                                    "p-2.5 rounded-xl transition-all border",
+                                    "p-2.5 rounded-xl transition-colors border",
                                     cuenta.excluirDelTotal 
-                                        ? "bg-amber-500/20 text-amber-500 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)]" 
+                                        ? "bg-amber-500/20 text-amber-500 border-amber-500/30 shadow-lg" 
                                         : "bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white border-slate-700/50"
                                 )}
                                 title={cuenta.excluirDelTotal ? "Incluir en total" : "Excluir del total"}
@@ -195,7 +159,7 @@ export default function CuentaCard({
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); onEliminar(cuenta); }}
-                                className="p-2.5 bg-red-500/5 text-red-500/50 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-all border border-red-500/10"
+                                className="p-2.5 bg-red-500/5 text-red-500/50 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors border border-red-500/10"
                             >
                                 <FiTrash2 size={12} />
                             </button>
@@ -203,13 +167,13 @@ export default function CuentaCard({
 
                         <div className="flex items-center gap-2 text-slate-500 font-black text-[10px] uppercase tracking-widest group-hover:text-violet-400 transition-colors">
                             Detalles
-                            <div className="p-1 px-1 rounded-full bg-slate-800/80 border border-slate-700/50 group-hover:border-violet-500/30 transition-all">
+                            <div className="p-1 px-1 rounded-full bg-slate-800/80 border border-slate-700/50 group-hover:border-violet-500/30 transition-colors">
                                 <FiArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 }

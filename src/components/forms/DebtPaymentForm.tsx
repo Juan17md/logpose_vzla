@@ -10,8 +10,6 @@ import Select from "@/components/ui/forms/Select";
 import DateSelect from "@/components/ui/forms/DateSelect";
 import Input from "@/components/ui/forms/Input";
 import CustomCurrencyInput from "@/components/ui/forms/CurrencyInput";
-import { motion, AnimatePresence } from "framer-motion";
-
 interface DebtPaymentFormProps {
     debt: Debt;
     onSubmit: (payment: Omit<Payment, "id">) => Promise<void>;
@@ -80,9 +78,7 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
             }`} />
 
             <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
-                <motion.div 
-                     initial={{ opacity: 0, y: 10 }}
-                     animate={{ opacity: 1, y: 0 }}
+                <div
                      className="bg-slate-950/50 backdrop-blur-md p-4 md:p-6 rounded-2xl border border-slate-800/80 mb-4 flex flex-col items-center relative overflow-hidden group shadow-inner"
                 >
                     <p className="text-slate-500 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] mb-1.5">
@@ -102,7 +98,7 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
                         {debt.type === 'por_cobrar' ? <FiTrendingUp /> : <FiTrendingDown />}
                         {debt.personName}
                     </div>
-                </motion.div>
+                </div>
 
                 <div className="space-y-4">
                     <div className="flex gap-4">
@@ -120,11 +116,11 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
                                             setAmountStr("");
                                         }}
                                         disabled={isLoading}
-                                        className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all duration-300 ${
+                                        className={`flex-1 py-3 text-xs font-bold rounded-xl transition-colors duration-300 ${
                                             currency === curr
                                                 ? curr === "USD" 
-                                                    ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]" 
-                                                    : "bg-slate-800 text-cyan-400 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+                                                    ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-lg" 
+                                                    : "bg-slate-800 text-cyan-400 border border-cyan-500/30 shadow-lg"
                                                 : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 border border-transparent"
                                         }`}
                                     >
@@ -146,22 +142,16 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
                             required
                             max={maxLimit}
                         />
-                        
-                        <AnimatePresence>
-                            {currency === "VES" && amountStr && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 10 }}
+{currency === "VES" && amountStr && (
+                                <div
                                     className="absolute top-9 right-4 pointer-events-none"
                                 >
                                     <span className="text-emerald-400 font-bold text-sm bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
                                         ≈ ${(parseNumeroFlexible(amountStr || "0") / (bcvRate || 1)).toLocaleString("es-ES", { maximumFractionDigits: 2 })}
                                     </span>
-                                </motion.div>
+                                </div>
                             )}
-                        </AnimatePresence>
-                    </div>
+</div>
                 </div>
 
                 <div className="text-[11px] font-medium text-amber-400/90 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 flex items-center gap-2">
@@ -197,17 +187,15 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
                         type="button"
                         onClick={() => onCancel ? onCancel() : router.back()}
                         disabled={isLoading}
-                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         <FiX size={16} />
                         CANCELAR
                     </button>
-                    <motion.button
-                        whileHover={{ scale: 1.02, translateY: -2 }}
-                        whileTap={{ scale: 0.98 }}
+                    <button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-[2] py-4 px-6 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-2xl text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all border border-white/10"
+                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isLoading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -217,7 +205,7 @@ export default function DebtPaymentForm({ debt, onSubmit, onCancel, isLoading }:
                                 ABONAR PAGO
                             </>
                         )}
-                    </motion.button>
+                    </button>
                 </div>
             </form>
         </div>

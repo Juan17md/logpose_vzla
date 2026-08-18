@@ -127,25 +127,26 @@ body {
   }
 }
 
-/* Custom animations */
-@keyframes fade-in-up {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animation-fade-in {
-  animation: fade-in-up 0.3s ease-out;
-}
-
 /* Tap highlight for touch devices and native app behavior */
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Feedback táctil global (reemplaza a whileTap de framer-motion) — solo pointer coarse */
+@media (pointer: coarse) {
+  button:active,
+  a:active,
+  [role="button"]:active {
+    transform: scale(0.98);
+    transition: transform 100ms ease-out;
+  }
+}
+
+/* Reducción de blur en móviles de gama media — regla unlayered gana a las utilities */
+@media (max-width: 767px) {
+  [class*="backdrop-blur"]:not([class*="backdrop-blur-none"]) {
+    --tw-backdrop-blur: blur(4px);
+  }
 }
 
 button, a, [role="button"], img, select, input[type="range"] {

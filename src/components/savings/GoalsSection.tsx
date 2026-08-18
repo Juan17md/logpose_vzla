@@ -108,7 +108,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
                 </h3>
                 <button
                     onClick={() => setShowAddModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-violet-500/10 text-violet-400 rounded-xl hover:bg-violet-500/20 transition-all border border-violet-500/20 text-sm font-bold"
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-500/10 text-violet-400 rounded-xl hover:bg-violet-500/20 transition-colors border border-violet-500/20 text-sm font-bold"
                 >
                     <FiPlus /> Nueva Meta
                 </button>
@@ -148,7 +148,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
                                 </div>
                                 <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-1000"
+                                        className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-colors duration-1000"
                                         style={{ width: `${progress}%` }}
                                     ></div>
                                 </div>
@@ -156,7 +156,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
 
                             <button
                                 onClick={() => setShowProgressModal(goal)}
-                                className="w-full mt-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 border border-slate-700"
+                                className="w-full mt-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-slate-700"
                             >
                                 <FiPlus /> Agregar Ahorro
                             </button>
@@ -168,7 +168,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
                 {goals.length === 0 && !loading && (
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-700 rounded-2xl p-6 text-slate-500 hover:text-violet-400 hover:border-violet-500/50 hover:bg-violet-500/5 transition-all group min-h-[200px]"
+                        className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-700 rounded-2xl p-6 text-slate-500 hover:text-violet-400 hover:border-violet-500/50 hover:bg-violet-500/5 transition-colors group min-h-[200px]"
                     >
                         <div className="p-4 rounded-full bg-slate-800 group-hover:bg-violet-500/10 transition-colors">
                             <FiPlus className="text-2xl" />
@@ -181,7 +181,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
             {/* Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl relative animation-fade-in">
+                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-lg relative">
                         <button
                             onClick={() => setShowAddModal(false)}
                             className="absolute top-4 right-4 text-slate-400 hover:text-white"
@@ -260,7 +260,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
                     </div>
                     <button
                         type="submit"
-                        className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-colors mt-2 shadow-lg shadow-violet-900/20"
+                        className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-colors mt-2 shadow-lg "
                     >
                         Agregar Ahorro
                     </button>

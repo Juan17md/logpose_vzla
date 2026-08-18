@@ -56,9 +56,9 @@ export default function CryptoCashWalletWidget({ userId }: { userId: string | un
     const totalSaved = userData.savingsPhysical + userData.savingsUSDT;
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group hover:bg-slate-900/70 transition-all duration-300 flex flex-col justify-between">
+        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group hover:bg-slate-900/70 transition-colors duration-300 flex flex-col justify-between">
             {/* Background Decoration */}
-            <div className="absolute bottom-0 right-0 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mb-16 group-hover:bg-violet-500/20 transition-all opacity-50"></div>
+            <div className="absolute bottom-0 right-0 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mb-16 group-hover:bg-violet-500/20 transition-colors opacity-50"></div>
 
             <div className="flex justify-between items-center mb-6 relative z-10">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -124,7 +124,7 @@ export default function CryptoCashWalletWidget({ userId }: { userId: string | un
             </div>
 
             <div className="mt-4 relative z-10">
-                <a href="/dashboard/ahorros" className="block w-full text-center py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold transition-all border border-slate-700/50 hover:border-slate-600 shadow-lg">
+                <a href="/dashboard/ahorros" className="block w-full text-center py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold transition-colors border border-slate-700/50 hover:border-slate-600 shadow-lg">
                     Registrar Ahorro
                 </a>
             </div>
@@ -157,7 +157,7 @@ export default function CryptoCashWalletWidget({ userId }: { userId: string | un
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-violet-500 hover:bg-violet-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-violet-500/20"
+                            className="px-6 py-2 bg-violet-500 hover:bg-violet-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-violet-500/20"
                         >
                             Guardar
                         </button>

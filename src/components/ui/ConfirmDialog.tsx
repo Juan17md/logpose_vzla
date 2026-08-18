@@ -30,17 +30,17 @@ export default function ConfirmDialog({
         danger: {
             icon: <FiAlertTriangle className="text-6xl text-red-500 mb-4 mx-auto" />,
             buttonBg: "bg-red-600 hover:bg-red-500",
-            buttonShadow: "shadow-red-900/20",
+            buttonShadow: "",
         },
         warning: {
             icon: <FiAlertTriangle className="text-6xl text-amber-500 mb-4 mx-auto" />,
             buttonBg: "bg-amber-600 hover:bg-amber-500",
-            buttonShadow: "shadow-amber-900/20",
+            buttonShadow: "",
         },
         info: {
             icon: null,
             buttonBg: "bg-violet-600 hover:bg-violet-500",
-            buttonShadow: "shadow-violet-900/20",
+            buttonShadow: "",
         },
     };
 
@@ -63,7 +63,7 @@ export default function ConfirmDialog({
                     <button
                         onClick={onConfirm}
                         disabled={isLoading}
-                        className={`px-6 py-3 font-semibold text-white ${currentConfig.buttonBg} rounded-xl shadow-lg ${currentConfig.buttonShadow} transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center`}
+                        className={`px-6 py-3 font-semibold text-white ${currentConfig.buttonBg} rounded-xl shadow-lg ${currentConfig.buttonShadow} transition-[transform,color] active:scale-95 disabled:opacity-50 flex items-center justify-center`}
                     >
                         {isLoading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

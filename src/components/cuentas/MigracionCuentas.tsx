@@ -139,7 +139,7 @@ export default function MigracionCuentas() {
                     <button
                         onClick={handleMigrar}
                         disabled={migrando}
-                        className="w-full px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-violet-900/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-violet-900/20 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                         {migrando ? (
                             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>

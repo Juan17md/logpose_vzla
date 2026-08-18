@@ -78,16 +78,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <>
             {/* Estilos del gradiente animado - mismo del login */}
             <style>{`
-                @keyframes gtext {
-                    0%,100% { background-position:0% 50%; }
-                    50%     { background-position:100% 50%; }
-                }
                 .sidebar-grad-text {
                     background: linear-gradient(135deg,#FBBF24,#F59E0B,#CA8A04,#FBBF24);
                     background-size:300% 300%;
                     -webkit-background-clip:text; -webkit-text-fill-color:transparent;
                     background-clip:text;
-                    animation: gtext 5s ease infinite;
                 }
             `}</style>
 

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useOnboarding, PerfilFinanciero } from "@/contexts/OnboardingContext";
-import { motion } from "framer-motion";
 import { FiDollarSign, FiTarget, FiTrendingUp, FiPieChart } from "react-icons/fi";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 
@@ -43,11 +42,7 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
   const valido = parseNum(salaryStr) > 0 && parseNum(budgetStr) > 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+    <div
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="text-center mb-6">
@@ -75,7 +70,7 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
                 value={salaryStr}
                 onChange={e => setSalaryStr(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3.5 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-all duration-300 text-sm"
+                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3.5 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-colors duration-300 text-sm"
               />
             </div>
           </div>
@@ -93,7 +88,7 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
                 value={budgetStr}
                 onChange={e => setBudgetStr(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3.5 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-all duration-300 text-sm"
+                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3.5 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-colors duration-300 text-sm"
               />
             </div>
           </div>
@@ -110,9 +105,9 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
                 key={m}
                 type="button"
                 onClick={() => setMonedaBase(m)}
-                className={`flex-1 py-3 rounded-2xl text-sm font-medium transition-all duration-300 border ${
+                className={`flex-1 py-3 rounded-2xl text-sm font-medium transition-colors duration-300 border ${
                   monedaBase === m
-                    ? "bg-amber-500/15 border-amber-500/40 text-amber-400 shadow-lg shadow-amber-500/10"
+                    ? "bg-amber-500/15 border-amber-500/40 text-amber-400 shadow-lg "
                     : "bg-slate-800/50 border-slate-700/30 text-slate-400 hover:border-slate-600/50"
                 }`}
               >
@@ -127,7 +122,7 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
             <FiPieChart className="text-amber-400" size={14} />
             Ahorros actuales (opcional)
           </label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400 text-sm font-medium">$</span>
               <input
@@ -136,7 +131,7 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
                 value={savingsPhysicalStr}
                 onChange={e => setSavingsPhysicalStr(e.target.value)}
                 placeholder="Efectivo físico"
-                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all duration-300 text-sm"
+                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors duration-300 text-sm"
               />
             </div>
             <div className="relative">
@@ -147,7 +142,7 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
                 value={savingsUSDTStr}
                 onChange={e => setSavingsUSDTStr(e.target.value)}
                 placeholder="USDT"
-                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 transition-all duration-300 text-sm"
+                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 transition-colors duration-300 text-sm"
               />
             </div>
           </div>
@@ -156,7 +151,7 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
         <button
           type="submit"
           disabled={!valido}
-          className="w-full bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-400 text-slate-950 font-bold py-4 px-6 rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
+          className="w-full bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-400 text-slate-950 font-bold py-4 px-6 rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
         >
           <span>Siguiente paso</span>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -164,6 +159,6 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
           </svg>
         </button>
       </form>
-    </motion.div>
+    </div>
   );
 }

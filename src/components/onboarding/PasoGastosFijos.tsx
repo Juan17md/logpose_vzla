@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
-import { motion, AnimatePresence } from "framer-motion";
 import { FiPlus, FiTrash2, FiCalendar, FiCheck } from "react-icons/fi";
 
 const CATEGORIAS = [
@@ -39,11 +38,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+    <div
     >
       <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/20 bg-sky-500/[.06] mb-3">
@@ -65,7 +60,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Ej: Internet"
-              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all duration-300 text-sm"
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-colors duration-300 text-sm"
             />
           </div>
           <div>
@@ -81,7 +76,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
                   value={amountStr}
                   onChange={e => setAmountStr(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all duration-300 text-sm"
+                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-colors duration-300 text-sm"
                 />
               </div>
               <select
@@ -122,7 +117,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
               value={dueDay}
               onChange={e => setDueDay(e.target.value)}
               placeholder="1-31"
-              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all duration-300 text-sm"
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-colors duration-300 text-sm"
             />
           </div>
         </div>
@@ -131,25 +126,19 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
           type="button"
           onClick={agregar}
           disabled={!title.trim() || parseNum(amountStr) <= 0}
-          className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-700/50 text-slate-400 hover:border-sky-500/30 hover:text-sky-400 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-700/50 text-slate-400 hover:border-sky-500/30 hover:text-sky-400 transition-colors duration-300 flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <FiPlus size={16} />
           Agregar gasto fijo
         </button>
       </div>
-
-      <AnimatePresence>
-        {gastosFijos.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
+{gastosFijos.length > 0 && (
+          <div
             className="space-y-2 mb-6"
           >
             {gastosFijos.map((g, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
                 className="flex items-center justify-between bg-slate-800/30 rounded-2xl px-4 py-3 border border-slate-700/30"
               >
                 <div className="flex items-center gap-3">
@@ -166,28 +155,26 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
                 <button
                   type="button"
                   onClick={() => eliminarGastoFijo(i)}
-                  className="p-2 rounded-xl hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-all duration-200"
+                  className="p-2 rounded-xl hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors duration-200"
                 >
                   <FiTrash2 size={14} />
                 </button>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
-
-      <div className="flex gap-3">
+<div className="flex gap-3">
         <button
           type="button"
           onClick={onAnterior}
-          className="flex-1 py-3.5 rounded-2xl border border-slate-700/50 text-slate-300 hover:bg-slate-800/50 transition-all duration-300 text-sm font-medium"
+          className="flex-1 py-3.5 rounded-2xl border border-slate-700/50 text-slate-300 hover:bg-slate-800/50 transition-colors duration-300 text-sm font-medium"
         >
           Atrás
         </button>
         <button
           type="button"
           onClick={onSiguiente}
-          className="flex-[2] bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-400 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+          className="flex-[2] bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-400 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 text-sm"
         >
           {gastosFijos.length === 0 ? (
             "Omitir paso"
@@ -199,6 +186,6 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
           )}
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }

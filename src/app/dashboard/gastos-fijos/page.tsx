@@ -12,7 +12,6 @@ import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { getBCVRate } from "@/lib/currency";
 import dynamic from "next/dynamic";
-import { motion, AnimatePresence } from "framer-motion";
 import FixedExpenseForm from "@/components/forms/FixedExpenseForm";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 
@@ -205,7 +204,7 @@ export default function FixedExpensesPage() {
     return (
         <div className="space-y-8 pb-32 md:pb-10">
             {/* Desktop Header */}
-            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiCalendar className="text-9xl text-violet-400" />
                 </div>
@@ -231,12 +230,10 @@ export default function FixedExpensesPage() {
                             </div>
                         </div>
                         <div className="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden">
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${progress}%` }}
-                                transition={{ duration: 1, ease: "easeOut" }}
+                            <div
+                                style={{ width: `${progress}%` }}
                                 className="h-full bg-linear-to-r from-emerald-500 to-teal-400 rounded-full"
-                            ></motion.div>
+                            ></div>
                         </div>
                     </div>
                 </div>
@@ -283,9 +280,8 @@ export default function FixedExpensesPage() {
                                 </div>
                             </div>
                             <div className="relative h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${progress}%` }}
+                                <div
+                                    style={{ width: `${progress}%` }}
                                     className="absolute top-0 left-0 h-full bg-emerald-500 rounded-full"
                                 />
                             </div>
@@ -298,13 +294,9 @@ export default function FixedExpensesPage() {
             <div className="relative">
                 {/* Mobile View Switcher */}
                 <div className="md:hidden">
-                    <AnimatePresence mode="wait">
-                        {mobileView === 'list' ? (
-                            <motion.div
+{mobileView === 'list' ? (
+                            <div
                                 key="list"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
                                 className="space-y-6"
                             >
                                 {/* Controls Mobile */}
@@ -312,13 +304,13 @@ export default function FixedExpensesPage() {
                                     <div className="flex bg-slate-900/40 rounded-2xl p-1 border border-slate-700/30">
                                         <button
                                             onClick={() => setViewMode('list')}
-                                            className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-violet-500 text-white shadow-lg' : 'text-slate-400'}`}
+                                            className={`p-2.5 rounded-xl transition-colors ${viewMode === 'list' ? 'bg-violet-500 text-white shadow-lg' : 'text-slate-400'}`}
                                         >
                                             <FiList size={20} />
                                         </button>
                                         <button
                                             onClick={() => setViewMode('calendar')}
-                                            className={`p-2.5 rounded-xl transition-all ${viewMode === 'calendar' ? 'bg-violet-500 text-white shadow-lg' : 'text-slate-400'}`}
+                                            className={`p-2.5 rounded-xl transition-colors ${viewMode === 'calendar' ? 'bg-violet-500 text-white shadow-lg' : 'text-slate-400'}`}
                                         >
                                             <FiCalendar size={20} />
                                         </button>
@@ -339,23 +331,17 @@ export default function FixedExpensesPage() {
                                 {renderContent()}
                                 
                                 {/* Floating Button — Elevado para no tapar a Nami */}
-                                <motion.button
+                                <button
                                     aria-label="Agregar gasto fijo"
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    whileTap={{ scale: 0.9 }}
                                     onClick={() => setMobileView('form')}
-                                    className="fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-linear-to-r from-violet-600 to-indigo-600 border border-violet-400/30 text-white rounded-2xl shadow-xl flex items-center justify-center z-50"
+                                    className="fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-linear-to-r from-violet-600 to-indigo-600 border border-violet-400/30 text-white rounded-2xl shadow-lg flex items-center justify-center z-50"
                                 >
                                     <FiPlus size={28} />
-                                </motion.button>
-                            </motion.div>
+                                </button>
+                            </div>
                         ) : (
-                            <motion.div
+                            <div
                                 key="form"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
                             >
                                 <div className="space-y-5">
                                     <div className="flex justify-between items-center">
@@ -385,10 +371,9 @@ export default function FixedExpensesPage() {
                                         isLoading={isSaving}
                                     />
                                 </div>
-                            </motion.div>
+                            </div>
                         )}
-                    </AnimatePresence>
-                </div>
+</div>
 
                 {/* Desktop Layout Grid */}
                 <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -431,14 +416,14 @@ export default function FixedExpensesPage() {
                                 <div className="flex bg-slate-800/50 rounded-2xl p-1 border border-slate-700/50 shadow-inner">
                                     <button
                                         onClick={() => setViewMode('list')}
-                                        className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30' : 'text-slate-400 hover:text-slate-200'}`}
+                                        className={`p-2.5 rounded-xl transition-colors ${viewMode === 'list' ? 'bg-violet-500 text-white shadow-lg ' : 'text-slate-400 hover:text-slate-200'}`}
                                         title="Vista Lista"
                                     >
                                         <FiList size={20} />
                                     </button>
                                     <button
                                         onClick={() => setViewMode('calendar')}
-                                        className={`p-2.5 rounded-xl transition-all ${viewMode === 'calendar' ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30' : 'text-slate-400 hover:text-slate-200'}`}
+                                        className={`p-2.5 rounded-xl transition-colors ${viewMode === 'calendar' ? 'bg-violet-500 text-white shadow-lg ' : 'text-slate-400 hover:text-slate-200'}`}
                                         title="Vista Calendario"
                                     >
                                         <FiCalendar size={20} />
@@ -451,17 +436,15 @@ export default function FixedExpensesPage() {
                                         placeholder="Filtrar por nombre o categoría..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full bg-slate-800/30 border border-slate-700/50 rounded-2xl py-2.5 pl-11 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all shadow-inner"
+                                        className="w-full bg-slate-800/30 border border-slate-700/50 rounded-2xl py-2.5 pl-11 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-colors shadow-inner"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         {/* Rendering content based on view mode */}
-                        <AnimatePresence mode="popLayout">
-                            {renderContent()}
-                        </AnimatePresence>
-                    </div>
+{renderContent()}
+</div>
                 </div>
             </div>
 
@@ -484,13 +467,13 @@ export default function FixedExpensesPage() {
                     <div className="grid grid-cols-1 gap-3 pt-4">
                         <button
                             onClick={() => executePay(true)}
-                            className="w-full py-4 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl shadow-lg transition-colors flex items-center justify-center gap-2"
                         >
                             <FiActivity size={18} /> Registrar Gasto y Pago
                         </button>
                         <button
                             onClick={() => executePay(false)}
-                            className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl border border-slate-700 transition-all flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl border border-slate-700 transition-colors flex items-center justify-center gap-2"
                         >
                             <FiCheckCircle size={18} /> Solo marcar como pagado
                         </button>
@@ -526,23 +509,17 @@ export default function FixedExpensesPage() {
     function renderContent() {
         if (viewMode === 'calendar') {
             return (
-                <motion.div
+                <div
                     key="calendar-view"
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
                 >
                     <FixedExpensesCalendar expenses={filteredExpenses} onPayExpense={handlePayExpenseClick} />
-                </motion.div>
+                </div>
             );
         }
 
         return (
-            <motion.div
+            <div
                 key="list-view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
                 className="space-y-4"
             >
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -566,19 +543,16 @@ export default function FixedExpensesPage() {
                         />
                     </div>
                 )}
-            </motion.div>
+            </div>
         );
     }
 
     function renderExpenseCard(expense: FixedExpense, index: number) {
         const isPaid = isPaidCurrentMonth(expense.lastPaidDate);
         return (
-            <motion.div
+            <div
                 key={expense.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`group relative flex flex-col bg-slate-900/40 backdrop-blur-xl border-2 rounded-[2.5rem] p-5 transition-all hover:bg-slate-900/60 ${isPaid ? 'border-emerald-500/20 shadow-lg shadow-emerald-500/5' : 'border-slate-800 hover:border-slate-700'}`}
+                className={`group relative flex flex-col bg-slate-900/40 backdrop-blur-xl border-2 rounded-[2.5rem] p-5 transition-colors hover:bg-slate-900/60 ${isPaid ? 'border-emerald-500/20 shadow-lg ' : 'border-slate-800 hover:border-slate-700'}`}
             >
                 {/* ... existing card content ... */}
                 <div className="flex justify-between items-start mb-6">
@@ -599,13 +573,13 @@ export default function FixedExpensesPage() {
                     <div className="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={() => handleEditExpenseClick(expense)}
-                            className="p-2 text-slate-500 hover:text-violet-400 hover:bg-violet-400/10 rounded-xl transition-all"
+                            className="p-2 text-slate-500 hover:text-violet-400 hover:bg-violet-400/10 rounded-xl transition-colors"
                         >
                             <FiEdit2 size={18} />
                         </button>
                         <button
                             onClick={() => handleDeleteClick(expense.id)}
-                            className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all"
+                            className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-colors"
                         >
                             <FiTrash2 size={18} />
                         </button>
@@ -636,9 +610,9 @@ export default function FixedExpensesPage() {
                     <button
                         onClick={() => handlePayExpenseClick(expense)}
                         disabled={isPaid}
-                        className={`flex-1 py-3.5 rounded-2xl text-sm font-black flex items-center justify-center gap-2 transition-all relative overflow-hidden group active:scale-95 ${isPaid
+                        className={`flex-1 py-3.5 rounded-2xl text-sm font-black flex items-center justify-center gap-2 transition-[transform,color] relative overflow-hidden group active:scale-95 ${isPaid
                             ? "bg-slate-800/50 text-emerald-500 cursor-not-allowed border border-emerald-500/20"
-                            : "bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)] border border-violet-400/30"}`}
+                            : "bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg border border-violet-400/30"}`}
                     >
                         {!isPaid && <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>}
                         <div className="relative z-10 flex items-center gap-2">
@@ -650,7 +624,7 @@ export default function FixedExpensesPage() {
                         </div>
                     </button>
                 </div>
-            </motion.div>
+            </div>
         );
     }
 }

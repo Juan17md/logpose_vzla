@@ -12,8 +12,6 @@ import {
 import { parseNumeroFlexible } from "@/lib/number";
 import Select from "@/components/ui/forms/Select";
 import { FiSave, FiX, FiBriefcase, FiHash } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
-
 interface CuentaFormValues {
     nombre: string;
     banco: string;
@@ -111,15 +109,9 @@ export default function CuentaForm({
     };
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                >
+        <div
+            className="overflow-hidden"
+        >
                     <div className="relative">
                         {/* Decorative background glow */}
                         <div 
@@ -168,7 +160,7 @@ export default function CuentaForm({
                                                 {...field}
                                                 type="text"
                                                 placeholder="Ej: Ahorros Personales"
-                                                className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-600"
+                                                className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-600"
                                             />
                                         )}
                                     />
@@ -189,7 +181,7 @@ export default function CuentaForm({
                                                     {...field}
                                                     type="text"
                                                     placeholder="Escribe el nombre aquí..."
-                                                    className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all"
+                                                    className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors"
                                                 />
                                             )}
                                         />
@@ -210,9 +202,9 @@ export default function CuentaForm({
                                                 type="button"
                                                 disabled={modoEdicion}
                                                 onClick={() => setValue("moneda", m.id)}
-                                                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all ${
+                                                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-colors ${
                                                     moneda === m.id
-                                                        ? "bg-violet-500/20 border-violet-500/50 text-white shadow-lg shadow-violet-500/10"
+                                                        ? "bg-violet-500/20 border-violet-500/50 text-white shadow-lg "
                                                         : modoEdicion 
                                                             ? "bg-slate-950/20 border-white/5 text-slate-600 opacity-50 cursor-not-allowed"
                                                             : "bg-slate-950/40 border-white/5 text-slate-500 hover:border-white/10 hover:bg-slate-950/60"
@@ -245,7 +237,7 @@ export default function CuentaForm({
                                                         type="text"
                                                         inputMode="decimal"
                                                         placeholder="0.00"
-                                                        className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-5 text-white text-2xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-700"
+                                                        className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-5 text-white text-2xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-700"
                                                     />
                                                 )}
                                         />
@@ -265,7 +257,7 @@ export default function CuentaForm({
                                                 key={c}
                                                 type="button"
                                                 onClick={() => setValue("color", c)}
-                                                className={`w-7 h-7 rounded-full transition-all relative ${
+                                                className={`w-7 h-7 rounded-full transition-colors relative ${
                                                     color === c
                                                         ? "scale-110 ring-2 ring-violet-500 ring-offset-2 ring-offset-slate-950 z-10"
                                                         : "hover:scale-105 opacity-40 hover:opacity-100"
@@ -273,8 +265,7 @@ export default function CuentaForm({
                                                 style={{ backgroundColor: c }}
                                             >
                                                 {color === c && (
-                                                    <motion.div 
-                                                        layoutId="color-active"
+                                                    <div 
                                                         className="absolute inset-0 rounded-full bg-white/20"
                                                     />
                                                 )}
@@ -288,7 +279,7 @@ export default function CuentaForm({
                                         <button
                                             type="button"
                                             onClick={onClose}
-                                            className="flex-1 px-4 py-3.5 text-slate-400 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-all rounded-xl hover:bg-white/5"
+                                            className="flex-1 px-4 py-3.5 text-slate-400 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors rounded-xl hover:bg-white/5"
                                         >
                                             Cancelar
                                         </button>
@@ -296,7 +287,7 @@ export default function CuentaForm({
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || (esBancoPersonalizado && !watch("bancoPersonalizado")?.trim())}
-                                        className="flex-2 px-6 py-3.5 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-xl shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all border border-violet-400/30"
+                                        className="flex-2 px-6 py-3.5 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-xl shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors border border-violet-400/30"
                                     >
                                         {isSubmitting ? (
                                             <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -309,8 +300,6 @@ export default function CuentaForm({
                             </div>
                         </form>
                     </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                </div>
     );
 }

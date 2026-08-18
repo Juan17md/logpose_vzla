@@ -14,7 +14,6 @@ import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/forms/Select";
 import { toast } from "sonner";
 import { FiArrowUpRight, FiArrowDownLeft, FiRepeat, FiSave, FiCreditCard, FiInfo } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { parseNumeroFlexible } from "@/lib/number";
 
@@ -166,15 +165,14 @@ export default function OperacionForm({
                                     type="button"
                                     onClick={() => setValue("tipo", t.id)}
                                     className={cn(
-                                        "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative overflow-hidden",
+                                        "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors relative overflow-hidden",
                                         isActive 
                                             ? `text-white shadow-lg` 
                                             : "text-slate-500 hover:text-slate-300"
                                     )}
                                 >
                                     {isActive && (
-                                        <motion.div 
-                                            layoutId="active-type"
+                                        <div 
                                             className={cn(
                                                 "absolute inset-0 bg-linear-to-r transition-colors duration-500",
                                                 t.color === "emerald" ? "from-emerald-600 to-teal-600" :
@@ -229,9 +227,7 @@ export default function OperacionForm({
 
                         {/* Cuenta Destino (solo transferencias) */}
                         {tipo === "transferencia" && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
+                            <div
                                 className="space-y-2"
                             >
                                 <label className="text-[10px] font-black uppercase tracking-[2px] text-slate-500 ml-1">
@@ -268,7 +264,7 @@ export default function OperacionForm({
                                         />
                                     )}
                                 />
-                            </motion.div>
+                            </div>
                         )}
                     </div>
 
@@ -293,7 +289,7 @@ export default function OperacionForm({
                                             type="text"
                                             inputMode="decimal"
                                             placeholder="0.00"
-                                            className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-700"
+                                            className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-700"
                                         />
                                     )}
                                 />
@@ -326,7 +322,7 @@ export default function OperacionForm({
                                                 type="text"
                                                 inputMode="decimal"
                                                 placeholder="0.00"
-                                                className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-lg font-bold outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-700"
+                                                className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-lg font-bold outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-700"
                                             />
                                         )}
                                     />
@@ -336,12 +332,8 @@ export default function OperacionForm({
                     </div>
 
                     {/* Tasa de Cambio */}
-                    <AnimatePresence>
-                        {monedasDiferentes && (
-                            <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
+{monedasDiferentes && (
+                            <div
                                 className="space-y-2 overflow-hidden"
                             >
                                 <label className="text-[10px] font-black uppercase tracking-[2px] text-emerald-500 ml-1 flex items-center gap-1.5">
@@ -356,7 +348,7 @@ export default function OperacionForm({
                                             type="text"
                                             inputMode="decimal"
                                             placeholder="0.0000"
-                                            className="w-full bg-slate-950/40 border border-emerald-500/10 rounded-2xl px-5 py-4 text-white text-lg font-black outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-all"
+                                            className="w-full bg-slate-950/40 border border-emerald-500/10 rounded-2xl px-5 py-4 text-white text-lg font-black outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-colors"
                                         />
                                     )}
                                 />
@@ -368,11 +360,9 @@ export default function OperacionForm({
                                         </span>
                                     </div>
                                 )}
-                            </motion.div>
+                            </div>
                         )}
-                    </AnimatePresence>
-
-                    {/* Descripción */}
+{/* Descripción */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-[2px] text-slate-500 ml-1">
                             Motivo o Referencia
@@ -386,7 +376,7 @@ export default function OperacionForm({
                                     type="text"
                                     placeholder="Escribe una breve descripción..."
                                     maxLength={80}
-                                    className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-slate-600"
+                                    className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-600"
                                 />
                             )}
                         />
@@ -398,7 +388,7 @@ export default function OperacionForm({
                         disabled={isSubmitting}
                         className="w-full relative group overflow-hidden"
                     >
-                        <div className="absolute inset-0 bg-linear-to-r from-violet-600 to-indigo-600 transition-all group-disabled:opacity-50" />
+                        <div className="absolute inset-0 bg-linear-to-r from-violet-600 to-indigo-600 transition-colors group-disabled:opacity-50" />
                         <div className="relative px-6 py-4 flex items-center justify-center gap-3 text-white font-black text-xs uppercase tracking-[3px] transition-transform group-active:scale-[0.98]">
                             {isSubmitting ? (
                                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

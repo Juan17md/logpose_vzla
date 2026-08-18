@@ -3,7 +3,6 @@
 import DatePicker, { registerLocale } from "react-datepicker";
 import { es } from "date-fns/locale";
 import { FiCalendar, FiAlertCircle, FiX, FiChevronDown } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
 import { FieldError } from "react-hook-form";
 import { forwardRef } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -46,7 +45,7 @@ const CustomInput = forwardRef<
         disabled={disabled}
         className={`
             w-full cursor-pointer bg-[#0A0E1A]/80 backdrop-blur-md border text-left rounded-2xl py-4 h-[54px] pl-5 pr-10
-            text-sm font-bold transition-all duration-300 outline-none relative flex items-center gap-3 shadow-lg group
+            text-sm font-bold transition-colors duration-300 outline-none relative flex items-center gap-3 shadow-lg group
             ${hasValue ? "text-white" : "text-slate-500"}
             ${hasError
                 ? "border-red-500/40 focus:border-red-500/60 ring-4 ring-red-500/10"
@@ -64,27 +63,19 @@ const CustomInput = forwardRef<
         <span className="flex-1 truncate font-bold text-sm">
             {value || placeholder || "Seleccionar fecha"}
         </span>
-
-        <AnimatePresence>
-            {clearable && hasValue && !disabled && (
-                <motion.span
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0 }}
-                    transition={{ duration: 0.15 }}
+{clearable && hasValue && !disabled && (
+                <span
                     onClick={(e) => {
                         e.stopPropagation();
                         onClear();
                     }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full
-                               text-slate-500 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+                               text-slate-500 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 >
                     <FiX size={12} />
-                </motion.span>
+                </span>
             )}
-        </AnimatePresence>
-
-        {(!clearable || !hasValue) && (
+{(!clearable || !hasValue) && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <FiChevronDown size={16} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
             </span>
@@ -230,20 +221,14 @@ export default function DateSelect({
                     />
                 }
             />
-
-            <AnimatePresence>
-                {error && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
+{error && (
+                    <div
                         className="flex items-center gap-1.5 mt-1.5 ml-1 text-red-400 text-[10px] font-bold uppercase tracking-wider"
                     >
                         <FiAlertCircle size={12} className="shrink-0" />
                         <span>{error.message}</span>
-                    </motion.div>
+                    </div>
                 )}
-            </AnimatePresence>
-        </div>
+</div>
     );
 }

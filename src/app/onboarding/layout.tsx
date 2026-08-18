@@ -81,7 +81,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
         {/* Content */}
         <main className="flex-1 flex items-start justify-center px-4 pb-12">
           <div className="w-full max-w-2xl">
-            <div className="bg-[#0B0F1A]/80 backdrop-blur-xl rounded-[2.5rem] p-6 sm:p-10 shadow-[0_30px_80px_-10px_rgba(0,0,0,.8),0_0_0_1px_rgba(255,255,255,.06)] border border-slate-700/30 relative overflow-hidden">
+            <div className="bg-[#0B0F1A]/80 backdrop-blur-xl rounded-[2.5rem] p-6 sm:p-10 shadow-lg border border-slate-700/30 relative overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
               <BankAccountsProvider>
@@ -97,40 +97,11 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       </div>
 
       <style>{`
-        @keyframes aurora-move {
-          0%   { transform: translate(0px, 0px)   scale(1); }
-          33%  { transform: translate(40px,-30px) scale(1.08); }
-          66%  { transform: translate(-30px,20px) scale(0.94); }
-          100% { transform: translate(0px, 0px)   scale(1); }
-        }
-        @keyframes aurora-move2 {
-          0%   { transform: translate(0px,0px)    scale(1); }
-          33%  { transform: translate(-50px,30px) scale(1.12); }
-          66%  { transform: translate(30px,-40px) scale(0.92); }
-          100% { transform: translate(0px,0px)    scale(1); }
-        }
-        @keyframes aurora-move3 {
-          0%   { transform: translate(0px,0px)   scale(1); }
-          50%  { transform: translate(20px,50px) scale(1.06); }
-          100% { transform: translate(0px,0px)   scale(1); }
-        }
-        @keyframes float-particle {
-          0%,100% { transform:translateY(0px)   opacity:0.5; }
-          50%      { transform:translateY(-24px) opacity:1; }
-        }
-        @keyframes grid-fade {
-          0%,100% { opacity:.04; }
-          50%      { opacity:.07; }
-        }
-        .orb1 { animation: aurora-move 22s ease-in-out infinite; }
-        .orb2 { animation: aurora-move2 28s ease-in-out infinite; }
-        .orb3 { animation: aurora-move3 18s ease-in-out infinite; }
-        .orb4 { animation: aurora-move 35s ease-in-out infinite reverse; }
-        .grid-anim { animation: grid-fade 8s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          .orb1,.orb2,.orb3,.orb4 { animation:none; }
-          .grid-anim { animation:none; }
-        }
+        .orb1 { opacity: 0.9; }
+        .orb2 { opacity: 0.9; }
+        .orb3 { opacity: 0.9; }
+        .orb4 { opacity: 0.9; }
+        .grid-anim { opacity: 0.05; }
       `}</style>
     </div>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useTransactions } from "@/hooks/useTransactions";
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiPieChart, FiBriefcase, FiPercent, FiActivity, FiArrowUpRight, FiArrowDownRight, FiAward } from "react-icons/fi";
@@ -242,23 +241,7 @@ export default function ReportsPage() {
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
 
-    // Variantes tween — más livianas que spring en CPU de gama baja
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.07, delayChildren: 0.05 }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 12, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: { type: "tween", duration: 0.25, ease: "easeOut" } as const
-        }
-    };
+    // Variantes de animación eliminadas — se prioriza la fluidez (ver ADR 11)
 
     if (loading || loadingSavings) {
         return (
@@ -271,20 +254,17 @@ export default function ReportsPage() {
     return (
         <>
             {/* ===== MOBILE LAYOUT ===== */}
-            <motion.div
+            <div
                 className="md:hidden flex flex-col gap-6 pb-20"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
             >
                 {/* Mobile Header & Filters */}
-                <motion.div variants={itemVariants} className="flex flex-col gap-6">
+                <div className="flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">Reportes</h1>
                             <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mt-2">Resumen financiero mensual</p>
                         </div>
-                        <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-500 shadow-lg shadow-amber-500/5">
+                        <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-500 shadow-lg ">
                             <FiPieChart size={24} />
                         </div>
                     </div>
@@ -311,31 +291,31 @@ export default function ReportsPage() {
                             />
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* KPI Grid 2x2 */}
-                <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-emerald-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
-                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
-                        <div className="mb-4 w-10 h-10 rounded-xl bg-emerald-500 text-slate-900 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-emerald-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors"></div>
+                        <div className="mb-4 w-10 h-10 rounded-xl bg-emerald-500 text-slate-900 flex items-center justify-center shadow-lg ">
                             <FiTrendingUp size={20} />
                         </div>
                         <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-1">Ingresos</p>
                         <p className="text-2xl font-black text-white tracking-tight">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
-                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-red-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
-                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
-                        <div className="mb-4 w-10 h-10 rounded-xl bg-red-500 text-slate-900 flex items-center justify-center shadow-lg shadow-red-500/20">
+                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-red-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-colors"></div>
+                        <div className="mb-4 w-10 h-10 rounded-xl bg-red-500 text-slate-900 flex items-center justify-center shadow-lg ">
                             <FiTrendingDown size={20} />
                         </div>
                         <p className="text-[10px] text-red-500 font-black uppercase tracking-widest mb-1">Gastos</p>
                         <p className="text-2xl font-black text-white tracking-tight">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
-                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-amber-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
-                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
-                        <div className="mb-4 w-10 h-10 rounded-xl bg-amber-500 text-slate-900 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-amber-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors"></div>
+                        <div className="mb-4 w-10 h-10 rounded-xl bg-amber-500 text-slate-900 flex items-center justify-center shadow-lg ">
                             <FiDollarSign size={20} />
                         </div>
                         <p className="text-[10px] text-amber-500 font-black uppercase tracking-widest mb-1">Balance</p>
@@ -344,9 +324,9 @@ export default function ReportsPage() {
                         </p>
                     </div>
 
-                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-violet-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-all">
-                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-all"></div>
-                        <div className="mb-4 w-10 h-10 rounded-xl bg-violet-500 text-white flex items-center justify-center shadow-lg shadow-violet-500/20">
+                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-violet-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-colors"></div>
+                        <div className="mb-4 w-10 h-10 rounded-xl bg-violet-500 text-white flex items-center justify-center shadow-lg ">
                             <FiBriefcase size={20} />
                         </div>
                         <p className="text-[10px] text-violet-500 font-black uppercase tracking-widest mb-1">Ahorro</p>
@@ -354,31 +334,31 @@ export default function ReportsPage() {
                             $ {savingsStats.netSavings.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Mobile Charts Area */}
                 <div className="space-y-4">
                     {/* Balance Chart Card */}
-                    <motion.div variants={itemVariants} className="bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-slate-700/50">
+                    <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-slate-700/50">
                         <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                             <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
                             Balance del Periodo
                         </h3>
                         <BalanceChart data={balanceData} />
-                    </motion.div>
+                    </div>
 
                     {/* Expenses Chart Card */}
-                    <motion.div variants={itemVariants} className="bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-slate-700/50">
+                    <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-slate-700/50">
                         <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                             <div className="w-1 h-4 bg-red-500 rounded-full"></div>
                             Gastos por Categoría
                         </h3>
                         <ExpenseCategoryChart data={stats.categoryData} />
-                    </motion.div>
+                    </div>
                 </div>
 
                 {/* Mobile Category Detail List */}
-                <motion.div variants={itemVariants}>
+                <div>
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">Detalle de Gastos</h3>
                     <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-700/50 divide-y divide-slate-700/30">
                         {stats.categoryData.length === 0 ? (
@@ -411,10 +391,10 @@ export default function ReportsPage() {
                             ))
                         )}
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Mobile Advanced Analytics Bento Grid */}
-                <motion.div variants={itemVariants} className="space-y-4">
+                <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider px-1">Análisis de Eficiencia</h3>
                     <div className="grid grid-cols-2 gap-4">
                         {/* Card 1: Tasa de Ahorro */}
@@ -492,13 +472,13 @@ export default function ReportsPage() {
                             <p className="text-[8px] text-slate-500 mt-1 font-medium">Respecto al mes anterior</p>
                         </div>
                     </div>
-                </motion.div>
-            </motion.div>
+                </div>
+            </div>
 
             {/* ===== DESKTOP LAYOUT (Original wrapped) ===== */}
             <div className="hidden md:block space-y-8">
                 {/* Header & Filter */}
-                <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+                <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
                     <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-10 -translate-y-10 group-hover:translate-x-5 group-hover:-translate-y-5 transition-transform duration-700">
                         <FiPieChart className="text-7xl md:text-9xl text-amber-500" />
                     </div>
@@ -535,28 +515,28 @@ export default function ReportsPage() {
                 {/* Summary Cards - Horizontal scroll en móvil */}
                 {/* blur-3xl eliminado de las tarjetas — 4 capas GPU simultáneas en escritorio */}
                 <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 scrollbar-hide">
-                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-emerald-500/30 relative overflow-hidden group active:scale-95 transition-all">
-                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all"></div>
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-emerald-500/30 relative overflow-hidden group active:scale-95 transition-transform">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
                         <div className="flex items-center space-x-3 text-emerald-400 mb-4">
-                            <div className="p-3 bg-emerald-500 text-slate-900 rounded-xl shadow-lg shadow-emerald-500/20"><FiTrendingUp size={20} /></div>
+                            <div className="p-3 bg-emerald-500 text-slate-900 rounded-xl shadow-lg "><FiTrendingUp size={20} /></div>
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-emerald-500">Ingresos</span>
                         </div>
                         <p className="text-3xl font-black text-white">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
-                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-red-500/30 relative overflow-hidden group active:scale-95 transition-all">
-                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-all"></div>
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-red-500/30 relative overflow-hidden group active:scale-95 transition-transform">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-colors"></div>
                         <div className="flex items-center space-x-3 text-red-400 mb-4">
-                            <div className="p-3 bg-red-500 text-slate-900 rounded-xl shadow-lg shadow-red-500/20"><FiTrendingDown size={20} /></div>
+                            <div className="p-3 bg-red-500 text-slate-900 rounded-xl shadow-lg "><FiTrendingDown size={20} /></div>
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-red-500">Gastos</span>
                         </div>
                         <p className="text-3xl font-black text-white">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
-                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-amber-500/30 relative overflow-hidden group active:scale-95 transition-all">
-                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all"></div>
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-amber-500/30 relative overflow-hidden group active:scale-95 transition-transform">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors"></div>
                         <div className="flex items-center space-x-3 text-amber-400 mb-4">
-                            <div className="p-3 bg-amber-500 text-slate-900 rounded-xl shadow-lg shadow-amber-500/20"><FiDollarSign size={20} /></div>
+                            <div className="p-3 bg-amber-500 text-slate-900 rounded-xl shadow-lg "><FiDollarSign size={20} /></div>
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-amber-500">Balance</span>
                         </div>
                         <p className={`text-3xl font-black ${stats.balance >= 0 ? "text-white" : "text-red-400"}`}>
@@ -564,10 +544,10 @@ export default function ReportsPage() {
                         </p>
                     </div>
 
-                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-violet-500/30 relative overflow-hidden group active:scale-95 transition-all">
-                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-all"></div>
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-violet-500/30 relative overflow-hidden group active:scale-95 transition-transform">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-colors"></div>
                         <div className="flex items-center space-x-3 text-violet-400 mb-4">
-                            <div className="p-3 bg-violet-500 text-white rounded-xl shadow-lg shadow-violet-500/20"><FiBriefcase size={20} /></div>
+                            <div className="p-3 bg-violet-500 text-white rounded-xl shadow-lg "><FiBriefcase size={20} /></div>
                             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-violet-500">Ahorro</span>
                         </div>
                         <p className={`text-3xl font-black ${savingsStats.netSavings >= 0 ? "text-white" : "text-red-400"}`}>
@@ -618,7 +598,7 @@ export default function ReportsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {/* Card 1: Tasa de Ahorro */}
                         <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-violet-500/20 backdrop-blur-xl relative overflow-hidden group">
-                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-all duration-500"></div>
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-colors duration-500"></div>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center border border-violet-500/10">
                                     <FiBriefcase size={20} />
@@ -640,7 +620,7 @@ export default function ReportsPage() {
 
                         {/* Card 2: Eficiencia de Consumo */}
                         <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-amber-500/20 backdrop-blur-xl relative overflow-hidden group">
-                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all duration-500"></div>
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors duration-500"></div>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/10">
                                     <FiPercent size={20} />
@@ -650,7 +630,7 @@ export default function ReportsPage() {
                             <p className="text-3xl font-black text-white">{advancedStats.expenseToIncomeRatio.toFixed(1)}%</p>
                             <div className="w-full h-1.5 bg-slate-800 rounded-full mt-3 overflow-hidden">
                                 <div 
-                                    className={`h-full rounded-full transition-all duration-500 ${
+                                    className={`h-full rounded-full transition-colors duration-500 ${
                                         advancedStats.expenseToIncomeRatio <= 70 ? 'bg-emerald-500' : advancedStats.expenseToIncomeRatio <= 90 ? 'bg-amber-500' : 'bg-red-500'
                                     }`}
                                     style={{ width: `${Math.min(advancedStats.expenseToIncomeRatio, 100)}%` }}
@@ -661,7 +641,7 @@ export default function ReportsPage() {
 
                         {/* Card 3: Día de Mayor Consumo */}
                         <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-red-500/20 backdrop-blur-xl relative overflow-hidden group">
-                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-all duration-500"></div>
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-colors duration-500"></div>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/10">
                                     <FiActivity size={20} />
@@ -678,7 +658,7 @@ export default function ReportsPage() {
 
                         {/* Card 4: Comparación MoM */}
                         <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-emerald-500/20 backdrop-blur-xl relative overflow-hidden group">
-                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500"></div>
+                            <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors duration-500"></div>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/10">
                                     <FiAward size={20} />

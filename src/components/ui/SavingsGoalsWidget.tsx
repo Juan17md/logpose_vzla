@@ -74,8 +74,8 @@ export default function SavingsGoalsWidget() {
     if (loading) return <div className="h-48 bg-slate-900/50 rounded-3xl animate-pulse"></div>;
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group hover:bg-slate-900/70 transition-all duration-300">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-all opacity-50"></div>
+        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group hover:bg-slate-900/70 transition-colors duration-300">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-colors opacity-50"></div>
 
             <div className="flex justify-between items-center mb-6 relative z-10">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -86,7 +86,7 @@ export default function SavingsGoalsWidget() {
                 </h3>
                 <button
                     onClick={() => setShowAddModal(true)}
-                    className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-500 hover:text-white transition-all transform hover:scale-105"
+                    className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-500 hover:text-white transition-[transform,color] transform hover:scale-105"
                 >
                     <FiPlus size={20} />
                 </button>
@@ -128,7 +128,7 @@ export default function SavingsGoalsWidget() {
                                 {/* Barra de Progreso */}
                                 <div className="w-full bg-slate-700/50 rounded-full h-3 mb-2 overflow-hidden backdrop-blur-sm">
                                     <div
-                                        className={`h-full rounded-full transition-all duration-1000 ease-out shadow-lg ${progress >= 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-violet-500 to-indigo-500'}`}
+                                        className={`h-full rounded-full transition-colors duration-1000 ease-out shadow-lg ${progress >= 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-violet-500 to-indigo-500'}`}
                                         style={{ width: `${progress}%` }}
                                     ></div>
                                 </div>
@@ -183,7 +183,7 @@ export default function SavingsGoalsWidget() {
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+                            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-500/20"
                         >
                             Crear Meta
                         </button>
@@ -249,7 +249,7 @@ export default function SavingsGoalsWidget() {
                         </button>
                         <button
                             type="submit"
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+                            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-500/20"
                         >
                             Registrar
                         </button>

@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { motion } from "framer-motion";
 import { FiAlertTriangle, FiRefreshCw, FiHome } from "react-icons/fi";
 import Link from "next/link";
 
@@ -25,34 +24,20 @@ export default function Error({
       <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-md w-full relative z-10 text-center">
-        {/* Animated Icon */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="flex justify-center mb-8"
-        >
+        {/* Icon */}
+        <div className="flex justify-center mb-8">
           <div className="relative">
             <div className="absolute inset-0 bg-red-500/20 blur-3xl rounded-full" />
-            <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl">
-              <motion.div
-                animate={{ rotate: [0, -3, 3, -3, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="text-red-400"
-              >
+            <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-lg">
+              <div className="text-red-400">
                 <FiAlertTriangle size={64} />
-              </motion.div>
+              </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Text Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
-          className="space-y-4"
-        >
+        <div className="space-y-4">
           <h1 className="text-6xl md:text-7xl font-black text-white font-bungee tracking-tighter">
             ¡UPS!
           </h1>
@@ -67,49 +52,33 @@ export default function Error({
               Código: <span className="text-slate-500">{error.digest}</span>
             </p>
           )}
-        </motion.div>
+        </div>
 
         {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-          className="mt-12 grid grid-cols-1 gap-4"
-        >
-          <motion.button
-            whileHover={{ scale: 1.02, translateY: -2 }}
-            whileTap={{ scale: 0.98 }}
+        <div className="mt-12 grid grid-cols-1 gap-4">
+          <button
             onClick={reset}
-            className="w-full bg-linear-to-r from-red-600 to-orange-600 text-white font-black py-4 px-6 rounded-2xl shadow-xl border border-white/10 flex items-center justify-center gap-3 transition-all cursor-pointer"
+            className="bg-gradient-to-r from-red-600 to-orange-600 text-white font-black py-3 px-6 rounded-2xl hover:from-red-500 hover:to-orange-500 hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-[transform,color] duration-200 flex items-center justify-center gap-2"
           >
             <FiRefreshCw size={20} />
             <span>INTENTAR DE NUEVO</span>
-          </motion.button>
+          </button>
 
           <Link href="/dashboard">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-slate-900/50 backdrop-blur-md text-slate-300 font-bold py-4 px-6 rounded-2xl border border-white/5 flex items-center justify-center gap-3 hover:bg-slate-800 hover:text-white transition-all cursor-pointer"
-            >
+            <button className="bg-slate-800/80 text-slate-200 font-black py-3 px-6 rounded-2xl hover:bg-slate-700/80 hover:scale-[1.02] active:scale-[0.98] border border-slate-700/50 transition-[transform,color] duration-200 flex items-center justify-center gap-2 w-full">
               <FiHome size={20} />
               <span>IR AL DASHBOARD</span>
-            </motion.button>
+            </button>
           </Link>
-        </motion.div>
+        </div>
       </div>
 
       {/* Footer Branding */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8, duration: 1 }}
-        className="absolute bottom-8 left-0 right-0 text-center"
-      >
+      <div className="absolute bottom-8 left-0 right-0 text-center">
         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
           LogPose VZLA • Tu sistema financiero personal
         </span>
-      </motion.div>
+      </div>
     </div>
   );
 }

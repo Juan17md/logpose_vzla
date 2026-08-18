@@ -40,12 +40,46 @@ service cloud.firestore {
       return value is bool;
     }
 
-    function isValidType(type) {
-      return type == "income" || type == "expense";
+    // Validación condicional: si el campo está presente en un update, debe tener el tipo correcto.
+    function validStringIfPresent(field) {
+      return !(field in request.resource.data) || isString(request.resource.data[field]);
     }
 
-    function isValidCurrency(currency) {
+    function validNumberIfPresent(field) {
+      return !(field in request.resource.data) || isNumber(request.resource.data[field]);
+    }
+
+    function validBooleanIfPresent(field) {
+      return !(field in request.resource.data) || isBoolean(request.resource.data[field]);
+    }
+
+    function isValidType(type) {
+      return type == "ingreso" || type == "gasto" || type == "transferencia";
+    }
+
+    function isValidTransactionCurrency(currency) {
       return currency == "VES" || currency == "USD";
+    }
+
+    function isValidAccountCurrency(currency) {
+      return currency == "BS" || currency == "USD" || currency == "EUR" || currency == "USDT";
+    }
+
+    function validTypeIfPresent() {
+      return !("type" in request.resource.data)
+        || (isString(request.resource.data.type) && isValidType(request.resource.data.type));
+    }
+
+    function validTransactionCurrencyIfPresent() {
+      return !("currency" in request.resource.data)
+        || (isString(request.resource.data.currency)
+            && isValidTransactionCurrency(request.resource.data.currency));
+    }
+
+    function validAccountCurrencyIfPresent() {
+      return !("moneda" in request.resource.data)
+        || (isString(request.resource.data.moneda)
+            && isValidAccountCurrency(request.resource.data.moneda));
     }
 
     // ========================================
@@ -64,7 +98,7 @@ service cloud.firestore {
     }
 
     // ========================================
-    // 📋 REGLAS DE SEGURIDAD - CONTROL DE GASTOS
+    // 📋 REGLAS DE SEGURIDAD - LOGPOSE VZLA
     // ========================================
 
     // ----------------------------------------
@@ -84,102 +118,164 @@ service cloud.firestore {
         || isAdmin();
       allow delete: if isAdmin();
 
-      // Subcolecciones: ownership estricto
+      // ----------------------------------------
+      // 🏦 CUENTAS BANCARIAS - users/{userId}/bank_accounts
+      // Modelo: nombre, banco, moneda (BS/USD/EUR/USDT), saldo,
+      //         color, activa, excluirDelTotal, creadoEn, actualizadoEn
+      // ----------------------------------------
+      match /bank_accounts/{accountId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isString(request.resource.data.nombre)
+          && isString(request.resource.data.banco)
+          && isString(request.resource.data.moneda)
+          && isValidAccountCurrency(request.resource.data.moneda)
+          && isNumber(request.resource.data.saldo)
+          && isString(request.resource.data.color)
+          && isBoolean(request.resource.data.activa);
+        allow update: if isOwner(userId)
+          && validStringIfPresent("nombre")
+          && validStringIfPresent("banco")
+          && validAccountCurrencyIfPresent()
+          && validNumberIfPresent("saldo")
+          && validStringIfPresent("color")
+          && validBooleanIfPresent("activa")
+          && validBooleanIfPresent("excluirDelTotal");
+        allow delete: if isOwner(userId);
+      }
+
+      // ----------------------------------------
+      // 💸 OPERACIONES DE CUENTA - users/{userId}/account_transactions
+      // Modelo: cuentaOrigenId, cuentaDestinoId, tipo, monto, moneda,
+      //         comision, tasaCambio, descripcion, fecha, creadoEn
+      // ----------------------------------------
+      match /account_transactions/{transId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isString(request.resource.data.cuentaOrigenId)
+          && isString(request.resource.data.tipo)
+          && isNumber(request.resource.data.monto)
+          && isString(request.resource.data.moneda)
+          && isValidAccountCurrency(request.resource.data.moneda);
+        allow update: if isOwner(userId)
+          && validStringIfPresent("cuentaOrigenId")
+          && validStringIfPresent("tipo")
+          && validNumberIfPresent("monto")
+          && validStringIfPresent("moneda");
+        allow delete: if isOwner(userId);
+      }
+
+      // ----------------------------------------
+      // 🗂️ CATEGORÍAS - users/{userId}/categories
+      // Modelo: nombre, tipo (ingreso/gasto/ambas), icono,
+      //         subcategorias, esPredeterminada, color, creadoEn
+      // ----------------------------------------
+      match /categories/{categoryId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isString(request.resource.data.nombre)
+          && isString(request.resource.data.tipo);
+        allow update: if isOwner(userId)
+          && validStringIfPresent("nombre")
+          && validStringIfPresent("tipo")
+          && validStringIfPresent("icono")
+          && validBooleanIfPresent("esPredeterminada");
+        allow delete: if isOwner(userId);
+      }
+
+      // ----------------------------------------
+      // 💳 DEUDAS - users/{userId}/debts
+      // Modelo: personName, type (por_cobrar/por_pagar), amount,
+      //         description, dueDate, currency, originalAmount,
+      //         exchangeRate, payments, isPaid, createdAt
+      // ----------------------------------------
       match /debts/{debtId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
           && isString(request.resource.data.personName)
           && isNumber(request.resource.data.amount);
         allow update: if isOwner(userId)
-          && isString(request.resource.data.personName)
-          && isNumber(request.resource.data.amount);
+          && validStringIfPresent("personName")
+          && validNumberIfPresent("amount")
+          && validBooleanIfPresent("isPaid");
         allow delete: if isOwner(userId);
       }
 
+      // ----------------------------------------
+      // 💼 GASTOS FIJOS - users/{userId}/fixed_expenses
+      // Modelo: title, amount, currency (USD/BS), category,
+      //         dueDay, description, lastPaidDate, createdAt
+      // ----------------------------------------
       match /fixed_expenses/{expenseId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
-          && isString(request.resource.data.name)
+          && isString(request.resource.data.title)
           && isNumber(request.resource.data.amount)
           && isNumber(request.resource.data.dueDay);
         allow update: if isOwner(userId)
-          && isString(request.resource.data.name)
-          && isNumber(request.resource.data.amount)
-          && isNumber(request.resource.data.dueDay);
+          && validStringIfPresent("title")
+          && validNumberIfPresent("amount")
+          && validNumberIfPresent("dueDay")
+          && validStringIfPresent("currency")
+          && validStringIfPresent("category");
         allow delete: if isOwner(userId);
       }
 
+      // ----------------------------------------
+      // 🎯 METAS DE AHORRO - users/{userId}/saving_goals
+      // Modelo: name, targetAmount, currentAmount, deadline,
+      //         color, createdAt
+      // ----------------------------------------
       match /saving_goals/{goalId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
           && isString(request.resource.data.name)
           && isNumber(request.resource.data.targetAmount);
         allow update: if isOwner(userId)
-          && isString(request.resource.data.name)
-          && isNumber(request.resource.data.targetAmount);
+          && validStringIfPresent("name")
+          && validNumberIfPresent("targetAmount")
+          && validNumberIfPresent("currentAmount")
+          && validStringIfPresent("color");
         allow delete: if isOwner(userId);
       }
 
+      // ----------------------------------------
+      // 🏦 MOVIMIENTOS DE AHORRO - users/{userId}/savings_transactions
+      // Modelo: amount, type (deposit/withdrawal), method
+      //         (physical/usdt/bs), description, date
+      // ----------------------------------------
       match /savings_transactions/{transactionId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
           && isNumber(request.resource.data.amount);
         allow update: if isOwner(userId)
-          && isNumber(request.resource.data.amount);
-        allow delete: if isOwner(userId);
-      }
-
-      match /bank_accounts/{accountId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId)
-          && isString(request.resource.data.name)
-          && isString(request.resource.data.currency)
-          && isValidCurrency(request.resource.data.currency)
-          && isNumber(request.resource.data.balance);
-        allow update: if isOwner(userId)
-          && isString(request.resource.data.name)
-          && isString(request.resource.data.currency)
-          && isValidCurrency(request.resource.data.currency)
-          && isNumber(request.resource.data.balance);
-        allow delete: if isOwner(userId);
-      }
-
-      match /account_transactions/{transId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId)
-          && isNumber(request.resource.data.amount);
-        allow update: if isOwner(userId)
-          && isNumber(request.resource.data.amount);
-        allow delete: if isOwner(userId);
-      }
-
-      match /categories/{categoryId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId)
-          && isString(request.resource.data.name);
-        allow update: if isOwner(userId)
-          && isString(request.resource.data.name);
+          && validNumberIfPresent("amount")
+          && validStringIfPresent("type")
+          && validStringIfPresent("method");
         allow delete: if isOwner(userId);
       }
     }
 
     // ----------------------------------------
-    // 💵 TRANSACCIONES - Ingresos y gastos
+    // 💵 TRANSACCIONES - Ingresos y gastos (colección raíz)
+    // Modelo: userId, amount, type (ingreso/gasto/transferencia),
+    //         category, subcategory, description, date, currency,
+    //         originalAmount, exchangeRate, accountId,
+    //         targetAccountId, period, createdAt
     // ----------------------------------------
     match /transactions/{transactionId} {
       allow read: if isOwnerFromResource();
       allow create: if isOwnerFromRequest()
-        && isString(request.resource.data.description)
         && isNumber(request.resource.data.amount)
         && isValidType(request.resource.data.type)
-        && isString(request.resource.data.currency)
-        && isValidCurrency(request.resource.data.currency);
+        && isString(request.resource.data.category)
+        && isString(request.resource.data.description);
       allow update: if isOwnerFromResource() && isOwnerFromRequest() && keepsSameUserId()
-        && isString(request.resource.data.description)
-        && isNumber(request.resource.data.amount)
-        && isValidType(request.resource.data.type)
-        && isString(request.resource.data.currency)
-        && isValidCurrency(request.resource.data.currency);
+        && validNumberIfPresent("amount")
+        && validTypeIfPresent()
+        && validStringIfPresent("category")
+        && validStringIfPresent("description")
+        && validTransactionCurrencyIfPresent();
       allow delete: if isOwnerFromResource();
     }
 
@@ -192,14 +288,15 @@ service cloud.firestore {
     }
 
     // ----------------------------------------
-    // 🛒 LISTAS DE COMPRAS - Shopping lists
+    // 🛒 LISTAS DE COMPRAS - Shopping lists (colección raíz)
+    // Modelo: userId, name, items, createdAt
     // ----------------------------------------
     match /shopping_lists/{listId} {
       allow read: if isOwnerFromResource();
       allow create: if isOwnerFromRequest()
         && isString(request.resource.data.name);
       allow update: if isOwnerFromResource() && isOwnerFromRequest() && keepsSameUserId()
-        && isString(request.resource.data.name);
+        && validStringIfPresent("name");
       allow delete: if isOwnerFromResource();
     }
 

@@ -67,7 +67,7 @@ export default function RecentTransactions() {
 
     if (loading) {
         return (
-            <div className="bg-slate-900/50 backdrop-blur-md rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-xl flex flex-col h-full">
+            <div className="bg-slate-900/50 backdrop-blur-md rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-lg flex flex-col h-full">
                 {/* Cabecera Esqueleto */}
                 <div className="p-6 border-b border-slate-700/50 bg-slate-800/30 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-2">
@@ -132,7 +132,7 @@ export default function RecentTransactions() {
     }
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-xl flex flex-col h-full">
+        <div className="bg-slate-900/50 backdrop-blur-md rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-lg flex flex-col h-full">
             <div className="p-6 border-b border-slate-700/50 bg-slate-800/30 flex flex-col md:flex-row justify-between items-center gap-4">
                 <h3 className="text-xl font-bold text-white flex items-center">
                     <FiClock className="mr-2 text-emerald-400" />
@@ -149,7 +149,7 @@ export default function RecentTransactions() {
                             setSearchTerm(e.target.value);
                             setCurrentPage(1);
                         }}
-                        className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-2 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder-slate-600 transition-all"
+                        className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-2 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder-slate-600 transition-colors"
                     />
                 </div>
             </div>

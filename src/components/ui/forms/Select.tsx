@@ -5,8 +5,6 @@ import { Listbox } from '@headlessui/react';
 import { FiCheck, FiChevronDown, FiAlertCircle } from 'react-icons/fi';
 import { cn } from '@/lib/utils';
 import { FieldError } from "react-hook-form";
-import { motion, AnimatePresence } from "framer-motion";
-
 export interface SelectOption<T extends string | number = string> {
     id: T | string;
     name: string;
@@ -69,13 +67,13 @@ export default function Select<T extends string | number = string>({
                 {({ open }) => (
                     <div className="relative">
                         <Listbox.Button className={cn(
-                            "relative w-full cursor-pointer bg-[#0A0E1A]/80 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 h-[54px] pl-5 pr-12 text-left outline-none transition-all duration-300 hover:border-amber-500/30 hover:bg-[#0A0E1A] shadow-lg",
+                            "relative w-full cursor-pointer bg-[#0A0E1A]/80 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 h-[54px] pl-5 pr-12 text-left outline-none transition-colors duration-300 hover:border-amber-500/30 hover:bg-[#0A0E1A] shadow-lg",
                             open && "border-amber-500/50 ring-4 ring-amber-500/10 bg-[#0A0E1A]",
                             error && "border-red-500/50 focus:border-red-500/50 ring-red-500/10",
                             disabled && "opacity-50 cursor-not-allowed hover:border-slate-700/50 hover:bg-[#0A0E1A]/80"
                         )}>
                             <span className={cn(
-                                "block truncate transition-all duration-300",
+                                "block truncate transition-colors duration-300",
                                 !selectedOption ? 'text-slate-500 font-medium' : 'text-white'
                             )}>
                                 {selectedOption 
@@ -84,33 +82,25 @@ export default function Select<T extends string | number = string>({
                             </span>
                             
                             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
-                                <motion.div
-                                    animate={{ rotate: open ? 180 : 0 }}
-                                    transition={{ duration: 0.3, ease: "backOut" }}
+                                <div
                                 >
                                     <FiChevronDown
                                         className={cn(
-                                            "h-5 w-5 transition-colors duration-300",
-                                            open ? "text-amber-400" : "text-slate-500"
+                                            "h-5 w-5 transition-transform duration-200",
+                                            open ? "text-amber-400 rotate-180" : "text-slate-500"
                                         )}
                                         aria-hidden="true"
                                     />
-                                </motion.div>
+                                </div>
                             </span>
                         </Listbox.Button>
-
-                        <AnimatePresence>
-                            {open && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                    transition={{ duration: 0.2, ease: "easeOut" }}
+{open && (
+                                <div
                                     className="absolute z-60 mt-3 w-full"
                                 >
                                     <Listbox.Options
                                         static
-                                        className="max-h-72 w-full overflow-auto rounded-3xl bg-slate-900/95 backdrop-blur-2xl border border-slate-700/50 p-2 text-base shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/10 focus:outline-none sm:text-sm custom-scrollbar"
+                                        className="max-h-72 w-full overflow-auto rounded-3xl bg-slate-900/95 backdrop-blur-2xl border border-slate-700/50 p-2 text-base shadow-lg ring-1 ring-white/10 focus:outline-none sm:text-sm custom-scrollbar"
                                     >
                                         {options.length === 0 ? (
                                             <div className="py-8 px-4 text-center">
@@ -130,7 +120,7 @@ export default function Select<T extends string | number = string>({
                                                         <Listbox.Option
                                                             key={String(option.value)}
                                                             className={({ active, selected }) => cn(
-                                                                "relative cursor-pointer select-none py-3.5 pl-5 pr-12 rounded-2xl transition-all duration-200 mb-1 last:mb-0",
+                                                                "relative cursor-pointer select-none py-3.5 pl-5 pr-12 rounded-2xl transition-colors duration-200 mb-1 last:mb-0",
                                                                 active ? "bg-amber-500/10 text-amber-400" : "text-slate-300",
                                                                 selected && "bg-amber-500/20 text-white font-bold"
                                                             )}
@@ -143,13 +133,11 @@ export default function Select<T extends string | number = string>({
                                                                     </span>
                                                                     
                                                                     {selected && (
-                                                                        <motion.span 
-                                                                            initial={{ scale: 0 }}
-                                                                            animate={{ scale: 1 }}
+                                                                        <span
                                                                             className="absolute inset-y-0 right-0 flex items-center pr-4 text-amber-400"
                                                                         >
                                                                             <FiCheck className="h-5 w-5" aria-hidden="true" />
-                                                                        </motion.span>
+                                                                        </span>
                                                                     )}
                                                                 </>
                                                             )}
@@ -159,22 +147,19 @@ export default function Select<T extends string | number = string>({
                                             ))
                                         )}
                                     </Listbox.Options>
-                                </motion.div>
+                                </div>
                             )}
-                        </AnimatePresence>
-                    </div>
+</div>
                 )}
             </Listbox>
 
             {error && (
-                <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
+                <div
                     className="flex items-center gap-1.5 mt-2 ml-1 text-red-400 text-[10px] font-black uppercase tracking-tighter"
                 >
                     <FiAlertCircle size={14} className="shrink-0" />
                     <span>{error.message}</span>
-                </motion.div>
+                </div>
             )}
         </div>
     );

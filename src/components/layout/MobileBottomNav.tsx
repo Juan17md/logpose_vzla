@@ -38,10 +38,10 @@ export default function MobileBottomNav({ onMenuClick, onNavigate }: MobileBotto
                 onClick={onNavigate}
                 className="flex flex-col items-center justify-center w-16 gap-1 group"
             >
-                <div className={`transition-all duration-300 ${isActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}>
+                <div className={`transition-colors duration-300 ${isActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}>
                     {item.icon}
                 </div>
-                <span className={`text-[10px] font-medium transition-all duration-300 ${isActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}>
+                <span className={`text-[10px] font-medium transition-colors duration-300 ${isActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}>
                     {item.name}
                 </span>
             </Link>
@@ -50,7 +50,7 @@ export default function MobileBottomNav({ onMenuClick, onNavigate }: MobileBotto
 
     return (
         <div
-            className="mobile-bottom-nav md:hidden fixed left-1/2 -translate-x-1/2 w-[85%] max-w-[360px] bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] rounded-full px-2 py-1.5 z-50 flex justify-between items-center transition-all duration-300"
+            className="mobile-bottom-nav md:hidden fixed left-1/2 -translate-x-1/2 w-[85%] max-w-[360px] bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] rounded-full px-2 py-1.5 z-50 flex justify-between items-center transition-colors duration-300"
             style={{ bottom: 'calc(4px + env(safe-area-inset-bottom, 0px))' }}
         >
             <div className="flex justify-evenly flex-1">
@@ -69,7 +69,7 @@ export default function MobileBottomNav({ onMenuClick, onNavigate }: MobileBotto
                 <div className="absolute inset-0 bg-amber-500/30 dark:bg-amber-400/20 blur-xl rounded-full scale-110 transition-transform duration-300 group-hover:scale-125" />
 
                 {/* Button container */}
-                <div className="relative w-14 h-14 bg-gradient-to-tr from-amber-500 to-yellow-400 dark:from-amber-500 dark:to-yellow-400 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/20 border-2 border-white dark:border-[#0f172a] transition-all duration-300 group-hover:-translate-y-1 active:scale-95 p-2">
+                <div className="relative w-14 h-14 bg-gradient-to-tr from-amber-500 to-yellow-400 dark:from-amber-500 dark:to-yellow-400 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/20 border-2 border-white dark:border-[#0f172a] transition-transform duration-300 group-hover:-translate-y-1 active:scale-95 p-2">
                     <Logo variant="icon" width={36} height={36} className="text-slate-900" />
                 </div>
             </button>

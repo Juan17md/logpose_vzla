@@ -73,8 +73,8 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
 
     if (!budgetLimit || budgetLimit === 0) {
         return (
-            <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg flex flex-col justify-center items-center text-center group hover:bg-slate-900/70 transition-all hover:border-slate-600">
-                <div className="p-4 bg-slate-800/50 rounded-2xl mb-4 text-slate-400 group-hover:text-yellow-400 group-hover:bg-yellow-500/10 transition-all">
+            <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg flex flex-col justify-center items-center text-center group hover:bg-slate-900/70 transition-colors hover:border-slate-600">
+                <div className="p-4 bg-slate-800/50 rounded-2xl mb-4 text-slate-400 group-hover:text-yellow-400 group-hover:bg-yellow-500/10 transition-colors">
                     <FiAlertTriangle size={28} />
                 </div>
                 <h3 className="text-white font-bold mb-2 text-lg">Sin Límite Definido</h3>
@@ -102,7 +102,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
                             <button type="button" onClick={() => setShowEdit(false)} className="px-4 py-2 text-slate-400 hover:text-white transition-colors">
                                 Cancelar
                             </button>
-                            <button type="button" onClick={guardarLimite} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20">
+                            <button type="button" onClick={guardarLimite} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-500/20">
                                 Guardar
                             </button>
                         </div>
@@ -113,8 +113,8 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
     }
 
     return (
-        <div className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden transition-all duration-300 hover:bg-slate-900/70">
-            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-16 -mt-16 transition-all opacity-0 group-hover:opacity-100 ${statusColor.replace('bg-', 'bg-').replace('500', '500/20')}`} />
+        <div className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden transition-colors duration-300 hover:bg-slate-900/70">
+            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-16 -mt-16 transition-colors opacity-0 group-hover:opacity-100 ${statusColor.replace('bg-', 'bg-').replace('500', '500/20')}`} />
 
             <div className="flex justify-between items-start mb-2 relative z-10">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -130,7 +130,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
                     <svg height="100%" width="100%" viewBox="0 0 160 160" className="transform -rotate-90">
                         <circle stroke="#1e293b" strokeWidth="12" fill="transparent" r="68" cx="80" cy="80" />
                         <circle
-                            className={`transition-all duration-1000 ease-out ${statusColor.replace("bg-", "text-")} drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]`}
+                            className={`transition-colors duration-1000 ease-out ${statusColor.replace("bg-", "text-")} drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]`}
                             stroke="currentColor" strokeWidth="12" strokeDasharray={68 * 2 * Math.PI}
                             strokeDashoffset={(68 * 2 * Math.PI) - (Math.min(percentage, 100) / 100) * (68 * 2 * Math.PI)}
                             strokeLinecap="round" fill="transparent" r="68" cx="80" cy="80"
@@ -156,7 +156,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
             <div className="mt-4 relative z-10">
                 <button
                     onClick={abrirModal}
-                    className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all border border-slate-700/50 hover:border-slate-600 shadow-lg uppercase tracking-wider"
+                    className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-semibold transition-colors border border-slate-700/50 hover:border-slate-600"
                 >
                     Actualizar Límite
                 </button>
@@ -181,7 +181,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
                         <button type="button" onClick={() => setShowEdit(false)} className="px-4 py-2 text-slate-400 hover:text-white transition-colors">
                             Cancelar
                         </button>
-                        <button type="button" onClick={guardarLimite} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20">
+                        <button type="button" onClick={guardarLimite} className="px-4 py-2 text-slate-400 hover:text-white transition-colors">
                             Guardar
                         </button>
                     </div>

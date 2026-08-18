@@ -3,7 +3,6 @@
 import { useDebts } from "@/hooks/useDebts";
 import { FiArrowUp, FiArrowDown, FiCreditCard, FiCheckCircle, FiClock, FiAlertCircle } from "react-icons/fi";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 import Skeleton from "./Skeleton";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
@@ -89,13 +88,10 @@ export default function PendingDebtsWidget() {
     }).slice(0, 3);
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg hover:border-violet-500/30 transition-all duration-300 relative overflow-hidden flex flex-col h-full"
+        <div
+            className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg hover:border-violet-500/30 transition-colors duration-300 relative overflow-hidden flex flex-col h-full"
         >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-all"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-colors"></div>
 
             <div className="flex justify-between items-start mb-6 relative z-10">
                 <div>
@@ -132,7 +128,7 @@ export default function PendingDebtsWidget() {
                         return (
                             <div key={debt.id} className="flex items-center justify-between p-3 bg-slate-800/30 hover:bg-slate-800/60 rounded-xl transition-colors border border-transparent hover:border-slate-700">
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 rounded-full ${debt.type === 'por_cobrar' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`}></div>
+                                    <div className={`w-2 h-2 rounded-full ${debt.type === 'por_cobrar' ? 'bg-emerald-500 shadow-lg' : 'bg-red-500 shadow-lg'}`}></div>
                                     <div>
                                         <p className="text-sm font-semibold text-slate-200">{debt.personName}</p>
                                         <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -167,6 +163,6 @@ export default function PendingDebtsWidget() {
             >
                 Gestionar Deudas
             </button>
-        </motion.div>
+        </div>
     );
 }

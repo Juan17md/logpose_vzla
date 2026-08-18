@@ -56,7 +56,7 @@ export default function CuentaDetalleModal({
                     
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                         <div className="flex items-center gap-5">
-                            <div className="p-3 rounded-2xl bg-slate-900/80 shadow-2xl border border-slate-700/50 group-hover:scale-105 transition-transform duration-500">
+                            <div className="p-3 rounded-2xl bg-slate-900/80 shadow-lg border border-slate-700/50 group-hover:scale-105 transition-transform duration-500">
                                 <BankLogo bankId={cuenta.banco} size={48} />
                             </div>
                             <div>
@@ -97,9 +97,9 @@ export default function CuentaDetalleModal({
                 <div className="grid grid-cols-3 gap-4">
                     <button
                         onClick={() => { onClose(); onNuevaOperacion(cuenta); }}
-                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/40 hover:bg-violet-500/10 border border-slate-700/50 hover:border-violet-500/30 rounded-2xl transition-all group"
+                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/40 hover:bg-violet-500/10 border border-slate-700/50 hover:border-violet-500/30 rounded-2xl transition-colors group"
                     >
-                        <div className="p-3 bg-violet-500/10 rounded-xl group-hover:scale-110 transition-all border border-violet-500/20">
+                        <div className="p-3 bg-violet-500/10 rounded-xl group-hover:scale-110 transition-transform border border-violet-500/20">
                             <FiPlus className="text-violet-400 text-xl" />
                         </div>
                         <span className="text-[9px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-violet-300">Operación</span>
@@ -107,9 +107,9 @@ export default function CuentaDetalleModal({
                     
                     <button
                         onClick={() => { onClose(); onEditar(cuenta); }}
-                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/40 hover:bg-amber-500/10 border border-slate-700/50 hover:border-amber-500/30 rounded-2xl transition-all group"
+                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/40 hover:bg-amber-500/10 border border-slate-700/50 hover:border-amber-500/30 rounded-2xl transition-colors group"
                     >
-                        <div className="p-3 bg-amber-500/10 rounded-xl group-hover:scale-110 transition-all border border-amber-500/20">
+                        <div className="p-3 bg-amber-500/10 rounded-xl group-hover:scale-110 transition-transform border border-amber-500/20">
                             <FiEdit2 className="text-amber-400 text-xl" />
                         </div>
                         <span className="text-[9px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-amber-300">Ajustar</span>
@@ -117,9 +117,9 @@ export default function CuentaDetalleModal({
 
                     <button
                         onClick={() => { onClose(); onEliminar(cuenta); }}
-                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/40 hover:bg-red-500/10 border border-slate-700/50 hover:border-red-500/30 rounded-2xl transition-all group"
+                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/40 hover:bg-red-500/10 border border-slate-700/50 hover:border-red-500/30 rounded-2xl transition-colors group"
                     >
-                        <div className="p-3 bg-red-500/10 rounded-xl group-hover:scale-110 transition-all border border-red-500/20">
+                        <div className="p-3 bg-red-500/10 rounded-xl group-hover:scale-110 transition-transform border border-red-500/20">
                             <FiTrash2 className="text-red-400 text-xl" />
                         </div>
                         <span className="text-[9px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-red-300">Vincular</span>
@@ -129,7 +129,7 @@ export default function CuentaDetalleModal({
                 {/* History Section */}
                 <div className="space-y-4 max-h-[400px] overflow-hidden flex flex-col">
                     <div className="flex items-center gap-3 px-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-lg" />
                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[4px]">Diario de Navegación</span>
                     </div>
                     <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">

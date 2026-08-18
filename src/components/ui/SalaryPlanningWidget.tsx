@@ -45,8 +45,8 @@ export default function SalaryPlanningWidget({ userId }: Props) {
     };
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg flex flex-col justify-between relative overflow-hidden group hover:bg-slate-900/70 transition-all duration-300">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-all opacity-50"></div>
+        <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg flex flex-col justify-between relative overflow-hidden group hover:bg-slate-900/70 transition-colors duration-300">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-colors opacity-50"></div>
 
             <div className="flex justify-between items-start mb-6 relative z-10">
                 <div>
@@ -65,7 +65,7 @@ export default function SalaryPlanningWidget({ userId }: Props) {
                 </button>
             </div>
 
-            <div className="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50 mb-4 group hover:border-violet-500/30 transition-all">
+            <div className="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50 mb-4 group hover:border-violet-500/30 transition-colors">
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-slate-400 text-sm font-medium uppercase tracking-wider">Sueldo Mensual</span>
                     <span className="font-bold text-white text-2xl">${salary.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
@@ -122,7 +122,7 @@ export default function SalaryPlanningWidget({ userId }: Props) {
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-violet-500 hover:bg-violet-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-violet-500/20"
+                            className="px-6 py-2 bg-violet-500 hover:bg-violet-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-violet-500/20"
                         >
                             Guardar
                         </button>

@@ -139,7 +139,7 @@ export default function ExpensePieChart({ transactions, data: propData }: Expens
                                             key={d.data.name}
                                             d={arcGenerator(d) || undefined}
                                             fill={`url(#${grad.id})`}
-                                            className="transition-all duration-300 cursor-pointer focus:outline-none"
+                                            className="transition-colors duration-300 cursor-pointer focus:outline-none"
                                             style={{
                                                 filter: isActive ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' : 'none',
                                                 transform: isActive ? 'scale(1.02)' : 'scale(1)',
@@ -178,7 +178,7 @@ export default function ExpensePieChart({ transactions, data: propData }: Expens
                     return (
                         <div
                             key={entry.name}
-                            className={`flex items-center justify-between p-2 rounded-lg transition-all cursor-pointer ${isActive
+                            className={`flex items-center justify-between p-2 rounded-lg transition-colors cursor-pointer ${isActive
                                 ? 'bg-slate-800/60 border border-slate-700/50 shadow-md'
                                 : 'hover:bg-slate-800/30 border border-transparent'
                                 }`}

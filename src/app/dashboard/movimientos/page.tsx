@@ -6,8 +6,6 @@ import TransactionForm from "@/components/forms/TransactionForm";
 import RecentTransactions from "@/components/ui/RecentTransactions";
 import { FiList, FiPlus, FiArrowLeft } from "react-icons/fi";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
-import { motion, AnimatePresence } from "framer-motion";
-
 // Fallback de carga en esqueleto para evitar saltos visuales en PWA
 function MovimientosFallback() {
     return (
@@ -63,7 +61,7 @@ function MovimientosContent() {
     return (
         <div className="space-y-6 pb-20 md:pb-0">
             {/* Desktop Header */}
-            <div className="hidden md:block bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+            <div className="hidden md:block bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiList className="text-7xl md:text-9xl text-violet-400" />
                 </div>
@@ -88,7 +86,7 @@ function MovimientosContent() {
                 {mobileView === 'form' && (
                     <button
                         onClick={handleBackToList}
-                        className="p-2.5 bg-slate-800/80 backdrop-blur-md rounded-xl text-slate-300 hover:text-white border border-slate-700/50 hover:bg-slate-700 transition-all shadow-md active:scale-95"
+                        className="p-2.5 bg-slate-800/80 backdrop-blur-md rounded-xl text-slate-300 hover:text-white border border-slate-700/50 hover:bg-slate-700 transition-[transform,color] shadow-md active:scale-95"
                     >
                         <FiArrowLeft size={18} />
                     </button>
@@ -97,40 +95,29 @@ function MovimientosContent() {
 
             {/* Mobile View Switching */}
             <div className="md:hidden relative">
-                <AnimatePresence mode="wait">
-                    {mobileView === 'list' ? (
-                        <motion.div
+{mobileView === 'list' ? (
+                        <div
                             key="list"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.2 }}
                         >
                             <RecentTransactions />
 
                             {/* FAB for Mobile: alineado con Nami en PWA */}
-                            <motion.button
-                                whileTap={{ scale: 0.9 }}
+                            <button
                                 onClick={() => setMobileView('form')}
                                 aria-label="Nuevo movimiento"
-                                className="fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-violet-500 rounded-2xl text-white shadow-xl shadow-violet-500/30 flex items-center justify-center z-50 border border-white/10"
+                                className="fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-violet-500 rounded-2xl text-white shadow-lg  flex items-center justify-center z-50 border border-white/10"
                             >
                                 <FiPlus size={28} />
-                            </motion.button>
-                        </motion.div>
+                            </button>
+                        </div>
                     ) : (
-                        <motion.div
+                        <div
                             key="form"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ duration: 0.2 }}
                         >
                             <TransactionForm />
-                        </motion.div>
+                        </div>
                     )}
-                </AnimatePresence>
-            </div>
+</div>
 
             {/* Desktop Layout Grid (Only visible on MD+) */}
             <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-8">

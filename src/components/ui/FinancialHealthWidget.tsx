@@ -77,7 +77,7 @@ export default function FinancialHealthWidget() {
     const strokeDashoffset = circumference - (salud.score / 100) * circumference;
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md p-5 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group transition-all hover:bg-slate-900/70 hover:border-slate-600">
+        <div className="bg-slate-900/50 backdrop-blur-md p-5 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden group transition-colors hover:bg-slate-900/70 hover:border-slate-600">
             <div className={`absolute top-0 right-0 w-32 h-32 ${salud.nivel.bg} rounded-full blur-3xl -mr-16 -mt-16 opacity-50`} />
 
             <div className="relative z-10">
@@ -166,7 +166,7 @@ export default function FinancialHealthWidget() {
                         </div>
                         <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
                             <div
-                                className={`h-full rounded-full transition-all duration-700 ${
+                                className={`h-full rounded-full transition-colors duration-700 ${
                                     salud.usoPresupuesto > 90
                                         ? 'bg-gradient-to-r from-red-500 to-red-400'
                                         : salud.usoPresupuesto > 70

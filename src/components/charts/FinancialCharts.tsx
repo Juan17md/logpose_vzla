@@ -92,7 +92,7 @@ export function ExpenseCategoryChart({ data }: { data: ChartData[] }) {
                                         key={d.data.name}
                                         d={arcGenerator(d) || undefined}
                                         fill={`url(#${grad.id})`}
-                                        className="transition-all duration-300 cursor-pointer focus:outline-none"
+                                        className="transition-colors duration-300 cursor-pointer focus:outline-none"
                                         style={{
                                             filter: isActive ? 'drop-shadow(0 6px 12px rgba(0,0,0,0.5))' : 'none',
                                             transform: isActive ? 'scale(1.03)' : 'scale(1)',
@@ -161,7 +161,7 @@ export function BalanceChart({ data }: { data: ChartData[] }) {
                         >
                             {/* Value tooltip above bar */}
                             <div
-                                className={`absolute -top-6 text-xs font-black transition-all duration-300 ${isHovered ? 'text-white scale-110' : 'text-slate-400'
+                                className={`absolute -top-6 text-xs font-black transition-[transform,color] duration-300 ${isHovered ? 'text-white scale-110' : 'text-slate-400'
                                     }`}
                             >
                                 ${Number(item.value).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -169,7 +169,7 @@ export function BalanceChart({ data }: { data: ChartData[] }) {
 
                             {/* The Bar */}
                             <div
-                                className="w-12 sm:w-16 rounded-t-2xl transition-all duration-500 ease-out cursor-pointer relative group overflow-hidden"
+                                className="w-12 sm:w-16 rounded-t-2xl transition-colors duration-500 ease-out cursor-pointer relative group overflow-hidden"
                                 style={{
                                     height: `${Math.max(heightPercent, 4)}%`,
                                     backgroundColor: color,
