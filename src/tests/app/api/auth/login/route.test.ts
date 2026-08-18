@@ -108,7 +108,7 @@ describe("POST /api/auth/login", () => {
     expect(mockCrearCustomToken).toHaveBeenCalledWith("uid-123")
 
     const claveRateLimit = mockLimit.mock.calls[0][0] as string
-    expect(claveRateLimit).toBe("unknown:a@b.com")
+    expect(claveRateLimit).toBe("a@b.com")
     expect(mockCrearCustomToken).toHaveBeenCalledWith("uid-123")
 
     const [url, opciones] = vi.mocked(fetch).mock.calls[0]
@@ -116,6 +116,18 @@ describe("POST /api/auth/login", () => {
     const enviado = JSON.parse(String(opciones?.body))
     expect(enviado.email).toBe("a@b.com")
     expect(enviado.returnSecureToken).toBe(true)
+  })
+
+  it("normaliza el email a minúsculas para el rate limit", async () => {
+    mockLimit.mockResolvedValue({ success: true })
+    mockCrearCustomToken.mockResolvedValue("token-personalizado")
+    vi.mocked(fetch).mockResolvedValue(
+      respuestaFirebase({ localId: "uid-123" })
+    )
+
+    await POST(peticion({ email: "Usuario@Ejemplo.com", password: "123456" }))
+    const claveRateLimit = mockLimit.mock.calls[0][0] as string
+    expect(claveRateLimit).toBe("usuario@ejemplo.com")
   })
 
   it("devuelve 500 si falta la API key", async () => {

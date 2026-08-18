@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: primerError }, { status: 400 });
     }
 
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const { success } = await obtenerLoginRateLimit().limit(`${ip}:${parsed.data.email}`);
+    const emailNormalizado = parsed.data.email.toLowerCase();
+    const { success } = await obtenerLoginRateLimit().limit(emailNormalizado);
     if (!success) {
       return NextResponse.json(
         { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: parsed.data.email,
+          email: emailNormalizado,
           password: parsed.data.password,
           returnSecureToken: true,
         }),
