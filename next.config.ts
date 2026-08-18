@@ -17,7 +17,6 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   turbopack: {},
-  serverExternalPackages: ["firebase-admin"],
 
   async headers() {
     return [

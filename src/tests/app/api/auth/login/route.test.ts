@@ -3,23 +3,17 @@ import { POST } from "@/app/api/auth/login/route"
 
 vi.mock("server-only", () => ({}))
 
-const { mockLimit, mockCreateCustomToken } = vi.hoisted(() => ({
+const { mockLimit, mockCrearCustomToken } = vi.hoisted(() => ({
   mockLimit: vi.fn(),
-  mockCreateCustomToken: vi.fn(),
+  mockCrearCustomToken: vi.fn(),
 }))
 
 vi.mock("@/lib/rateLimit", () => ({
   obtenerLoginRateLimit: () => ({ limit: mockLimit }),
 }))
 
-vi.mock("firebase-admin/app", () => ({
-  getApps: () => [],
-  initializeApp: () => ({}),
-  cert: () => ({}),
-}))
-
-vi.mock("firebase-admin/auth", () => ({
-  getAuth: () => ({ createCustomToken: mockCreateCustomToken }),
+vi.mock("@/lib/customToken", () => ({
+  crearCustomToken: mockCrearCustomToken,
 }))
 
 vi.stubGlobal("fetch", vi.fn())
@@ -46,7 +40,7 @@ beforeEach(() => {
   vi.stubEnv("FIREBASE_SERVICE_ACCOUNT", JSON.stringify({}))
   vi.stubEnv("NEXT_PUBLIC_FIREBASE_API_KEY", API_KEY)
   mockLimit.mockReset()
-  mockCreateCustomToken.mockReset()
+  mockCrearCustomToken.mockReset()
   vi.mocked(fetch).mockReset()
 })
 
@@ -102,7 +96,7 @@ describe("POST /api/auth/login", () => {
 
   it("devuelve custom token al validar credenciales", async () => {
     mockLimit.mockResolvedValue({ success: true })
-    mockCreateCustomToken.mockResolvedValue("token-personalizado")
+    mockCrearCustomToken.mockResolvedValue("token-personalizado")
     vi.mocked(fetch).mockResolvedValue(
       respuestaFirebase({ localId: "uid-123", idToken: "id-token" })
     )
@@ -111,6 +105,11 @@ describe("POST /api/auth/login", () => {
     expect(respuesta.status).toBe(200)
     const cuerpo = await respuesta.json()
     expect(cuerpo.customToken).toBe("token-personalizado")
+    expect(mockCrearCustomToken).toHaveBeenCalledWith("uid-123")
+
+    const claveRateLimit = mockLimit.mock.calls[0][0] as string
+    expect(claveRateLimit).toBe("unknown:a@b.com")
+    expect(mockCrearCustomToken).toHaveBeenCalledWith("uid-123")
 
     const [url, opciones] = vi.mocked(fetch).mock.calls[0]
     expect(url).toContain(`accounts:signInWithPassword?key=${API_KEY}`)

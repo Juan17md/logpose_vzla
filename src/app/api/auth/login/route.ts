@@ -2,27 +2,12 @@ import 'server-only';
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { obtenerLoginRateLimit } from "@/lib/rateLimit";
+import { crearCustomToken } from "@/lib/customToken";
 
 const credencialesSchema = z.object({
   email: z.string().email("Correo electrónico inválido").max(254),
   password: z.string().min(1, "La contraseña es obligatoria").max(1024),
 });
-
-let _adminAuth: ReturnType<typeof import("firebase-admin/auth").getAuth> | null = null;
-
-async function obtenerAdminAuth() {
-  if (!_adminAuth) {
-    const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT no está configurado");
-    const { cert, initializeApp, getApps } = await import("firebase-admin/app");
-    const { getAuth } = await import("firebase-admin/auth");
-    if (getApps().length === 0) {
-      initializeApp({ credential: cert(JSON.parse(raw)) });
-    }
-    _adminAuth = getAuth();
-  }
-  return _adminAuth;
-}
 
 const ERRORES_FIREBASE = {
   INVALID_LOGIN_CREDENTIALS: { status: 401, mensaje: "Credenciales incorrectas." },
@@ -34,20 +19,20 @@ const ERRORES_FIREBASE = {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const { success } = await obtenerLoginRateLimit().limit(ip);
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },
-        { status: 429 }
-      );
-    }
-
     const body = await request.json().catch(() => null);
     const parsed = credencialesSchema.safeParse(body);
     if (!parsed.success) {
       const primerError = parsed.error.issues[0]?.message ?? "Datos inválidos.";
       return NextResponse.json({ error: primerError }, { status: 400 });
+    }
+
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const { success } = await obtenerLoginRateLimit().limit(`${ip}:${parsed.data.email}`);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },
+        { status: 429 }
+      );
     }
 
     const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
@@ -85,7 +70,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
     }
 
-    const customToken = await (await obtenerAdminAuth()).createCustomToken(data.localId);
+    const customToken = await crearCustomToken(data.localId);
 
     return NextResponse.json({ customToken });
   } catch (e) {
