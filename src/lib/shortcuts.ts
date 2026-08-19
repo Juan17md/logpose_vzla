@@ -35,13 +35,22 @@ const CATEGORIAS_POR_TIPO = {
 
 export const transaccionShortcutSchema = z
   .object({
-    monto: z
-      .number({ error: 'El monto debe ser un número.' })
-      .positive({ error: 'El monto debe ser mayor que cero.' })
-      .max(999_999_999, { error: 'El monto es demasiado grande.' }),
-    tipo: z.enum(['ingreso', 'gasto'], {
-      error: 'El tipo debe ser "ingreso" o "gasto".',
-    }),
+    monto: z.preprocess(
+      (valor) =>
+        typeof valor === 'string' && /^\d+(\.\d+)?$/.test(valor)
+          ? Number(valor)
+          : valor,
+      z
+        .number({ error: 'El monto debe ser un número.' })
+        .positive({ error: 'El monto debe ser mayor que cero.' })
+        .max(999_999_999, { error: 'El monto es demasiado grande.' })
+    ),
+    tipo: z.preprocess(
+      (valor) => (typeof valor === 'string' ? valor.toLowerCase() : valor),
+      z.enum(['ingreso', 'gasto'], {
+        error: 'El tipo debe ser "ingreso" o "gasto".',
+      })
+    ),
     categoria: z
       .string({ error: 'La categoría es obligatoria.' })
       .min(1, { error: 'La categoría es obligatoria.' })

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import { NextRequest } from "next/server"
 import { POST } from "@/app/api/auth/login/route"
 
 vi.mock("server-only", () => ({}))
@@ -20,8 +21,8 @@ vi.stubGlobal("fetch", vi.fn())
 
 const API_KEY = "clave-de-prueba"
 
-function peticion(payload: unknown): Request {
-  return new Request("http://localhost/api/auth/login", {
+function peticion(payload: unknown): NextRequest {
+  return new NextRequest("http://localhost/api/auth/login", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload),
@@ -58,7 +59,7 @@ describe("POST /api/auth/login", () => {
 
   it("devuelve 400 con JSON inválido", async () => {
     mockLimit.mockResolvedValue({ success: true })
-    const request = new Request("http://localhost/api/auth/login", {
+    const request = new NextRequest("http://localhost/api/auth/login", {
       method: "POST",
       body: "no-json",
     })

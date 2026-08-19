@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { NextRequest } from 'next/server'
 import { POST } from '@/app/api/shortcuts/transaction/route'
 
 vi.mock('server-only', () => ({}))
@@ -21,13 +22,13 @@ const USER_ID = "uid-del-dueno"
 
 function peticion(
   payload: unknown,
-  token = TOKEN
-): Request {
+  token: string | null = TOKEN
+): NextRequest {
   const headers: Record<string, string> = {
     "content-type": "application/json",
   }
   if (token !== null) headers.authorization = `Bearer ${token}`
-  return new Request("http://localhost/api/shortcuts/transaction", {
+  return new NextRequest("http://localhost/api/shortcuts/transaction", {
     method: "POST",
     headers,
     body: JSON.stringify(payload),
@@ -91,7 +92,7 @@ describe("POST /api/shortcuts/transaction", () => {
   })
 
   it("devuelve 400 con JSON inválido", async () => {
-    const request = new Request("http://localhost/api/shortcuts/transaction", {
+    const request = new NextRequest("http://localhost/api/shortcuts/transaction", {
       method: "POST",
       headers: { authorization: `Bearer ${TOKEN}` },
       body: "no-json",
@@ -114,11 +115,59 @@ describe("POST /api/shortcuts/transaction", () => {
     expect(cuerpo.error).toBe("El monto debe ser mayor que cero.")
   })
 
+  it("devuelve 400 si el monto es una string vacía (Atajos envía \"\")", async () => {
+    const respuesta = await POST(peticion(cuerpoValido({ monto: "" })))
+    expect(respuesta.status).toBe(400)
+    const cuerpo = await respuesta.json()
+    expect(cuerpo.error).toBe("El monto debe ser un número.")
+  })
+
+  it("devuelve 400 si el monto es una string no numérica", async () => {
+    const respuesta = await POST(peticion(cuerpoValido({ monto: "8.5.3" })))
+    expect(respuesta.status).toBe(400)
+    const cuerpo = await respuesta.json()
+    expect(cuerpo.error).toBe("El monto debe ser un número.")
+  })
+
+  it("acepta el monto como string numérica (Atajos lo serializa como texto)", async () => {
+    const respuesta = await POST(peticion(cuerpoValido({ monto: "8" })))
+    expect(respuesta.status).toBe(200)
+    const cuerpo = await respuesta.json()
+    expect(cuerpo.transaccion.monto).toBe(8)
+    const escritos = mockCrearTransaccion.mock.calls[0][0]
+    expect(escritos.amount).toBe(8)
+  })
+
+  it("acepta el monto decimal como string y lo redondea a 2 decimales", async () => {
+    const respuesta = await POST(peticion(cuerpoValido({ monto: "8.509" })))
+    expect(respuesta.status).toBe(200)
+    const escritos = mockCrearTransaccion.mock.calls[0][0]
+    expect(escritos.amount).toBe(8.51)
+  })
+
   it("devuelve 400 si el tipo no es válido", async () => {
     const respuesta = await POST(peticion(cuerpoValido({ tipo: "transferencia" })))
     expect(respuesta.status).toBe(400)
     const cuerpo = await respuesta.json()
     expect(cuerpo.error).toBe('El tipo debe ser "ingreso" o "gasto".')
+  })
+
+  it("acepta el tipo con la primera letra en mayúscula (Atajos capitaliza la lista)", async () => {
+    const respuesta = await POST(
+      peticion(cuerpoValido({ tipo: "Gasto", categoria: "Comida" }))
+    )
+    expect(respuesta.status).toBe(200)
+    const escritos = mockCrearTransaccion.mock.calls[0][0]
+    expect(escritos.type).toBe("gasto")
+  })
+
+  it("acepta el tipo ingreso con mayúscula y valida su categoría", async () => {
+    const respuesta = await POST(
+      peticion(cuerpoValido({ tipo: "Ingreso", categoria: "Salario" }))
+    )
+    expect(respuesta.status).toBe(200)
+    const escritos = mockCrearTransaccion.mock.calls[0][0]
+    expect(escritos.type).toBe("ingreso")
   })
 
   it("devuelve 400 si la categoría no está permitida", async () => {
