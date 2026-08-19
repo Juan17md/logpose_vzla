@@ -158,6 +158,21 @@ export async function actualizarUsuario(
   return res.json();
 }
 
+/**
+ * Crea una transacción en la colección raíz `transactions` con ID autogenerado.
+ * Devuelve el ID del documento creado. El POST a la colección sin `documentId`
+ * hace que Firestore genere un ID aleatorio.
+ */
+export async function crearTransaccionFirestore(
+  datos: Record<string, unknown>
+): Promise<string> {
+  const data = await requestFirestore("POST", "/transactions", {
+    fields: jsonToFields(datos),
+  });
+  const nombre = (data as { name?: string })?.name ?? "";
+  return nombre.split("/").pop() ?? "";
+}
+
 export async function eliminarColeccion(
   uid: string,
   coleccion: string

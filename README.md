@@ -48,6 +48,29 @@
 - Validación Zod en todas las escrituras Firestore (15+ esquemas)
 - `server-only` para módulos sensibles del backend
 
+## Integración con Atajos de iOS (Shortcuts)
+
+Registra ingresos y gastos directamente desde la app **Atajos** sin abrir la interfaz web, mediante el endpoint `POST /api/shortcuts/transaction`.
+
+**Configuración** (variables de entorno):
+
+| Variable | Descripción |
+| :--- | :--- |
+| `SHORTCUTS_API_TOKEN` | Token estático generado con `openssl rand -hex 32`. Se envía como `Authorization: Bearer <token>` |
+| `SHORTCUTS_USER_ID` | UID de Firebase del dueño de la cuenta (el token solo escribe en esta cuenta) |
+
+**Body JSON**: `monto` (número positivo), `tipo` (`ingreso`/`gasto`), `categoria` (Salario, Freelance, Comida, Hogar, Transporte, Servicios, Salud, Educación, Entretenimiento, Mascotas, Regalos, Ropa, Seguros, Belleza, Deudas, Inversiones, Otra), `descripcion` (opcional), `fecha` (opcional, ISO 8601, default: ahora) y `currency` (opcional, `USD`/`VES`, default: `USD`).
+
+```bash
+curl -X POST https://logpose-vzla.vercel.app/api/shortcuts/transaction \
+  -H "Authorization: Bearer $SHORTCUTS_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"monto": 2500, "tipo": "gasto", "categoria": "Comida",
+       "descripcion": "Almuerzo con amigos", "currency": "VES"}'
+```
+
+Respuesta de éxito: `200` con `{ "success": true, "transaccion": { id, monto, tipo, ... } }`. Errores: `400` body inválido, `401` token incorrecto, `429` límite de solicitudes, `500` error de servidor. Al no exponer cabeceras CORS, solo clientes nativos (Atajos) pueden consumirlo — los navegadores quedan excluidos por diseño.
+
 ## Stack Tecnológico
 
 | Componente | Tecnología |

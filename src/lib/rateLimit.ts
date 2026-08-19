@@ -4,6 +4,7 @@ import { Redis } from "@upstash/redis";
 let _chatRateLimit: Ratelimit | null = null;
 let _authRateLimit: Ratelimit | null = null;
 let _loginRateLimit: Ratelimit | null = null;
+let _shortcutRateLimit: Ratelimit | null = null;
 
 function crearRedis(): Redis {
   return new Redis({
@@ -46,4 +47,16 @@ export function obtenerLoginRateLimit(): Ratelimit {
     });
   }
   return _loginRateLimit;
+}
+
+export function obtenerShortcutRateLimit(): Ratelimit {
+  if (!_shortcutRateLimit) {
+    _shortcutRateLimit = new Ratelimit({
+      redis: crearRedis(),
+      limiter: Ratelimit.slidingWindow(20, "60 s"),
+      analytics: true,
+      prefix: "logpose:shortcut",
+    });
+  }
+  return _shortcutRateLimit;
 }
