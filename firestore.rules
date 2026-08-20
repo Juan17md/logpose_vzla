@@ -104,6 +104,12 @@ service cloud.firestore {
       return isSignedIn() && hasRole(request.auth.uid, "admin");
     }
 
+    // El rol no puede mutar desde el SDK cliente (ni el dueño ni un admin).
+    // Promociones y degradaciones: Server Actions con service account (omite rules).
+    function keepsSameRole() {
+      return request.resource.data.role == resource.data.role;
+    }
+
     // ========================================
     // 📋 REGLAS DE SEGURIDAD - LOGPOSE VZLA
     // ========================================
@@ -112,17 +118,17 @@ service cloud.firestore {
     // 👤 USUARIOS - Documento principal del usuario
     // ----------------------------------------
     // Colección: users/{userId}
-    // El propietario siempre puede leer/escribir su propio documento.
-    // Los administradores pueden leer todos los users para el panel admin.
+    // El propietario lee y actualiza su documento (sin cambiar role).
+    // Los administradores leen todos los users (panel). El update NO usa isAdmin():
+    // un admin autenticado en el cliente no puede promover a otros ni reescribir
+    // perfiles ajenos. Nombre y rol de terceros: Server Actions (Admin REST).
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId)
         && isString(request.resource.data.email)
         && isString(request.resource.data.displayName)
         && request.resource.data.role == "usuario";
-      allow update: if (isOwner(userId)
-        && request.resource.data.role == resource.data.role)
-        || isAdmin();
+      allow update: if isOwner(userId) && keepsSameRole();
       allow delete: if isAdmin();
 
       // ----------------------------------------

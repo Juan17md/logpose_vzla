@@ -1,11 +1,16 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from "react";
-import { collection, query, where, orderBy, limit, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp, updateDoc, runTransaction } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, onSnapshot, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { createVenezuelaDate } from "@/lib/timezone";
-import { convertirMontoParaCuenta } from "@/lib/bankAccounts";
+import {
+  crearMovimiento,
+  eliminarMovimiento,
+  actualizarMovimiento,
+  type MovimientoData,
+} from "@/lib/movimientos";
 
 export interface Transaction {
     id: string;
@@ -88,274 +93,75 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
-    const deleteTransaction = useCallback(async (id: string) => {
-        if (!auth.currentUser) return false;
-        try {
-            await runTransaction(db, async (transaction) => {
-                const transRef = doc(db, "transactions", id);
-                const transDoc = await transaction.get(transRef);
-                
-                if (!transDoc.exists()) throw "La transacción no existe";
+    // Todas las escrituras delegan en el servicio de dominio (src/lib/movimientos.ts),
+    // única implementación del impacto de un movimiento sobre los saldos.
 
-                const transData = transDoc.data();
-                const { accountId, amount, type, currency, exchangeRate, originalAmount } = transData;
+    const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id'>): Promise<string | null> => {
+        if (!auth.currentUser) return null;
 
-                if (accountId) {
-                    const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
-                    const cuentaDoc = await transaction.get(cuentaRef);
-                    if (cuentaDoc.exists()) {
-                        const currentSaldo = cuentaDoc.data().saldo || 0;
-                        const cuentaMoneda = cuentaDoc.data().moneda || "USD";
-                        const montoParaReversar = convertirMontoParaCuenta(amount, currency || 'USD', cuentaMoneda, exchangeRate, originalAmount);
+        const resultado = await crearMovimiento(
+            db,
+            auth.currentUser.uid,
+            transaction as MovimientoData
+        );
 
-                        let nuevoSaldo = currentSaldo;
-                        if (type === 'ingreso') nuevoSaldo -= montoParaReversar;
-                        else if (type === 'gasto') nuevoSaldo += montoParaReversar;
-                        else if (type === 'transferencia') nuevoSaldo += montoParaReversar;
-                        transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
-                    }
-                }
-
-                if (type === 'transferencia' && transData.targetAccountId) {
-                    const targetCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", transData.targetAccountId);
-                    const targetCuentaDoc = await transaction.get(targetCuentaRef);
-                    if (targetCuentaDoc.exists()) {
-                        const currentSaldo = targetCuentaDoc.data().saldo || 0;
-                        const targetCuentaMoneda = targetCuentaDoc.data().moneda || "USD";
-                        const montoParaTargetReversar = convertirMontoParaCuenta(amount, currency || 'USD', targetCuentaMoneda, exchangeRate, originalAmount);
-                        const nuevoSaldo = currentSaldo - montoParaTargetReversar;
-                        transaction.update(targetCuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
-                    }
-                }
-
-                transaction.delete(transRef);
-            });
-            return true;
-        } catch (error) {
-            console.error("Error deleting transaction:", error);
-            return false;
+        if (!resultado.exito) {
+            console.error("Error adding transaction:", resultado.error);
+            return null;
         }
+        return resultado.id;
     }, []);
 
-    const duplicateTransaction = useCallback(async (id: string) => {
+    const updateTransaction = useCallback(async (id: string, updates: Partial<Transaction>): Promise<boolean> => {
+        if (!auth.currentUser) return false;
+
+        const resultado = await actualizarMovimiento(
+            db,
+            auth.currentUser.uid,
+            id,
+            updates as Partial<MovimientoData>
+        );
+
+        if (!resultado.exito) {
+            console.error("Error updating transaction:", resultado.error);
+            return false;
+        }
+        return true;
+    }, []);
+
+    const deleteTransaction = useCallback(async (id: string): Promise<boolean> => {
+        if (!auth.currentUser) return false;
+
+        const resultado = await eliminarMovimiento(db, auth.currentUser.uid, id);
+        if (!resultado.exito) {
+            console.error("Error deleting transaction:", resultado.error);
+            return false;
+        }
+        return true;
+    }, []);
+
+    const duplicateTransaction = useCallback(async (id: string): Promise<boolean> => {
         const transactionToCopy = transactions.find(t => t.id === id);
         if (!transactionToCopy || !auth.currentUser) return false;
 
-        try {
-            await runTransaction(db, async (transaction) => {
-                const { id: _, date, ...rest } = transactionToCopy;
-                const cleanRest = Object.fromEntries(
-                    Object.entries(rest).filter(([, v]) => v !== undefined)
-                ) as Omit<Transaction, 'id' | 'date'>;
-                const { accountId, amount, type } = cleanRest;
+        const { id: _id, date: _fecha, ...rest } = transactionToCopy;
+        void _id;
+        void _fecha;
+        const resultado = await crearMovimiento(
+            db,
+            auth.currentUser.uid,
+            {
+                ...rest,
+                date: createVenezuelaDate(),
+            } as MovimientoData
+        );
 
-                if (accountId) {
-                    const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
-                    const cuentaDoc = await transaction.get(cuentaRef);
-                    if (cuentaDoc.exists()) {
-                        const currentSaldo = cuentaDoc.data().saldo || 0;
-                        const cuentaMoneda = cuentaDoc.data().moneda || "USD";
-
-                        const montoParaCuenta = convertirMontoParaCuenta(
-                            amount,
-                            cleanRest.currency || 'USD',
-                            cuentaMoneda,
-                            cleanRest.exchangeRate,
-                            cleanRest.originalAmount
-                        );
-
-                        let nuevoSaldo = currentSaldo;
-                        if (type === 'ingreso') nuevoSaldo += montoParaCuenta;
-                        else if (type === 'gasto') nuevoSaldo -= montoParaCuenta;
-                        else if (type === 'transferencia') nuevoSaldo -= montoParaCuenta;
-                        transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
-                    }
-                }
-
-                if (type === 'transferencia' && cleanRest.targetAccountId) {
-                    const targetCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", cleanRest.targetAccountId);
-                    const targetCuentaDoc = await transaction.get(targetCuentaRef);
-                    if (targetCuentaDoc.exists()) {
-                        const currentSaldo = targetCuentaDoc.data().saldo || 0;
-                        const targetCuentaMoneda = targetCuentaDoc.data().moneda || "USD";
-
-                        const montoParaTargetCuenta = convertirMontoParaCuenta(
-                            amount,
-                            cleanRest.currency || 'USD',
-                            targetCuentaMoneda,
-                            cleanRest.exchangeRate,
-                            cleanRest.originalAmount
-                        );
-
-                        const nuevoSaldo = currentSaldo + montoParaTargetCuenta;
-                        transaction.update(targetCuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
-                    }
-                }
-
-                const newTransRef = doc(collection(db, "transactions"));
-                transaction.set(newTransRef, {
-                    ...cleanRest,
-                    userId: auth.currentUser!.uid,
-                    date: createVenezuelaDate(),
-                    createdAt: serverTimestamp()
-                });
-            });
-            return true;
-        } catch (error) {
-            console.error("Error duplicating transaction:", error);
+        if (!resultado.exito) {
+            console.error("Error duplicating transaction:", resultado.error);
             return false;
         }
+        return true;
     }, [transactions]);
-
-    const addTransaction = useCallback(async (transactionData: Omit<Transaction, 'id'>) => {
-        if (!auth.currentUser) return null;
-
-        try {
-            const cleanTransactionData = Object.fromEntries(
-                Object.entries(transactionData).filter(([, v]) => v !== undefined)
-            ) as Omit<Transaction, 'id'>;
-
-            let newId = "";
-            await runTransaction(db, async (transaction) => {
-                const { accountId, amount, type } = cleanTransactionData;
-
-                if (accountId) {
-                    const cuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", accountId);
-                    const cuentaDoc = await transaction.get(cuentaRef);
-                    if (cuentaDoc.exists()) {
-                        const currentSaldo = cuentaDoc.data().saldo || 0;
-                        const cuentaMoneda = cuentaDoc.data().moneda || "USD";
-                        
-                        // Determinar el monto en la moneda de la cuenta
-                        const montoParaCuenta = convertirMontoParaCuenta(amount, cleanTransactionData.currency || 'USD', cuentaMoneda, cleanTransactionData.exchangeRate, cleanTransactionData.originalAmount);
-
-                        let nuevoSaldo = currentSaldo;
-                        if (type === 'ingreso') nuevoSaldo += montoParaCuenta;
-                        else if (type === 'gasto') nuevoSaldo -= montoParaCuenta;
-                        else if (type === 'transferencia') nuevoSaldo -= montoParaCuenta;
-                        
-                        transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
-                    }
-                }
-
-                if (type === 'transferencia' && cleanTransactionData.targetAccountId) {
-                    const targetCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", cleanTransactionData.targetAccountId);
-                    const targetCuentaDoc = await transaction.get(targetCuentaRef);
-                    if (targetCuentaDoc.exists()) {
-                        const currentSaldo = targetCuentaDoc.data().saldo || 0;
-                        const targetCuentaMoneda = targetCuentaDoc.data().moneda || "USD";
-                        
-                        const montoParaTargetCuenta = convertirMontoParaCuenta(amount, cleanTransactionData.currency || 'USD', targetCuentaMoneda, cleanTransactionData.exchangeRate, cleanTransactionData.originalAmount);
-
-                        const nuevoSaldo = currentSaldo + montoParaTargetCuenta;
-                        transaction.update(targetCuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
-                    }
-                }
-
-                const newTransRef = doc(collection(db, "transactions"));
-                newId = newTransRef.id;
-                transaction.set(newTransRef, {
-                    ...cleanTransactionData,
-                    userId: auth.currentUser!.uid,
-                    createdAt: serverTimestamp()
-                });
-            });
-            return newId;
-        } catch (error) {
-            console.error("Error adding transaction:", error);
-            return null;
-        }
-    }, []);
-
-    const updateTransaction = useCallback(async (id: string, updates: Partial<Transaction>) => {
-        if (!auth.currentUser) return false;
-        try {
-            await runTransaction(db, async (transaction) => {
-                const transRef = doc(db, "transactions", id);
-                const transDoc = await transaction.get(transRef);
-                if (!transDoc.exists()) throw "Transacción no encontrada";
-
-                const oldData = transDoc.data() as Transaction;
-                const cleanUpdates = Object.fromEntries(
-                    Object.entries(updates).filter(([, v]) => v !== undefined)
-                ) as Partial<Transaction>;
-                
-                const newData = { ...oldData, ...cleanUpdates };
-
-                // Si ha cambiado la cuenta, el destino, el monto o el tipo, necesitamos recalcular saldos
-                const needsBalanceUpdate = 
-                    oldData.accountId !== cleanUpdates.accountId || 
-                    oldData.targetAccountId !== cleanUpdates.targetAccountId ||
-                    oldData.amount !== cleanUpdates.amount || 
-                    oldData.type !== cleanUpdates.type ||
-                    oldData.currency !== cleanUpdates.currency ||
-                    oldData.exchangeRate !== cleanUpdates.exchangeRate ||
-                    oldData.originalAmount !== cleanUpdates.originalAmount;
-
-                if (needsBalanceUpdate) {
-                    // 1. Revertir impacto anterior
-                    if (oldData.accountId) {
-                        const oldCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", oldData.accountId);
-                        const oldCuentaDoc = await transaction.get(oldCuentaRef);
-                        if (oldCuentaDoc.exists()) {
-                            const currentSaldo = oldCuentaDoc.data().saldo || 0;
-                            const oldCuentaMoneda = oldCuentaDoc.data().moneda || "USD";
-                            const montoParaOldCuenta = convertirMontoParaCuenta(oldData.amount, oldData.currency || 'USD', oldCuentaMoneda, oldData.exchangeRate, oldData.originalAmount);
-
-                            let revertedSaldo = currentSaldo;
-                            if (oldData.type === 'ingreso') revertedSaldo -= montoParaOldCuenta;
-                            else revertedSaldo += montoParaOldCuenta;
-                            transaction.update(oldCuentaRef, { saldo: revertedSaldo, actualizadoEn: serverTimestamp() });
-                        }
-                    }
-                    if (oldData.type === 'transferencia' && oldData.targetAccountId) {
-                        const oldTargetRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", oldData.targetAccountId);
-                        const oldTargetDoc = await transaction.get(oldTargetRef);
-                        if (oldTargetDoc.exists()) {
-                            const currentSaldo = oldTargetDoc.data().saldo || 0;
-                            const oldTargetMoneda = oldTargetDoc.data().moneda || "USD";
-                            const montoParaOldTarget = convertirMontoParaCuenta(oldData.amount, oldData.currency || 'USD', oldTargetMoneda, oldData.exchangeRate, oldData.originalAmount);
-
-                            transaction.update(oldTargetRef, { saldo: currentSaldo - montoParaOldTarget, actualizadoEn: serverTimestamp() });
-                        }
-                    }
-
-                    // 2. Aplicar nuevo impacto
-                    if (newData.accountId) {
-                        const newCuentaRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", newData.accountId);
-                        const newCuentaDoc = await transaction.get(newCuentaRef);
-                        if (newCuentaDoc.exists()) {
-                            const currentSaldo = newCuentaDoc.data().saldo || 0;
-                            const newCuentaMoneda = newCuentaDoc.data().moneda || "USD";
-                            const montoParaNewCuenta = convertirMontoParaCuenta(newData.amount, newData.currency || 'USD', newCuentaMoneda, newData.exchangeRate, newData.originalAmount);
-
-                            let appliedSaldo = currentSaldo;
-                            if (newData.type === 'ingreso') appliedSaldo += montoParaNewCuenta;
-                            else appliedSaldo -= montoParaNewCuenta;
-                            transaction.update(newCuentaRef, { saldo: appliedSaldo, actualizadoEn: serverTimestamp() });
-                        }
-                    }
-                    if (newData.type === 'transferencia' && newData.targetAccountId) {
-                        const newTargetRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", newData.targetAccountId);
-                        const newTargetDoc = await transaction.get(newTargetRef);
-                        if (newTargetDoc.exists()) {
-                            const currentSaldo = newTargetDoc.data().saldo || 0;
-                            const newTargetMoneda = newTargetDoc.data().moneda || "USD";
-                            const montoParaNewTarget = convertirMontoParaCuenta(newData.amount, newData.currency || 'USD', newTargetMoneda, newData.exchangeRate, newData.originalAmount);
-
-                            transaction.update(newTargetRef, { saldo: currentSaldo + montoParaNewTarget, actualizadoEn: serverTimestamp() });
-                        }
-                    }
-                }
-
-                transaction.update(transRef, cleanUpdates);
-            });
-            return true;
-        } catch (error) {
-            console.error("Error updating transaction:", error);
-            return false;
-        }
-    }, []);
 
     const value = useMemo(() => ({
         transactions,
