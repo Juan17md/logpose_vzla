@@ -4,9 +4,11 @@ import { POST } from '@/app/api/shortcuts/transaction/route'
 
 vi.mock('server-only', () => ({}))
 
-const { mockLimit, mockCrearTransaccion } = vi.hoisted(() => ({
+const { mockLimit, mockCrearTransaccion, mockObtenerCuenta, mockIncrementarSaldo } = vi.hoisted(() => ({
   mockLimit: vi.fn(),
   mockCrearTransaccion: vi.fn(),
+  mockObtenerCuenta: vi.fn(),
+  mockIncrementarSaldo: vi.fn(),
 }))
 
 vi.mock('@/lib/rateLimit', () => ({
@@ -15,6 +17,8 @@ vi.mock('@/lib/rateLimit', () => ({
 
 vi.mock('@/lib/firebaseAdmin', () => ({
   crearTransaccionFirestore: mockCrearTransaccion,
+  obtenerCuentaFirestore: mockObtenerCuenta,
+  incrementarSaldoCuenta: mockIncrementarSaldo,
 }))
 
 const TOKEN = "token-de-prueba"
@@ -49,8 +53,11 @@ beforeEach(() => {
   vi.stubEnv("SHORTCUTS_USER_ID", USER_ID)
   mockLimit.mockReset()
   mockCrearTransaccion.mockReset()
+  mockObtenerCuenta.mockReset()
+  mockIncrementarSaldo.mockReset()
   mockLimit.mockResolvedValue({ success: true })
   mockCrearTransaccion.mockResolvedValue("id-generado-123")
+  mockObtenerCuenta.mockResolvedValue({ nombre: "Efectivo", saldo: 1000 })
 })
 
 afterEach(() => {
@@ -81,6 +88,27 @@ describe("POST /api/shortcuts/transaction", () => {
     mockLimit.mockResolvedValue({ success: false })
     const respuesta = await POST(peticion(cuerpoValido()))
     expect(respuesta.status).toBe(429)
+    expect(mockCrearTransaccion).not.toHaveBeenCalled()
+  })
+
+  it("usa el SHORTCUTS_USER_ID como clave del rate limit (no global)", async () => {
+    const respuesta = await POST(peticion(cuerpoValido()))
+    expect(respuesta.status).toBe(200)
+    const clave = mockLimit.mock.calls[0][0] as string
+    expect(clave).toBe(USER_ID)
+  })
+
+  it("no aplica el rate limit si el token es inválido", async () => {
+    const respuesta = await POST(peticion(cuerpoValido(), "token-equivocado"))
+    expect(respuesta.status).toBe(401)
+    expect(mockLimit).not.toHaveBeenCalled()
+  })
+
+  it("devuelve 500 (no 401) si falta SHORTCUTS_API_TOKEN aunque se envíe token", async () => {
+    vi.stubEnv("SHORTCUTS_API_TOKEN", "")
+    const respuesta = await POST(peticion(cuerpoValido()))
+    expect(respuesta.status).toBe(500)
+    expect(mockLimit).not.toHaveBeenCalled()
     expect(mockCrearTransaccion).not.toHaveBeenCalled()
   })
 
@@ -245,5 +273,69 @@ describe("POST /api/shortcuts/transaction", () => {
     expect(escritos.currency).toBe("VES")
     expect(escritos.description).toBe("Quincena")
     expect((escritos.date as Date).toISOString()).toBe(new Date(fecha).toISOString())
+  })
+
+  it("actualiza el saldo de la cuenta con un gasto (delta negativo)", async () => {
+    const respuesta = await POST(
+      peticion(cuerpoValido({ monto: 30, accountId: "cuenta-1" }))
+    )
+    expect(respuesta.status).toBe(200)
+    expect(mockObtenerCuenta).toHaveBeenCalledWith(USER_ID, "cuenta-1")
+    expect(mockIncrementarSaldo).toHaveBeenCalledWith(USER_ID, "cuenta-1", -30)
+    const escritos = mockCrearTransaccion.mock.calls[0][0]
+    expect(escritos.accountId).toBeUndefined()
+  })
+
+  it("actualiza el saldo de la cuenta con un ingreso (delta positivo)", async () => {
+    const respuesta = await POST(
+      peticion(
+        cuerpoValido({ tipo: "ingreso", categoria: "Salario", monto: 500, accountId: "cuenta-1" })
+      )
+    )
+    expect(respuesta.status).toBe(200)
+    expect(mockIncrementarSaldo).toHaveBeenCalledWith(USER_ID, "cuenta-1", 500)
+    expect(mockObtenerCuenta).toHaveBeenCalledWith(USER_ID, "cuenta-1")
+  })
+
+  it("devuelve 400 si el accountId no existe para el usuario", async () => {
+    mockObtenerCuenta.mockResolvedValue(null)
+    const respuesta = await POST(
+      peticion(cuerpoValido({ monto: 30, accountId: "cuenta-inexistente" }))
+    )
+    expect(respuesta.status).toBe(400)
+    const cuerpo = await respuesta.json()
+    expect(cuerpo.error).toContain("cuenta-inexistente")
+    expect(mockCrearTransaccion).not.toHaveBeenCalled()
+    expect(mockIncrementarSaldo).not.toHaveBeenCalled()
+  })
+
+  it("no toca saldos ni cuentas cuando no se envía accountId", async () => {
+    const respuesta = await POST(peticion(cuerpoValido()))
+    expect(respuesta.status).toBe(200)
+    expect(mockObtenerCuenta).not.toHaveBeenCalled()
+    expect(mockIncrementarSaldo).not.toHaveBeenCalled()
+  })
+
+  it("rechaza un accountId vacío", async () => {
+    const respuesta = await POST(peticion(cuerpoValido({ accountId: "" })))
+    expect(respuesta.status).toBe(400)
+    expect(mockCrearTransaccion).not.toHaveBeenCalled()
+  })
+
+  it("incluye accountId en la respuesta cuando se envía", async () => {
+    const respuesta = await POST(
+      peticion(cuerpoValido({ monto: 10, accountId: "cuenta-1" }))
+    )
+    expect(respuesta.status).toBe(200)
+    const cuerpo = await respuesta.json()
+    expect(cuerpo.transaccion.accountId).toBe("cuenta-1")
+  })
+
+  it("aplica el redondeo a 2 decimales también al delta del saldo", async () => {
+    const respuesta = await POST(
+      peticion(cuerpoValido({ monto: "8.509", accountId: "cuenta-1" }))
+    )
+    expect(respuesta.status).toBe(200)
+    expect(mockIncrementarSaldo).toHaveBeenCalledWith(USER_ID, "cuenta-1", -8.51)
   })
 })

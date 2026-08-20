@@ -318,16 +318,42 @@ export async function listarLogs(): Promise<Array<Record<string, unknown>>> {
   return docs;
 }
 
-export async function leerUsuarioConToken(
-  uid: string,
-  idToken: string
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<Record<string, any> | null> {
-  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${idToken}` },
+export async function obtenerCuentaFirestore(
+  userId: string,
+  accountId: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    const data = await requestFirestore(
+      "GET",
+      `/users/${userId}/bank_accounts/${accountId}`
+    );
+    return docToObject(data);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Aplica un delta al saldo de una cuenta bancaria de forma atómica
+ * (increment server-side con la API :commit de Firestore, sin condición de
+ * carrera). El delta se expresa en la misma moneda de la cuenta.
+ */
+export async function incrementarSaldoCuenta(
+  userId: string,
+  accountId: string,
+  delta: number
+): Promise<void> {
+  await requestFirestore("POST", ":commit", {
+    writes: [
+      {
+        update: {
+          name: `projects/${PROJECT_ID}/databases/(default)/documents/users/${userId}/bank_accounts/${accountId}`,
+        },
+        updateTransforms: [
+          { fieldPath: "saldo", increment: { doubleValue: delta } },
+        ],
+        currentDocument: { exists: true },
+      },
+    ],
   });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return docToObject(data);
 }

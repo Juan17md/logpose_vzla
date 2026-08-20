@@ -59,7 +59,7 @@ Registra ingresos y gastos directamente desde la app **Atajos** sin abrir la int
 | `SHORTCUTS_API_TOKEN` | Token estático generado con `openssl rand -hex 32`. Se envía como `Authorization: Bearer <token>` |
 | `SHORTCUTS_USER_ID` | UID de Firebase del dueño de la cuenta (el token solo escribe en esta cuenta) |
 
-**Body JSON**: `monto` (número positivo), `tipo` (`ingreso`/`gasto`), `categoria` (Salario, Freelance, Comida, Hogar, Transporte, Servicios, Salud, Educación, Entretenimiento, Mascotas, Regalos, Ropa, Seguros, Belleza, Deudas, Inversiones, Otra), `descripcion` (opcional), `fecha` (opcional, ISO 8601, default: ahora) y `currency` (opcional, `USD`/`VES`, default: `USD`).
+**Body JSON**: `monto` (número positivo; también acepta string numérica como `"2500"` — Atajos serializa los números como texto), `tipo` (`ingreso`/`gasto`, insensible a mayúsculas: `Ingreso`/`Gasto` funcionan), `categoria` (Salario, Freelance, Comida, Hogar, Transporte, Servicios, Salud, Educación, Entretenimiento, Mascotas, Regalos, Ropa, Seguros, Belleza, Deudas, Inversiones, Otra), `descripcion` (opcional), `fecha` (opcional, ISO 8601, default: ahora) y `currency` (opcional, `USD`/`VES`, default: `USD`).
 
 ```bash
 curl -X POST https://logpose-vzla.vercel.app/api/shortcuts/transaction \

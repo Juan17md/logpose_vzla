@@ -2,6 +2,7 @@ import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   crearTransaccionDesdeShortcut,
+  ErrorCuentaShortcut,
   transaccionShortcutSchema,
   verificarTokenShortcut,
 } from '@/lib/shortcuts';
@@ -25,12 +26,18 @@ import { obtenerShortcutRateLimit } from '@/lib/rateLimit';
  *   descripcion: string        (opcional, máx. 200 caracteres)
  *   fecha:       string        (opcional, ISO 8601; default: ahora)
  *   currency:    "USD" | "VES" (opcional, default: "USD")
+ *   accountId:   string        (opcional; ID de una cuenta del usuario)
  *
  * Categorías permitidas:
  *   ingreso → Salario, Freelance
  *   gasto   → Comida, Hogar, Transporte, Servicios, Salud, Educación,
  *             Entretenimiento, Mascotas, Regalos, Ropa, Seguros, Belleza,
  *             Deudas, Inversiones, Otra
+ *
+ * Nota sobre accountId: si se envía, la transacción se asocia a la cuenta y
+ * su saldo se actualiza atómicamente (gasto resta, ingreso suma), igual que
+ * al registrar desde la app. Si no se envía, la transacción queda como
+ * registro sin cuenta (el saldo de ninguna cuenta se modifica).
  *
  * Configuración (.env / Vercel):
  *   SHORTCUTS_API_TOKEN=<token generado con: openssl rand -hex 32>
@@ -50,7 +57,7 @@ import { obtenerShortcutRateLimit } from '@/lib/rateLimit';
  *
  * Respuestas:
  *   200 → { "success": true, "transaccion": { id, monto, tipo, ... } }
- *   400 → { "error": "<mensaje descriptivo>" }        (body inválido)
+ *   400 → { "error": "<mensaje descriptivo>" }        (body inválido o cuenta inexistente)
  *   401 → { "error": "Token no autorizado." }
  *   429 → { "error": "Demasiadas solicitudes..." }
  *   500 → { "error": "Error interno del servidor" }   (o no configurado)
@@ -64,23 +71,15 @@ export async function POST(request: NextRequest) {
       ? authHeader.slice(7)
       : null;
 
-    if (!process.env.SHORTCUTS_API_TOKEN) {
+    const verificacion = verificarTokenShortcut(token);
+    if (verificacion.estado === 'no_config') {
       return NextResponse.json(
         { error: 'El endpoint no está configurado (falta SHORTCUTS_API_TOKEN).' },
         { status: 500 }
       );
     }
-
-    if (!verificarTokenShortcut(token)) {
+    if (verificacion.estado === 'invalid') {
       return NextResponse.json({ error: 'Token no autorizado.' }, { status: 401 });
-    }
-
-    const { success } = await obtenerShortcutRateLimit().limit('shortcuts');
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
-        { status: 429 }
-      );
     }
 
     const userId = process.env.SHORTCUTS_USER_ID;
@@ -88,6 +87,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'El endpoint no está configurado (falta SHORTCUTS_USER_ID).' },
         { status: 500 }
+      );
+    }
+
+    // Clave del rate limit por usuario (no global): un token comprometido no
+    // puede agotar la cuota de los demás usuarios del endpoint.
+    const { success } = await obtenerShortcutRateLimit().limit(userId);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
+        { status: 429 }
       );
     }
 
@@ -114,9 +123,13 @@ export async function POST(request: NextRequest) {
         descripcion: parsed.data.descripcion ?? '',
         fecha,
         currency: parsed.data.currency,
+        ...(parsed.data.accountId ? { accountId: parsed.data.accountId } : {}),
       },
     });
   } catch (e) {
+    if (e instanceof ErrorCuentaShortcut) {
+      return NextResponse.json({ error: e.message }, { status: 400 });
+    }
     console.error('Error en /api/shortcuts/transaction:', e);
     return NextResponse.json(
       { error: 'Error interno del servidor' },

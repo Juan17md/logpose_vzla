@@ -1,29 +1,9 @@
 "use server";
 import 'server-only';
 
-import { crearLog, listarLogs, leerUsuario } from "./firebaseAdmin";
-import { verificarCookieSesion } from "./authCookie";
-import { cookies } from "next/headers";
-import { esAdmin } from "@/types/rbac";
+import { crearLog, listarLogs } from "./firebaseAdmin";
+import { verificarAdmin } from "./verificarAdmin";
 import type { AdminLogAction, AdminLogEntry } from "@/types/adminLogs";
-
-async function verificarAdmin(): Promise<{ uid: string; email: string }> {
-  const cookieStore = await cookies();
-  const cookieVal = cookieStore.get("session")?.value;
-  if (!cookieVal) throw new Error("No autorizado");
-
-  const sesion = await verificarCookieSesion(cookieVal);
-  if (!sesion) throw new Error("Sesión inválida");
-
-  const userData = await leerUsuario(sesion.uid);
-  if (!userData) throw new Error("Usuario no encontrado");
-
-  if (!esAdmin(userData.role)) {
-    throw new Error("Se requieren permisos de administrador");
-  }
-
-  return { uid: sesion.uid, email: (userData.email as string) || "" };
-}
 
 export async function registrarLogAdmin(
   action: AdminLogAction,

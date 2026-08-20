@@ -1,7 +1,11 @@
 import 'server-only';
 import { createHash, timingSafeEqual } from 'crypto';
 import { z } from 'zod';
-import { crearTransaccionFirestore } from '@/lib/firebaseAdmin';
+import {
+  crearTransaccionFirestore,
+  obtenerCuentaFirestore,
+  incrementarSaldoCuenta,
+} from '@/lib/firebaseAdmin';
 import { createVenezuelaDate } from '@/lib/timezone';
 
 // ─── Categorías permitidas ─────────────────────────────────────
@@ -70,6 +74,11 @@ export const transaccionShortcutSchema = z
         error: 'La moneda debe ser "USD" o "VES".',
       })
       .default('USD'),
+    accountId: z
+      .string()
+      .min(1, { error: 'El accountId no puede estar vacío.' })
+      .max(50, { error: 'El accountId no puede superar 50 caracteres.' })
+      .optional(),
   })
   .superRefine((datos, ctx) => {
     const categorias = CATEGORIAS_POR_TIPO[datos.tipo];
@@ -85,34 +94,64 @@ export type TransaccionShortcut = z.infer<typeof transaccionShortcutSchema>;
 
 // ─── Autenticación con token estático ──────────────────────────
 
+export type ResultadoVerificacionToken =
+  | { estado: 'no_config' }
+  | { estado: 'invalid' }
+  | { estado: 'valid' };
+
 /**
  * Compara el token recibido con SHORTCUTS_API_TOKEN en tiempo constante
  * (hash SHA-256 previo para igualar longitudes y evitar leaks por longitud).
+ * Centraliza la validación: distingue entre "el endpoint no está configurado"
+ * (500) y "el token es inválido" (401).
  */
-export function verificarTokenShortcut(token: string | null): boolean {
+export function verificarTokenShortcut(
+  token: string | null
+): ResultadoVerificacionToken {
   const esperado = process.env.SHORTCUTS_API_TOKEN;
-  if (!token || !esperado) return false;
+  if (!esperado) return { estado: 'no_config' };
+  if (!token) return { estado: 'invalid' };
   const recibido = createHash('sha256').update(token).digest();
   const correcto = createHash('sha256').update(esperado).digest();
-  return timingSafeEqual(recibido, correcto);
+  return timingSafeEqual(recibido, correcto)
+    ? { estado: 'valid' }
+    : { estado: 'invalid' };
 }
 
 // ─── Creación de la transacción ────────────────────────────────
+
+/** Error cuando el accountId enviado no corresponde a una cuenta del usuario. */
+export class ErrorCuentaShortcut extends Error {}
 
 /**
  * Crea la transacción en Firestore con el mismo modelo que usa el resto de la
  * app (userId, amount, type, category, description, date, currency, createdAt)
  * y devuelve el ID generado junto con la fecha final normalizada a ISO 8601.
+ *
+ * Si se envía `accountId`, valida que la cuenta exista (400 si no) y actualiza
+ * su saldo con un increment atómico server-side (gasto resta, ingreso suma),
+ * replicando el comportamiento de `TransactionsContext.addTransaction`. Si no
+ * se envía, la transacción queda como registro sin cuenta (saldo intacto).
  */
 export async function crearTransaccionDesdeShortcut(
   datos: TransaccionShortcut,
   userId: string
 ): Promise<{ id: string; fecha: string }> {
   const fecha = datos.fecha ? new Date(datos.fecha) : createVenezuelaDate();
+  const monto = Math.round(datos.monto * 100) / 100;
+
+  if (datos.accountId) {
+    const cuenta = await obtenerCuentaFirestore(userId, datos.accountId);
+    if (!cuenta) {
+      throw new ErrorCuentaShortcut(
+        `La cuenta "${datos.accountId}" no existe para este usuario.`
+      );
+    }
+  }
 
   const id = await crearTransaccionFirestore({
     userId,
-    amount: Math.round(datos.monto * 100) / 100,
+    amount: monto,
     type: datos.tipo,
     category: datos.categoria,
     description: datos.descripcion ?? '',
@@ -120,6 +159,11 @@ export async function crearTransaccionDesdeShortcut(
     currency: datos.currency,
     createdAt: new Date(),
   });
+
+  if (datos.accountId) {
+    const delta = datos.tipo === 'gasto' ? -monto : monto;
+    await incrementarSaldoCuenta(userId, datos.accountId, delta);
+  }
 
   return { id, fecha: fecha.toISOString() };
 }

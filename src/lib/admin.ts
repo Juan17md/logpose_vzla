@@ -1,7 +1,6 @@
 "use server";
 import 'server-only';
 
-import { cookies } from "next/headers";
 import {
   leerUsuario,
   listarUsuarios,
@@ -12,29 +11,10 @@ import {
   eliminarUsuarioDoc,
   eliminarAuthUser,
 } from "./firebaseAdmin";
-import { verificarCookieSesion } from "./authCookie";
-import { esAdmin } from "@/types/rbac";
+import { verificarAdmin } from "./verificarAdmin";
 import { registrarLogAdmin } from "./adminLogs";
 
 type ActionResult = { exito: true } | { exito: false; error: string };
-
-async function verificarAdmin(): Promise<string> {
-  const cookieStore = await cookies();
-  const cookieVal = cookieStore.get("session")?.value;
-  if (!cookieVal) throw new Error("No autorizado");
-
-  const sesion = await verificarCookieSesion(cookieVal);
-  if (!sesion) throw new Error("Sesión inválida");
-
-  const userData = await leerUsuario(sesion.uid);
-  if (!userData) throw new Error("Usuario no encontrado");
-
-  if (!esAdmin(userData.role)) {
-    throw new Error("Se requieren permisos de administrador");
-  }
-
-  return sesion.uid;
-}
 
 export async function obtenerUsuarios(): Promise<
   Array<{

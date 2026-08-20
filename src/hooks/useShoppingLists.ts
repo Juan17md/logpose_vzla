@@ -88,11 +88,23 @@ export const useShoppingLists = () => {
         });
     };
 
+    // Defensa en profundidad: las Firestore rules ya validan ownership en el
+    // servidor, pero aquí se evita cualquier operación sobre listas que no
+    // pertenezcan al usuario actual (los IDs de Firestore no son secretos).
+    const esListaPropia = (listId: string): boolean => {
+        const usuarioActual = auth.currentUser;
+        if (!usuarioActual) return false;
+        const lista = lists.find(l => l.id === listId);
+        return !!lista && lista.userId === usuarioActual.uid;
+    };
+
     const deleteList = async (listId: string) => {
+        if (!esListaPropia(listId)) return;
         await deleteDoc(doc(db, "shopping_lists", listId));
     };
 
     const addItem = async (listId: string, item: Omit<ShoppingItem, "id" | "completed" | "purchasedQuantity">) => {
+        if (!esListaPropia(listId)) return;
         const parsed = itemListaSchema.safeParse(item);
         if (!parsed.success) {
             console.error("Item inválido:", parsed.error.flatten());
@@ -188,6 +200,7 @@ export const useShoppingLists = () => {
     };
 
     const updateListName = async (listId: string, newName: string) => {
+        if (!esListaPropia(listId)) return;
         const parsed = listaComprasSchema.safeParse({ name: newName });
         if (!parsed.success) {
             console.error("Nombre de lista inválido:", parsed.error.flatten());
