@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { addDoc, collection, Timestamp, doc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2, FiEye, FiEyeOff, FiChevronRight, FiClock, FiAlertCircle, FiSave, FiTag } from "react-icons/fi";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -16,6 +16,8 @@ import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { obtenerSimboloMoneda, MONEDAS_SOPORTADAS, type MonedaSoportada } from "@/lib/bankAccounts";
 import CurrencySelector from "@/components/ui/CurrencySelector";
 import Select from "@/components/ui/forms/Select";
+import { crearMovimiento } from "@/lib/movimientos";
+import { createVenezuelaDate } from "@/lib/timezone";
 
 
 // ─── Placeholder ligero para widgets durante carga ────────────────────────────
@@ -83,12 +85,15 @@ export default function DashboardPage() {
     const { 
         cuentas, 
         obtenerCuenta, 
-        calcularSaldoTotal, 
-        apiRates, 
-        tasasEnBs,
         monedaBase, 
         actualizarMonedaBase 
     } = useBankAccounts();
+    const {
+        stats,
+        tasasEnBs,
+        convertirMontoBaseABs,
+        convertirMontoBaseAUsd,
+    } = useDashboardMetrics();
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);
     const [showAdjustModal, setShowAdjustModal] = useState(false);
     const [cuentaAjustando, setCuentaAjustando] = useState<string>("");
@@ -115,100 +120,6 @@ export default function DashboardPage() {
 
         return () => unsubscribeAuth();
     }, [router]);
-
-    const convertirMontoBaseABs = (monto: number): number => {
-        if (monedaBase === "BS") return monto;
-        const tasaMonedaBase = tasasEnBs[monedaBase] || 0;
-        return monto * tasaMonedaBase;
-    };
-
-    const convertirMontoBaseAUsd = (monto: number): number => {
-        const montoEnBs = convertirMontoBaseABs(monto);
-        const tasaUsdEnBs = tasasEnBs.USD || 0;
-        if (!tasaUsdEnBs || tasaUsdEnBs <= 0) return 0;
-        return montoEnBs / tasaUsdEnBs;
-    };
-
-    const stats = useMemo(() => {
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-        const daysPassed = now.getDate();
-
-        let monthlyIncome = 0;
-        let monthlyExpense = 0;
-        const expensesByCategory: Record<string, number> = {};
-
-        const totalBalance = calcularSaldoTotal();
-        const tasaBaseEnBs = tasasEnBs[monedaBase] || 1;
-        const convertirDesdeBs = (montoEnBs: number): number => {
-            if (monedaBase === "BS") return montoEnBs;
-            if (!tasaBaseEnBs || tasaBaseEnBs <= 0) return 0;
-            return montoEnBs / tasaBaseEnBs;
-        };
-        const convertirTransaccionAMonedaBase = (t: typeof transactions[number]): number => {
-            const amount = Number(t.amount) || 0;
-            const currency = String(t.currency || "USD").toUpperCase();
-            const exchangeRate = Number(t.exchangeRate) || 0;
-            const originalAmount = Number(t.originalAmount) || 0;
-
-            let montoEnBs = 0;
-            if (currency === "VES" || currency === "BS") {
-                if (originalAmount > 0) montoEnBs = originalAmount;
-                else if (exchangeRate > 0 && exchangeRate !== 1) montoEnBs = amount * exchangeRate;
-                else montoEnBs = amount * (tasasEnBs.USD || 0);
-            } else if (currency === "USDT") {
-                montoEnBs = amount * (tasasEnBs.USDT || 0);
-            } else if (currency === "EUR") {
-                montoEnBs = amount * (tasasEnBs.EUR || 0);
-            } else {
-                // USD
-                if (exchangeRate > 0 && exchangeRate !== 1) {
-                    montoEnBs = amount * exchangeRate;
-                } else {
-                    montoEnBs = amount * (tasasEnBs.USD || 0);
-                }
-            }
-
-            return convertirDesdeBs(montoEnBs);
-        };
-
-        transactions.forEach(t => {
-            const amount = convertirTransaccionAMonedaBase(t);
-            const tDate = new Date(t.date);
-            if (tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear) {
-                if (t.type === "ingreso") {
-                    monthlyIncome += amount;
-                } else {
-                    monthlyExpense += amount;
-                    // Track category expenses
-                    expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + amount;
-                }
-            }
-        });
-
-        // Find top category
-        let topCategoryName = "N/A";
-        let topCategoryAmount = 0;
-        Object.entries(expensesByCategory).forEach(([cat, amount]) => {
-            if (amount > topCategoryAmount) {
-                topCategoryAmount = amount;
-                topCategoryName = cat;
-            }
-        });
-
-        const dailyAverage = daysPassed > 0 ? monthlyExpense / daysPassed : 0;
-
-        const categoryData = Object.entries(expensesByCategory)
-            .map(([name, value]) => ({ name, value: convertirMontoBaseAUsd(value) }))
-            .sort((a, b) => b.value - a.value);
-
-        // Redondear a 2 decimales y eliminar -0 por errores de punto flotante
-        const balanceRedondeado = Math.round(totalBalance * 100) / 100;
-        const balanceFinal = Object.is(balanceRedondeado, -0) ? 0 : balanceRedondeado;
-
-        return { totalBalance: balanceFinal, monthlyIncome, monthlyExpense, topCategoryName, topCategoryAmount, dailyAverage, categoryData };
-    }, [transactions, calcularSaldoTotal, tasasEnBs, monedaBase, convertirMontoBaseAUsd]);
 
     const handleUpdateBalanceClick = (e: React.MouseEvent, accountId?: string) => {
         e.stopPropagation();
@@ -237,30 +148,37 @@ export default function DashboardPage() {
         }
 
         try {
-            await runTransaction(db, async (transaction) => {
-                const diff = amount - cuenta.saldo;
-                const cuentaRef = doc(db, "users", user.uid, "bank_accounts", cuentaAjustando);
-                
-                transaction.update(cuentaRef, { 
-                    saldo: amount, 
-                    actualizadoEn: serverTimestamp() 
-                });
+            const diff = amount - cuenta.saldo;
 
-                const newTransRef = doc(collection(db, "transactions"));
-                transaction.set(newTransRef, {
-                    userId: user.uid,
-                    accountId: cuentaAjustando,
+            // Las rules de transactions solo aceptan USD/VES: mapeamos la moneda
+            // de la cuenta (BS → VES, EUR/USDT → USD) para el registro contable.
+            const monedaMovimiento = cuenta.moneda === "BS" ? "VES" : "USD";
+
+            const resultado = await crearMovimiento(
+                db,
+                user.uid,
+                {
                     amount: Math.abs(diff),
-                    type: diff > 0 ? 'ingreso' : 'gasto',
-                    category: 'Ajuste',
-                    description: `Ajuste manual de saldo`,
-                    date: Timestamp.now(),
-                    currency: cuenta.moneda,
+                    type: diff > 0 ? "ingreso" : "gasto",
+                    category: "Ajuste",
+                    description: "Ajuste manual de saldo",
+                    date: createVenezuelaDate(),
+                    currency: monedaMovimiento,
                     originalAmount: Math.abs(diff),
                     exchangeRate: 1,
-                    createdAt: serverTimestamp()
-                });
-            });
+                    accountId: cuentaAjustando,
+                },
+                {
+                    ajusteSaldo: {
+                        nuevoSaldo: amount,
+                        monedaMovimiento,
+                    },
+                }
+            );
+
+            if (!resultado.exito) {
+                throw new Error(resultado.error);
+            }
 
             toast.success("Saldo actualizado correctamente");
             setShowAdjustModal(false);
@@ -280,9 +198,6 @@ export default function DashboardPage() {
 
     // Obtener las últimas 3 transacciones para la preview móvil
     const recentThree = transactions.slice(0, 3);
-    const savingsPercentage = stats.monthlyIncome > 0
-        ? Math.max(0, ((stats.monthlyIncome - stats.monthlyExpense) / stats.monthlyIncome) * 100)
-        : 0;
 
 
 

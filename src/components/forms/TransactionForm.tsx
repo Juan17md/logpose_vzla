@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { addDoc, collection, serverTimestamp, doc, updateDoc, runTransaction } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { toast } from "sonner";
 import { IconType } from "react-icons";
@@ -46,6 +45,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { es } from 'date-fns/locale/es';
 import { getBCVRate } from "@/lib/currency";
 import { createVenezuelaDate } from "@/lib/timezone";
+import { crearMovimiento, actualizarMovimiento } from "@/lib/movimientos";
 import { useEditTransaction } from "@/contexts/EditTransactionContext";
 import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { useCategorias, MAPA_ICONOS } from "@/contexts/CategoriesContext";
@@ -421,19 +421,6 @@ export default function TransactionForm() {
         try {
             const finalCategory = data.category === "Otra" ? data.customCategory!.trim() : data.category;
 
-            const transactionData = {
-                amount: parseNumeroFlexible(data.amount),
-                type: data.type,
-                category: data.type === "transferencia" ? "Transferencias" : finalCategory,
-                subcategory: data.type === "transferencia" ? "" : (data.subcategory || ""),
-                description: data.description || "",
-                date: data.date,
-                currency: data.currency,
-                originalAmount: data.currency === "VES" ? parseNumeroFlexible(data.vesAmount || "0") : parseNumeroFlexible(data.amount),
-                exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
-                accountId: data.accountId,
-            };
-
             const montoUSD = parseNumeroFlexible(data.amount);
 
             if (data.type === "transferencia") {
@@ -452,79 +439,55 @@ export default function TransactionForm() {
 
                 const comisionUSD = data.hasCommission && data.commissionAmount ? parseNumeroFlexible(data.commissionAmount) : 0;
                 const comisionVES = data.hasCommission && data.vesCommissionAmount ? parseNumeroFlexible(data.vesCommissionAmount) : 0;
+                const comisionParaOrigen = cuentaOrigen.moneda === "BS" ? comisionVES : comisionUSD;
 
-                await runTransaction(db, async (transaction) => {
-                    const cuentaOrigenRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", data.accountId);
-                    const cuentaDestinoRef = doc(db, "users", auth.currentUser!.uid, "bank_accounts", data.targetAccountId!);
-                    
-                    const cuentaOrigenDoc = await transaction.get(cuentaOrigenRef);
-                    const cuentaDestinoDoc = await transaction.get(cuentaDestinoRef);
+                // Validar saldo suficiente antes de delegar en el servicio
+                const montoOrigen = convertirMontoParaCuenta(montoUSD, data.currency, cuentaOrigen.moneda, parseNumeroFlexible(data.exchangeRate), parseNumeroFlexible(data.vesAmount), tasasEnBs);
+                if (cuentaOrigen.saldo < montoOrigen + comisionParaOrigen) {
+                    toast.error("Saldo insuficiente");
+                    setLoading(false);
+                    return;
+                }
 
-                    if (cuentaOrigenDoc.exists() && cuentaDestinoDoc.exists()) {
-                        const origenData = cuentaOrigenDoc.data();
-                        const destinoData = cuentaDestinoDoc.data();
-
-                        const saldoOrigen = origenData?.saldo || 0;
-                        const saldoDestino = destinoData?.saldo || 0;
-                        const cuentaOrigenMoneda = origenData?.moneda || "USD";
-                        const cuentaDestinoMoneda = destinoData?.moneda || "USD";
-
-                        // Determinar montos según la moneda de la cuenta
-                        const montoOrigen = convertirMontoParaCuenta(montoUSD, data.currency, cuentaOrigenMoneda, parseNumeroFlexible(data.exchangeRate), parseNumeroFlexible(data.vesAmount), tasasEnBs);
-                        
-                        const tasaCambioUsuario = parseNumeroFlexible(data.tasaCambio || "0");
-                        let montoDestino: number;
-                        if (cuentaOrigenMoneda !== cuentaDestinoMoneda && tasaCambioUsuario > 0) {
-                            montoDestino = montoOrigen * tasaCambioUsuario;
-                        } else {
-                            montoDestino = convertirMontoParaCuenta(montoUSD, data.currency, cuentaDestinoMoneda, parseNumeroFlexible(data.exchangeRate), parseNumeroFlexible(data.vesAmount), tasasEnBs);
-                        }
-
-                        const comisionParaOrigen = cuentaOrigenMoneda === "BS" ? comisionVES : comisionUSD;
-
-                        // Validar saldo suficiente
-                        if (saldoOrigen < montoOrigen + comisionParaOrigen) {
-                            throw new Error("Saldo insuficiente");
-                        }
-
-                        transaction.update(cuentaOrigenRef, { saldo: saldoOrigen - montoOrigen - comisionParaOrigen, actualizadoEn: serverTimestamp() });
-                        transaction.update(cuentaDestinoRef, { saldo: saldoDestino + montoDestino, actualizadoEn: serverTimestamp() });
-                    }
-
-                    // Unica transaccion de transferencia
-                    const newTransRef = doc(collection(db, "transactions"));
-                    transaction.set(newTransRef, {
-                        ...transactionData,
-                        userId: auth.currentUser!.uid,
+                const resultado = await crearMovimiento(
+                    db,
+                    auth.currentUser.uid,
+                    {
+                        amount: montoUSD,
                         type: "transferencia",
                         category: "Transferencias",
                         subcategory: "",
                         description: data.description || `Transferencia a ${cuentaDestino.nombre}`,
+                        date: data.date,
+                        currency: data.currency,
+                        originalAmount: data.currency === "VES" ? parseNumeroFlexible(data.vesAmount || "0") : montoUSD,
+                        exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
+                        accountId: data.accountId,
                         targetAccountId: data.targetAccountId,
                         period: "mensual",
-                        createdAt: serverTimestamp(),
-                    });
-
-                    // Comision (origen)
-                    if (comisionUSD > 0) {
-                        const comisionRef = doc(collection(db, "transactions"));
-                        transaction.set(comisionRef, {
-                            userId: auth.currentUser!.uid,
-                            amount: comisionUSD,
-                            type: "gasto",
-                            category: "Comisiones",
-                            subcategory: "",
-                            description: `Comisión de transferencia`,
-                            date: data.date,
-                            currency: data.currency,
-                            originalAmount: data.currency === "VES" ? comisionVES : comisionUSD,
-                            exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
-                            accountId: data.accountId,
-                            period: "mensual",
-                            createdAt: serverTimestamp(),
-                        });
+                    },
+                    {
+                        tasasEnBs,
+                        validarSaldoOrigen: true,
+                        tasaCambioDestino: parseNumeroFlexible(data.tasaCambio || "0") > 0
+                            ? parseNumeroFlexible(data.tasaCambio!)
+                            : undefined,
+                        comisiones: comisionUSD > 0
+                            ? [{
+                                amount: comisionUSD,
+                                currency: data.currency,
+                                originalAmount: data.currency === "VES" ? comisionVES : comisionUSD,
+                                exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
+                                accountId: data.accountId,
+                                description: "Comisión de transferencia",
+                            }]
+                            : undefined,
                     }
-                });
+                );
+
+                if (!resultado.exito) {
+                    throw new Error(resultado.error);
+                }
                 toast.success("Transferencia registrada exitosamente.");
                 reset({
                     amount: "", description: "", category: "", subcategory: "", customCategory: "",
@@ -534,88 +497,75 @@ export default function TransactionForm() {
                     tasaCambio: "", montoDestino: "",
                 });
             } else if (transactionToEdit) {
-                // Al editar, ajustar saldo: revertir el anterior y aplicar el nuevo
-                const cuentaRef = doc(db, "users", auth.currentUser.uid, "bank_accounts", data.accountId);
-                await runTransaction(db, async (transaction) => {
-                    const cuentaDoc = await transaction.get(cuentaRef);
-                    if (cuentaDoc.exists()) {
-                        let saldo = cuentaDoc.data().saldo || 0;
-                        const cuentaMoneda = cuentaDoc.data().moneda || "USD";
-                        const tasa = parseNumeroFlexible(data.exchangeRate || "1");
-
-                        // Determinar montos actuales
-                        const montoActualParaCuenta = convertirMontoParaCuenta(montoUSD, data.currency, cuentaMoneda, tasa, parseNumeroFlexible(data.vesAmount));
-
-                        // Revertir movimiento anterior si era de la misma cuenta
-                        if (transactionToEdit.accountId === data.accountId) {
-                            const realMontoAnteriorParaCuenta = convertirMontoParaCuenta(transactionToEdit.amount, transactionToEdit.currency || 'USD', cuentaMoneda, transactionToEdit.exchangeRate, transactionToEdit.originalAmount);
-
-                            if (transactionToEdit.type === "ingreso") saldo -= realMontoAnteriorParaCuenta;
-                            else saldo += realMontoAnteriorParaCuenta;
-                        }
-
-                        // Aplicar nuevo movimiento
-                        if (data.type === "ingreso") saldo += montoActualParaCuenta;
-                        else saldo -= montoActualParaCuenta;
-                        
-                        transaction.update(cuentaRef, { saldo, actualizadoEn: serverTimestamp() });
+                // Al editar, el servicio de dominio revierte el impacto anterior
+                // (cuenta/destino/monto/tipo antiguos) y aplica el nuevo (T6).
+                // Nota: la edición solo soporta ingreso/gasto (sin transferencias).
+                const resultado = await actualizarMovimiento(
+                    db,
+                    auth.currentUser.uid,
+                    transactionToEdit.id,
+                    {
+                        amount: montoUSD,
+                        type: data.type,
+                        category: finalCategory,
+                        subcategory: data.subcategory || "",
+                        description: data.description || "",
+                        date: data.date,
+                        currency: data.currency,
+                        originalAmount: data.currency === "VES" ? parseNumeroFlexible(data.vesAmount || "0") : montoUSD,
+                        exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
+                        accountId: data.accountId,
+                        period: "mensual",
+                    },
+                    {
+                        tasasEnBs,
                     }
-                    transaction.update(doc(db, "transactions", transactionToEdit.id), transactionData);
-                });
+                );
+
+                if (!resultado.exito) {
+                    throw new Error(resultado.error);
+                }
                 toast.success("El movimiento ha sido modificado.");
                 clearEditing();
             } else {
                 // Crear transacción y actualizar saldo de la cuenta en una transacción atómica
-                const cuentaRef = doc(db, "users", auth.currentUser.uid, "bank_accounts", data.accountId);
-                
                 const comisionUSD = data.hasCommission && data.commissionAmount ? parseNumeroFlexible(data.commissionAmount) : 0;
                 const comisionVES = data.hasCommission && data.vesCommissionAmount ? parseNumeroFlexible(data.vesCommissionAmount) : 0;
 
-                await runTransaction(db, async (transaction) => {
-                    const cuentaDoc = await transaction.get(cuentaRef);
-                    if (cuentaDoc.exists()) {
-                        const saldo = cuentaDoc.data().saldo || 0;
-                        const cuentaMoneda = cuentaDoc.data().moneda || "USD";
-                        const tasa = parseNumeroFlexible(data.exchangeRate || "1");
-
-                        const montoParaCuenta = convertirMontoParaCuenta(montoUSD, data.currency, cuentaMoneda, tasa, parseNumeroFlexible(data.vesAmount));
-                        
-                        const comisionParaCuenta = cuentaMoneda === "BS" ? comisionVES : comisionUSD;
-
-                        const nuevoSaldo = data.type === "ingreso" 
-                            ? saldo + montoParaCuenta - comisionParaCuenta 
-                            : saldo - montoParaCuenta - comisionParaCuenta;
-                        
-                        transaction.update(cuentaRef, { saldo: nuevoSaldo, actualizadoEn: serverTimestamp() });
-                    }
-                    
-                    const newTransRef = doc(collection(db, "transactions"));
-                    transaction.set(newTransRef, {
-                        userId: auth.currentUser!.uid,
-                        ...transactionData,
+                const resultado = await crearMovimiento(
+                    db,
+                    auth.currentUser.uid,
+                    {
+                        amount: montoUSD,
+                        type: data.type,
+                        category: finalCategory,
+                        subcategory: data.subcategory || "",
+                        description: data.description || "",
+                        date: data.date,
+                        currency: data.currency,
+                        originalAmount: data.currency === "VES" ? parseNumeroFlexible(data.vesAmount || "0") : montoUSD,
+                        exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
+                        accountId: data.accountId,
                         period: "mensual",
-                        createdAt: serverTimestamp(),
-                    });
-
-                    if (comisionUSD > 0) {
-                        const comisionRef = doc(collection(db, "transactions"));
-                        transaction.set(comisionRef, {
-                            userId: auth.currentUser!.uid,
-                            amount: comisionUSD,
-                            type: "gasto",
-                            category: "Comisiones",
-                            subcategory: "",
-                            description: `Comisión de: ${data.description || data.category}`,
-                            date: data.date,
-                            currency: data.currency,
-                            originalAmount: data.currency === "VES" ? comisionVES : comisionUSD,
-                            exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
-                            accountId: data.accountId,
-                            period: "mensual",
-                            createdAt: serverTimestamp(),
-                        });
+                    },
+                    {
+                        tasasEnBs,
+                        comisiones: comisionUSD > 0
+                            ? [{
+                                amount: comisionUSD,
+                                currency: data.currency,
+                                originalAmount: data.currency === "VES" ? comisionVES : comisionUSD,
+                                exchangeRate: parseNumeroFlexible(data.exchangeRate) || rate || 1,
+                                accountId: data.accountId,
+                                description: `Comisión de: ${data.description || data.category}`,
+                            }]
+                            : undefined,
                     }
-                });
+                );
+
+                if (!resultado.exito) {
+                    throw new Error(resultado.error);
+                }
                 toast.success("El movimiento se ha registrado correctamente.");
 
                 // Reset form but keep some defaults

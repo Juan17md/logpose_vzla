@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { obtenerCookieSesion, configCookie } from "@/lib/authCookie";
 import Sidebar from "@/components/layout/Sidebar";
 
 import Footer from "@/components/layout/Footer";

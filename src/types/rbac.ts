@@ -8,6 +8,8 @@ export type Role = (typeof ROLES)[keyof typeof ROLES];
 export interface DatosSesion {
   uid: string;
   role: Role;
+  /** Emisión en segundos (epoch). La cookie es inválida pasados MAX_AGE_SEGUNDOS. */
+  iat?: number;
 }
 
 export interface UserDoc {

@@ -40,6 +40,10 @@ export interface Debt {
     exchangeRate?: number;
 }
 
+// Cada abono (~200 bytes) se guarda dentro del documento de la deuda, cuyo
+// límite es 1 MiB. 100 pagos (~20 KB) dejan margen amplio sin arriesgar el doc.
+const MAX_PAGOS_POR_DEUDA = 100;
+
 export function useDebts() {
     const [debts, setDebts] = useState<Debt[]>([]);
     const [loadingDebts, setLoadingDebts] = useState(true);
@@ -167,6 +171,9 @@ export function useDebts() {
 
                 // Use current data from transaction read
                 const currentPayments = currentData.payments || [];
+                if (currentPayments.length >= MAX_PAGOS_POR_DEUDA) {
+                    throw "Se alcanzó el límite de abonos para esta deuda";
+                }
                 const updatedPayments = [...currentPayments, newPayment];
 
                 const totalPaid = updatedPayments.reduce((acc, curr) => acc + (curr.amount || 0), 0);

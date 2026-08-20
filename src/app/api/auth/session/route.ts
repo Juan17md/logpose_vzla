@@ -1,9 +1,10 @@
 import 'server-only';
 import { NextRequest, NextResponse } from "next/server";
-import { leerUsuarioConToken } from "@/lib/firebaseAdmin";
+import { leerUsuario } from "@/lib/firebaseAdmin";
 import { verificarTokenFirebase } from "@/lib/verificarAuthFirebase";
 import { crearCookieSesion, configCookie } from "@/lib/authCookie";
 import { obtenerAuthRateLimit } from "@/lib/rateLimit";
+import type { Role } from "@/types/rbac";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    const userData = await leerUsuarioConToken(info.uid, idToken);
+    const userData = await leerUsuario(info.uid);
     if (!userData) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const role = userData.role || "usuario";
+    const role = (userData.role as Role) || "usuario";
 
     const sessionData = {
       uid: info.uid,

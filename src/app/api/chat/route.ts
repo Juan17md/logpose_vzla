@@ -3,6 +3,7 @@ import { Groq } from 'groq-sdk';
 import { NextResponse } from 'next/server';
 import { verificarTokenFirebase } from '@/lib/verificarAuthFirebase';
 import { obtenerChatRateLimit } from '@/lib/rateLimit';
+import { chatBodySchema } from '@/lib/chatSchemas';
 
 interface MensajeChat {
     role: "system" | "user" | "assistant";
@@ -39,10 +40,17 @@ export async function POST(req: Request) {
 
     try {
       const body = await req.json();
-      message = body.message || "";
-      conversationHistory = body.conversationHistory || [];
-      userContext = body.userContext || {};
-      operacionPendiente = body.operacionPendiente || null;
+      const parsed = chatBodySchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Solicitud inválida. Verifica el mensaje e inténtalo de nuevo.' },
+          { status: 400 }
+        );
+      }
+      message = parsed.data.message;
+      conversationHistory = parsed.data.conversationHistory;
+      userContext = parsed.data.userContext;
+      operacionPendiente = parsed.data.operacionPendiente;
     } catch {
       return NextResponse.json({
         operations: [],
@@ -50,30 +58,42 @@ export async function POST(req: Request) {
       });
     }
 
-    // Extraer contexto del usuario
+    // Extraer contexto del usuario (validando tipos: los campos null o con
+    // tipos inesperados se tratan como ausentes para no contaminar el prompt)
     const uc = userContext as Record<string, unknown>;
-    const balance = uc.balance as number | undefined;
-    const goals = uc.goals as Array<Record<string, unknown>> | undefined;
-    const debts = uc.debts as Array<Record<string, unknown>> | undefined;
-    const monthlyExpense = uc.monthlyExpense as number | undefined;
-    const monthlyIncome = uc.monthlyIncome as number | undefined;
-    const averageDailyExpense = uc.averageDailyExpense as number | undefined;
-    const lastTransaction = uc.lastTransaction as Record<string, unknown> | null;
-    const fixedExpenses = uc.fixedExpenses as Array<Record<string, unknown>> | undefined;
-    const shoppingLists = uc.shoppingLists as Array<Record<string, unknown>> | undefined;
-    const monthlyBudget = uc.monthlyBudget as number | undefined;
-    const monthlySalary = uc.monthlySalary as number | undefined;
-    const topCategories = uc.topCategories as Array<Record<string, unknown>> | undefined;
-    const previousMonthlyExpense = uc.previousMonthlyExpense as number | undefined;
-    const upcomingFixedExpenses = uc.upcomingFixedExpenses as Array<Record<string, unknown>> | undefined;
-    const bankAccounts = uc.bankAccounts as Array<Record<string, unknown>> | undefined;
-    const previousTopCategories = uc.previousTopCategories as Array<Record<string, unknown>> | undefined;
-    const savingsRatio = uc.savingsRatio as number | undefined;
-    const projectedMonthlyExpense = uc.projectedMonthlyExpense as number | undefined;
-    const apiRates = (uc.apiRates || {}) as Record<string, number | undefined>;
-    const tUSD = apiRates.USD || apiRates.usd || 56.40;
-    const tEUR = apiRates.EUR || apiRates.eur || 61.20;
-    const tUSDT = apiRates.USDT || apiRates.usdt || 64.50;
+    const numero = (valor: unknown): number | undefined =>
+      typeof valor === "number" && Number.isFinite(valor) ? valor : undefined;
+    const arreglo = (valor: unknown): Array<Record<string, unknown>> | undefined =>
+      Array.isArray(valor)
+        ? (valor as Array<Record<string, unknown>>)
+        : undefined;
+    const objeto = (valor: unknown): Record<string, unknown> | null =>
+      valor !== null && typeof valor === "object"
+        ? (valor as Record<string, unknown>)
+        : null;
+
+    const balance = numero(uc.balance);
+    const goals = arreglo(uc.goals);
+    const debts = arreglo(uc.debts);
+    const monthlyExpense = numero(uc.monthlyExpense);
+    const monthlyIncome = numero(uc.monthlyIncome);
+    const averageDailyExpense = numero(uc.averageDailyExpense);
+    const lastTransaction = objeto(uc.lastTransaction);
+    const fixedExpenses = arreglo(uc.fixedExpenses);
+    const shoppingLists = arreglo(uc.shoppingLists);
+    const monthlyBudget = numero(uc.monthlyBudget);
+    const monthlySalary = numero(uc.monthlySalary);
+    const topCategories = arreglo(uc.topCategories);
+    const previousMonthlyExpense = numero(uc.previousMonthlyExpense);
+    const upcomingFixedExpenses = arreglo(uc.upcomingFixedExpenses);
+    const bankAccounts = arreglo(uc.bankAccounts);
+    const previousTopCategories = arreglo(uc.previousTopCategories);
+    const savingsRatio = numero(uc.savingsRatio);
+    const projectedMonthlyExpense = numero(uc.projectedMonthlyExpense);
+    const apiRates = (objeto(uc.apiRates) ?? {}) as Record<string, number | undefined>;
+    const tUSD = numero(apiRates.USD) ?? numero(apiRates.usd) ?? 56.40;
+    const tEUR = numero(apiRates.EUR) ?? numero(apiRates.eur) ?? 61.20;
+    const tUSDT = numero(apiRates.USDT) ?? numero(apiRates.usdt) ?? 64.50;
 
     const contextoPendiente = operacionPendiente
       ? `\n\n⚠️ CONTEXTO ACTIVO: El usuario tiene una operación PENDIENTE esperando ${operacionPendiente.campoFaltante === 'targetAccountId' ? 'la cuenta DESTINO' : 'la cuenta ORIGEN'}. Si el mensaje indica una cuenta, DEBES devolver la operación COMPLETA en "operations" con el accountId/targetAccountId correcto (ID real de la lista de cuentas).`

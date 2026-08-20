@@ -68,7 +68,10 @@ async function hmacVerify(
 export async function crearCookieSesion(
   data: DatosSesion
 ): Promise<string> {
-  const payload = JSON.stringify(data);
+  const payload = JSON.stringify({
+    ...data,
+    iat: Math.floor(Date.now() / 1000),
+  });
   const payloadBase64 = base64UrlEncode(new TextEncoder().encode(payload));
   const sig = await hmacSign(payloadBase64);
   return `${payloadBase64}.${sig}`;
@@ -86,7 +89,19 @@ export async function verificarCookieSesion(
     if (!valido) return null;
 
     const json = new TextDecoder().decode(base64UrlDecode(payloadBase64));
-    return JSON.parse(json) as DatosSesion;
+    const sesion = JSON.parse(json) as DatosSesion;
+
+    // La cookie debe tener emisión interna (iat) y estar dentro de su vida útil.
+    // Sin iat se rechaza: una cookie capturada no puede valer indefinidamente
+    // aunque el navegador no la haya descartado todavía.
+    if (typeof sesion.iat !== "number") return null;
+
+    const ahora = Math.floor(Date.now() / 1000);
+    const toleranciaReloj = 60;
+    if (sesion.iat > ahora + toleranciaReloj) return null;
+    if (ahora - sesion.iat > MAX_AGE_SEGUNDOS) return null;
+
+    return sesion;
   } catch {
     return null;
   }

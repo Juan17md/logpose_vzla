@@ -1,7 +1,6 @@
 "use server";
 import 'server-only';
 
-import { cookies } from "next/headers";
 import {
   leerUsuario,
   listarUsuarios,
@@ -12,29 +11,10 @@ import {
   eliminarUsuarioDoc,
   eliminarAuthUser,
 } from "./firebaseAdmin";
-import { verificarCookieSesion } from "./authCookie";
-import { esAdmin } from "@/types/rbac";
+import { verificarAdmin } from "./verificarAdmin";
 import { registrarLogAdmin } from "./adminLogs";
 
 type ActionResult = { exito: true } | { exito: false; error: string };
-
-async function verificarAdmin(): Promise<string> {
-  const cookieStore = await cookies();
-  const cookieVal = cookieStore.get("session")?.value;
-  if (!cookieVal) throw new Error("No autorizado");
-
-  const sesion = await verificarCookieSesion(cookieVal);
-  if (!sesion) throw new Error("Sesión inválida");
-
-  const userData = await leerUsuario(sesion.uid);
-  if (!userData) throw new Error("Usuario no encontrado");
-
-  if (!esAdmin(userData.role)) {
-    throw new Error("Se requieren permisos de administrador");
-  }
-
-  return sesion.uid;
-}
 
 export async function obtenerUsuarios(): Promise<
   Array<{
@@ -113,6 +93,27 @@ export async function actualizarNombreUsuario(
   }
 }
 
+/**
+ * Política de contraseñas del panel admin, alineada con el registro de la app
+ * (mínimo 6) y endurecida con límite superior (72, límite de Identity Toolkit)
+ * y rechazo de contraseñas en blanco / solo espacios.
+ */
+export function validarContraseñaAdmin(password: string): string | null {
+  if (!password || typeof password !== "string") {
+    return "La contraseña es obligatoria";
+  }
+  if (password.trim().length < 6) {
+    return "La contraseña debe tener al menos 6 caracteres";
+  }
+  if (password.length > 72) {
+    return "La contraseña no puede superar 72 caracteres";
+  }
+  if (password.trim() !== password || !password.trim()) {
+    return "La contraseña no puede contener solo espacios";
+  }
+  return null;
+}
+
 export async function cambiarPasswordUsuario(
   uid: string,
   nuevaPassword: string
@@ -122,10 +123,13 @@ export async function cambiarPasswordUsuario(
     const userData = await leerUsuario(uid);
     if (!userData) return { exito: false, error: "Usuario no encontrado" };
 
-    if (!nuevaPassword || nuevaPassword.length < 6) {
+    const errorPassword = validarContraseñaAdmin(nuevaPassword);
+    if (errorPassword) return { exito: false, error: errorPassword };
+
+    if (userData.role === "admin") {
       return {
         exito: false,
-        error: "La contraseña debe tener al menos 6 caracteres",
+        error: "No puedes cambiar la contraseña de administradores",
       };
     }
 
@@ -144,9 +148,23 @@ export async function cambiarPasswordUsuario(
 
 export async function eliminarUsuario(uid: string): Promise<ActionResult> {
   try {
-    await verificarAdmin();
+    const sesion = await verificarAdmin();
     const userData = await leerUsuario(uid);
     if (!userData) return { exito: false, error: "Usuario no encontrado" };
+
+    if (userData.role === "admin") {
+      return {
+        exito: false,
+        error: "No puedes eliminar administradores",
+      };
+    }
+
+    if (sesion.uid === uid) {
+      return {
+        exito: false,
+        error: "No puedes eliminar tu propia cuenta desde el panel",
+      };
+    }
 
     const subColecciones = [
       "bank_accounts",
@@ -158,36 +176,45 @@ export async function eliminarUsuario(uid: string): Promise<ActionResult> {
       "categories",
     ];
 
+    const errores: string[] = [];
+
     for (const sub of subColecciones) {
       try {
         await eliminarColeccion(uid, sub);
-      } catch {
-        // continuar si la subcolección no existe
+      } catch (e) {
+        errores.push(`Subcolección "${sub}": ${(e as Error).message}`);
       }
     }
 
     try {
       await eliminarDocumentosWhere("transactions", "userId", uid);
-    } catch {
-      // continuar
+    } catch (e) {
+      errores.push(`Transacciones: ${(e as Error).message}`);
     }
 
     try {
       await eliminarDocumentosWhere("shopping_lists", "userId", uid);
-    } catch {
-      // continuar
+    } catch (e) {
+      errores.push(`Listas de compras: ${(e as Error).message}`);
     }
 
     try {
       await eliminarUsuarioDoc(uid);
-    } catch {
-      // continuar
+    } catch (e) {
+      errores.push(`Documento de usuario: ${(e as Error).message}`);
     }
 
     try {
       await eliminarAuthUser(uid);
-    } catch {
-      // Si falla eliminar auth user, continuamos
+    } catch (e) {
+      errores.push(`Cuenta de autenticación: ${(e as Error).message}`);
+    }
+
+    if (errores.length > 0) {
+      return {
+        exito: false,
+        error: `Eliminación incompleta: ${errores.join(" | ")}`,
+      };
     }
 
     registrarLogAdmin("eliminar_usuario", uid, userData.email as string, "Usuario eliminado permanentemente");

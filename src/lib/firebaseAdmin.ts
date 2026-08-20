@@ -173,66 +173,109 @@ export async function crearTransaccionFirestore(
   return nombre.split("/").pop() ?? "";
 }
 
+type ResultadoRunQuery = Array<{
+  document?: { name: string };
+  done?: { transaction?: string };
+}>;
+
+/**
+ * Ejecuta un runQuery con paginación completa. La API REST de Firestore devuelve
+ * un token de transacción en el último mensaje (`done.transaction`) cuando hay
+ * más resultados; se repite la consulta pasándolo como cursor hasta agotar.
+ * Devuelve los nombres completos de los documentos encontrados.
+ */
+async function ejecutarRunQueryPaginated(
+  path: string,
+  query: Record<string, unknown>
+): Promise<string[]> {
+  const nombres: string[] = [];
+  let cursor: string | undefined;
+
+  do {
+    const body: Record<string, unknown> = { structuredQuery: query };
+    if (cursor) body.transaction = cursor;
+
+    const data = (await requestFirestore(
+      "POST",
+      path,
+      body
+    )) as ResultadoRunQuery;
+    cursor = undefined;
+
+    for (const resultado of data || []) {
+      if (resultado.document?.name) nombres.push(resultado.document.name);
+      if (resultado.done?.transaction) cursor = resultado.done.transaction;
+    }
+  } while (cursor);
+
+  return nombres;
+}
+
+async function borrarDocumentos(nombres: string[]): Promise<void> {
+  for (const docPath of nombres) {
+    const encodedPath = docPath.replace(
+      `projects/${PROJECT_ID}/databases/(default)/documents/`,
+      ""
+    );
+    await requestFirestore("DELETE", `/${encodedPath}`);
+  }
+}
+
+/**
+ * Elimina todos los documentos de una subcolección `users/{uid}/{coleccion}`.
+ * El parent del runQuery es el documento del usuario (`/users/{uid}:runQuery`),
+ * no la colección: la API espera el ancestro + `from.collectionId`.
+ * Tras borrar, re-consulta y lanza si quedó algún documento (PII / ARCO).
+ */
 export async function eliminarColeccion(
   uid: string,
   coleccion: string
 ): Promise<void> {
-  const data = await requestFirestore(
-    "POST",
-    `/users/${uid}/${coleccion}:runQuery`,
-    {
-      structuredQuery: {
-        from: [{ collectionId: coleccion }],
-        select: { fields: [{ fieldPath: "__name__" }] },
-      },
-    }
-  );
+  const path = `/users/${uid}:runQuery`;
+  const query = {
+    from: [{ collectionId: coleccion }],
+    select: { fields: [{ fieldPath: "__name__" }] },
+  };
 
-  for (const result of data || []) {
-    if (result.document) {
-      const docPath = result.document.name;
-      const encodedPath = docPath
-        .replace(
-          `projects/${PROJECT_ID}/databases/(default)/documents/`,
-          ""
-        );
-      await requestFirestore("DELETE", `/${encodedPath}`);
-    }
+  const nombres = await ejecutarRunQueryPaginated(path, query);
+  await borrarDocumentos(nombres);
+
+  const restantes = await ejecutarRunQueryPaginated(path, query);
+  if (restantes.length > 0) {
+    throw new Error(
+      `Quedaron ${restantes.length} documentos en "${coleccion}" del usuario ${uid}`
+    );
   }
 }
 
+/**
+ * Elimina documentos de una colección raíz filtrando por un campo.
+ * El parent del runQuery es la raíz (`/documents:runQuery`) con `from.collectionId`.
+ */
 export async function eliminarDocumentosWhere(
   coleccion: string,
   campo: string,
   valor: string
 ): Promise<void> {
-  const data = await requestFirestore(
-    "POST",
-    `/${coleccion}:runQuery`,
-    {
-      structuredQuery: {
-        from: [{ collectionId: coleccion }],
-        where: {
-          fieldFilter: {
-            field: { fieldPath: campo },
-            op: "EQUAL",
-            value: { stringValue: valor },
-          },
-        },
+  const path = ":runQuery";
+  const query = {
+    from: [{ collectionId: coleccion }],
+    where: {
+      fieldFilter: {
+        field: { fieldPath: campo },
+        op: "EQUAL",
+        value: { stringValue: valor },
       },
-    }
-  );
+    },
+    select: { fields: [{ fieldPath: "__name__" }] },
+  };
 
-  for (const result of data || []) {
-    if (result.document) {
-      const docPath = result.document.name;
-      const encodedPath = docPath
-        .replace(
-          `projects/${PROJECT_ID}/databases/(default)/documents/`,
-          ""
-        );
-      await requestFirestore("DELETE", `/${encodedPath}`);
-    }
+  const nombres = await ejecutarRunQueryPaginated(path, query);
+  await borrarDocumentos(nombres);
+
+  const restantes = await ejecutarRunQueryPaginated(path, query);
+  if (restantes.length > 0) {
+    throw new Error(`Quedaron ${restantes.length} documentos en "${coleccion}"`);
   }
 }
 
@@ -281,7 +324,7 @@ export async function eliminarAuthUser(uid: string): Promise<void> {
 
   if (!res.ok) {
     const text = await res.text();
-    console.error("Error eliminando auth user:", text);
+    throw new Error(`Identity Toolkit error al eliminar auth user (${res.status}): ${text}`);
   }
 }
 
@@ -318,16 +361,42 @@ export async function listarLogs(): Promise<Array<Record<string, unknown>>> {
   return docs;
 }
 
-export async function leerUsuarioConToken(
-  uid: string,
-  idToken: string
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<Record<string, any> | null> {
-  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${idToken}` },
+export async function obtenerCuentaFirestore(
+  userId: string,
+  accountId: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    const data = await requestFirestore(
+      "GET",
+      `/users/${userId}/bank_accounts/${accountId}`
+    );
+    return docToObject(data);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Aplica un delta al saldo de una cuenta bancaria de forma atómica
+ * (increment server-side con la API :commit de Firestore, sin condición de
+ * carrera). El delta se expresa en la misma moneda de la cuenta.
+ */
+export async function incrementarSaldoCuenta(
+  userId: string,
+  accountId: string,
+  delta: number
+): Promise<void> {
+  await requestFirestore("POST", ":commit", {
+    writes: [
+      {
+        update: {
+          name: `projects/${PROJECT_ID}/databases/(default)/documents/users/${userId}/bank_accounts/${accountId}`,
+        },
+        updateTransforms: [
+          { fieldPath: "saldo", increment: { doubleValue: delta } },
+        ],
+        currentDocument: { exists: true },
+      },
+    ],
   });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return docToObject(data);
 }
