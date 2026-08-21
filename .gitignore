@@ -49,6 +49,7 @@ CLAUDE.md
 .agent/
 .claude/
 .cursor/
+.omo/
 skills-lock.json
 
 #docs-obsidian

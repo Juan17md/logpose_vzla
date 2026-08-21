@@ -3,9 +3,11 @@ import { createHash, timingSafeEqual } from 'crypto';
 import { z } from 'zod';
 import {
   crearTransaccionFirestore,
+  crearTransaccionConSaldoAtomico,
   obtenerCuentaFirestore,
-  incrementarSaldoCuenta,
 } from '@/lib/firebaseAdmin';
+import { convertirMontoParaCuenta, type MonedaSoportada } from '@/lib/bankAccounts';
+import { getRates } from '@/lib/currency';
 import { createVenezuelaDate } from '@/lib/timezone';
 
 // ─── Categorías permitidas ─────────────────────────────────────
@@ -140,16 +142,8 @@ export async function crearTransaccionDesdeShortcut(
   const fecha = datos.fecha ? new Date(datos.fecha) : createVenezuelaDate();
   const monto = Math.round(datos.monto * 100) / 100;
 
-  if (datos.accountId) {
-    const cuenta = await obtenerCuentaFirestore(userId, datos.accountId);
-    if (!cuenta) {
-      throw new ErrorCuentaShortcut(
-        `La cuenta "${datos.accountId}" no existe para este usuario.`
-      );
-    }
-  }
-
-  const id = await crearTransaccionFirestore({
+  // Datos base del documento — T8: accountId incluido si viene.
+  const docData: Record<string, unknown> = {
     userId,
     amount: monto,
     type: datos.tipo,
@@ -158,12 +152,60 @@ export async function crearTransaccionDesdeShortcut(
     date: fecha,
     currency: datos.currency,
     createdAt: new Date(),
-  });
+  };
 
   if (datos.accountId) {
-    const delta = datos.tipo === 'gasto' ? -monto : monto;
-    await incrementarSaldoCuenta(userId, datos.accountId, delta);
+    // Validación anticipada: si la cuenta no existe, devolvemos un 400
+    // descriptivo. El :commit también fallaría (precondición exists:true),
+    // pero el error de la API REST sería críptico.
+    const cuenta = await obtenerCuentaFirestore(userId, datos.accountId);
+    if (!cuenta) {
+      throw new ErrorCuentaShortcut(
+        `La cuenta "${datos.accountId}" no existe para este usuario.`
+      );
+    }
+
+    // T8: persistir accountId en el documento.
+    docData.accountId = datos.accountId;
+
+    // T10: conversión de moneda a la moneda de la cuenta bancaria.
+    const monedaCuenta = ((cuenta.moneda as string) || 'USD') as MonedaSoportada;
+    const rates = await getRates();
+    const tasasEnBs: Record<string, number> = {
+      USD: rates.usd,
+      EUR: rates.eur,
+      USDT: rates.usdt,
+      BS: 1,
+    };
+
+    const montoEnMonedaCuenta = convertirMontoParaCuenta(
+      monto,
+      datos.currency,
+      monedaCuenta,
+      rates.usd,
+      undefined,
+      tasasEnBs
+    );
+    const montoDelta = Math.round(montoEnMonedaCuenta * 100) / 100;
+
+    // Guardar tasa de cambio de referencia si hubo conversión o si la moneda es VES
+    if (datos.currency === 'VES' || monedaCuenta !== datos.currency) {
+      docData.exchangeRate = rates.usd;
+    }
+
+    // T9: commit atómico — transacción + saldo en una sola escritura.
+    // Si el :commit falla, ni la transacción ni el saldo se modifican.
+    const delta = datos.tipo === 'gasto' ? -montoDelta : montoDelta;
+    const id = await crearTransaccionConSaldoAtomico(
+      docData,
+      userId,
+      datos.accountId,
+      delta
+    );
+    return { id, fecha: fecha.toISOString() };
   }
 
+  // Sin cuenta: solo crear la transacción (sin impacto en saldo).
+  const id = await crearTransaccionFirestore(docData);
   return { id, fecha: fecha.toISOString() };
 }

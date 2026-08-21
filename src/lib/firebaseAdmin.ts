@@ -377,6 +377,57 @@ export async function obtenerCuentaFirestore(
 }
 
 /**
+ * Genera un ID de documento aleatorio compatible con Firestore (20 caracteres
+ * alfanuméricos). Replica el formato de los IDs autogenerados del SDK.
+ */
+function generarDocId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(20));
+  return Array.from(bytes, (b) => chars[b % chars.length]).join('');
+}
+
+/**
+ * Crea una transacción y actualiza el saldo de una cuenta bancaria en una
+ * sola operación atómica (:commit). Si la cuenta no existe, toda la operación
+ * falla y no se crea la transacción (precondición `exists: true`).
+ *
+ * Resuelve T8 (accountId persistido) y T9 (atomicidad) del plan de corrección.
+ */
+export async function crearTransaccionConSaldoAtomico(
+  datos: Record<string, unknown>,
+  userId: string,
+  accountId: string,
+  delta: number
+): Promise<string> {
+  const docId = generarDocId();
+  const transName = `projects/${PROJECT_ID}/databases/(default)/documents/transactions/${docId}`;
+  const accountName = `projects/${PROJECT_ID}/databases/(default)/documents/users/${userId}/bank_accounts/${accountId}`;
+
+  await requestFirestore("POST", ":commit", {
+    writes: [
+      {
+        update: {
+          name: transName,
+          fields: jsonToFields(datos),
+        },
+        currentDocument: { exists: false },
+      },
+      {
+        update: {
+          name: accountName,
+        },
+        updateTransforms: [
+          { fieldPath: "saldo", increment: { doubleValue: delta } },
+        ],
+        currentDocument: { exists: true },
+      },
+    ],
+  });
+
+  return docId;
+}
+
+/**
  * Aplica un delta al saldo de una cuenta bancaria de forma atómica
  * (increment server-side con la API :commit de Firestore, sin condición de
  * carrera). El delta se expresa en la misma moneda de la cuenta.
