@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, runTransaction } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, runTransaction, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { deudaSchema, pagoSchema } from "@/lib/schemas";
-import { toast } from "sonner";
 
 export interface Payment {
     id: string;
@@ -154,30 +153,50 @@ export function useDebts() {
             console.error("Pago inválido:", parsed.error.flatten());
             return false;
         }
+        const userId = auth.currentUser.uid;
+
         try {
             await runTransaction(db, async (transaction) => {
-                const debtRef = doc(db, "users", auth.currentUser!.uid, "debts", debtId);
+                const debtRef = doc(db, "users", userId, "debts", debtId);
                 const debtDoc = await transaction.get(debtRef);
 
                 if (!debtDoc.exists()) {
-                    throw "Debt document does not exist";
+                    throw new Error("Debt document does not exist");
                 }
 
                 const currentData = debtDoc.data() as Debt;
-
                 const cleanPayment = { ...parsed.data };
-
                 const newPayment = { ...cleanPayment, id: crypto.randomUUID() } as Payment;
 
-                // Use current data from transaction read
                 const currentPayments = currentData.payments || [];
                 if (currentPayments.length >= MAX_PAGOS_POR_DEUDA) {
-                    throw "Se alcanzó el límite de abonos para esta deuda";
+                    throw new Error("Se alcanzó el límite de abonos para esta deuda");
                 }
                 const updatedPayments = [...currentPayments, newPayment];
 
                 const totalPaid = updatedPayments.reduce((acc, curr) => acc + (curr.amount || 0), 0);
                 const isPaid = totalPaid >= currentData.amount;
+
+                // T13: Crear movimiento contable en transactions (ingreso si por cobrar, gasto si por pagar)
+                const transRef = doc(collection(db, "transactions"));
+                const tipoMovimiento = currentData.type === "por_cobrar" ? "ingreso" : "gasto";
+                const descripcionMovimiento = currentData.type === "por_cobrar"
+                    ? `Cobro de deuda: ${currentData.personName}${cleanPayment.note ? ` (${cleanPayment.note})` : ""}`
+                    : `Pago de deuda: ${currentData.personName}${cleanPayment.note ? ` (${cleanPayment.note})` : ""}`;
+
+                transaction.set(transRef, {
+                    userId,
+                    amount: cleanPayment.amount,
+                    type: tipoMovimiento,
+                    category: "Deudas",
+                    description: descripcionMovimiento,
+                    date: cleanPayment.date ? new Date(cleanPayment.date) : new Date(),
+                    currency: (cleanPayment.currency || currentData.currency || "USD") as "USD" | "VES",
+                    originalAmount: cleanPayment.originalAmount,
+                    exchangeRate: cleanPayment.exchangeRate,
+                    period: "mensual",
+                    createdAt: serverTimestamp(),
+                });
 
                 transaction.update(debtRef, {
                     payments: updatedPayments,

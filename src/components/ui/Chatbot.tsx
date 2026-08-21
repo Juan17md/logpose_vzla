@@ -520,6 +520,12 @@ export default function Chatbot() {
                 }
 
                 let amountUSD = typeof data.amount === 'string' ? parseNumeroFlexible(data.amount) : data.amount;
+                if (typeof amountUSD !== "number" || isNaN(amountUSD) || amountUSD <= 0) {
+                    aiResponse = "El monto de la transacción debe ser un número válido mayor a 0.";
+                    success = false;
+                    break;
+                }
+
                 let exchangeRate = 1;
                 let originalAmount = undefined;
                 const monedaTransaccion = (data.currency || "USD").toUpperCase();
@@ -584,10 +590,21 @@ export default function Chatbot() {
                 break;
             }
 
-            case "new_debt":
+            case "new_debt": {
                 let debtOriginalAmount = undefined;
                 let debtExchangeRate = 1;
                 let debtAmount = parseNumeroFlexible(data.amount);
+
+                if (isNaN(debtAmount) || debtAmount <= 0) {
+                    aiResponse = "El monto de la deuda debe ser un número mayor a 0.";
+                    success = false;
+                    break;
+                }
+                if (!data.person || typeof data.person !== "string" || !data.person.trim()) {
+                    aiResponse = "Debes indicar el nombre de la persona asociada a la deuda.";
+                    success = false;
+                    break;
+                }
 
                 if (data.currency === "VES") {
                     const rate = tasasEnBs.USD;
@@ -597,9 +614,9 @@ export default function Chatbot() {
                 }
 
                 success = (await addDebt({
-                    personName: data.person,
+                    personName: data.person.trim(),
                     amount: debtAmount,
-                    type: data.type,
+                    type: data.type === "por_pagar" ? "por_pagar" : "por_cobrar",
                     description: data.description || "Deuda registrada por Nami",
                     currency: data.currency || "USD",
                     originalAmount: debtOriginalAmount,
@@ -612,18 +629,34 @@ export default function Chatbot() {
 
                 aiResponse = `Creé la deuda de ${data.person} por ${debtDisplay}.`;
                 break;
+            }
 
-            case "new_fixed_expense":
+            case "new_fixed_expense": {
+                const fixedAmount = parseNumeroFlexible(data.amount);
+                const diaVencimiento = parseInt(data.dueDay, 10);
+
+                if (isNaN(fixedAmount) || fixedAmount <= 0) {
+                    aiResponse = "El monto del gasto fijo debe ser mayor a 0.";
+                    success = false;
+                    break;
+                }
+                if (isNaN(diaVencimiento) || diaVencimiento < 1 || diaVencimiento > 31) {
+                    aiResponse = "El día de cobro debe ser un número de día válido entre 1 y 31.";
+                    success = false;
+                    break;
+                }
+
                 success = (await addFixedExpense({
-                    title: data.name,
-                    amount: parseNumeroFlexible(data.amount),
-                    dueDay: parseInt(data.dueDay),
+                    title: data.name || "Gasto fijo",
+                    amount: fixedAmount,
+                    dueDay: diaVencimiento,
                     category: data.category || "Servicios",
                     description: data.description || "Gasto fijo registrado por Nami"
                 } as any)) || false;
 
-                aiResponse = `He programado el gasto fijo "${data.name}" por $${parseFloat(Number(data.amount).toFixed(2))} para el día ${data.dueDay} de cada mes.`;
+                aiResponse = `He programado el gasto fijo "${data.name || "Gasto fijo"}" por $${parseFloat(fixedAmount.toFixed(2))} para el día ${diaVencimiento} de cada mes.`;
                 break;
+            }
 
             case "account_operation": {
                 if (cuentas.length === 0) {

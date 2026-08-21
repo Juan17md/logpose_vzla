@@ -17,6 +17,17 @@ const ERRORES_FIREBASE = {
   EMAIL_NOT_FOUND: { status: 401, mensaje: "Credenciales incorrectas." },
 } as const;
 
+function obtenerIpCliente(request: NextRequest): string {
+  const xForwardedFor = request.headers.get("x-forwarded-for");
+  if (xForwardedFor) {
+    const primeraIp = xForwardedFor.split(",")[0]?.trim();
+    if (primeraIp) return primeraIp;
+  }
+  const xRealIp = request.headers.get("x-real-ip");
+  if (xRealIp) return xRealIp.trim();
+  return "127.0.0.1";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => null);
@@ -27,7 +38,9 @@ export async function POST(request: NextRequest) {
     }
 
     const emailNormalizado = parsed.data.email.toLowerCase();
-    const { success } = await obtenerLoginRateLimit().limit(emailNormalizado);
+    const ip = obtenerIpCliente(request);
+    const identificadorRateLimit = `${ip}:${emailNormalizado}`;
+    const { success } = await obtenerLoginRateLimit().limit(identificadorRateLimit);
     if (!success) {
       return NextResponse.json(
         { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },

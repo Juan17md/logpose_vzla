@@ -4,7 +4,7 @@ import {
   verificarCookieSesion,
 } from "@/lib/authCookie";
 
-const RUTAS_PROTEGIDAS = ["/dashboard"];
+const RUTAS_PROTEGIDAS = ["/dashboard", "/onboarding"];
 const RUTAS_ADMIN = ["/dashboard/admin"];
 const RUTAS_AUTH = ["/login", "/register"];
 

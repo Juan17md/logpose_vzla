@@ -17,9 +17,7 @@ import {
     limit,
     onSnapshot,
     doc,
-    runTransaction,
     serverTimestamp,
-    Timestamp,
     addDoc,
     updateDoc,
 } from "firebase/firestore";
@@ -27,6 +25,7 @@ import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { getRates, type TasasCambio } from "@/lib/currency";
 import { cuentaBancariaSchema } from "@/lib/schemas";
+import { crearMovimiento, type MovimientoData } from "@/lib/movimientos";
 import type {
     CuentaBancaria,
     TransaccionCuenta,
@@ -34,7 +33,6 @@ import type {
     TipoOperacion,
 } from "@/lib/bankAccounts";
 import { obtenerColorAleatorio } from "@/lib/bankAccounts";
-import { toast } from "sonner";
 
 // ─── Tipos del Context ────────────────────────────────────────
 
@@ -283,7 +281,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
             console.error("Error creating bank account:", error);
             return null;
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const editarCuenta = useCallback(async (
@@ -344,94 +341,78 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    // ─── Operaciones ──────────────────────────────────────────
-
+    // ─── Operaciones (Ledger Unificado con crearMovimiento) ────
     const realizarOperacion = useCallback(async (input: OperacionInput): Promise<boolean> => {
         if (!auth.currentUser) return false;
         const userId = auth.currentUser.uid;
 
-        try {
-            await runTransaction(db, async (transaction) => {
-                const cuentaOrigenRef = doc(db, "users", userId, "bank_accounts", input.cuentaOrigenId);
-                const cuentaOrigenDoc = await transaction.get(cuentaOrigenRef);
+        const cuentaOrigen = cuentas.find(c => c.id === input.cuentaOrigenId);
+        if (!cuentaOrigen) throw new Error("Cuenta origen no existe");
 
-                if (!cuentaOrigenDoc.exists()) throw new Error("Cuenta origen no existe");
+        const monedaCuentaOrigen = cuentaOrigen.moneda === "BS" ? "VES" : "USD";
 
-                const saldoOrigen = cuentaOrigenDoc.data().saldo || 0;
+        let tipoMovimiento: MovimientoData["type"];
+        let categoria: string;
+        let descripcionDefault: string;
 
-                if (input.tipo === "deposito") {
-                    // Depósito: sumar al saldo de la cuenta
-                    transaction.update(cuentaOrigenRef, {
-                        saldo: saldoOrigen + input.monto,
-                        actualizadoEn: serverTimestamp(),
-                    });
-                } else if (input.tipo === "retiro" || input.tipo === "pago") {
-                    // Retiro/Pago: restar del saldo
-                    if (input.monto > saldoOrigen) {
-                        throw new Error("Saldo insuficiente");
-                    }
-                    transaction.update(cuentaOrigenRef, {
-                        saldo: saldoOrigen - input.monto,
-                        actualizadoEn: serverTimestamp(),
-                    });
-                } else if (input.tipo === "transferencia") {
-                    // Transferencia: restar de origen + comisión, sumar al destino
-                    if (!input.cuentaDestinoId) throw new Error("Cuenta destino requerida");
-
-                    const montoTotalDescontar = input.monto + (input.comision || 0);
-                    if (montoTotalDescontar > saldoOrigen) {
-                        throw new Error("Saldo insuficiente (incluye comisión)");
-                    }
-
-                    const cuentaDestinoRef = doc(db, "users", userId, "bank_accounts", input.cuentaDestinoId);
-                    const cuentaDestinoDoc = await transaction.get(cuentaDestinoRef);
-
-                    if (!cuentaDestinoDoc.exists()) throw new Error("Cuenta destino no existe");
-
-                    const saldoDestino = cuentaDestinoDoc.data().saldo || 0;
-
-                    // Descontar del origen (monto + comisión)
-                    transaction.update(cuentaOrigenRef, {
-                        saldo: saldoOrigen - montoTotalDescontar,
-                        actualizadoEn: serverTimestamp(),
-                    });
-
-                    // Si hay tasa de cambio, convertir el monto al destino
-                    const montoDestino = input.tasaCambio
-                        ? input.monto * input.tasaCambio
-                        : input.monto;
-
-                    // Sumar al destino
-                    transaction.update(cuentaDestinoRef, {
-                        saldo: saldoDestino + montoDestino,
-                        actualizadoEn: serverTimestamp(),
-                    });
-                }
-
-                // Registrar la transacción
-                const transRef = doc(collection(db, "users", userId, "account_transactions"));
-                const monedaOrigen = cuentaOrigenDoc.data().moneda;
-
-                transaction.set(transRef, {
-                    cuentaOrigenId: input.cuentaOrigenId,
-                    cuentaDestinoId: input.cuentaDestinoId || null,
-                    tipo: input.tipo,
-                    monto: input.monto,
-                    moneda: monedaOrigen,
-                    comision: input.comision || null,
-                    tasaCambio: input.tasaCambio || null,
-                    descripcion: input.descripcion || obtenerDescripcionDefault(input.tipo),
-                    fecha: serverTimestamp(),
-                    creadoEn: serverTimestamp(),
-                });
-            });
-
-            return true;
-        } catch (error) {
-            console.error("Error en operación bancaria:", error);
-            throw error; // Re-lanzar para que el componente pueda mostrar el error
+        switch (input.tipo) {
+            case "deposito":
+                tipoMovimiento = "ingreso";
+                categoria = "Transferencia";
+                descripcionDefault = `Depósito en ${cuentaOrigen.nombre}`;
+                break;
+            case "retiro":
+                tipoMovimiento = "gasto";
+                categoria = "Retiro";
+                descripcionDefault = `Retiro de ${cuentaOrigen.nombre}`;
+                break;
+            case "pago":
+                tipoMovimiento = "gasto";
+                categoria = "Servicios";
+                descripcionDefault = `Pago desde ${cuentaOrigen.nombre}`;
+                break;
+            case "transferencia":
+                tipoMovimiento = "transferencia";
+                categoria = "Transferencia";
+                descripcionDefault = `Transferencia desde ${cuentaOrigen.nombre}`;
+                break;
+            default:
+                tipoMovimiento = "gasto";
+                categoria = "Otra";
+                descripcionDefault = "Operación bancaria";
         }
-    }, []);
+
+        const movimientoData: MovimientoData = {
+            amount: input.monto,
+            type: tipoMovimiento,
+            category: categoria,
+            description: input.descripcion || descripcionDefault,
+            currency: monedaCuentaOrigen,
+            accountId: input.cuentaOrigenId,
+            targetAccountId: input.tipo === "transferencia" ? input.cuentaDestinoId : undefined,
+            date: new Date(),
+        };
+
+        const opciones = {
+            validarSaldoOrigen: input.tipo !== "deposito",
+            tasaCambioDestino: input.tasaCambio,
+            tasasEnBs,
+            comisiones: input.comision && input.comision > 0 ? [{
+                amount: input.comision,
+                currency: monedaCuentaOrigen as "USD" | "VES",
+                accountId: input.cuentaOrigenId,
+                description: "Comisión de transferencia",
+            }] : undefined,
+        };
+
+        const resultado = await crearMovimiento(db, userId, movimientoData, opciones);
+
+        if (!resultado.exito) {
+            throw new Error(resultado.error);
+        }
+
+        return true;
+    }, [cuentas, tasasEnBs]);
 
     // ─── Helpers ──────────────────────────────────────────────
 
@@ -458,6 +439,7 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         apiRates,
         monedaBase,
         tasas,
+        tasasEnBs,
         crearCuenta,
         editarCuenta,
         eliminarCuenta,
@@ -466,7 +448,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         actualizarMonedaBase,
         calcularSaldoTotal,
         toggleExclusionCuenta,
-        tasasEnBs,
         refreshRates,
     }), [
         cuentas,
@@ -476,6 +457,7 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         apiRates,
         monedaBase,
         tasas,
+        tasasEnBs,
         crearCuenta,
         editarCuenta,
         eliminarCuenta,
@@ -484,7 +466,6 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
         actualizarMonedaBase,
         calcularSaldoTotal,
         toggleExclusionCuenta,
-        tasasEnBs,
         refreshRates,
     ]);
 
@@ -503,16 +484,4 @@ export function useBankAccounts() {
         throw new Error("useBankAccounts debe usarse dentro de un BankAccountsProvider");
     }
     return context;
-}
-
-// ─── Helpers privados ─────────────────────────────────────────
-
-function obtenerDescripcionDefault(tipo: TipoOperacion): string {
-    const defaults: Record<TipoOperacion, string> = {
-        deposito: "Depósito",
-        retiro: "Retiro",
-        transferencia: "Transferencia",
-        pago: "Pago",
-    };
-    return defaults[tipo];
 }

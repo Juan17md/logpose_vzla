@@ -107,25 +107,40 @@ export async function leerUsuario(uid: string) {
   }
 }
 
-export async function listarUsuarios() {
+export async function listarUsuarios(maxResultados: number = 500) {
   const token = await obtenerAccessToken();
-  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/users?pageSize=100`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Firestore API error (${res.status}): ${text}`);
-  }
-
-  const data = await res.json();
   const docs: Array<Record<string, unknown>> = [];
-  for (const doc of data.documents || []) {
-    const obj = docToObject(doc);
-    obj.uid = doc.name.split("/").pop();
-    docs.push(obj);
-  }
+  let pageToken: string | undefined = undefined;
+
+  do {
+    const params = new URLSearchParams({ pageSize: "100" });
+    if (pageToken) params.set("pageToken", pageToken);
+
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/users?${params.toString()}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Firestore API error (${res.status}): ${text}`);
+    }
+
+    const data = (await res.json()) as {
+      documents?: Array<{ name: string; fields?: Record<string, unknown> }>;
+      nextPageToken?: string;
+    };
+
+    for (const doc of data.documents || []) {
+      const obj = docToObject(doc);
+      obj.uid = doc.name.split("/").pop();
+      docs.push(obj);
+      if (docs.length >= maxResultados) break;
+    }
+
+    pageToken = data.nextPageToken;
+  } while (pageToken && docs.length < maxResultados);
+
   return docs;
 }
 

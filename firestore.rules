@@ -40,28 +40,56 @@ service cloud.firestore {
       return value is bool;
     }
 
-    // Validación condicional: si el campo está presente en un update, debe tener el tipo correcto.
+    function isPositiveNumber(value) {
+      return isNumber(value) && value > 0;
+    }
+
+    function isNonNegativeNumber(value) {
+      return isNumber(value) && value >= 0;
+    }
+
+    function isStringMaxSize(value, maxLen) {
+      return isString(value) && value.size() <= maxLen;
+    }
+
+    // Validación condicional: si el campo está presente en un update, debe tener el tipo/tamaño correcto.
     function validStringIfPresent(field) {
       return !(field in request.resource.data) || isString(request.resource.data[field]);
+    }
+
+    function validStringMaxSizeIfPresent(field, maxLen) {
+      return !(field in request.resource.data)
+        || isStringMaxSize(request.resource.data[field], maxLen);
     }
 
     function validNumberIfPresent(field) {
       return !(field in request.resource.data) || isNumber(request.resource.data[field]);
     }
 
+    function validPositiveNumberIfPresent(field) {
+      return !(field in request.resource.data)
+        || isPositiveNumber(request.resource.data[field]);
+    }
+
+    function validNonNegativeIfPresent(field) {
+      return !(field in request.resource.data)
+        || isNonNegativeNumber(request.resource.data[field]);
+    }
+
     function validBooleanIfPresent(field) {
       return !(field in request.resource.data) || isBoolean(request.resource.data[field]);
     }
 
-    // Montos de saldo/progreso no pueden ser negativos (si el campo está presente).
-    function validNonNegativeIfPresent(field) {
-      return !(field in request.resource.data)
-        || (isNumber(request.resource.data[field])
-            && request.resource.data[field] >= 0);
-    }
-
     function isValidType(type) {
       return type == "ingreso" || type == "gasto" || type == "transferencia";
+    }
+
+    function isValidDebtType(type) {
+      return type == "por_cobrar" || type == "por_pagar";
+    }
+
+    function isValidCategoryType(type) {
+      return type == "ingreso" || type == "gasto" || type == "ambas";
     }
 
     function isValidTransactionCurrency(currency) {
@@ -77,6 +105,16 @@ service cloud.firestore {
         || (isString(request.resource.data.type) && isValidType(request.resource.data.type));
     }
 
+    function validDebtTypeIfPresent() {
+      return !("type" in request.resource.data)
+        || (isString(request.resource.data.type) && isValidDebtType(request.resource.data.type));
+    }
+
+    function validCategoryTypeIfPresent() {
+      return !("tipo" in request.resource.data)
+        || (isString(request.resource.data.tipo) && isValidCategoryType(request.resource.data.tipo));
+    }
+
     function validTransactionCurrencyIfPresent() {
       return !("currency" in request.resource.data)
         || (isString(request.resource.data.currency)
@@ -87,6 +125,19 @@ service cloud.firestore {
       return !("moneda" in request.resource.data)
         || (isString(request.resource.data.moneda)
             && isValidAccountCurrency(request.resource.data.moneda));
+    }
+
+    function validDueDayIfPresent() {
+      return !("dueDay" in request.resource.data)
+        || (isNumber(request.resource.data.dueDay)
+            && request.resource.data.dueDay >= 1
+            && request.resource.data.dueDay <= 31);
+    }
+
+    function validPaymentsSizeIfPresent() {
+      return !("payments" in request.resource.data)
+        || (request.resource.data.payments is list
+            && request.resource.data.payments.size() <= 100);
     }
 
     // ========================================
@@ -117,41 +168,36 @@ service cloud.firestore {
     // ----------------------------------------
     // 👤 USUARIOS - Documento principal del usuario
     // ----------------------------------------
-    // Colección: users/{userId}
-    // El propietario lee y actualiza su documento (sin cambiar role).
-    // Los administradores leen todos los users (panel). El update NO usa isAdmin():
-    // un admin autenticado en el cliente no puede promover a otros ni reescribir
-    // perfiles ajenos. Nombre y rol de terceros: Server Actions (Admin REST).
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId)
-        && isString(request.resource.data.email)
-        && isString(request.resource.data.displayName)
+        && isStringMaxSize(request.resource.data.email, 150)
+        && isStringMaxSize(request.resource.data.displayName, 100)
         && request.resource.data.role == "usuario";
-      allow update: if isOwner(userId) && keepsSameRole();
+      allow update: if isOwner(userId)
+        && keepsSameRole()
+        && validStringMaxSizeIfPresent("displayName", 100);
       allow delete: if isAdmin();
 
       // ----------------------------------------
       // 🏦 CUENTAS BANCARIAS - users/{userId}/bank_accounts
-      // Modelo: nombre, banco, moneda (BS/USD/EUR/USDT), saldo,
-      //         color, activa, excluirDelTotal, creadoEn, actualizadoEn
       // ----------------------------------------
       match /bank_accounts/{accountId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
-          && isString(request.resource.data.nombre)
-          && isString(request.resource.data.banco)
+          && isStringMaxSize(request.resource.data.nombre, 100)
+          && isStringMaxSize(request.resource.data.banco, 100)
           && isString(request.resource.data.moneda)
           && isValidAccountCurrency(request.resource.data.moneda)
           && isNumber(request.resource.data.saldo)
-          && isString(request.resource.data.color)
+          && isStringMaxSize(request.resource.data.color, 30)
           && isBoolean(request.resource.data.activa);
         allow update: if isOwner(userId)
-          && validStringIfPresent("nombre")
-          && validStringIfPresent("banco")
+          && validStringMaxSizeIfPresent("nombre", 100)
+          && validStringMaxSizeIfPresent("banco", 100)
           && validAccountCurrencyIfPresent()
           && validNumberIfPresent("saldo")
-          && validStringIfPresent("color")
+          && validStringMaxSizeIfPresent("color", 30)
           && validBooleanIfPresent("activa")
           && validBooleanIfPresent("excluirDelTotal");
         allow delete: if isOwner(userId);
@@ -159,111 +205,116 @@ service cloud.firestore {
 
       // ----------------------------------------
       // 💸 OPERACIONES DE CUENTA - users/{userId}/account_transactions
-      // Modelo: cuentaOrigenId, cuentaDestinoId, tipo, monto, moneda,
-      //         comision, tasaCambio, descripcion, fecha, creadoEn
       // ----------------------------------------
       match /account_transactions/{transId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
           && isString(request.resource.data.cuentaOrigenId)
           && isString(request.resource.data.tipo)
-          && isNumber(request.resource.data.monto)
+          && isPositiveNumber(request.resource.data.monto)
           && isString(request.resource.data.moneda)
           && isValidAccountCurrency(request.resource.data.moneda);
         allow update: if isOwner(userId)
           && validStringIfPresent("cuentaOrigenId")
           && validStringIfPresent("tipo")
-          && validNumberIfPresent("monto")
-          && validStringIfPresent("moneda");
+          && validPositiveNumberIfPresent("monto")
+          && validAccountCurrencyIfPresent();
         allow delete: if isOwner(userId);
       }
 
       // ----------------------------------------
       // 🗂️ CATEGORÍAS - users/{userId}/categories
-      // Modelo: nombre, tipo (ingreso/gasto/ambas), icono,
-      //         subcategorias, esPredeterminada, color, creadoEn
       // ----------------------------------------
       match /categories/{categoryId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
-          && isString(request.resource.data.nombre)
-          && isString(request.resource.data.tipo);
+          && isStringMaxSize(request.resource.data.nombre, 100)
+          && isString(request.resource.data.tipo)
+          && isValidCategoryType(request.resource.data.tipo)
+          && validStringMaxSizeIfPresent("icono", 50)
+          && validStringMaxSizeIfPresent("color", 30);
         allow update: if isOwner(userId)
-          && validStringIfPresent("nombre")
-          && validStringIfPresent("tipo")
-          && validStringIfPresent("icono")
+          && validStringMaxSizeIfPresent("nombre", 100)
+          && validCategoryTypeIfPresent()
+          && validStringMaxSizeIfPresent("icono", 50)
+          && validStringMaxSizeIfPresent("color", 30)
           && validBooleanIfPresent("esPredeterminada");
         allow delete: if isOwner(userId);
       }
 
       // ----------------------------------------
       // 💳 DEUDAS - users/{userId}/debts
-      // Modelo: personName, type (por_cobrar/por_pagar), amount,
-      //         description, dueDate, currency, originalAmount,
-      //         exchangeRate, payments, isPaid, createdAt
       // ----------------------------------------
       match /debts/{debtId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
-          && isString(request.resource.data.personName)
-          && isNumber(request.resource.data.amount);
+          && isStringMaxSize(request.resource.data.personName, 100)
+          && isPositiveNumber(request.resource.data.amount)
+          && isString(request.resource.data.type)
+          && isValidDebtType(request.resource.data.type)
+          && validTransactionCurrencyIfPresent()
+          && validPaymentsSizeIfPresent();
         allow update: if isOwner(userId)
-          && validStringIfPresent("personName")
-          && validNumberIfPresent("amount")
-          && validBooleanIfPresent("isPaid");
+          && validStringMaxSizeIfPresent("personName", 100)
+          && validPositiveNumberIfPresent("amount")
+          && validDebtTypeIfPresent()
+          && validBooleanIfPresent("isPaid")
+          && validTransactionCurrencyIfPresent()
+          && validPaymentsSizeIfPresent();
         allow delete: if isOwner(userId);
       }
 
       // ----------------------------------------
       // 💼 GASTOS FIJOS - users/{userId}/fixed_expenses
-      // Modelo: title, amount, currency (USD/BS), category,
-      //         dueDay, description, lastPaidDate, createdAt
       // ----------------------------------------
       match /fixed_expenses/{expenseId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
-          && isString(request.resource.data.title)
-          && isNumber(request.resource.data.amount)
-          && isNumber(request.resource.data.dueDay);
+          && isStringMaxSize(request.resource.data.title, 100)
+          && isPositiveNumber(request.resource.data.amount)
+          && isNumber(request.resource.data.dueDay)
+          && request.resource.data.dueDay >= 1
+          && request.resource.data.dueDay <= 31
+          && validTransactionCurrencyIfPresent()
+          && validStringMaxSizeIfPresent("category", 100)
+          && validStringMaxSizeIfPresent("description", 500);
         allow update: if isOwner(userId)
-          && validStringIfPresent("title")
-          && validNumberIfPresent("amount")
-          && validNumberIfPresent("dueDay")
-          && validStringIfPresent("currency")
-          && validStringIfPresent("category");
+          && validStringMaxSizeIfPresent("title", 100)
+          && validPositiveNumberIfPresent("amount")
+          && validDueDayIfPresent()
+          && validTransactionCurrencyIfPresent()
+          && validStringMaxSizeIfPresent("category", 100)
+          && validStringMaxSizeIfPresent("description", 500);
         allow delete: if isOwner(userId);
       }
 
       // ----------------------------------------
       // 🎯 METAS DE AHORRO - users/{userId}/saving_goals
-      // Modelo: name, targetAmount, currentAmount, deadline,
-      //         color, createdAt
       // ----------------------------------------
       match /saving_goals/{goalId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
-          && isString(request.resource.data.name)
-          && isNumber(request.resource.data.targetAmount)
-          && validNonNegativeIfPresent("currentAmount");
-        allow update: if isOwner(userId)
-          && validStringIfPresent("name")
-          && validNumberIfPresent("targetAmount")
+          && isStringMaxSize(request.resource.data.name, 100)
+          && isPositiveNumber(request.resource.data.targetAmount)
           && validNonNegativeIfPresent("currentAmount")
-          && validStringIfPresent("color");
+          && validStringMaxSizeIfPresent("color", 30);
+        allow update: if isOwner(userId)
+          && validStringMaxSizeIfPresent("name", 100)
+          && validPositiveNumberIfPresent("targetAmount")
+          && validNonNegativeIfPresent("currentAmount")
+          && validStringMaxSizeIfPresent("color", 30);
         allow delete: if isOwner(userId);
       }
 
       // ----------------------------------------
       // 🏦 MOVIMIENTOS DE AHORRO - users/{userId}/savings_transactions
-      // Modelo: amount, type (deposit/withdrawal), method
-      //         (physical/usdt/bs), description, date
       // ----------------------------------------
       match /savings_transactions/{transactionId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
-          && isNumber(request.resource.data.amount);
+          && isPositiveNumber(request.resource.data.amount);
         allow update: if isOwner(userId)
-          && validNumberIfPresent("amount")
+          && validPositiveNumberIfPresent("amount")
           && validStringIfPresent("type")
           && validStringIfPresent("method");
         allow delete: if isOwner(userId);
@@ -272,56 +323,49 @@ service cloud.firestore {
 
     // ----------------------------------------
     // 💵 TRANSACCIONES - Ingresos y gastos (colección raíz)
-    // Modelo: userId, amount, type (ingreso/gasto/transferencia),
-    //         category, subcategory, description, date, currency,
-    //         originalAmount, exchangeRate, accountId,
-    //         targetAccountId, period, createdAt
     // ----------------------------------------
     match /transactions/{transactionId} {
       allow read: if isOwnerFromResource();
       allow create: if isOwnerFromRequest()
-        && isNumber(request.resource.data.amount)
+        && isPositiveNumber(request.resource.data.amount)
         && isValidType(request.resource.data.type)
-        && isString(request.resource.data.category)
-        && isString(request.resource.data.description)
+        && isStringMaxSize(request.resource.data.category, 100)
+        && isStringMaxSize(request.resource.data.description, 500)
         && isString(request.resource.data.currency)
         && isValidTransactionCurrency(request.resource.data.currency);
       allow update: if isOwnerFromResource() && isOwnerFromRequest() && keepsSameUserId()
-        && validNumberIfPresent("amount")
+        && validPositiveNumberIfPresent("amount")
         && validTypeIfPresent()
-        && validStringIfPresent("category")
-        && validStringIfPresent("description")
+        && validStringMaxSizeIfPresent("category", 100)
+        && validStringMaxSizeIfPresent("description", 500)
         && validTransactionCurrencyIfPresent();
       allow delete: if isOwnerFromResource();
     }
 
     // ----------------------------------------
     // 📋 LOGS DE ADMINISTRACIÓN - Auditoría
-    // Modelo: action, adminUid, adminEmail, targetUid,
-    //         targetEmail, details, timestamp (ISO 8601)
     // ----------------------------------------
     match /admin_logs/{logId} {
       allow read: if isAdmin();
       allow create: if isAdmin()
-        && isString(request.resource.data.action)
-        && isString(request.resource.data.adminUid)
-        && isString(request.resource.data.adminEmail)
-        && isString(request.resource.data.targetUid)
-        && isString(request.resource.data.targetEmail)
-        && isString(request.resource.data.details)
-        && isString(request.resource.data.timestamp);
+        && isStringMaxSize(request.resource.data.action, 100)
+        && isStringMaxSize(request.resource.data.adminUid, 128)
+        && isStringMaxSize(request.resource.data.adminEmail, 150)
+        && isStringMaxSize(request.resource.data.targetUid, 128)
+        && isStringMaxSize(request.resource.data.targetEmail, 150)
+        && isStringMaxSize(request.resource.data.details, 1000)
+        && isStringMaxSize(request.resource.data.timestamp, 50);
     }
 
     // ----------------------------------------
     // 🛒 LISTAS DE COMPRAS - Shopping lists (colección raíz)
-    // Modelo: userId, name, items, createdAt
     // ----------------------------------------
     match /shopping_lists/{listId} {
       allow read: if isOwnerFromResource();
       allow create: if isOwnerFromRequest()
-        && isString(request.resource.data.name);
+        && isStringMaxSize(request.resource.data.name, 100);
       allow update: if isOwnerFromResource() && isOwnerFromRequest() && keepsSameUserId()
-        && validStringIfPresent("name");
+        && validStringMaxSizeIfPresent("name", 100);
       allow delete: if isOwnerFromResource();
     }
 
