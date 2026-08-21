@@ -72,25 +72,25 @@ afterEach(() => {
 });
 
 describe("validarContraseñaAdmin", () => {
-  it("acepta una contraseña válida", () => {
-    expect(validarContraseñaAdmin("hola123")).toBeNull();
+  it("acepta una contraseña válida", async () => {
+    expect(await validarContraseñaAdmin("hola123")).toBeNull();
   });
 
-  it("rechaza vacía", () => {
-    expect(validarContraseñaAdmin("")).toContain("obligatoria");
+  it("rechaza vacía", async () => {
+    expect(await validarContraseñaAdmin("")).toContain("obligatoria");
   });
 
-  it("rechaza menor a 6 caracteres", () => {
-    expect(validarContraseñaAdmin("abc")).toContain("al menos 6");
+  it("rechaza menor a 6 caracteres", async () => {
+    expect(await validarContraseñaAdmin("abc")).toContain("al menos 6");
   });
 
-  it("rechaza mayor a 72 caracteres", () => {
-    expect(validarContraseñaAdmin("x".repeat(73))).toContain("72");
+  it("rechaza mayor a 72 caracteres", async () => {
+    expect(await validarContraseñaAdmin("x".repeat(73))).toContain("72");
   });
 
-  it("rechaza contraseñas con espacios al inicio o final", () => {
-    expect(validarContraseñaAdmin("  abcdef")).toContain("espacios");
-    expect(validarContraseñaAdmin("abcdef  ")).toContain("espacios");
+  it("rechaza contraseñas con espacios al inicio o final", async () => {
+    expect(await validarContraseñaAdmin("  abcdef")).toContain("espacios");
+    expect(await validarContraseñaAdmin("abcdef  ")).toContain("espacios");
   });
 });
 
