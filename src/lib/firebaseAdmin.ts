@@ -466,3 +466,60 @@ export async function incrementarSaldoCuenta(
     ],
   });
 }
+
+// ─── Commit atómico genérico (transferencias + comisiones del atajo) ───
+
+/** Escritura individual dentro de un commit atómico multi-documento. */
+export type EscrituraAtomica =
+  | {
+      clase: "doc";
+      /** Ruta relativa tras `documents/`, ej. "transactions" o "users/{uid}/transactions". */
+      coleccion: string;
+      datos: Record<string, unknown>;
+    }
+  | { clase: "saldo"; userId: string; accountId: string; delta: number };
+
+/**
+ * Ejecuta N escrituras en UN solo `POST :commit` de la API REST de Firestore:
+ * creación de documentos (`clase: "doc"`) e increments de saldo
+ * (`clase: "saldo"`). Si cualquier escritura falla, NINGUNA se aplica.
+ *
+ * Soportado por el plan de corrección T9/T12: transferencias y comisiones del
+ * atajo requieren tocar transacción + dos saldos (+ documento de comisión)
+ * sin dejar estados a medias.
+ */
+export async function ejecutarCommitAtomico(
+  escrituras: EscrituraAtomica[]
+): Promise<string[]> {
+  const docIds: string[] = [];
+
+  const writes = escrituras.map((escritura) => {
+    if (escritura.clase === "saldo") {
+      return {
+        update: {
+          name: `projects/${PROJECT_ID}/databases/(default)/documents/users/${escritura.userId}/bank_accounts/${escritura.accountId}`,
+        },
+        updateTransforms: [
+          {
+            fieldPath: "saldo",
+            increment: { doubleValue: escritura.delta },
+          },
+        ],
+        currentDocument: { exists: true },
+      };
+    }
+
+    const docId = generarDocId();
+    docIds.push(docId);
+    return {
+      update: {
+        name: `projects/${PROJECT_ID}/databases/(default)/documents/${escritura.coleccion}/${docId}`,
+        fields: jsonToFields(escritura.datos),
+      },
+      currentDocument: { exists: false } as { exists: boolean },
+    };
+  });
+
+  await requestFirestore("POST", ":commit", { writes });
+  return docIds;
+}
