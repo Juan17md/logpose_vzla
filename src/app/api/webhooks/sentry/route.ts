@@ -7,6 +7,16 @@ import {
   type PayloadSentry,
 } from "@/lib/telegram"
 
+import { timingSafeEqual } from "node:crypto"
+
+function verificarSecretoSeguro(header: string | null, secreto: string | undefined): boolean {
+  if (!header || !secreto) return false
+  const bufHeader = Buffer.from(header, "utf-8")
+  const bufSecreto = Buffer.from(secreto, "utf-8")
+  if (bufHeader.length !== bufSecreto.length) return false
+  return timingSafeEqual(bufHeader, bufSecreto)
+}
+
 export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
@@ -19,7 +29,7 @@ export async function POST(request: Request) {
 
   const secreto = process.env.SENTRY_WEBHOOK_SECRET
   const headerSecreto = request.headers.get("x-webhook-secret")
-  if (!secreto || headerSecreto !== secreto) {
+  if (!verificarSecretoSeguro(headerSecreto, secreto)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 

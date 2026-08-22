@@ -123,6 +123,7 @@ export const useShoppingLists = () => {
     };
 
     const toggleItem = async (listId: string, _currentItems: ShoppingItem[], itemId: string) => {
+        if (!esListaPropia(listId)) return;
         try {
             await runTransaction(db, async (transaction) => {
                 const listRef = doc(db, "shopping_lists", listId);
@@ -152,6 +153,7 @@ export const useShoppingLists = () => {
     };
 
     const updateItemProgress = async (listId: string, _currentItems: ShoppingItem[], itemId: string, change: number) => {
+        if (!esListaPropia(listId)) return;
         try {
             await runTransaction(db, async (transaction) => {
                 const listRef = doc(db, "shopping_lists", listId);
@@ -182,6 +184,7 @@ export const useShoppingLists = () => {
     };
 
     const deleteItem = async (listId: string, _currentItems: ShoppingItem[], itemId: string) => {
+        if (!esListaPropia(listId)) return;
         try {
             await runTransaction(db, async (transaction) => {
                 const listRef = doc(db, "shopping_lists", listId);
@@ -211,6 +214,7 @@ export const useShoppingLists = () => {
     };
 
     const updateItem = async (listId: string, _currentItems: ShoppingItem[], itemId: string, updates: Partial<ShoppingItem>) => {
+        if (!esListaPropia(listId)) return;
         try {
             await runTransaction(db, async (transaction) => {
                 const listRef = doc(db, "shopping_lists", listId);
@@ -235,7 +239,7 @@ export const useShoppingLists = () => {
     };
 
     const duplicateList = async (listId: string) => {
-        if (!auth.currentUser) return;
+        if (!esListaPropia(listId) || !auth.currentUser) return;
         const sourceList = lists.find(l => l.id === listId);
         if (!sourceList) return;
 

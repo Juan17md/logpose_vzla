@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { addDoc, collection, Timestamp, doc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { FiTrendingUp, FiTrendingDown, FiCreditCard, FiArrowRight, FiActivity, FiPlusCircle, FiPieChart, FiTarget, FiShoppingCart, FiCalendar, FiEdit2, FiEye, FiEyeOff, FiChevronRight, FiClock, FiAlertCircle, FiSave, FiTag } from "react-icons/fi";
@@ -17,6 +16,8 @@ import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { obtenerSimboloMoneda, MONEDAS_SOPORTADAS, type MonedaSoportada } from "@/lib/bankAccounts";
 import CurrencySelector from "@/components/ui/CurrencySelector";
 import Select from "@/components/ui/forms/Select";
+import { crearMovimiento } from "@/lib/movimientos";
+import { createVenezuelaDate } from "@/lib/timezone";
 
 
 // ─── Placeholder ligero para widgets durante carga ────────────────────────────
@@ -147,30 +148,37 @@ export default function DashboardPage() {
         }
 
         try {
-            await runTransaction(db, async (transaction) => {
-                const diff = amount - cuenta.saldo;
-                const cuentaRef = doc(db, "users", user.uid, "bank_accounts", cuentaAjustando);
-                
-                transaction.update(cuentaRef, { 
-                    saldo: amount, 
-                    actualizadoEn: serverTimestamp() 
-                });
+            const diff = amount - cuenta.saldo;
 
-                const newTransRef = doc(collection(db, "transactions"));
-                transaction.set(newTransRef, {
-                    userId: user.uid,
-                    accountId: cuentaAjustando,
+            // Las rules de transactions solo aceptan USD/VES: mapeamos la moneda
+            // de la cuenta (BS → VES, EUR/USDT → USD) para el registro contable.
+            const monedaMovimiento = cuenta.moneda === "BS" ? "VES" : "USD";
+
+            const resultado = await crearMovimiento(
+                db,
+                user.uid,
+                {
                     amount: Math.abs(diff),
-                    type: diff > 0 ? 'ingreso' : 'gasto',
-                    category: 'Ajuste',
-                    description: `Ajuste manual de saldo`,
-                    date: Timestamp.now(),
-                    currency: cuenta.moneda,
+                    type: diff > 0 ? "ingreso" : "gasto",
+                    category: "Ajuste",
+                    description: "Ajuste manual de saldo",
+                    date: createVenezuelaDate(),
+                    currency: monedaMovimiento,
                     originalAmount: Math.abs(diff),
                     exchangeRate: 1,
-                    createdAt: serverTimestamp()
-                });
-            });
+                    accountId: cuentaAjustando,
+                },
+                {
+                    ajusteSaldo: {
+                        nuevoSaldo: amount,
+                        monedaMovimiento,
+                    },
+                }
+            );
+
+            if (!resultado.exito) {
+                throw new Error(resultado.error);
+            }
 
             toast.success("Saldo actualizado correctamente");
             setShowAdjustModal(false);

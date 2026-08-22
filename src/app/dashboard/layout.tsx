@@ -34,8 +34,25 @@ function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const [verificado, setVerificado] = useState(false);
 
   useEffect(() => {
+    let montado = true;
+
+    // Timeout de seguridad: si Firebase Auth tarda más de 5s, redirigir a login o desbloquear
+    const timer = setTimeout(() => {
+      if (montado && !verificado) {
+        if (!auth.currentUser) {
+          router.replace("/login");
+        } else {
+          setVerificado(true);
+        }
+      }
+    }, 5000);
+
     const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
+      if (!montado) return;
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
       try {
         const snap = await getDoc(doc(db, "users", user.uid));
         if (snap.exists()) {
@@ -47,17 +64,29 @@ function OnboardingGuard({ children }: { children: React.ReactNode }) {
             router.replace("/onboarding");
             return;
           }
-
         }
       } catch {
-        // Si falla la lectura, dejar pasar
+        // Si falla la lectura, dejar pasar al dashboard
       }
-      setVerificado(true);
+      if (montado) {
+        setVerificado(true);
+      }
     });
-    return () => unsub();
-  }, [router]);
 
-  if (!verificado) return null;
+    return () => {
+      montado = false;
+      clearTimeout(timer);
+      unsub();
+    };
+  }, [router, verificado]);
+
+  if (!verificado) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500" />
+      </div>
+    );
+  }
   return <>{children}</>;
 }
 

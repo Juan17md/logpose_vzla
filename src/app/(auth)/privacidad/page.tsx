@@ -1,23 +1,26 @@
-"use client";
-
 import Link from "next/link";
-import { FiAlertOctagon, FiArrowLeft, FiDatabase, FiEdit, FiEye, FiFileText, FiGlobe, FiLock, FiMail, FiServer, FiShield, FiSliders, FiTrash2, FiUsers } from "react-icons/fi";
+import {
+  FiAlertOctagon,
+  FiArrowLeft,
+  FiDatabase,
+  FiEdit,
+  FiEye,
+  FiFileText,
+  FiGlobe,
+  FiLock,
+  FiMail,
+  FiServer,
+  FiShield,
+  FiSliders,
+  FiTrash2,
+  FiUsers,
+} from "react-icons/fi";
 import Logo from "@/components/layout/Logo";
 import { Outfit, IBM_Plex_Sans } from "next/font/google";
 import "../aurora.css";
 
 const outfit = Outfit({ variable: "--font-outfit", weight: ["400","500","600","700","800"], subsets: ["latin"] });
 const ibmPlexSans = IBM_Plex_Sans({ variable: "--font-ibm", weight: ["300","400","500","600","700"], subsets: ["latin"] });
-
-const stagger = { oculto: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.07, delayChildren: 0.1 } } };
-const item = {
-  oculto: { opacity: 0, y: 16, filter: "blur(4px)" },
-  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
-};
-const card = {
-  oculto: { opacity: 0, y: 24, scale: 0.97 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
-};
 
 const secciones = [
   {

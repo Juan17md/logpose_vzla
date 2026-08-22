@@ -4,21 +4,26 @@ import { POST } from '@/app/api/shortcuts/transaction/route'
 
 vi.mock('server-only', () => ({}))
 
-const { mockLimit, mockCrearTransaccion, mockObtenerCuenta, mockIncrementarSaldo } = vi.hoisted(() => ({
+const { mockLimit, mockCrearTransaccion, mockObtenerCuenta, mockCommitAtomico, mockGetRates } = vi.hoisted(() => ({
   mockLimit: vi.fn(),
   mockCrearTransaccion: vi.fn(),
   mockObtenerCuenta: vi.fn(),
-  mockIncrementarSaldo: vi.fn(),
+  mockCommitAtomico: vi.fn(),
+  mockGetRates: vi.fn(),
 }))
 
 vi.mock('@/lib/rateLimit', () => ({
   obtenerShortcutRateLimit: () => ({ limit: mockLimit }),
 }))
 
+vi.mock('@/lib/currency', () => ({
+  getRates: mockGetRates,
+}))
+
 vi.mock('@/lib/firebaseAdmin', () => ({
   crearTransaccionFirestore: mockCrearTransaccion,
+  crearTransaccionConSaldoAtomico: mockCommitAtomico,
   obtenerCuentaFirestore: mockObtenerCuenta,
-  incrementarSaldoCuenta: mockIncrementarSaldo,
 }))
 
 const TOKEN = "token-de-prueba"
@@ -54,10 +59,18 @@ beforeEach(() => {
   mockLimit.mockReset()
   mockCrearTransaccion.mockReset()
   mockObtenerCuenta.mockReset()
-  mockIncrementarSaldo.mockReset()
+  mockCommitAtomico.mockReset()
+  mockGetRates.mockReset()
   mockLimit.mockResolvedValue({ success: true })
   mockCrearTransaccion.mockResolvedValue("id-generado-123")
-  mockObtenerCuenta.mockResolvedValue({ nombre: "Efectivo", saldo: 1000 })
+  mockCommitAtomico.mockResolvedValue("id-atomico-456")
+  mockObtenerCuenta.mockResolvedValue({ nombre: "Efectivo", moneda: "USD", saldo: 1000 })
+  mockGetRates.mockResolvedValue({
+    usd: 500,
+    eur: 600,
+    usdt: 500,
+    lastUpdated: new Date().toISOString(),
+  })
 })
 
 afterEach(() => {
@@ -275,25 +288,40 @@ describe("POST /api/shortcuts/transaction", () => {
     expect((escritos.date as Date).toISOString()).toBe(new Date(fecha).toISOString())
   })
 
-  it("actualiza el saldo de la cuenta con un gasto (delta negativo)", async () => {
+  it("usa commit atómico y persiste accountId con un gasto (delta negativo) — T8+T9", async () => {
     const respuesta = await POST(
       peticion(cuerpoValido({ monto: 30, accountId: "cuenta-1" }))
     )
     expect(respuesta.status).toBe(200)
     expect(mockObtenerCuenta).toHaveBeenCalledWith(USER_ID, "cuenta-1")
-    expect(mockIncrementarSaldo).toHaveBeenCalledWith(USER_ID, "cuenta-1", -30)
-    const escritos = mockCrearTransaccion.mock.calls[0][0]
-    expect(escritos.accountId).toBeUndefined()
+
+    // T9: debe usar commit atómico, NO crearTransaccion + incrementar por separado
+    expect(mockCommitAtomico).toHaveBeenCalledOnce()
+    expect(mockCrearTransaccion).not.toHaveBeenCalled()
+
+    // T8: accountId debe estar en los datos del documento
+    const datosDoc = mockCommitAtomico.mock.calls[0][0]
+    expect(datosDoc.accountId).toBe("cuenta-1")
+
+    // Delta correcto: gasto = negativo
+    const delta = mockCommitAtomico.mock.calls[0][3]
+    expect(delta).toBe(-30)
+
+    // Verifica userId y accountId pasados al commit
+    expect(mockCommitAtomico.mock.calls[0][1]).toBe(USER_ID)
+    expect(mockCommitAtomico.mock.calls[0][2]).toBe("cuenta-1")
   })
 
-  it("actualiza el saldo de la cuenta con un ingreso (delta positivo)", async () => {
+  it("usa commit atómico con un ingreso (delta positivo) — T9", async () => {
     const respuesta = await POST(
       peticion(
         cuerpoValido({ tipo: "ingreso", categoria: "Salario", monto: 500, accountId: "cuenta-1" })
       )
     )
     expect(respuesta.status).toBe(200)
-    expect(mockIncrementarSaldo).toHaveBeenCalledWith(USER_ID, "cuenta-1", 500)
+    expect(mockCommitAtomico).toHaveBeenCalledOnce()
+    const delta = mockCommitAtomico.mock.calls[0][3]
+    expect(delta).toBe(500)
     expect(mockObtenerCuenta).toHaveBeenCalledWith(USER_ID, "cuenta-1")
   })
 
@@ -306,14 +334,16 @@ describe("POST /api/shortcuts/transaction", () => {
     const cuerpo = await respuesta.json()
     expect(cuerpo.error).toContain("cuenta-inexistente")
     expect(mockCrearTransaccion).not.toHaveBeenCalled()
-    expect(mockIncrementarSaldo).not.toHaveBeenCalled()
+    expect(mockCommitAtomico).not.toHaveBeenCalled()
   })
 
   it("no toca saldos ni cuentas cuando no se envía accountId", async () => {
     const respuesta = await POST(peticion(cuerpoValido()))
     expect(respuesta.status).toBe(200)
     expect(mockObtenerCuenta).not.toHaveBeenCalled()
-    expect(mockIncrementarSaldo).not.toHaveBeenCalled()
+    expect(mockCommitAtomico).not.toHaveBeenCalled()
+    // Sin accountId: usa crearTransaccionFirestore (no atómico)
+    expect(mockCrearTransaccion).toHaveBeenCalledOnce()
   })
 
   it("rechaza un accountId vacío", async () => {
@@ -329,13 +359,89 @@ describe("POST /api/shortcuts/transaction", () => {
     expect(respuesta.status).toBe(200)
     const cuerpo = await respuesta.json()
     expect(cuerpo.transaccion.accountId).toBe("cuenta-1")
+    // El ID proviene del commit atómico
+    expect(cuerpo.transaccion.id).toBe("id-atomico-456")
   })
 
-  it("aplica el redondeo a 2 decimales también al delta del saldo", async () => {
+  it("aplica el redondeo a 2 decimales también al delta del commit atómico", async () => {
     const respuesta = await POST(
       peticion(cuerpoValido({ monto: "8.509", accountId: "cuenta-1" }))
     )
     expect(respuesta.status).toBe(200)
-    expect(mockIncrementarSaldo).toHaveBeenCalledWith(USER_ID, "cuenta-1", -8.51)
+    const delta = mockCommitAtomico.mock.calls[0][3]
+    expect(delta).toBe(-8.51)
+  })
+
+  describe("Conversión de moneda al impactar saldo de cuenta — T10", () => {
+    it("convierte gasto USD a cuenta en BS multiplicando por la tasa BCV", async () => {
+      mockObtenerCuenta.mockResolvedValue({ nombre: "Banesco", moneda: "BS", saldo: 50000 })
+      const respuesta = await POST(
+        peticion(cuerpoValido({ monto: 10, currency: "USD", accountId: "cuenta-bs" }))
+      )
+      expect(respuesta.status).toBe(200)
+      // 10 USD * 500 = 5000 BS
+      const delta = mockCommitAtomico.mock.calls[0][3]
+      expect(delta).toBe(-5000)
+
+      const docData = mockCommitAtomico.mock.calls[0][0]
+      expect(docData.currency).toBe("USD")
+      expect(docData.exchangeRate).toBe(500)
+    })
+
+    it("convierte gasto VES a cuenta en USD dividiendo por la tasa BCV", async () => {
+      mockObtenerCuenta.mockResolvedValue({ nombre: "Zelle", moneda: "USD", saldo: 100 })
+      const respuesta = await POST(
+        peticion(cuerpoValido({ monto: 2500, currency: "VES", accountId: "cuenta-usd" }))
+      )
+      expect(respuesta.status).toBe(200)
+      // 2500 VES / 500 = 5 USD
+      const delta = mockCommitAtomico.mock.calls[0][3]
+      expect(delta).toBe(-5)
+
+      const docData = mockCommitAtomico.mock.calls[0][0]
+      expect(docData.currency).toBe("VES")
+      expect(docData.exchangeRate).toBe(500)
+    })
+
+    it("aplica 1:1 cuando la transacción VES va a cuenta en BS", async () => {
+      mockObtenerCuenta.mockResolvedValue({ nombre: "Pago Móvil", moneda: "BS", saldo: 10000 })
+      const respuesta = await POST(
+        peticion(cuerpoValido({ monto: 750, currency: "VES", accountId: "cuenta-bs" }))
+      )
+      expect(respuesta.status).toBe(200)
+      // 750 VES = 750 BS
+      const delta = mockCommitAtomico.mock.calls[0][3]
+      expect(delta).toBe(-750)
+    })
+
+    it("convierte gasto USD a cuenta en EUR usando tasas intermediarias en BS", async () => {
+      mockObtenerCuenta.mockResolvedValue({ nombre: "Cuenta Euro", moneda: "EUR", saldo: 500 })
+      const respuesta = await POST(
+        peticion(cuerpoValido({ monto: 120, currency: "USD", accountId: "cuenta-eur" }))
+      )
+      expect(respuesta.status).toBe(200)
+      // 120 USD * (500 / 600) = 100 EUR
+      const delta = mockCommitAtomico.mock.calls[0][3]
+      expect(delta).toBe(-100)
+    })
+
+    it("convierte ingreso VES a cuenta en USD sumando el delta convertido", async () => {
+      mockObtenerCuenta.mockResolvedValue({ nombre: "Efectivo USD", moneda: "USD", saldo: 200 })
+      const respuesta = await POST(
+        peticion(
+          cuerpoValido({
+            tipo: "ingreso",
+            categoria: "Salario",
+            monto: 10000,
+            currency: "VES",
+            accountId: "cuenta-usd",
+          })
+        )
+      )
+      expect(respuesta.status).toBe(200)
+      // 10000 VES / 500 = 20 USD (positivo)
+      const delta = mockCommitAtomico.mock.calls[0][3]
+      expect(delta).toBe(20)
+    })
   })
 })

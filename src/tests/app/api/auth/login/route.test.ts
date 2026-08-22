@@ -108,27 +108,33 @@ describe("POST /api/auth/login", () => {
     expect(cuerpo.customToken).toBe("token-personalizado")
     expect(mockCrearCustomToken).toHaveBeenCalledWith("uid-123")
 
-    const claveRateLimit = mockLimit.mock.calls[0][0] as string
-    expect(claveRateLimit).toBe("a@b.com")
-    expect(mockCrearCustomToken).toHaveBeenCalledWith("uid-123")
-
     const [url, opciones] = vi.mocked(fetch).mock.calls[0]
     expect(url).toContain(`accounts:signInWithPassword?key=${API_KEY}`)
     const enviado = JSON.parse(String(opciones?.body))
     expect(enviado.email).toBe("a@b.com")
     expect(enviado.returnSecureToken).toBe(true)
+
+    const claveRateLimit = mockLimit.mock.calls[0][0] as string
+    expect(claveRateLimit).toBe("127.0.0.1:a@b.com")
   })
 
-  it("normaliza el email a minúsculas para el rate limit", async () => {
+  it("normaliza el email a minúsculas y combina con IP para el rate limit", async () => {
     mockLimit.mockResolvedValue({ success: true })
     mockCrearCustomToken.mockResolvedValue("token-personalizado")
-    vi.mocked(fetch).mockResolvedValue(
-      respuestaFirebase({ localId: "uid-123" })
-    )
+    vi.mocked(fetch).mockResolvedValue(respuestaFirebase({ localId: "uid-123" }))
 
-    await POST(peticion({ email: "Usuario@Ejemplo.com", password: "123456" }))
+    const reqConIp = new NextRequest("http://localhost/api/auth/login", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "192.168.1.50, 10.0.0.1",
+      },
+      body: JSON.stringify({ email: "Usuario@Ejemplo.com", password: "123456" }),
+    })
+
+    await POST(reqConIp)
     const claveRateLimit = mockLimit.mock.calls[0][0] as string
-    expect(claveRateLimit).toBe("usuario@ejemplo.com")
+    expect(claveRateLimit).toBe("192.168.1.50:usuario@ejemplo.com")
   })
 
   it("devuelve 500 si falta la API key", async () => {
