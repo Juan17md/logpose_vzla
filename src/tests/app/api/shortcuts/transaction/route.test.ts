@@ -4,12 +4,13 @@ import { POST } from '@/app/api/shortcuts/transaction/route'
 
 vi.mock('server-only', () => ({}))
 
-const { mockLimit, mockCrearTransaccion, mockObtenerCuenta, mockCommitAtomico, mockGetRates } = vi.hoisted(() => ({
+const { mockLimit, mockCrearTransaccion, mockObtenerCuenta, mockCommitAtomico, mockGetRates, mockCommitGenerico } = vi.hoisted(() => ({
   mockLimit: vi.fn(),
   mockCrearTransaccion: vi.fn(),
   mockObtenerCuenta: vi.fn(),
   mockCommitAtomico: vi.fn(),
   mockGetRates: vi.fn(),
+  mockCommitGenerico: vi.fn(),
 }))
 
 vi.mock('@/lib/rateLimit', () => ({
@@ -23,6 +24,7 @@ vi.mock('@/lib/currency', () => ({
 vi.mock('@/lib/firebaseAdmin', () => ({
   crearTransaccionFirestore: mockCrearTransaccion,
   crearTransaccionConSaldoAtomico: mockCommitAtomico,
+  ejecutarCommitAtomico: mockCommitGenerico,
   obtenerCuentaFirestore: mockObtenerCuenta,
 }))
 
@@ -61,9 +63,11 @@ beforeEach(() => {
   mockObtenerCuenta.mockReset()
   mockCommitAtomico.mockReset()
   mockGetRates.mockReset()
+  mockCommitGenerico.mockReset()
   mockLimit.mockResolvedValue({ success: true })
   mockCrearTransaccion.mockResolvedValue("id-generado-123")
   mockCommitAtomico.mockResolvedValue("id-atomico-456")
+  mockCommitGenerico.mockResolvedValue(["id-commit-789", "id-commit-790"])
   mockObtenerCuenta.mockResolvedValue({ nombre: "Efectivo", moneda: "USD", saldo: 1000 })
   mockGetRates.mockResolvedValue({
     usd: 500,
@@ -187,10 +191,12 @@ describe("POST /api/shortcuts/transaction", () => {
   })
 
   it("devuelve 400 si el tipo no es válido", async () => {
-    const respuesta = await POST(peticion(cuerpoValido({ tipo: "transferencia" })))
+    const respuesta = await POST(peticion(cuerpoValido({ tipo: "prestamo" })))
     expect(respuesta.status).toBe(400)
     const cuerpo = await respuesta.json()
-    expect(cuerpo.error).toBe('El tipo debe ser "ingreso" o "gasto".')
+    expect(cuerpo.error).toBe(
+      'El tipo debe ser "ingreso", "gasto" o "transferencia".'
+    )
   })
 
   it("acepta el tipo con la primera letra en mayúscula (Atajos capitaliza la lista)", async () => {
@@ -442,6 +448,226 @@ describe("POST /api/shortcuts/transaction", () => {
       // 10000 VES / 500 = 20 USD (positivo)
       const delta = mockCommitAtomico.mock.calls[0][3]
       expect(delta).toBe(20)
+    })
+
+    describe("transferencias, comisiones y subcategoría", () => {
+      const CUERPO_TRANSFERENCIA = {
+        monto: 100,
+        tipo: "transferencia",
+        categoria: "Transferencias",
+        accountId: "cta-usd",
+        targetAccountId: "cta-bs",
+      }
+
+      function mockearDosCuentas() {
+        const cuentas: Record<string, { nombre: string; moneda: string; saldo: number }> = {
+          "cta-usd": { nombre: "Zelle", moneda: "USD", saldo: 500 },
+          "cta-bs": { nombre: "Pago Móvil", moneda: "BS", saldo: 90000 },
+        }
+        mockObtenerCuenta.mockImplementation(
+          (_uid: string, id: string) => Promise.resolve(cuentas[id] ?? null)
+        )
+      }
+
+      it("rechaza transferencia sin targetAccountId", async () => {
+        const respuesta = await POST(
+          peticion({
+            monto: 100,
+            tipo: "transferencia",
+            categoria: "Transferencias",
+            accountId: "cta-usd",
+          })
+        )
+        expect(respuesta.status).toBe(400)
+        const cuerpo = await respuesta.json()
+        expect(cuerpo.error).toContain("targetAccountId")
+      })
+
+      it("rechaza transferencia con cuenta origen igual a la destino", async () => {
+        const respuesta = await POST(
+          peticion({ ...CUERPO_TRANSFERENCIA, targetAccountId: "cta-usd" })
+        )
+        expect(respuesta.status).toBe(400)
+        const cuerpo = await respuesta.json()
+        expect(cuerpo.error).toContain("distintas")
+      })
+
+      it("rechaza transferencia con categoría distinta de Transferencias", async () => {
+        const respuesta = await POST(
+          peticion({ ...CUERPO_TRANSFERENCIA, categoria: "Comida" })
+        )
+        expect(respuesta.status).toBe(400)
+        const cuerpo = await respuesta.json()
+        expect(cuerpo.error).toContain("Transferencias")
+      })
+
+      it("rechaza comision menor o igual que cero", async () => {
+        const respuesta = await POST(
+          peticion(cuerpoValido({ comision: 0 }))
+        )
+        expect(respuesta.status).toBe(400)
+      })
+
+      it("rechaza subcategoria de más de 50 caracteres", async () => {
+        const respuesta = await POST(
+          peticion(cuerpoValido({ subcategoria: "s".repeat(51) }))
+        )
+        expect(respuesta.status).toBe(400)
+      })
+
+      it("registra transferencia USD→USD con deltas opuestos en un solo commit", async () => {
+        mockObtenerCuenta.mockImplementation((_uid: string, id: string) =>
+          Promise.resolve(
+            id === "cta-usd"
+              ? { nombre: "Zelle", moneda: "USD", saldo: 500 }
+              : { nombre: "Efectivo USD", moneda: "USD", saldo: 300 }
+          )
+        )
+        const respuesta = await POST(peticion(CUERPO_TRANSFERENCIA))
+        expect(respuesta.status).toBe(200)
+
+        expect(mockCommitGenerico).toHaveBeenCalledTimes(1)
+        const escrituras = mockCommitGenerico.mock.calls[0][0]
+
+        const doc = escrituras[0].datos
+        expect(doc.type).toBe("transferencia")
+        expect(doc.category).toBe("Transferencias")
+        expect(doc.accountId).toBe("cta-usd")
+        expect(doc.targetAccountId).toBe("cta-bs")
+
+        const saldoOrigen = escrituras.find(
+          (e: { clase: string; accountId?: string }) =>
+            e.clase === "saldo" && e.accountId === "cta-usd"
+        )
+        const saldoDestino = escrituras.find(
+          (e: { clase: string; accountId?: string }) =>
+            e.clase === "saldo" && e.accountId === "cta-bs"
+        )
+        expect(saldoOrigen.delta).toBe(-100)
+        expect(saldoDestino.delta).toBe(100)
+        expect(escrituras.filter((e: { clase: string }) => e.clase === "doc")).toHaveLength(1)
+
+        const cuerpo = await respuesta.json()
+        expect(cuerpo.success).toBe(true)
+        expect(cuerpo.transaccion.id).toBe("id-commit-789")
+      })
+
+      it("convierte el monto destino cuando las monedas difieren (USD→BS)", async () => {
+        mockearDosCuentas()
+        const respuesta = await POST(peticion(CUERPO_TRANSFERENCIA))
+        const escrituras = mockCommitGenerico.mock.calls[0][0]
+        const saldoDestino = escrituras.find(
+          (e: { clase: string; accountId?: string }) =>
+            e.clase === "saldo" && e.accountId === "cta-bs"
+        )
+        // 100 USD * 500 = 50000 BS
+        expect(saldoDestino.delta).toBe(50000)
+      })
+
+      it("devuelve 400 si la cuenta origen no existe", async () => {
+        mockObtenerCuenta.mockResolvedValue(null)
+        const respuesta = await POST(peticion(CUERPO_TRANSFERENCIA))
+        expect(respuesta.status).toBe(400)
+        const cuerpo = await respuesta.json()
+        expect(cuerpo.error).toContain("origen")
+      })
+
+      it("devuelve 400 si la cuenta destino no existe", async () => {
+        mockObtenerCuenta.mockImplementation((_uid: string, id: string) =>
+          id === "cta-usd"
+            ? Promise.resolve({ nombre: "Zelle", moneda: "USD", saldo: 500 })
+            : Promise.resolve(null)
+        )
+        const respuesta = await POST(peticion(CUERPO_TRANSFERENCIA))
+        expect(respuesta.status).toBe(400)
+        const cuerpo = await respuesta.json()
+        expect(cuerpo.error).toContain("destino")
+      })
+
+      it("devuelve 400 si el saldo origen no alcanza para monto + comisión", async () => {
+        mockearDosCuentas()
+        mockObtenerCuenta.mockImplementation((_uid: string, id: string) =>
+          id === "cta-usd"
+            ? Promise.resolve({ nombre: "Zelle", moneda: "USD", saldo: 50 })
+            : Promise.resolve({ nombre: "Pago Móvil", moneda: "BS", saldo: 90000 })
+        )
+        const respuesta = await POST(
+          peticion({ ...CUERPO_TRANSFERENCIA, comision: 5 })
+        )
+        expect(respuesta.status).toBe(400)
+        const cuerpo = await respuesta.json()
+        expect(cuerpo.error).toContain("Saldo insuficiente")
+      })
+
+      it("con comisión registra documento aparte y descuenta del mismo saldo origen", async () => {
+        mockearDosCuentas()
+        const respuesta = await POST(
+          peticion({ ...CUERPO_TRANSFERENCIA, comision: 5 })
+        )
+        expect(respuesta.status).toBe(200)
+
+        const escrituras = mockCommitGenerico.mock.calls[0][0]
+        const docs = escrituras.filter((e: { clase: string }) => e.clase === "doc")
+        expect(docs).toHaveLength(2)
+        const docComision = docs[1].datos
+        expect(docComision.category).toBe("Comisiones")
+        expect(docComision.amount).toBe(5)
+        expect(docComision.type).toBe("gasto")
+
+        const saldoOrigen = escrituras.find(
+          (e: { clase: string; accountId?: string }) =>
+            e.clase === "saldo" && e.accountId === "cta-usd"
+        )
+        // -(monto 100 + comisión 5)
+        expect(saldoOrigen.delta).toBe(-105)
+      })
+
+      it("gasto sin cuenta con comisión crea ambos documentos sin tocar saldos", async () => {
+        const respuesta = await POST(
+          peticion(cuerpoValido({ comision: 2.5 }))
+        )
+        expect(respuesta.status).toBe(200)
+
+        const escrituras = mockCommitGenerico.mock.calls[0][0]
+        expect(escrituras.filter((e: { clase: string }) => e.clase === "doc")).toHaveLength(2)
+        expect(escrituras.filter((e: { clase: string }) => e.clase === "saldo")).toHaveLength(0)
+        // camino antiguo NO debe usarse
+        expect(mockCrearTransaccion).not.toHaveBeenCalled()
+      })
+
+      it("gasto con cuenta y comisión fusiona delta -(monto+comisión) en un saldo", async () => {
+        mockObtenerCuenta.mockResolvedValue({ nombre: "Zelle", moneda: "USD", saldo: 1000 })
+        const respuesta = await POST(
+          peticion(cuerpoValido({ accountId: "cta-usd", comision: 3 }))
+        )
+        expect(respuesta.status).toBe(200)
+
+        const escrituras = mockCommitGenerico.mock.calls[0][0]
+        const docs = escrituras.filter((e: { clase: string }) => e.clase === "doc")
+        expect(docs.map((d: { datos: { category: string } }) => d.datos.category)).toEqual([
+          "Comida",
+          "Comisiones",
+        ])
+        const saldoOrigen = escrituras.find((e: { clase: string }) => e.clase === "saldo")
+        expect(saldoOrigen.delta).toBe(-103)
+      })
+
+      it("persiste subcategoria como subcategory en el documento", async () => {
+        const respuesta = await POST(
+          peticion(cuerpoValido({ subcategoria: "Mercado Municipal" }))
+        )
+        expect(respuesta.status).toBe(200)
+        const docData = mockCrearTransaccion.mock.calls[0][0]
+        expect(docData.subcategory).toBe("Mercado Municipal")
+      })
+
+      it("regresión: gasto simple con cuenta sigue usando el commit atómico original", async () => {
+        mockObtenerCuenta.mockResolvedValue({ nombre: "Efectivo", moneda: "USD", saldo: 1000 })
+        const respuesta = await POST(peticion(cuerpoValido({ accountId: "cta-usd" })))
+        expect(respuesta.status).toBe(200)
+        expect(mockCommitAtomico).toHaveBeenCalledTimes(1)
+        expect(mockCommitGenerico).not.toHaveBeenCalled()
+      })
     })
   })
 })
