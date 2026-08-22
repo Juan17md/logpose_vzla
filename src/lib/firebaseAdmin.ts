@@ -391,6 +391,58 @@ export async function obtenerCuentaFirestore(
   }
 }
 
+/** Vista mínima de una cuenta para listados (atajo iOS / simulador). */
+export interface CuentaResumen {
+  id: string;
+  nombre: string;
+  banco: string;
+  moneda: string;
+  saldo: number;
+}
+
+/**
+ * Lista las cuentas ACTIVAS del usuario ordenadas por creación (mismo criterio
+ * que el listener de la app). Sin orderBy en el structuredQuery a propósito:
+ * así no depende del índice compuesto activa+creadoEn en ningún proyecto;
+ * el orden se aplica en memoria sobre creadoEn.
+ */
+export async function listarCuentasActivasFirestore(
+  userId: string
+): Promise<CuentaResumen[]> {
+  const data = (await requestFirestore("POST", `/users/${userId}:runQuery`, {
+    structuredQuery: {
+      from: [{ collectionId: "bank_accounts" }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "activa" },
+          op: "EQUAL",
+          value: { booleanValue: true },
+        },
+      },
+    },
+  })) as Array<{
+    document?: { name: string; fields?: Record<string, unknown> };
+  }>;
+
+  const cuentas: (CuentaResumen & { _creadoEn: string })[] = [];
+  for (const resultado of data || []) {
+    if (!resultado.document?.name) continue;
+    const id = resultado.document.name.split("/").pop() as string;
+    const campos = docToObject(resultado.document);
+    cuentas.push({
+      id,
+      nombre: String(campos.nombre ?? ""),
+      banco: String(campos.banco ?? ""),
+      moneda: String(campos.moneda ?? "USD"),
+      saldo: Number(campos.saldo ?? 0),
+      _creadoEn: String(campos.creadoEn ?? ""),
+    });
+  }
+
+  cuentas.sort((a, b) => a._creadoEn.localeCompare(b._creadoEn));
+  return cuentas.map(({ _creadoEn, ...cuenta }) => cuenta);
+}
+
 /**
  * Genera un ID de documento aleatorio compatible con Firestore (20 caracteres
  * alfanuméricos). Replica el formato de los IDs autogenerados del SDK.

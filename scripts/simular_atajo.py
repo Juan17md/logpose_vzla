@@ -212,17 +212,62 @@ def leer_token_de_env_local() -> str | None:
     return coincidencia.group(1).strip() if coincidencia else None
 
 
-def obtener_token() -> str:
+def obtener_token(opcional: bool = False) -> str | None:
     token = os.environ.get("SHORTCUTS_API_TOKEN") or leer_token_de_env_local()
     if token:
         origen = "variable de entorno" if os.environ.get("SHORTCUTS_API_TOKEN") else ".env.local"
         ok(f"Token cargado desde {origen}.")
         return token
+    if opcional:
+        advertencia("Sin SHORTCUTS_API_TOKEN: no se podrán listar cuentas.")
+        return None
     advertencia("No se encontró SHORTCUTS_API_TOKEN en el entorno ni en .env.local.")
     token = getpass.getpass("  Pega el token (entrada oculta): ").strip()
     if not token:
         error_salir("Sin token no se puede autenticar la petición.")
     return token
+
+
+def listar_cuentas(url_base: str, token: str) -> list[dict] | None:
+    """GET /api/shortcuts/accounts. Devuelve None si falla (para usar fallback manual)."""
+    try:
+        peticion = urllib.request.Request(
+            url_base + "/api/shortcuts/accounts",
+            headers={"Authorization": f"Bearer {token}"},
+            method="GET",
+        )
+        with urllib.request.urlopen(peticion, timeout=TIMEOUT_SEGUNDOS) as respuesta:
+            cuerpo = json.loads(respuesta.read().decode("utf-8"))
+            return cuerpo.get("cuentas", [])
+    except urllib.error.HTTPError as excepcion:
+        advertencia(f"No se pudieron listar cuentas (HTTP {excepcion.code}).")
+        return None
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        advertencia("No se pudo contactar el endpoint de cuentas.")
+        return None
+
+
+def elegir_cuenta(cuentas: list[dict], mensaje: str, excluir_id: str | None = None) -> str:
+    """Menú numerado de cuentas reales; opción 0 = entrada manual del ID."""
+    visibles = [c for c in cuentas if c["id"] != excluir_id] if excluir_id else cuentas
+    if visibles:
+        print(f"{mensaje}")
+        for i, cuenta in enumerate(visibles, start=1):
+            print(
+                f"  {i}) {cuenta['nombre']} · {cuenta['banco'] or '—'} · "
+                f"{cuenta['moneda']} · saldo {cuenta['saldo']:,.2f}"
+            )
+        print(f"  0) Ingresar ID manualmente")
+        while True:
+            bruto = input(f"  Opción [0-{len(visibles)}]: ").strip()
+            if bruto == "0":
+                return pedir_identificador("ID de la cuenta")
+            if bruto.isdigit() and 1 <= int(bruto) <= len(visibles):
+                elegida = visibles[int(bruto) - 1]
+                print(f"  {C.GRIS}→ {elegida['id']}{C.FIN}")
+                return elegida["id"]
+            print(f"  {C.ROJO}Opción inválida.{C.FIN}")
+    return pedir_identificador(mensaje.replace("(elige una)", "").strip() + " (accountId)")
 
 
 def elegir_url(entorno: str) -> str:
@@ -319,13 +364,25 @@ def main() -> None:
     url_base = elegir_url(argumentos.entorno)
     ok(f"Entorno: {argumentos.entorno} → {url_base + RUTA}")
 
+    token = obtener_token(opcional=argumentos.dry_run)
+
+    titulo("Cuentas disponibles")
+    cuentas = listar_cuentas(url_base, token) if token else None
+
     tipo = pedir_opcion("Tipo de movimiento:", ["ingreso", "gasto", "transferencia"]).lower()
-    titulo("Cuentas")
-    cuenta_origen = pedir_identificador("ID de la cuenta ORIGEN (accountId)")
+    if cuentas:
+        cuenta_origen = elegir_cuenta(cuentas, "Cuenta ORIGEN (la que realiza el movimiento):")
+    else:
+        cuenta_origen = pedir_identificador("ID de la cuenta ORIGEN (accountId)")
     cuenta_destino = None
     if tipo == "transferencia":
         while True:
-            cuenta_destino = pedir_identificador("ID de la cuenta DESTINO (targetAccountId)")
+            if cuentas:
+                cuenta_destino = elegir_cuenta(
+                    cuentas, "Cuenta DESTINO (donde llega el dinero):", excluir_id=cuenta_origen
+                )
+            else:
+                cuenta_destino = pedir_identificador("ID de la cuenta DESTINO (targetAccountId)")
             if cuenta_destino != cuenta_origen:
                 break
             print(f"  {C.ROJO}La cuenta destino debe ser distinta a la origen.{C.FIN}")
@@ -393,7 +450,8 @@ def main() -> None:
         print("Cancelado por el usuario.")
         return
 
-    token = obtener_token()
+    if not token:
+        token = obtener_token()
 
     print(f"\n{C.GRIS}Enviando…{C.FIN}")
     codigo, cuerpo = enviar(url_base, token, carga)
