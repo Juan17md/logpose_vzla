@@ -98,7 +98,7 @@ export async function actualizarNombreUsuario(
  * (mínimo 6) y endurecida con límite superior (72, límite de Identity Toolkit)
  * y rechazo de contraseñas en blanco / solo espacios.
  */
-export async function validarContraseñaAdmin(password: string): Promise<string | null> {
+export async function validarContrasenaAdmin(password: string): Promise<string | null> {
   if (!password || typeof password !== "string") {
     return "La contraseña es obligatoria";
   }
@@ -123,7 +123,7 @@ export async function cambiarPasswordUsuario(
     const userData = await leerUsuario(uid);
     if (!userData) return { exito: false, error: "Usuario no encontrado" };
 
-    const errorPassword = await validarContraseñaAdmin(nuevaPassword);
+    const errorPassword = await validarContrasenaAdmin(nuevaPassword);
     if (errorPassword) return { exito: false, error: errorPassword };
 
     if (userData.role === "admin") {

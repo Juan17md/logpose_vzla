@@ -37,7 +37,7 @@ vi.mock("@/lib/adminLogs", () => ({
 import {
   cambiarPasswordUsuario,
   eliminarUsuario,
-  validarContraseñaAdmin,
+  validarContrasenaAdmin,
 } from "@/lib/admin";
 
 const SESION_ADMIN = { uid: "admin-1", email: "admin@test.com" };
@@ -71,26 +71,26 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("validarContraseñaAdmin", () => {
+describe("validarContrasenaAdmin", () => {
   it("acepta una contraseña válida", async () => {
-    expect(await validarContraseñaAdmin("hola123")).toBeNull();
+    expect(await validarContrasenaAdmin("hola123")).toBeNull();
   });
 
   it("rechaza vacía", async () => {
-    expect(await validarContraseñaAdmin("")).toContain("obligatoria");
+    expect(await validarContrasenaAdmin("")).toContain("obligatoria");
   });
 
   it("rechaza menor a 6 caracteres", async () => {
-    expect(await validarContraseñaAdmin("abc")).toContain("al menos 6");
+    expect(await validarContrasenaAdmin("abc")).toContain("al menos 6");
   });
 
   it("rechaza mayor a 72 caracteres", async () => {
-    expect(await validarContraseñaAdmin("x".repeat(73))).toContain("72");
+    expect(await validarContrasenaAdmin("x".repeat(73))).toContain("72");
   });
 
   it("rechaza contraseñas con espacios al inicio o final", async () => {
-    expect(await validarContraseñaAdmin("  abcdef")).toContain("espacios");
-    expect(await validarContraseñaAdmin("abcdef  ")).toContain("espacios");
+    expect(await validarContrasenaAdmin("  abcdef")).toContain("espacios");
+    expect(await validarContrasenaAdmin("abcdef  ")).toContain("espacios");
   });
 });
 
