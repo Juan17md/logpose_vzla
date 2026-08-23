@@ -339,7 +339,7 @@ def elegir_url(entorno: str) -> str:
 # ─── Validación local (espejo del esquema Zod) ──────────────────────────────
 
 
-def validar_carga(carga: dict) -> list[str]:
+def validar_carga(carga: dict, catalogo: list[dict] | None = None) -> list[str]:
     errores: list[str] = []
 
     if carga["monto"] <= 0:
@@ -351,11 +351,21 @@ def validar_carga(carga: dict) -> list[str]:
     if carga["currency"] not in ("USD", "VES"):
         errores.append('La moneda debe ser "USD" o "VES".')
 
-    categorias_validas = {
-        "ingreso": CATEGORIAS_INGRESO,
-        "gasto": CATEGORIAS_GASTO,
-        "transferencia": ["Transferencias"],
-    }[carga["tipo"]]
+    # Validar contra el catálogo REAL del usuario cuando esté disponible
+    # (soporta categorías personalizadas); fallback a listas fijas offline.
+    if catalogo:
+        categorias_validas = [
+            c["nombre"]
+            for c in catalogo
+            if c.get("tipo") in ("ambas", carga["tipo"])
+        ]
+    elif carga["tipo"] == "transferencia":
+        categorias_validas = ["Transferencias"]
+    else:
+        categorias_validas = (
+            CATEGORIAS_INGRESO if carga["tipo"] == "ingreso" else CATEGORIAS_GASTO
+        )
+
     if carga["categoria"] not in categorias_validas:
         errores.append(
             f'La categoría "{carga["categoria"]}" no es válida para un {carga["tipo"]}. '
@@ -503,7 +513,7 @@ def main() -> None:
     titulo("Carga útil (JSON)")
     print(json.dumps(carga, indent=2, ensure_ascii=False))
 
-    errores = validar_carga(carga)
+    errores = validar_carga(carga, catalogo_categorias)
     if errores:
         for detalle in errores:
             error_salir(detalle)
