@@ -71,3 +71,6 @@ extraer.js
 # Python
 __pycache__/
 *.pyc
+
+# Scripts locales de prueba (contienen flujos con tokens)
+scripts/
