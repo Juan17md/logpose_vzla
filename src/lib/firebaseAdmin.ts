@@ -533,12 +533,12 @@ export async function crearTransaccionConSaldoAtomico(
         currentDocument: { exists: false },
       },
       {
-        update: {
-          name: accountName,
+        transform: {
+          document: accountName,
+          fieldTransforms: [
+            { fieldPath: "saldo", increment: { doubleValue: delta } },
+          ],
         },
-        updateTransforms: [
-          { fieldPath: "saldo", increment: { doubleValue: delta } },
-        ],
         currentDocument: { exists: true },
       },
     ],
@@ -560,12 +560,12 @@ export async function incrementarSaldoCuenta(
   await requestFirestore("POST", ":commit", {
     writes: [
       {
-        update: {
-          name: `projects/${PROJECT_ID}/databases/(default)/documents/users/${userId}/bank_accounts/${accountId}`,
+        transform: {
+          document: `projects/${PROJECT_ID}/databases/(default)/documents/users/${userId}/bank_accounts/${accountId}`,
+          fieldTransforms: [
+            { fieldPath: "saldo", increment: { doubleValue: delta } },
+          ],
         },
-        updateTransforms: [
-          { fieldPath: "saldo", increment: { doubleValue: delta } },
-        ],
         currentDocument: { exists: true },
       },
     ],
@@ -603,15 +603,15 @@ export async function ejecutarCommitAtomico(
   const writes = escrituras.map((escritura) => {
     if (escritura.clase === "saldo") {
       return {
-        update: {
-          name: `projects/${PROJECT_ID}/databases/(default)/documents/users/${escritura.userId}/bank_accounts/${escritura.accountId}`,
+        transform: {
+          document: `projects/${PROJECT_ID}/databases/(default)/documents/users/${escritura.userId}/bank_accounts/${escritura.accountId}`,
+          fieldTransforms: [
+            {
+              fieldPath: "saldo",
+              increment: { doubleValue: escritura.delta },
+            },
+          ],
         },
-        updateTransforms: [
-          {
-            fieldPath: "saldo",
-            increment: { doubleValue: escritura.delta },
-          },
-        ],
         currentDocument: { exists: true },
       };
     }
