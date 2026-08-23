@@ -67,3 +67,7 @@ public/workbox-*.js.map
 public/fallback-*.js
 public/fallback-*.js.map
 extraer.js
+
+# Python
+__pycache__/
+*.pyc
