@@ -443,6 +443,54 @@ export async function listarCuentasActivasFirestore(
   return cuentas.map(({ _creadoEn, ...cuenta }) => cuenta);
 }
 
+/** Categoría del usuario para listados del atajo/simulador. */
+export interface CategoriaResumen {
+  nombre: string;
+  tipo: string;
+  subcategorias: string[];
+}
+
+/**
+ * Lista TODAS las categorías del usuario (el consumidor filtra por tipo).
+ * Orden por nombre ascendente igual que el listener de la app (índice simple,
+ * sin compuestos). subcategorias llega como arrayValue REST y se aplana.
+ */
+export async function listarCategoriasFirestore(
+  userId: string
+): Promise<CategoriaResumen[]> {
+  const data = (await requestFirestore("POST", `/users/${userId}:runQuery`, {
+    structuredQuery: {
+      from: [{ collectionId: "categories" }],
+      orderBy: [
+        { field: { fieldPath: "nombre" }, direction: "ASCENDING" },
+      ],
+    },
+  })) as Array<{
+    document?: { name: string; fields?: Record<string, unknown> };
+  }>;
+
+  const categorias: CategoriaResumen[] = [];
+  for (const resultado of data || []) {
+    if (!resultado.document?.name) continue;
+    const campos = docToObject(resultado.document);
+    const bruto = campos.subcategorias as
+      | { arrayValue?: { values?: Array<{ stringValue?: string }> } }
+      | undefined;
+    const subcategorias = Array.isArray(bruto)
+      ? (bruto as string[])
+      : (bruto?.arrayValue?.values ?? [])
+          .map((valor) => valor.stringValue ?? "")
+          .filter(Boolean);
+
+    categorias.push({
+      nombre: String(campos.nombre ?? ""),
+      tipo: String(campos.tipo ?? "gasto"),
+      subcategorias,
+    });
+  }
+  return categorias;
+}
+
 /**
  * Genera un ID de documento aleatorio compatible con Firestore (20 caracteres
  * alfanuméricos). Replica el formato de los IDs autogenerados del SDK.

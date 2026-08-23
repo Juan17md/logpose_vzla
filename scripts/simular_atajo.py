@@ -228,8 +228,8 @@ def obtener_token(opcional: bool = False) -> str | None:
     return token
 
 
-def listar_cuentas(url_base: str, token: str) -> list[dict] | None:
-    """GET /api/shortcuts/accounts. Devuelve None si falla (para usar fallback manual)."""
+def obtener_contexto(url_base: str, token: str) -> dict | None:
+    """GET /api/shortcuts/accounts → {'cuentas': [...], 'categorias': [...]}. None si falla."""
     try:
         peticion = urllib.request.Request(
             url_base + "/api/shortcuts/accounts",
@@ -238,17 +238,20 @@ def listar_cuentas(url_base: str, token: str) -> list[dict] | None:
         )
         with urllib.request.urlopen(peticion, timeout=TIMEOUT_SEGUNDOS) as respuesta:
             cuerpo = json.loads(respuesta.read().decode("utf-8"))
-            return cuerpo.get("cuentas", [])
+            return {
+                "cuentas": cuerpo.get("cuentas", []),
+                "categorias": cuerpo.get("categorias", []),
+            }
     except urllib.error.HTTPError as excepcion:
-        advertencia(f"No se pudieron listar cuentas (HTTP {excepcion.code}).")
+        advertencia(f"No se pudieron listar cuentas/categorías (HTTP {excepcion.code}).")
         return None
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
         advertencia("No se pudo contactar el endpoint de cuentas.")
         return None
 
 
-def elegir_cuenta(cuentas: list[dict], mensaje: str, excluir_id: str | None = None) -> str:
-    """Menú numerado de cuentas reales; opción 0 = entrada manual del ID."""
+def elegir_cuenta(cuentas: list[dict], mensaje: str, excluir_id: str | None = None) -> tuple[str, dict | None]:
+    """Menú numerado de cuentas reales. Devuelve (id, objeto_cuenta|None). Opción 0 = ID manual."""
     visibles = [c for c in cuentas if c["id"] != excluir_id] if excluir_id else cuentas
     if visibles:
         print(f"{mensaje}")
@@ -261,13 +264,66 @@ def elegir_cuenta(cuentas: list[dict], mensaje: str, excluir_id: str | None = No
         while True:
             bruto = input(f"  Opción [0-{len(visibles)}]: ").strip()
             if bruto == "0":
-                return pedir_identificador("ID de la cuenta")
+                return pedir_identificador("ID de la cuenta"), None
             if bruto.isdigit() and 1 <= int(bruto) <= len(visibles):
                 elegida = visibles[int(bruto) - 1]
                 print(f"  {C.GRIS}→ {elegida['id']}{C.FIN}")
-                return elegida["id"]
+                return elegida["id"], elegida
             print(f"  {C.ROJO}Opción inválida.{C.FIN}")
-    return pedir_identificador(mensaje.replace("(elige una)", "").strip() + " (accountId)")
+    return pedir_identificador(mensaje.replace("(elige una)", "").strip() + " (accountId)"), None
+
+
+def elegir_categoria(catalogo: list[dict], tipo: str) -> dict:
+    """Menú de categorías REALES del usuario filtradas por tipo. Fallback: lista fija."""
+    if catalogo:
+        filtradas = [c for c in catalogo if c.get("tipo") in ("ambas", tipo)]
+        if filtradas:
+            print(f"Categoría ({tipo}):")
+            for i, cat in enumerate(filtradas, start=1):
+                cantidad_subs = len(cat.get("subcategorias") or [])
+                extra = f" {C.GRIS}({cantidad_subs} subcategorías){C.FIN}" if cantidad_subs else ""
+                print(f"  {i}) {cat['nombre']}{extra}")
+            while True:
+                bruto = input(f"  Opción [1-{len(filtradas)}]: ").strip()
+                if bruto.isdigit() and 1 <= int(bruto) <= len(filtradas):
+                    return filtradas[int(bruto) - 1]
+                coincidencia = next((c for c in filtradas if c["nombre"].lower() == bruto.lower()), None)
+                if coincidencia:
+                    return coincidencia
+                print(f"  {C.ROJO}Opción inválida.{C.FIN}")
+    opciones = CATEGORIAS_INGRESO if tipo == "ingreso" else CATEGORIAS_GASTO
+    elegida = pedir_opcion(f"Categoría ({tipo}) — sin conexión al catálogo:", opciones)
+    return {"nombre": elegida, "subcategorias": []}
+
+
+def elegir_subcategoria(categoria: dict) -> str | None:
+    nombre = categoria.get("nombre", "?")
+    subcategorias = categoria.get("subcategorias") or []
+    if not subcategorias:
+        return pedir_texto(
+            f"Subcategoría de '{nombre}' (opcional)",
+            obligatorio=False,
+            maximo=50,
+            etiqueta_campo="subcategoria",
+        )
+    print(f"Subcategoría de '{nombre}':")
+    for i, sub in enumerate(subcategorias, start=1):
+        print(f"  {i}) {sub}")
+    print("  0) Escribir otra   ·   Enter = sin subcategoría")
+    while True:
+        bruto = input(f"  Opción [0-{len(subcategorias)}] o Enter: ").strip()
+        if not bruto:
+            return None
+        if bruto == "0":
+            return pedir_texto(
+                "  Escribe la subcategoría",
+                obligatorio=True,
+                maximo=50,
+                etiqueta_campo="subcategoria",
+            )
+        if bruto.isdigit() and 1 <= int(bruto) <= len(subcategorias):
+            return subcategorias[int(bruto) - 1]
+        print(f"  {C.ROJO}Opción inválida.{C.FIN}")
 
 
 def elegir_url(entorno: str) -> str:
@@ -367,29 +423,43 @@ def main() -> None:
     token = obtener_token(opcional=argumentos.dry_run)
 
     titulo("Cuentas disponibles")
-    cuentas = listar_cuentas(url_base, token) if token else None
+    contexto = obtener_contexto(url_base, token) if token else None
+    cuentas = contexto["cuentas"] if contexto else None
+    catalogo_categorias = contexto["categorias"] if contexto else []
 
     tipo = pedir_opcion("Tipo de movimiento:", ["ingreso", "gasto", "transferencia"]).lower()
     if cuentas:
-        cuenta_origen = elegir_cuenta(cuentas, "Cuenta ORIGEN (la que realiza el movimiento):")
+        cuenta_origen_id, cuenta_origen_obj = elegir_cuenta(
+            cuentas, "Cuenta ORIGEN (la que realiza el movimiento):"
+        )
     else:
-        cuenta_origen = pedir_identificador("ID de la cuenta ORIGEN (accountId)")
-    cuenta_destino = None
+        cuenta_origen_id = pedir_identificador("ID de la cuenta ORIGEN (accountId)")
+        cuenta_origen_obj = None
+
+    cuenta_destino_id = None
     if tipo == "transferencia":
         while True:
             if cuentas:
-                cuenta_destino = elegir_cuenta(
-                    cuentas, "Cuenta DESTINO (donde llega el dinero):", excluir_id=cuenta_origen
+                cuenta_destino_id, _ = elegir_cuenta(
+                    cuentas, "Cuenta DESTINO (donde llega el dinero):", excluir_id=cuenta_origen_id
                 )
             else:
-                cuenta_destino = pedir_identificador("ID de la cuenta DESTINO (targetAccountId)")
-            if cuenta_destino != cuenta_origen:
+                cuenta_destino_id = pedir_identificador("ID de la cuenta DESTINO (targetAccountId)")
+            if cuenta_destino_id != cuenta_origen_id:
                 break
             print(f"  {C.ROJO}La cuenta destino debe ser distinta a la origen.{C.FIN}")
 
+    # Moneda sugerida por la cuenta origen: BS → VES; USD/EUR/USDT → USD
+    moneda_cuenta = (cuenta_origen_obj or {}).get("moneda") or ""
+    moneda_sugerida = "VES" if moneda_cuenta.upper() == "BS" else "USD"
+
     titulo("Monto y moneda")
+    moneda = pedir_opcion(
+        f"Moneda del movimiento{f' {C.GRIS}(cuenta origen en {moneda_cuenta}){C.FIN}'}:",
+        ["USD", "VES"],
+        defecto=moneda_sugerida,
+    )
     monto = pedir_monto()
-    moneda = pedir_opcion("Moneda del movimiento:", ["USD", "VES"], defecto="USD")
 
     comision = None
     if tipo in ("gasto", "transferencia"):
@@ -397,15 +467,13 @@ def main() -> None:
 
     titulo("Clasificación")
     if tipo == "transferencia":
-        categoria = "Transferencias"
+        categoria_obj = {"nombre": "Transferencias", "subcategorias": []}
         ok('Las transferencias usan automáticamente la categoría "Transferencias".')
     else:
-        opciones = CATEGORIAS_INGRESO if tipo == "ingreso" else CATEGORIAS_GASTO
-        categoria = pedir_opcion(f"Categoría ({tipo}):", opciones)
+        categoria_obj = elegir_categoria(catalogo_categorias, tipo)
+    categoria = categoria_obj["nombre"]
+    subcategoria = elegir_subcategoria(categoria_obj)
 
-    subcategoria = pedir_texto(
-        "Subcategoría (opcional)", obligatorio=False, maximo=50, etiqueta_campo="subcategoria"
-    )
     descripcion = pedir_texto(
         "Descripción breve (opcional)", obligatorio=False, maximo=200, etiqueta_campo="descripcion"
     )
@@ -419,10 +487,10 @@ def main() -> None:
         "categoria": categoria,
         "currency": moneda,
     }
-    if cuenta_origen:
-        carga["accountId"] = cuenta_origen
-    if cuenta_destino:
-        carga["targetAccountId"] = cuenta_destino
+    if cuenta_origen_id:
+        carga["accountId"] = cuenta_origen_id
+    if cuenta_destino_id:
+        carga["targetAccountId"] = cuenta_destino_id
     if subcategoria:
         carga["subcategoria"] = subcategoria
     if descripcion:

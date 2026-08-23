@@ -120,6 +120,7 @@ export async function POST(request: NextRequest) {
         monto: parsed.data.monto,
         tipo: parsed.data.tipo,
         categoria: parsed.data.categoria,
+        ...(parsed.data.subcategoria ? { subcategoria: parsed.data.subcategoria } : {}),
         descripcion: parsed.data.descripcion ?? '',
         fecha,
         currency: parsed.data.currency,

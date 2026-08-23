@@ -1,6 +1,9 @@
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
-import { listarCuentasActivasFirestore } from '@/lib/firebaseAdmin';
+import {
+  listarCategoriasFirestore,
+  listarCuentasActivasFirestore,
+} from '@/lib/firebaseAdmin';
 import { verificarTokenShortcut } from '@/lib/shortcuts';
 import { obtenerShortcutRateLimit } from '@/lib/rateLimit';
 
@@ -10,9 +13,10 @@ import { obtenerShortcutRateLimit } from '@/lib/rateLimit';
  * ─────────────────────────────────────────────────────────────────────
  * GET /api/shortcuts/accounts
  *
- * Devuelve las cuentas ACTIVAS del dueño (SHORTCUTS_USER_ID) para que el
- * atajo o el simulador puedan elegir accountId / targetAccountId desde un
- * menú en lugar de tipear IDs opacos.
+ * Devuelve las cuentas ACTIVAS y el catálogo de categorías (con sus
+ * subcategorías) del dueño (SHORTCUTS_USER_ID) para que el atajo o el
+ * simulador puedan elegir todo desde menús en lugar de tipear IDs o
+ * adivinar categorías.
  *
  * Autenticación idéntica al endpoint de transacciones:
  *   Authorization: Bearer <SHORTCUTS_API_TOKEN>
@@ -62,7 +66,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const cuentas = await listarCuentasActivasFirestore(userId);
+    const [cuentas, categorias] = await Promise.all([
+      listarCuentasActivasFirestore(userId),
+      listarCategoriasFirestore(userId),
+    ]);
 
     return NextResponse.json({
       success: true,
@@ -73,6 +80,7 @@ export async function GET(request: NextRequest) {
         moneda: cuenta.moneda,
         saldo: cuenta.saldo,
       })),
+      categorias,
     });
   } catch (e) {
     console.error('Error en /api/shortcuts/accounts:', e);

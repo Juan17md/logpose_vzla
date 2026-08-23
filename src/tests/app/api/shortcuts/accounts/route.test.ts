@@ -4,9 +4,10 @@ import { GET } from '@/app/api/shortcuts/accounts/route'
 
 vi.mock('server-only', () => ({}))
 
-const { mockLimit, mockListarCuentas } = vi.hoisted(() => ({
+const { mockLimit, mockListarCuentas, mockListarCategorias } = vi.hoisted(() => ({
   mockLimit: vi.fn(),
   mockListarCuentas: vi.fn(),
+  mockListarCategorias: vi.fn(),
 }))
 
 vi.mock('@/lib/rateLimit', () => ({
@@ -15,6 +16,7 @@ vi.mock('@/lib/rateLimit', () => ({
 
 vi.mock('@/lib/firebaseAdmin', () => ({
   listarCuentasActivasFirestore: mockListarCuentas,
+  listarCategoriasFirestore: mockListarCategorias,
 }))
 
 const TOKEN = "token-de-prueba"
@@ -34,10 +36,16 @@ beforeEach(() => {
   vi.stubEnv("SHORTCUTS_USER_ID", USER_ID)
   mockLimit.mockReset()
   mockListarCuentas.mockReset()
+  mockListarCategorias.mockReset()
   mockLimit.mockResolvedValue({ success: true })
   mockListarCuentas.mockResolvedValue([
     { id: "cta-abc123", nombre: "Zelle", banco: "Bank of America", moneda: "USD", saldo: 500 },
     { id: "cta-xyz789", nombre: "Pago Móvil", banco: "Mercantil", moneda: "BS", saldo: 9000 },
+  ])
+  mockListarCategorias.mockResolvedValue([
+    { nombre: "Comida", tipo: "gasto", subcategorias: ["Supermercado", "Restaurantes"] },
+    { nombre: "Salario", tipo: "ingreso", subcategorias: ["Nómina principal"] },
+    { nombre: "Negocio", tipo: "ambas", subcategorias: [] },
   ])
 })
 
@@ -81,11 +89,12 @@ describe("GET /api/shortcuts/accounts", () => {
     expect(mockListarCuentas).not.toHaveBeenCalled()
   })
 
-  it("lista las cuentas activas del dueño del token", async () => {
+  it("lista las cuentas activas y el catalogo de categorias del dueño del token", async () => {
     const respuesta = await GET(peticion())
     expect(respuesta.status).toBe(200)
 
     expect(mockListarCuentas).toHaveBeenCalledWith(USER_ID)
+    expect(mockListarCategorias).toHaveBeenCalledWith(USER_ID)
     const cuerpo = await respuesta.json()
     expect(cuerpo.success).toBe(true)
     expect(cuerpo.cuentas).toHaveLength(2)
@@ -96,7 +105,11 @@ describe("GET /api/shortcuts/accounts", () => {
       moneda: "USD",
       saldo: 500,
     })
-    expect(cuerpo.cuentas[1].moneda).toBe("BS")
+    expect(cuerpo.categorias).toHaveLength(3)
+    expect(cuerpo.categorias.find((c: { nombre: string }) => c.nombre === "Comida").subcategorias).toEqual([
+      "Supermercado",
+      "Restaurantes",
+    ])
   })
 
   it("devuelve lista vacía cuando el usuario no tiene cuentas activas", async () => {
