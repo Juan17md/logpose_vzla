@@ -495,10 +495,15 @@ export async function listarCategoriasFirestore(
  * Genera un ID de documento aleatorio compatible con Firestore (20 caracteres
  * alfanuméricos). Replica el formato de los IDs autogenerados del SDK.
  */
-function generarDocId(): string {
+export function generarNuevoDocId(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const bytes = crypto.getRandomValues(new Uint8Array(20));
   return Array.from(bytes, (b) => chars[b % chars.length]).join('');
+}
+
+/** Alias interno para no romper usos existentes dentro del módulo. */
+function generarDocId(): string {
+  return generarNuevoDocId();
 }
 
 /**
@@ -576,6 +581,8 @@ export type EscrituraAtomica =
       /** Ruta relativa tras `documents/`, ej. "transactions" o "users/{uid}/transactions". */
       coleccion: string;
       datos: Record<string, unknown>;
+      /** Opcional: ID pre-generado para poder vincular documentos entre sí. */
+      docId?: string;
     }
   | { clase: "saldo"; userId: string; accountId: string; delta: number };
 
@@ -609,7 +616,7 @@ export async function ejecutarCommitAtomico(
       };
     }
 
-    const docId = generarDocId();
+    const docId = escritura.docId ?? generarDocId();
     docIds.push(docId);
     return {
       update: {

@@ -20,8 +20,11 @@ import {
   collection,
   deleteField,
   doc,
+  getDocs,
+  query,
   runTransaction,
   serverTimestamp,
+  where,
 } from "firebase/firestore";
 import { convertirMontoParaCuenta } from "@/lib/bankAccounts";
 
@@ -275,6 +278,19 @@ export async function eliminarMovimiento(
   transaccionId: string
 ): Promise<ResultadoMovimiento> {
   try {
+    // Comisiones hijas creadas junto al movimiento (atajo iOS): son un par
+    // contable; si se elimina el padre deben eliminarse y revertirse también.
+    const comisionesSnap = await getDocs(
+      query(
+        collection(db, "transactions"),
+        where("transaccionAsociadaId", "==", transaccionId)
+      )
+    );
+    const comisionesHijas = comisionesSnap.docs.map((docSnap) => ({
+      id: docSnap.id,
+      data: docSnap.data() as MovimientoData,
+    }));
+
     await runTransaction(db, async (transaction) => {
       const transRef = doc(db, "transactions", transaccionId);
       const transDoc = await transaction.get(transRef);
@@ -290,9 +306,16 @@ export async function eliminarMovimiento(
           const saldoActual = (cuentaDoc.data().saldo as number) || 0;
           const monedaCuenta = (cuentaDoc.data().moneda as string) || "USD";
           // Reversa: la cuenta tenía aplicado -delta; sumamos delta para deshacer.
-          const delta = -deltaCuentaOrigen(transData, monedaCuenta);
+          let deltaReversion = -deltaCuentaOrigen(transData, monedaCuenta);
+          for (const comision of comisionesHijas) {
+            // La comisión fue registrada como gasto: su eliminación devuelve su valor.
+            deltaReversion += Math.abs(
+              convertirParaCuenta(comision.data, monedaCuenta)
+            );
+            transaction.delete(doc(db, "transactions", comision.id));
+          }
           transaction.update(cuentaRef, {
-            saldo: saldoActual + delta,
+            saldo: saldoActual + deltaReversion,
             actualizadoEn: serverTimestamp(),
           });
         }

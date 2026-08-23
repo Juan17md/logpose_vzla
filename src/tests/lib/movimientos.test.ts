@@ -92,7 +92,34 @@ vi.mock("firebase/firestore", () => {
   const Timestamp = { now: () => ({ __timestampNow: true }) };
   const deleteField = () => ({ __deleteField: true });
 
-  return { collection, doc, runTransaction, serverTimestamp, Timestamp, deleteField };
+  const where = (campo: string, _op: string, valor: unknown) => ({
+    type: "where",
+    campo,
+    valor,
+  });
+  const query = (base: unknown, ...constraints: Array<Record<string, unknown>>) => ({
+    ...(base as Record<string, unknown>),
+    constraints,
+  });
+  const getDocs = async (
+    q: { constraints?: Array<{ type: string; campo: string; valor: unknown }> }
+  ) => {
+    const docs = [];
+    for (const [path, data] of estado) {
+      if (!path.startsWith("transactions/")) continue;
+      let cumple = true;
+      for (const c of q.constraints ?? []) {
+        if (c.type === "where" && (data as Record<string, unknown>)?.[c.campo] !== c.valor) {
+          cumple = false;
+          break;
+        }
+      }
+      if (cumple) docs.push({ id: path.split("/").pop(), data: () => data });
+    }
+    return { docs, size: docs.length };
+  };
+
+  return { collection, doc, runTransaction, serverTimestamp, Timestamp, deleteField, where, query, getDocs };
 });
 
 // ─── Sujeto bajo prueba ───────────────────────────────────────────────────────
@@ -303,6 +330,62 @@ describe("eliminarMovimiento", () => {
 
     expect(resultado.exito).toBe(false);
     expect(resultado).toEqual({ exito: false, error: "La transacción no existe" });
+  });
+
+  it("elimina la comisión hija del atajo y revierte su impacto junto al padre", async () => {
+    sembrarCuenta("u1", "cta-bs", "BS", 740);
+
+    // Par contable creado por el atajo: gasto 250 VES (canon USD) + comisión 10 VES
+    estado.set("transactions/tx-padre", {
+      userId: "u1",
+      amount: 0.5,
+      type: "gasto",
+      category: "Comida",
+      currency: "VES",
+      originalAmount: 250,
+      exchangeRate: 500,
+      accountId: "cta-bs",
+    });
+    estado.set("transactions/com-hija", {
+      userId: "u1",
+      amount: 0.02,
+      type: "gasto",
+      category: "Comisiones",
+      description: "Comisión",
+      currency: "VES",
+      originalAmount: 10,
+      exchangeRate: 500,
+      accountId: "cta-bs",
+      transaccionAsociadaId: "tx-padre",
+    });
+
+    const resultado = await eliminarMovimiento(db, "u1", "tx-padre");
+
+    expect(resultado.exito).toBe(true);
+    // Revierte padre (250 BS) + comisión hija (10 BS): saldo vuelve a 1000
+    expect(leerCuenta("u1", "cta-bs")?.saldo).toBe(1000);
+    expect(estado.has("transactions/tx-padre")).toBe(false);
+    expect(estado.has("transactions/com-hija")).toBe(false);
+  });
+
+  it("deja intactas otras transacciones sin vinculación al eliminado", async () => {
+    sembrarCuenta("u1", "a1", "USD", 200);
+    const creado = await crearMovimiento(db, "u1", baseGasto());
+    if (!creado.exito) throw new Error("Setup falló");
+
+    estado.set("transactions/otra-transaccion", {
+      userId: "u1",
+      amount: 50,
+      type: "gasto",
+      category: "Otra",
+      currency: "USD",
+      accountId: "a1",
+      transaccionAsociadaId: "id-distinto",
+    });
+
+    await eliminarMovimiento(db, "u1", creado.id);
+
+    expect(estado.has("transactions/otra-transaccion")).toBe(true);
   });
 });
 

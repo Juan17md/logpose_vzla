@@ -5,6 +5,7 @@ import {
   crearTransaccionFirestore,
   crearTransaccionConSaldoAtomico,
   ejecutarCommitAtomico,
+  generarNuevoDocId,
   obtenerCuentaFirestore,
   type EscrituraAtomica,
 } from '@/lib/firebaseAdmin';
@@ -184,13 +185,20 @@ export async function crearTransaccionDesdeShortcut(
   const comision = datos.comision
     ? Math.round(datos.comision * 100) / 100
     : 0;
+  const rates = await getRates();
+  const tasasEnBs: Record<string, number> = {
+    USD: rates.usd,
+    EUR: rates.eur,
+    USDT: rates.usdt,
+    BS: 1,
+  };
 
   if (datos.tipo === 'transferencia') {
-    return crearTransferenciaDesdeShortcut(datos, userId, fecha, monto, comision);
+    return crearTransferenciaDesdeShortcut(datos, userId, fecha, monto, comision, rates.usd, tasasEnBs);
   }
 
-  // Datos base del documento — T8: accountId incluido si viene.
-  const docData: Record<string, unknown> = {
+  // Canon de la app: amount SIEMPRE en USD; VES conserva nominal + tasa.
+  const docPrincipal: Record<string, unknown> = {
     userId,
     amount: monto,
     type: datos.tipo,
@@ -200,24 +208,38 @@ export async function crearTransaccionDesdeShortcut(
     currency: datos.currency,
     createdAt: new Date(),
   };
+  if (datos.currency === 'VES') {
+    docPrincipal.originalAmount = monto;
+    docPrincipal.exchangeRate = rates.usd;
+    docPrincipal.amount = Math.round((monto / rates.usd) * 100) / 100;
+  }
   if (datos.subcategoria) {
-    docData.subcategory = datos.subcategoria;
+    docPrincipal.subcategory = datos.subcategoria;
   }
 
-  const docComision = comision > 0 ? construirDocComision(datos, userId, fecha, comision) : null;
+  // Comisión vinculada a su transacción padre: al eliminar uno se elimina el otro.
+  let docComision: Record<string, unknown> | null = null;
+  if (comision > 0) {
+    docComision = construirDocComision(
+      datos,
+      userId,
+      fecha,
+      comision,
+      rates.usd,
+      generarNuevoDocId()
+    );
+  }
 
   if (!datos.accountId) {
-    // Sin cuenta: registro sin impacto en saldo. Con comisión, ambos documentos
-    // se crean en un solo commit para no dejar la contabilidad a medias.
-    if (docComision) {
-      const ids = await ejecutarCommitAtomico([
-        { clase: 'doc', coleccion: 'transactions', datos: docData },
-        { clase: 'doc', coleccion: 'transactions', datos: docComision },
-      ]);
-      return { id: ids[0], fecha: fecha.toISOString() };
+    if (!docComision) {
+      const id = await crearTransaccionFirestore(docPrincipal);
+      return { id, fecha: fecha.toISOString() };
     }
-    const id = await crearTransaccionFirestore(docData);
-    return { id, fecha: fecha.toISOString() };
+    const ids = await ejecutarCommitAtomico([
+      { clase: 'doc', coleccion: 'transactions', datos: docPrincipal, docId: docComision.transaccionAsociadaId as string },
+      { clase: 'doc', coleccion: 'transactions', datos: docComision },
+    ]);
+    return { id: ids[0], fecha: fecha.toISOString() };
   }
 
   // Validación anticipada: si la cuenta no existe, devolvemos un 400
@@ -229,88 +251,73 @@ export async function crearTransaccionDesdeShortcut(
       `La cuenta "${datos.accountId}" no existe para este usuario.`
     );
   }
+  docPrincipal.accountId = datos.accountId;
+  if (docComision) docComision.accountId = datos.accountId;
 
-  // T8: persistir accountId en el documento.
-  docData.accountId = datos.accountId;
-
-  // T10: conversión de moneda a la moneda de la cuenta bancaria.
   const monedaCuenta = ((cuenta.moneda as string) || 'USD') as MonedaSoportada;
-  const rates = await getRates();
-  const tasasEnBs: Record<string, number> = {
-    USD: rates.usd,
-    EUR: rates.eur,
-    USDT: rates.usdt,
-    BS: 1,
-  };
 
-  const montoEnMonedaCuenta = convertirMontoParaCuenta(
-    monto,
-    datos.currency,
-    monedaCuenta,
-    rates.usd,
-    undefined,
-    tasasEnBs
-  );
-  const montoDelta = Math.round(montoEnMonedaCuenta * 100) / 100;
-
-  // Guardar tasa de cambio de referencia si hubo conversión o si la moneda es VES
+  // Tasa de referencia necesaria para que eliminarMovimiento/actualizarMovimiento
+  // reconstruyan EXACTAMENTE este impacto (la rama BS de convertirMontoParaCuenta
+  // multiplica por exchangeRate del documento, ignora tasasEnBs).
   if (datos.currency === 'VES' || monedaCuenta !== datos.currency) {
-    docData.exchangeRate = rates.usd;
+    docPrincipal.exchangeRate = rates.usd;
+    if (docComision) docComision.exchangeRate = rates.usd;
   }
 
-  // Comisión: se descuenta del mismo saldo y se registra como gasto
-  // independiente categoría "Comisiones" (mismo modelo que movimientos.ts).
-  if (docComision && comision > 0) {
-    docComision.accountId = datos.accountId;
-    if (datos.currency === 'VES' || monedaCuenta !== datos.currency) {
-      docComision.exchangeRate = rates.usd;
-    }
-    const comisionEnMonedaCuenta = Math.round(
-      convertirMontoParaCuenta(
-        comision,
-        datos.currency,
-        monedaCuenta,
-        rates.usd,
-        undefined,
-        tasasEnBs
-      ) * 100
-    ) / 100;
-    const deltaTotal =
-      (datos.tipo === 'gasto' ? -montoDelta : montoDelta) -
-      comisionEnMonedaCuenta;
+  // Delta calculado DESDE el documento canónico con la misma fórmula que
+  // usarán eliminarMovimiento/actualizarMovimiento: simetría garantizada.
+  const montoDelta = Math.round(
+    convertirMontoParaCuenta(
+      docPrincipal.amount as number,
+      datos.currency,
+      monedaCuenta,
+      docPrincipal.exchangeRate as number | undefined,
+      docPrincipal.originalAmount as number | undefined,
+      tasasEnBs
+    ) * 100
+  ) / 100;
 
-    const ids = await ejecutarCommitAtomico([
-      { clase: 'doc', coleccion: 'transactions', datos: docData },
-      { clase: 'doc', coleccion: 'transactions', datos: docComision },
-      {
-        clase: 'saldo',
-        userId,
-        accountId: datos.accountId,
-        delta: deltaTotal,
-      },
-    ]);
-    return { id: ids[0], fecha: fecha.toISOString() };
+  if (!docComision) {
+    const delta = datos.tipo === 'gasto' ? -montoDelta : montoDelta;
+    const id = await crearTransaccionConSaldoAtomico(
+      docPrincipal,
+      userId,
+      datos.accountId,
+      delta
+    );
+    return { id, fecha: fecha.toISOString() };
   }
 
-  // T9: commit atómico — transacción + saldo en una sola escritura.
-  // Si el :commit falla, ni la transacción ni el saldo se modifican.
-  const delta = datos.tipo === 'gasto' ? -montoDelta : montoDelta;
-  const id = await crearTransaccionConSaldoAtomico(
-    docData,
-    userId,
-    datos.accountId,
-    delta
-  );
-  return { id, fecha: fecha.toISOString() };
+  const comisionDelta = Math.round(
+    convertirMontoParaCuenta(
+      docComision.amount as number,
+      datos.currency,
+      monedaCuenta,
+      docComision.exchangeRate as number | undefined,
+      docComision.originalAmount as number | undefined,
+      tasasEnBs
+    ) * 100
+  ) / 100;
+  const deltaTotal =
+    (datos.tipo === 'gasto' ? -montoDelta : montoDelta) - comisionDelta;
+
+  await ejecutarCommitAtomico([
+    { clase: 'doc', coleccion: 'transactions', datos: docPrincipal, docId: docComision.transaccionAsociadaId as string },
+    { clase: 'doc', coleccion: 'transactions', datos: docComision },
+    { clase: 'saldo', userId, accountId: datos.accountId, delta: deltaTotal },
+  ]);
+  return { id: docComision.transaccionAsociadaId as string, fecha: fecha.toISOString() };
 }
 
 function construirDocComision(
   datos: TransaccionShortcut,
   userId: string,
   fecha: Date,
-  comision: number
+  comision: number,
+  ratesUsd: number,
+  transaccionAsociadaId: string
 ): Record<string, unknown> {
-  return {
+  const doc: Record<string, unknown> = {
     userId,
     amount: comision,
     type: 'gasto',
@@ -319,7 +326,14 @@ function construirDocComision(
     date: fecha,
     currency: datos.currency,
     createdAt: new Date(),
+    transaccionAsociadaId,
   };
+  if (datos.currency === 'VES') {
+    doc.originalAmount = comision;
+    doc.exchangeRate = ratesUsd;
+    doc.amount = Math.round((comision / ratesUsd) * 100) / 100;
+  }
+  return doc;
 }
 
 async function crearTransferenciaDesdeShortcut(
@@ -327,7 +341,9 @@ async function crearTransferenciaDesdeShortcut(
   userId: string,
   fecha: Date,
   monto: number,
-  comision: number
+  comision: number,
+  ratesUsd: number,
+  tasasEnBs: Record<string, number>
 ): Promise<{ id: string; fecha: string }> {
   const cuentaOrigenId = datos.accountId;
   const cuentaDestinoId = datos.targetAccountId;
@@ -353,40 +369,10 @@ async function crearTransferenciaDesdeShortcut(
     );
   }
 
-  const rates = await getRates();
-  const tasasEnBs: Record<string, number> = {
-    USD: rates.usd,
-    EUR: rates.eur,
-    USDT: rates.usdt,
-    BS: 1,
-  };
-
   const monedaOrigen = ((origen.moneda as string) || 'USD') as MonedaSoportada;
   const monedaDestino = ((destino.moneda as string) || 'USD') as MonedaSoportada;
 
-  const montoOrigen = Math.round(
-    convertirMontoParaCuenta(monto, datos.currency, monedaOrigen, rates.usd, undefined, tasasEnBs) * 100
-  ) / 100;
-  const montoDestino = Math.round(
-    convertirMontoParaCuenta(monto, datos.currency, monedaDestino, rates.usd, undefined, tasasEnBs) * 100
-  ) / 100;
-  const comisionOrigen = comision > 0
-    ? Math.round(convertirMontoParaCuenta(comision, datos.currency, monedaOrigen, rates.usd, undefined, tasasEnBs) * 100) / 100
-    : 0;
-
-  const saldoOrigen = Number(origen.saldo ?? 0);
-  if (saldoOrigen < montoOrigen + comisionOrigen) {
-    throw new ErrorCuentaShortcut(
-      `Saldo insuficiente en la cuenta origen "${(origen.nombre as string) || datos.accountId}" (saldo: ${saldoOrigen}, requerido: ${montoOrigen + comisionOrigen}).`
-    );
-  }
-
-  const huboConversion =
-    datos.currency === 'VES' ||
-    monedaOrigen !== datos.currency ||
-    monedaDestino !== datos.currency ||
-    monedaOrigen !== monedaDestino;
-
+  // Documento canónico (amount en USD si currency=VES).
   const docTransferencia: Record<string, unknown> = {
     userId,
     amount: monto,
@@ -396,18 +382,77 @@ async function crearTransferenciaDesdeShortcut(
     date: fecha,
     currency: datos.currency,
     createdAt: new Date(),
-    accountId: datos.accountId,
-    targetAccountId: datos.targetAccountId,
+    accountId: cuentaOrigenId,
+    targetAccountId: cuentaDestinoId,
   };
   if (datos.subcategoria) {
     docTransferencia.subcategory = datos.subcategoria;
   }
-  if (huboConversion) {
-    docTransferencia.exchangeRate = rates.usd;
+  if (datos.currency === 'VES') {
+    docTransferencia.originalAmount = monto;
+    docTransferencia.exchangeRate = ratesUsd;
+    docTransferencia.amount = Math.round((monto / ratesUsd) * 100) / 100;
+  }
+  if (
+    monedaOrigen !== monedaDestino ||
+    (monedaOrigen !== datos.currency && !docTransferencia.exchangeRate)
+  ) {
+    docTransferencia.exchangeRate = ratesUsd;
+  }
+
+  const convertirDesdeDoc = (monedaCuenta: MonedaSoportada) =>
+    Math.round(
+      convertirMontoParaCuenta(
+        docTransferencia.amount as number,
+        datos.currency,
+        monedaCuenta,
+        docTransferencia.exchangeRate as number | undefined,
+        docTransferencia.originalAmount as number | undefined,
+        tasasEnBs
+      ) * 100
+    ) / 100;
+
+  const montoOrigen = convertirDesdeDoc(monedaOrigen);
+  const montoDestino = convertirDesdeDoc(monedaDestino);
+
+  let docComision: Record<string, unknown> | null = null;
+  let comisionOrigen = 0;
+  if (comision > 0) {
+    docComision = construirDocComision(
+      datos,
+      userId,
+      fecha,
+      comision,
+      ratesUsd,
+      generarNuevoDocId()
+    );
+    docComision.accountId = cuentaOrigenId;
+    comisionOrigen = Math.round(
+      convertirMontoParaCuenta(
+        docComision.amount as number,
+        datos.currency,
+        monedaOrigen,
+        docComision.exchangeRate as number | undefined,
+        docComision.originalAmount as number | undefined,
+        tasasEnBs
+      ) * 100
+    ) / 100;
+  }
+
+  const saldoOrigen = Number(origen.saldo ?? 0);
+  if (saldoOrigen < montoOrigen + comisionOrigen) {
+    throw new ErrorCuentaShortcut(
+      `Saldo insuficiente en la cuenta origen "${(origen.nombre as string) || cuentaOrigenId}" (saldo: ${saldoOrigen}, requerido: ${montoOrigen + comisionOrigen}).`
+    );
   }
 
   const escrituras: EscrituraAtomica[] = [
-    { clase: 'doc', coleccion: 'transactions', datos: docTransferencia },
+    {
+      clase: 'doc',
+      coleccion: 'transactions',
+      datos: docTransferencia,
+      ...(docComision ? { docId: docComision.transaccionAsociadaId as string } : {}),
+    },
     {
       clase: 'saldo',
       userId,
@@ -421,12 +466,11 @@ async function crearTransferenciaDesdeShortcut(
       delta: montoDestino,
     },
   ];
-
-  if (comision > 0) {
+  if (docComision) {
     escrituras.push({
       clase: 'doc',
       coleccion: 'transactions',
-      datos: construirDocComision(datos, userId, fecha, comision),
+      datos: docComision,
     });
   }
 

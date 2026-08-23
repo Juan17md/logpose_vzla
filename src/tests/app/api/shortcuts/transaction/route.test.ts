@@ -25,6 +25,7 @@ vi.mock('@/lib/firebaseAdmin', () => ({
   crearTransaccionFirestore: mockCrearTransaccion,
   crearTransaccionConSaldoAtomico: mockCommitAtomico,
   ejecutarCommitAtomico: mockCommitGenerico,
+  generarNuevoDocId: vi.fn(() => `id-generado-${Math.floor(Math.random() * 1e9)}`),
   obtenerCuentaFirestore: mockObtenerCuenta,
 }))
 
@@ -667,6 +668,30 @@ describe("POST /api/shortcuts/transaction", () => {
         expect(respuesta.status).toBe(200)
         expect(mockCommitAtomico).toHaveBeenCalledTimes(1)
         expect(mockCommitGenerico).not.toHaveBeenCalled()
+      })
+
+      it("canonicaliza el monto VES a USD en el documento (canon de la app)", async () => {
+        const respuesta = await POST(
+          peticion(cuerpoValido({ monto: 2500, currency: "VES" }))
+        )
+        expect(respuesta.status).toBe(200)
+        const docData = mockCrearTransaccion.mock.calls[0][0]
+        expect(docData.amount).toBe(5) // 2500 VES / 500
+        expect(docData.originalAmount).toBe(2500)
+        expect(docData.exchangeRate).toBe(500)
+        expect(docData.currency).toBe("VES")
+      })
+
+      it("vincula la comisión con transaccionAsociadaId igual al documento principal", async () => {
+        mockObtenerCuenta.mockResolvedValue({ nombre: "Zelle", moneda: "USD", saldo: 1000 })
+        await POST(
+          peticion(cuerpoValido({ accountId: "cta-usd", comision: 3 }))
+        )
+        const escrituras = mockCommitGenerico.mock.calls[0][0]
+        const idPrincipal = escrituras[0].docId
+        expect(idPrincipal).toBeTruthy()
+        const docComision = escrituras[1].datos
+        expect(docComision.transaccionAsociadaId).toBe(idPrincipal)
       })
     })
   })
