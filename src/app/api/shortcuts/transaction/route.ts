@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   crearTransaccionDesdeShortcut,
   ErrorCuentaShortcut,
+  ErrorValidacionShortcut,
   transaccionShortcutSchema,
   verificarTokenShortcut,
 } from '@/lib/shortcuts';
@@ -128,7 +129,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (e) {
-    if (e instanceof ErrorCuentaShortcut) {
+    if (
+      e instanceof ErrorCuentaShortcut ||
+      e instanceof ErrorValidacionShortcut
+    ) {
       return NextResponse.json({ error: e.message }, { status: 400 });
     }
     console.error('Error en /api/shortcuts/transaction:', e);
