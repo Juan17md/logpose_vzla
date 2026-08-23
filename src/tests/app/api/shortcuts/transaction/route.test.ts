@@ -4,13 +4,14 @@ import { POST } from '@/app/api/shortcuts/transaction/route'
 
 vi.mock('server-only', () => ({}))
 
-const { mockLimit, mockCrearTransaccion, mockObtenerCuenta, mockCommitAtomico, mockGetRates, mockCommitGenerico } = vi.hoisted(() => ({
+const { mockLimit, mockCrearTransaccion, mockObtenerCuenta, mockCommitAtomico, mockGetRates, mockCommitGenerico, mockCatalogo } = vi.hoisted(() => ({
   mockLimit: vi.fn(),
   mockCrearTransaccion: vi.fn(),
   mockObtenerCuenta: vi.fn(),
   mockCommitAtomico: vi.fn(),
   mockGetRates: vi.fn(),
   mockCommitGenerico: vi.fn(),
+  mockCatalogo: vi.fn(),
 }))
 
 vi.mock('@/lib/rateLimit', () => ({
@@ -26,6 +27,7 @@ vi.mock('@/lib/firebaseAdmin', () => ({
   crearTransaccionConSaldoAtomico: mockCommitAtomico,
   ejecutarCommitAtomico: mockCommitGenerico,
   generarNuevoDocId: vi.fn(() => `id-generado-${Math.floor(Math.random() * 1e9)}`),
+  listarCategoriasFirestore: mockCatalogo,
   obtenerCuentaFirestore: mockObtenerCuenta,
 }))
 
@@ -65,10 +67,17 @@ beforeEach(() => {
   mockCommitAtomico.mockReset()
   mockGetRates.mockReset()
   mockCommitGenerico.mockReset()
+  mockCatalogo.mockReset()
   mockLimit.mockResolvedValue({ success: true })
   mockCrearTransaccion.mockResolvedValue("id-generado-123")
   mockCommitAtomico.mockResolvedValue("id-atomico-456")
   mockCommitGenerico.mockResolvedValue(["id-commit-789", "id-commit-790"])
+  mockCatalogo.mockResolvedValue([
+    { nombre: "Salario", tipo: "ingreso", subcategorias: [] },
+    { nombre: "Freelance", tipo: "ingreso", subcategorias: [] },
+    { nombre: "Comida", tipo: "gasto", subcategorias: [] },
+    { nombre: "Tania", tipo: "ambas", subcategorias: ["Ingreso", "Gasto"] },
+  ])
   mockObtenerCuenta.mockResolvedValue({ nombre: "Efectivo", moneda: "USD", saldo: 1000 })
   mockGetRates.mockResolvedValue({
     usd: 500,
@@ -218,21 +227,33 @@ describe("POST /api/shortcuts/transaction", () => {
     expect(escritos.type).toBe("ingreso")
   })
 
-  it("devuelve 400 si la categoría no está permitida", async () => {
+  it("acepta categorías personalizadas del catálogo con tipo ambas", async () => {
+    const respuesta = await POST(
+      peticion(
+        cuerpoValido({ tipo: "ingreso", categoria: "Tania", subcategoria: "Ingreso" })
+      )
+    )
+    expect(respuesta.status).toBe(200)
+    const escritos = mockCrearTransaccion.mock.calls[0][0]
+    expect(escritos.category).toBe("Tania")
+    expect(escritos.subcategory).toBe("Ingreso")
+  })
+
+  it("devuelve 400 si la categoría no está en el catálogo", async () => {
     const respuesta = await POST(peticion(cuerpoValido({ categoria: "Cripto" })))
     expect(respuesta.status).toBe(400)
     const cuerpo = await respuesta.json()
-    expect(cuerpo.error).toContain("no es válida para un gasto")
+    expect(cuerpo.error).toContain('"Cripto" no existe en tu catálogo')
     expect(cuerpo.error).toContain("Comida")
   })
 
-  it("devuelve 400 si la categoría no corresponde al tipo", async () => {
+  it("devuelve 400 si la categoría existe pero su tipo no corresponde", async () => {
     const respuesta = await POST(
       peticion(cuerpoValido({ tipo: "gasto", categoria: "Salario" }))
     )
     expect(respuesta.status).toBe(400)
     const cuerpo = await respuesta.json()
-    expect(cuerpo.error).toContain('"Salario" no es válida para un gasto')
+    expect(cuerpo.error).toContain('"Salario" no existe en tu catálogo para un gasto')
   })
 
   it("devuelve 400 si la fecha no es válida", async () => {

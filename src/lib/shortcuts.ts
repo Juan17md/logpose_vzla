@@ -6,6 +6,7 @@ import {
   crearTransaccionConSaldoAtomico,
   ejecutarCommitAtomico,
   generarNuevoDocId,
+  listarCategoriasFirestore,
   obtenerCuentaFirestore,
   type EscrituraAtomica,
 } from '@/lib/firebaseAdmin';
@@ -121,16 +122,10 @@ export const transaccionShortcutSchema = z
             'La cuenta origen y la cuenta destino deben ser distintas.',
         });
       }
-      return;
     }
-
-    const categorias = CATEGORIAS_POR_TIPO[datos.tipo];
-    if (!(categorias as readonly string[]).includes(datos.categoria)) {
-      ctx.addIssue({
-        code: 'custom',
-        message: `La categoría "${datos.categoria}" no es válida para un ${datos.tipo}. Categorías de ${datos.tipo} permitidas: ${categorias.join(', ')}.`,
-      });
-    }
+    // La pertenencia de la categoría NO se valida contra listas fijas:
+    // se valida dinámicamente contra el catálogo real del usuario en
+    // crearTransaccionDesdeShortcut (soporta categorías personalizadas).
   });
 
 export type TransaccionShortcut = z.infer<typeof transaccionShortcutSchema>;
@@ -166,6 +161,9 @@ export function verificarTokenShortcut(
 /** Error cuando el accountId enviado no corresponde a una cuenta del usuario. */
 export class ErrorCuentaShortcut extends Error {}
 
+/** Error de validación contra el catálogo real (responde 400). */
+export class ErrorValidacionShortcut extends Error {}
+
 /**
  * Crea la transacción en Firestore con el mismo modelo que usa el resto de la
  * app (userId, amount, type, category, description, date, currency, createdAt)
@@ -192,6 +190,24 @@ export async function crearTransaccionDesdeShortcut(
     USDT: rates.usdt,
     BS: 1,
   };
+
+  // Validación dinámica contra el catálogo real del usuario (incluye
+  // categorías personalizadas). Sin catálogo cargado no se bloquea.
+  // Las transferencias usan "Transferencias" internamente: no aplican.
+  if (datos.tipo !== 'transferencia') {
+    const catalogoUsuario = await listarCategoriasFirestore(userId);
+    const categoriasCompatibles = catalogoUsuario.filter(
+      (c) => c.tipo === 'ambas' || c.tipo === datos.tipo
+    );
+    if (
+      categoriasCompatibles.length > 0 &&
+      !categoriasCompatibles.some((c) => c.nombre === datos.categoria)
+    ) {
+      throw new ErrorValidacionShortcut(
+        `La categoría "${datos.categoria}" no existe en tu catálogo para un ${datos.tipo}. Disponibles: ${categoriasCompatibles.map((c) => c.nombre).join(', ')}.`
+      );
+    }
+  }
 
   if (datos.tipo === 'transferencia') {
     return crearTransferenciaDesdeShortcut(datos, userId, fecha, monto, comision, rates.usd, tasasEnBs);
