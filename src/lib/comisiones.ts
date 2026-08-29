@@ -1,6 +1,9 @@
 import { parseNumeroFlexible } from "./number";
 
-export type TipoComision = "p2p" | "p2c" | "interbancaria" | "custom";
+/** Comisión mínima regulada por Pago Móvil en Venezuela (Bs.). Aumentó de Bs. 2.00 a Bs. 14.00. */
+export const COMISION_MINIMA_BS = 14.00;
+
+export type TipoComision = "p2p" | "p2c" | "c2p_vuelto" | "interbancaria" | "custom";
 
 interface ResultadoComision {
     vesAmount: number;
@@ -9,11 +12,11 @@ interface ResultadoComision {
 
 /**
  * Calcula la comisión bancaria de forma automática según la regulación venezolana (SUDEBAN/BCV).
- * Aplica el porcentaje correspondiente o la comisión mínima de Bs. 2.00 (el que sea mayor).
- * 
+ * Aplica el porcentaje correspondiente o la comisión mínima de Bs. 14.00 (el que sea mayor).
+ *
  * @param monto Principal de la transacción
  * @param moneda Moneda de la transacción ("USD" | "VES")
- * @param tipo Tipo de comisión ("p2p" | "p2c" | "interbancaria" | "custom")
+ * @param tipo Tipo de comisión ("p2p" | "p2c" | "c2p_vuelto" | "interbancaria" | "custom")
  * @param tasa Tasa de cambio oficial del BCV (VES/USD)
  */
 export function calcularComision(
@@ -34,20 +37,22 @@ export function calcularComision(
         porcentaje = 0.3; // 0.30%
     } else if (tipo === "p2c") {
         porcentaje = 1.5; // 1.50%
+    } else if (tipo === "c2p_vuelto") {
+        porcentaje = 2.0; // 2.00% (Comercio a Persona - Vuelto)
     }
 
     let comisionBs = 0;
 
     if (moneda === "VES") {
         comisionBs = montoNum * (porcentaje / 100);
-        if (comisionBs < 2.00) {
-            comisionBs = 2.00;
+        if (comisionBs < COMISION_MINIMA_BS) {
+            comisionBs = COMISION_MINIMA_BS;
         }
     } else {
         const montoBs = montoNum * tasaNum;
         comisionBs = montoBs * (porcentaje / 100);
-        if (comisionBs < 2.00) {
-            comisionBs = 2.00;
+        if (comisionBs < COMISION_MINIMA_BS) {
+            comisionBs = COMISION_MINIMA_BS;
         }
     }
 

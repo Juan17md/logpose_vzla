@@ -50,6 +50,7 @@ CLAUDE.md
 .claude/
 .cursor/
 .omo/
+.opencode/
 skills-lock.json
 
 #docs-obsidian

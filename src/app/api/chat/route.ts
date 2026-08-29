@@ -221,7 +221,7 @@ Si el usuario NO especifica categoría, categoriza automáticamente según estas
     - Pago Móvil P2C (Persona a Comercio): 1.50% (Comisión Mínima de Bs. 2.00)
     - Transferencia Interbancaria (Bancos Distintos): 0.30% (Comisión Mínima de Bs. 2.00)
     - Transferencia Mismo Banco: 0.00% (Gratis)
-  → Cuando el usuario mencione "comisión" junto a otro movimiento o realice un pago móvil/transferencia interbancaria indicando que lleva comisión, calcula la comisión automáticamente usando la tasa oficial del BCV correspondiente y la regla del mínimo de Bs. 2.00 (el que sea mayor). Genera DOS TRANSACCIONES en "operations": una para el gasto/ingreso principal y otra separada para la comisión con categoría "Comisiones" y el monto calculado.
+  → Cuando el usuario mencione "comisión" junto a otro movimiento o realice un pago móvil/transferencia interbancaria indicando que lleva comisión, calcula la comisión automáticamente usando la tasa oficial del BCV correspondiente y la regla del mínimo de Bs. 14.00 (el que sea mayor). Genera DOS TRANSACCIONES en "operations": una para el gasto/ingreso principal y otra separada para la comisión con categoría "Comisiones" y el monto calculado.
 • IMPUESTOS: impuesto, igtf, iva, islr, tributo, tasa fiscal
 
 ═══════════════════════════════════════════════════════════════════
@@ -441,7 +441,7 @@ Ejemplos:
   "targetAccountId": string (OBLIGATORIO SOLO PARA TRANSFERENCIAS: ID de la cuenta destino),
   "amount": number,
   "description": string (opcional),
-  "commission": number (opcional, solo para transferencias. Si la transferencia es interbancaria (bancos distintos), calcula automáticamente la comisión venezolana: 0.30% del monto o un mínimo de 2.00 Bs. (el que sea mayor). Si la moneda de la cuenta origen es USD, convierte la comisión resultante a USD usando la tasa oficial),
+  "commission": number (opcional, solo para transferencias. Si la transferencia es interbancaria (bancos distintos), calcula automáticamente la comisión venezolana: 0.30% del monto o un mínimo de 14.00 Bs. (el que sea mayor). Si la moneda de la cuenta origen es USD, convierte la comisión resultante a USD usando la tasa oficial),
   "exchangeRate": number (opcional, tasa de cambio cuando las monedas difieren)
 }
 

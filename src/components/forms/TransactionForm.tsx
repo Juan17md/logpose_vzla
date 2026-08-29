@@ -79,7 +79,7 @@ const transactionSchema = z.object({
     accountId: z.string().min(1, "Debes seleccionar una cuenta"),
     targetAccountId: z.string().optional(),
     hasCommission: z.boolean().optional(),
-    commissionType: z.enum(["p2p", "p2c", "interbancaria", "custom"]).optional(),
+    commissionType: z.enum(["p2p", "p2c", "c2p_vuelto", "interbancaria", "custom"]).optional(),
     commissionAmount: z.string().optional(),
     vesCommissionAmount: z.string().optional(),
     tasaCambio: z.string().optional(),
@@ -1219,6 +1219,7 @@ export default function TransactionForm() {
                                                         {[
                                                             { id: "p2p", label: "P2P (0.3%)", desc: "Pago Móvil", icono: FiSmartphone, color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
                                                             { id: "p2c", label: "P2C (1.5%)", desc: "Comercio", icono: FiShoppingBag, color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+                                                            { id: "c2p_vuelto", label: "C2P (2.0%)", desc: "Vuelto Comercio", icono: FiRefreshCw, color: "text-rose-400 bg-rose-500/10 border-rose-500/20" },
                                                             { id: "interbancaria", label: "Interban. (0.3%)", desc: "Otros Bancos", icono: FiRepeat, color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20" },
                                                             { id: "custom", label: "Personalizada", desc: "Monto libre", icono: FiEdit2, color: "text-violet-400 bg-violet-500/10 border-violet-500/20" }
                                                         ].map((opt) => {
@@ -1263,7 +1264,7 @@ export default function TransactionForm() {
                                                     <CustomCurrencyInput
                                                         label={
                                                             commissionType !== "custom"
-                                                                ? `Comisión Calculada (${currency === "VES" ? "Bs. con mínimo 2.00 Bs." : "Dólares"})`
+                                                                ? `Comisión Calculada (${currency === "VES" ? "Bs. con mínimo 14.00 Bs." : "Dólares"})`
                                                                 : `Comisión Personalizada ${currency === "VES" ? "(Bolívares)" : "(Dólares)"}`
                                                         }
                                                         placeholder="0.00"
@@ -1299,7 +1300,7 @@ export default function TransactionForm() {
                                             >
                                                 <span>✨</span>
                                                 <span>
-                                                    Calculado: {commissionType === "p2c" ? "1.50%" : "0.30%"} del monto (mínimo de Bs. 2.00).
+                                                    Calculado: {commissionType === "p2c" ? "1.50%" : commissionType === "c2p_vuelto" ? "2.00%" : "0.30%"} del monto (mínimo de Bs. 14.00).
                                                 </span>
                                             </p>
                                         )}
