@@ -1,5 +1,5 @@
 import 'server-only';
-import { Groq } from 'groq-sdk';
+import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
 import { verificarTokenFirebase } from '@/lib/verificarAuthFirebase';
 import { obtenerChatRateLimit } from '@/lib/rateLimit';
@@ -10,8 +10,9 @@ interface MensajeChat {
     content: string;
 }
 
-const client = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
+const client = new OpenAI({
+  apiKey: process.env.NVIDIA_API_KEY,
+  baseURL: 'https://integrate.api.nvidia.com/v1',
 });
 
 export async function POST(req: Request) {
@@ -634,7 +635,7 @@ Cuando el usuario pida análisis, tendencias o comparaciones, usa los datos disp
 
     const completion = await client.chat.completions.create({
       messages,
-      model: "llama-3.3-70b-versatile",
+      model: process.env.NVIDIA_MODEL || "meta/llama-3.3-70b-instruct",
       temperature: 0,
       stream: false,
     });
@@ -698,7 +699,7 @@ Cuando el usuario pida análisis, tendencias o comparaciones, usa los datos disp
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Groq API Error:", error);
+    console.error("NVIDIA NIM API Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

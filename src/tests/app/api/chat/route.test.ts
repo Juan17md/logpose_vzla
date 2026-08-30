@@ -18,15 +18,15 @@ vi.mock("@/lib/verificarAuthFirebase", () => ({
   verificarTokenFirebase: mockVerificarToken,
 }))
 
-vi.mock("groq-sdk", () => {
-  class MockGroq {
+vi.mock("openai", () => {
+  class MockOpenAI {
     chat = {
       completions: {
         create: mockCreate,
       },
     }
   }
-  return { default: MockGroq, Groq: MockGroq }
+  return { default: MockOpenAI }
 })
 
 function peticion(payload: unknown): NextRequest {
@@ -41,7 +41,7 @@ function peticion(payload: unknown): NextRequest {
   })
 }
 
-function respuestaGroq(content: string): unknown {
+function respuestaNvidia(content: string): unknown {
   return {
     choices: [{ message: { content } }],
   }
@@ -53,7 +53,7 @@ beforeEach(() => {
   mockCreate.mockReset()
   mockLimit.mockResolvedValue({ success: true })
   mockVerificarToken.mockResolvedValue({ uid: "uid-123", email: "a@b.com" })
-  mockCreate.mockResolvedValue(respuestaGroq('{"operations": [], "message": "Hola"}'))
+  mockCreate.mockResolvedValue(respuestaNvidia('{"operations": [], "message": "Hola"}'))
 })
 
 afterEach(() => {
