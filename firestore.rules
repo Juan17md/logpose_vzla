@@ -174,9 +174,10 @@ service cloud.firestore {
         && isStringMaxSize(request.resource.data.email, 150)
         && isStringMaxSize(request.resource.data.displayName, 100)
         && request.resource.data.role == "usuario";
-      allow update: if isOwner(userId)
-        && keepsSameRole()
-        && validStringMaxSizeIfPresent("displayName", 100);
+allow update: if isOwner(userId)
+          && keepsSameRole()
+          && keepsSameUserId()
+          && validStringMaxSizeIfPresent("displayName", 100);
       allow delete: if isAdmin();
 
       // ----------------------------------------
