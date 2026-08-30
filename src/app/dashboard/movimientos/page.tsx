@@ -61,7 +61,7 @@ function MovimientosContent() {
     return (
         <div className="space-y-6 pb-20 md:pb-0">
             {/* Desktop Header */}
-            <div className="hidden md:block bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl">
+            <div className="hidden md:block bg-gradient-to-br from-slate-900/80 to-slate-900/50 border border-slate-700/50 p-5 md:p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiList className="text-7xl md:text-9xl text-violet-400" />
                 </div>

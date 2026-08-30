@@ -51,7 +51,7 @@ export default function CryptoCashWalletWidget({ userId }: { userId: string | un
         }
     };
 
-    if (loading) return <div className="h-48 bg-slate-900/50 rounded-3xl animate-pulse"></div>;
+    if (loading) return <div className="h-48 bg-slate-900/50 rounded-[2.5rem] animate-pulse"></div>;
 
     const totalSaved = userData.savingsPhysical + userData.savingsUSDT;
 

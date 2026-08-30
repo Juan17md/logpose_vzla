@@ -205,7 +205,7 @@ export default function FixedExpenseForm({ initialData, onSubmit, onCancel, isLo
                         control={control}
                         name="currency"
                         render={({ field }) => (
-                            <div className="flex p-1 bg-[#0A0E1A]/80 rounded-2xl border border-white/10 shadow-inner h-[46px]">
+                            <div className="flex p-1 bg-[#0A0E1A]/80 rounded-2xl border border-slate-700/50 shadow-inner h-[46px]">
                                 {(["USD", "BS"] as const).map((curr) => (
                                     <button
                                         key={curr}

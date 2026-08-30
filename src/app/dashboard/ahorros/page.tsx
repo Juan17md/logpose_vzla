@@ -37,7 +37,7 @@ export default function AhorrosPage() {
     return (
         <div className="space-y-8 pb-32 md:pb-10">
             {/* Header */}
-            <div className="relative overflow-hidden bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem] group min-h-[130px] flex items-center">
+            <div className="relative overflow-hidden bg-slate-900/50 border border-white/5 p-8 rounded-[2.5rem] group min-h-[130px] flex items-center">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between w-full gap-6">
                     <div>
                         <h1 className="text-3xl font-bold text-white leading-none mb-2 flex items-center gap-3">

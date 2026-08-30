@@ -252,7 +252,7 @@ export default function CuentasPage() {
                     </button>
 
                     <div className="sticky top-6">
-                        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-6 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+                        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-6 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-black text-white flex items-center gap-3">
                                     {cuentaEditando ? (
@@ -319,7 +319,7 @@ export default function CuentasPage() {
                     {/* Accounts Cards Grid */}
                     <section className="relative">
                         {cuentas.length === 0 ? (
-                            <div className="p-12 text-center bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/10">
+                            <div className="p-12 text-center bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-slate-700/50">
                                 <FiCreditCard className="text-5xl text-slate-700 mx-auto mb-6" />
                                 <h3 className="text-xl font-bold text-white mb-2">Sin Cuentas</h3>
                                 <p className="text-slate-500 text-sm max-w-xs mx-auto">Comienza inicializando una cuenta bancaria o billetera en el panel lateral.</p>

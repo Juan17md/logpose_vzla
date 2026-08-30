@@ -1095,7 +1095,7 @@ export default function TransactionForm() {
                                                 onChange={(date: Date | null) => field.onChange(date)}
                                                 locale="es"
                                                 dateFormat="dd/MM/yyyy"
-                                                className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-9 pr-3 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-colors duration-300 cursor-pointer hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg"
+                                                className="w-full bg-[#0A0E1A]/80 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-9 pr-3 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-colors duration-300 cursor-pointer hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg"
                                                 wrapperClassName="w-full"
                                                 calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-lg !rounded-2xl overflow-hidden"
                                                 dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-colors"}
@@ -1141,7 +1141,7 @@ export default function TransactionForm() {
                                             onChange={(date: Date | null) => field.onChange(date)}
                                             locale="es"
                                             dateFormat="dd/MM/yyyy"
-                                            className="w-full bg-slate-800/40 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-9 pr-3 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-colors duration-300 cursor-pointer hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg"
+                                            className="w-full bg-[#0A0E1A]/80 backdrop-blur-md border border-slate-700/50 text-white text-sm font-bold rounded-2xl py-4 pl-9 pr-3 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-colors duration-300 cursor-pointer hover:border-amber-500/30 hover:bg-slate-800/60 shadow-lg"
                                             wrapperClassName="w-full"
                                             calendarClassName="!bg-slate-800 !border-slate-700 !text-white !font-sans !shadow-lg !rounded-2xl overflow-hidden"
                                             dayClassName={() => "hover:!bg-emerald-500 hover:!text-white !text-slate-300 !rounded-lg transition-colors"}

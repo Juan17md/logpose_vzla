@@ -22,7 +22,7 @@ import { createVenezuelaDate } from "@/lib/timezone";
 
 // ─── Placeholder ligero para widgets durante carga ────────────────────────────
 const SkeletonWidget = () => (
-    <div className="bg-slate-800/40 rounded-3xl animate-pulse h-36 w-full" aria-hidden="true" />
+    <div className="bg-slate-800/40 rounded-[2.5rem] animate-pulse h-36 w-full" aria-hidden="true" />
 );
 
 // ─── Imports diferidos — solo se descargan cuando el DOM los necesita ─────────
@@ -211,7 +211,7 @@ export default function DashboardPage() {
                 {/* Privacidad - Removido saludo y botón externo */}
 
                 {/* Balance Card Principal - Hero */}
-                <div className="relative bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-500/30 p-5 rounded-3xl shadow-lg overflow-hidden">
+                <div className="relative bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-500/30 p-5 rounded-[2.5rem] shadow-lg overflow-hidden">
                     {/* Decoración de fondo */}
                     <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl -ml-16 -mb-16"></div>
@@ -498,7 +498,7 @@ export default function DashboardPage() {
             {/* ===== DESKTOP LAYOUT (Original) ===== */}
             <div className="hidden md:flex flex-col gap-8 pb-10">
                 {/* Header */}
-                <div className="order-1 bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl">
+                <div className="order-1 bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl">
                     <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                         <FiActivity className="text-7xl md:text-9xl text-amber-400" />
                     </div>
@@ -599,7 +599,7 @@ export default function DashboardPage() {
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/dashboard/reportes'); }}
-                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-[transform,color] duration-300 relative overflow-hidden cursor-pointer active:scale-95"
+                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-[transform,color] duration-300 relative overflow-hidden cursor-pointer active:scale-95"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-colors"></div>
                         <div className="flex justify-between items-start mb-4 relative z-10">
@@ -637,7 +637,7 @@ export default function DashboardPage() {
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/dashboard/movimientos'); }}
-                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-[transform,color] duration-300 relative overflow-hidden cursor-pointer active:scale-95"
+                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-[transform,color] duration-300 relative overflow-hidden cursor-pointer active:scale-95"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-colors"></div>
                         <div className="flex justify-between items-start mb-4 relative z-10">
@@ -669,7 +669,7 @@ export default function DashboardPage() {
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/dashboard/reportes'); }}
-                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-[transform,color] duration-300 relative overflow-hidden cursor-pointer active:scale-95"
+                        className="group bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg hover:border-emerald-500/30 hover:bg-slate-900/70 transition-[transform,color] duration-300 relative overflow-hidden cursor-pointer active:scale-95"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-colors"></div>
                         <div className="flex justify-between items-start mb-4 relative z-10">
@@ -708,7 +708,7 @@ export default function DashboardPage() {
 
                 {/* Visual Analytics Section */}
                 <div className="order-3 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-slate-900/50 backdrop-blur-md p-4 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden">
+                    <div className="bg-slate-900/50 backdrop-blur-md p-4 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden">
                         <h3 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
                             <span className="w-1 h-4 bg-violet-500 rounded-full"></span>
                             Flujo de Caja (Mes Actual)
@@ -718,7 +718,7 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="bg-slate-900/50 backdrop-blur-md p-4 rounded-3xl border border-slate-700/50 shadow-lg relative overflow-hidden">
+                    <div className="bg-slate-900/50 backdrop-blur-md p-4 rounded-[2.5rem] border border-slate-700/50 shadow-lg relative overflow-hidden">
                         <h3 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
                             <span className="w-1 h-4 bg-amber-500 rounded-full"></span>
                             Distribución de Gastos

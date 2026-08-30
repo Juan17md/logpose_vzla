@@ -164,7 +164,7 @@ export default function ShoppingListsPage() {
     return (
         <div className="space-y-8 pb-32 md:pb-10">
             {/* Desktop Header */}
-            <div className="hidden md:block bg-slate-900/40 border border-slate-700/50 p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl group">
+            <div className="hidden md:block bg-slate-900/50 border border-slate-700/50 p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl group">
                 <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-10 -translate-y-10 group-hover:translate-x-5 group-hover:-translate-y-5 transition-transform duration-700">
                     <FiShoppingCart className="text-9xl text-amber-500" />
                 </div>

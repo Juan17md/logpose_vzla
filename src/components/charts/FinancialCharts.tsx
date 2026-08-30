@@ -57,7 +57,7 @@ export function ExpenseCategoryChart({ data }: { data: ChartData[] }) {
 
     if (data.length === 0) {
         return (
-            <div className="h-64 flex flex-col items-center justify-center text-slate-500 bg-slate-900/40 rounded-[2.5rem] border border-slate-700/50 border-dashed backdrop-blur-sm">
+            <div className="h-64 flex flex-col items-center justify-center text-slate-500 bg-slate-900/50 rounded-[2.5rem] border border-slate-700/50 border-dashed backdrop-blur-sm">
                 <p className="font-semibold text-sm">Sin datos para mostrar 📊</p>
                 <p className="text-[10px] opacity-60 mt-1">Registra gastos para ver el gráfico</p>
             </div>
@@ -137,7 +137,7 @@ export function BalanceChart({ data }: { data: ChartData[] }) {
 
     if (data.every(d => d.value === 0)) {
         return (
-            <div className="h-64 flex flex-col items-center justify-center text-slate-500 bg-slate-900/40 rounded-[2.5rem] border border-slate-700/50 border-dashed backdrop-blur-sm">
+            <div className="h-64 flex flex-col items-center justify-center text-slate-500 bg-slate-900/50 rounded-[2.5rem] border border-slate-700/50 border-dashed backdrop-blur-sm">
                 <p className="font-semibold text-sm">Sin movimientos en este periodo 📉</p>
             </div>
         );

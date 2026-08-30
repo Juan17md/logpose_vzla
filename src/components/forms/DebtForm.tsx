@@ -202,7 +202,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`flex-[2] py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 border border-white/10 ${
+                        className={`flex-[2] py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 border border-slate-700/50 ${
                             type === 'por_cobrar' 
                             ? 'bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white '
                             : 'bg-linear-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white '

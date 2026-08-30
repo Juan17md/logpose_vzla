@@ -68,10 +68,11 @@ export default function CuentaCard({
             tabIndex={0}
             className={cn(outfit.className, "group relative h-56 w-full cursor-pointer")}
             onClick={() => onVerDetalle(cuenta)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onVerDetalle(cuenta); } }}
         >
             {/* Card Body - Restore slate-900/40 aesthetic from Sidebar */}
             <div className={cn(
-                "absolute inset-0 bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] border border-white/10 overflow-hidden shadow-lg transition-colors duration-500 group-hover:border-violet-500/30 group-hover:bg-slate-900/80",
+                "absolute inset-0 bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-lg transition-colors duration-500 group-hover:border-violet-500/30 group-hover:bg-slate-900/80",
                 cuenta.excluirDelTotal && "grayscale opacity-60 contrast-[0.8] bg-slate-950/40"
             )}>
                 

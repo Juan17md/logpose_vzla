@@ -21,7 +21,7 @@ const FixedExpensesCalendar = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="bg-slate-800/30 rounded-3xl animate-pulse h-96 w-full" aria-hidden="true" />
+            <div className="bg-slate-800/30 rounded-[2.5rem] animate-pulse h-96 w-full" aria-hidden="true" />
         ),
     }
 );
@@ -204,7 +204,7 @@ export default function FixedExpensesPage() {
     return (
         <div className="space-y-8 pb-32 md:pb-10">
             {/* Desktop Header */}
-            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl">
+            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiCalendar className="text-9xl text-violet-400" />
                 </div>
@@ -257,7 +257,7 @@ export default function FixedExpensesPage() {
                 </div>
 
                 {mobileView === 'list' && (
-                    <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-lg">
+                    <div className="bg-slate-900/80 border border-slate-800 rounded-[2.5rem] p-5 shadow-lg">
                         <div className="flex justify-between items-center mb-4">
                             <div className="p-3 bg-violet-500/10 rounded-2xl border border-violet-500/20">
                                 <FiActivity className="text-violet-500 text-xl" />
@@ -411,7 +411,7 @@ export default function FixedExpensesPage() {
                     {/* Right Column: List */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Desktop Controls */}
-                        <div className="flex justify-between items-center bg-slate-900/40 p-4 rounded-3xl border border-slate-700/30 backdrop-blur-md">
+                        <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-[2.5rem] border border-slate-700/30 backdrop-blur-md">
                             <div className="flex items-center gap-4 flex-1">
                                 <div className="flex bg-slate-800/50 rounded-2xl p-1 border border-slate-700/50 shadow-inner">
                                     <button
