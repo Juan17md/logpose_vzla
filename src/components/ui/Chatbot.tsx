@@ -704,6 +704,9 @@ export default function Chatbot() {
                 }
                 try {
                     const montoOperacion = parseNumeroFlexible(data.amount);
+                    if (isNaN(montoOperacion) || montoOperacion <= 0) {
+                        return "El monto de la operación debe ser un número positivo.";
+                    }
                     await realizarOperacion({
                         cuentaOrigenId: data.accountId,
                         tipo: data.operation,
@@ -806,7 +809,13 @@ export default function Chatbot() {
                     if (target) {
                         const updates: any = {};
                         if (data.field === 'amount') updates.amount = parseNumeroFlexible(data.value);
-                        if (data.field === 'day') updates.dueDay = parseInt(data.value);
+                        if (data.field === 'day') {
+                            const diaActualizado = parseInt(data.value, 10);
+                            if (isNaN(diaActualizado) || diaActualizado < 1 || diaActualizado > 31) {
+                                return "El día de vencimiento debe estar entre 1 y 31.";
+                            }
+                            updates.dueDay = diaActualizado;
+                        }
                         if (data.field === 'name') updates.title = data.value;
                         if (data.field === 'category') updates.category = data.value;
                         if (data.field === 'description') updates.description = data.value;
@@ -970,6 +979,12 @@ export default function Chatbot() {
             case "new_goal":
                 try {
                     const targetAmount = parseNumeroFlexible(data.targetAmount);
+                    if (isNaN(targetAmount) || targetAmount <= 0) {
+                        return "El monto objetivo de la meta debe ser un número positivo.";
+                    }
+                    if (!data.name || typeof data.name !== "string" || !data.name.trim()) {
+                        return "Debes indicar un nombre para la meta de ahorro.";
+                    }
                     await addGoal(data.name, targetAmount, data.deadline);
                     aiResponse = `Creé la meta de ahorro "${data.name}" con un objetivo de $${parseFloat(targetAmount.toFixed(2))}${data.deadline ? ` para el ${new Date(data.deadline).toLocaleDateString()}` : ""}.`;
                     success = true;
@@ -985,6 +1000,9 @@ export default function Chatbot() {
                     const goalToContribute = goals.find(g => g.name.toLowerCase().includes(data.name.toLowerCase()));
                     if (goalToContribute) {
                         const contributionAmount = parseNumeroFlexible(data.amount);
+                        if (isNaN(contributionAmount) || contributionAmount <= 0) {
+                            return "El monto del aporte debe ser un número positivo.";
+                        }
                         const method = (data.currency === "USDT" || String(data.name).toLowerCase().includes("usdt") || String(data.name).toLowerCase().includes("cripto")) ? "usdt" : "physical";
                         await addContribution(goalToContribute.id, goalToContribute.name, contributionAmount, method);
                         aiResponse = `Aporté $${parseFloat(contributionAmount.toFixed(2))} a tu meta "${goalToContribute.name}".`;
@@ -1001,6 +1019,9 @@ export default function Chatbot() {
                 break;
 
             case "shopping_item":
+                if (!data.item || typeof data.item !== "string" || !data.item.trim()) {
+                    return "Debes indicar el nombre del artículo.";
+                }
                 try {
                     const listName = data.listName || "Lista de compras";
                     const listToAddTo = lists.find(l => l.name.toLowerCase().includes(listName.toLowerCase()));
@@ -1036,10 +1057,16 @@ export default function Chatbot() {
                 break;
 
             case "pay_debt":
+                if (!data.person || typeof data.person !== "string" || !data.person.trim()) {
+                    return "Debes indicar a quién se le abona la deuda.";
+                }
+                const paymentAmount = parseNumeroFlexible(data.amount);
+                if (isNaN(paymentAmount) || paymentAmount <= 0) {
+                    return "El monto del abono debe ser un número positivo.";
+                }
                 try {
                     const debtToPay = debts.find(d => !d.isPaid && d.personName.toLowerCase().includes(data.person.toLowerCase()));
                     if (debtToPay) {
-                        const paymentAmount = parseNumeroFlexible(data.amount);
                         const isVes = data.currency === "VES" || debtToPay.currency === "VES";
                         const rate = tasasEnBs.USD;
                         
@@ -1142,7 +1169,13 @@ export default function Chatbot() {
 
             const result = await processOperation(pendingData);
 
-            if (result.success) {
+            if (typeof result === "string") {
+                setMessages(prev => [...prev, {
+                    role: "ai",
+                    content: result
+                }]);
+                toast.error(result);
+            } else if (result.success) {
                 setMessages(prev => [...prev, {
                     role: "ai",
                     content: `✅ ¡Listo! Registré tu transacción en **${accountName}** de forma exitosa.`,
@@ -1252,18 +1285,26 @@ export default function Chatbot() {
                     try {
                         const resultado = await processOperation(datosPendientes);
                         if (isMountedRef.current) {
-                            setMessages((prev) => [
-                                ...prev,
-                                {
-                                    role: "ai",
-                                    content: resultado.success
-                                        ? `✅ Registré tu transacción en **${cuenta?.nombre || "tu cuenta"}**.`
-                                        : resultado.response,
-                                    isTransaction: resultado.success,
-                                },
-                            ]);
-                            if (resultado.success) toast.success("Transacción registrada");
-                            else toast.error("No se pudo registrar la transacción");
+                            if (typeof resultado === "string") {
+                                setMessages((prev) => [
+                                    ...prev,
+                                    { role: "ai", content: resultado },
+                                ]);
+                                toast.error(resultado);
+                            } else {
+                                setMessages((prev) => [
+                                    ...prev,
+                                    {
+                                        role: "ai",
+                                        content: resultado.success
+                                            ? `✅ Registré tu transacción en **${cuenta?.nombre || "tu cuenta"}**.`
+                                            : resultado.response,
+                                        isTransaction: resultado.success,
+                                    },
+                                ]);
+                                if (resultado.success) toast.success("Transacción registrada");
+                                else toast.error("No se pudo registrar la transacción");
+                            }
                         }
                     } catch (error) {
                         console.error("Error al completar transacción pendiente por texto:", error);
@@ -1464,7 +1505,11 @@ export default function Chatbot() {
                 const results: { success: boolean; response: string; chartType?: "pie" | "bar"; pendingTransaction?: any }[] = [];
                 for (const op of operations) {
                     const result = await processOperation(op);
-                    results.push(result as any);
+                    if (typeof result === "string") {
+                        results.push({ success: false, response: result });
+                    } else {
+                        results.push(result);
+                    }
                 }
 
                 // ✅ FIX: Esperar un tick para que React actualice el contexto
