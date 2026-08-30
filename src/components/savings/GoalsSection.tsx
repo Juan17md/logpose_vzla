@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, increment } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, runTransaction } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { FiTarget, FiPlus, FiTrash2, FiX } from "react-icons/fi";
 import { toast } from "sonner";
@@ -87,8 +87,11 @@ export default function GoalsSection({ userId }: { userId: string }) {
         try {
             const numAmount = parseFloat(progressAmount.replace(",", "."));
             const goalRef = doc(db, "users", userId, "saving_goals", showProgressModal.id);
-            await updateDoc(goalRef, {
-                currentAmount: increment(numAmount)
+            await runTransaction(db, async (transaction) => {
+                const docRef = doc(db, "users", userId, "saving_goals", showProgressModal.id);
+                const docSnap = await transaction.get(docRef);
+                const newAmount = (docSnap.data()?.currentAmount || 0) + numAmount;
+                transaction.update(docRef, { currentAmount: newAmount });
             });
             toast.success(`¡+$${numAmount} agregados!`);
             setShowProgressModal(null);
