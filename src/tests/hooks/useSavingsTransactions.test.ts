@@ -31,6 +31,9 @@ vi.mock("firebase/firestore", () => {
         toDate() {
             return this.date;
         }
+        static fromDate(date: Date) {
+            return new FakeTimestamp(date);
+        }
     }
 
     return {
@@ -92,7 +95,7 @@ describe("useSavingsTransactions", () => {
                             type: "deposit",
                             method: "usdt",
                             description: "Aporte mensual",
-                            date: new Timestamp(fechaPrueba),
+                            date: Timestamp.fromDate(fechaPrueba),
                         }),
                     },
                     {

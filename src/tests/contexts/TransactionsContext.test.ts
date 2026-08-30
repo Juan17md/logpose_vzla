@@ -47,6 +47,9 @@ vi.mock("firebase/firestore", () => {
         toDate() {
             return this.date;
         }
+        static fromDate(date: Date) {
+            return new FakeTimestamp(date);
+        }
     }
 
     return {
@@ -105,7 +108,7 @@ describe("TransactionsContext", () => {
                             type: "gasto",
                             category: "Comida",
                             description: "Supermercado",
-                            date: new Timestamp(fechaMock),
+                            date: Timestamp.fromDate(fechaMock),
                             currency: "USD",
                             accountId: "cuenta-1",
                         }),
@@ -237,7 +240,7 @@ describe("TransactionsContext", () => {
                             type: "gasto",
                             category: "Servicios",
                             description: "Internet Fibra",
-                            date: new Timestamp(new Date("2026-07-01T10:00:00Z")),
+                            date: Timestamp.fromDate(new Date("2026-07-01T10:00:00Z")),
                             currency: "USD",
                             accountId: "cuenta-zelle",
                         }),
