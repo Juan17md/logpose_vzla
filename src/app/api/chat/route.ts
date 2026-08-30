@@ -636,9 +636,11 @@ Cuando el usuario pida análisis, tendencias o comparaciones, usa los datos disp
     const completion = await client.chat.completions.create({
       messages,
       model: process.env.NVIDIA_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b",
-      temperature: 0.2,
+      temperature: 0.1,
+      max_tokens: 1024,
       stream: false,
-    });
+      chat_template_kwargs: { enable_thinking: false },
+    } as unknown as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming);
 
     const content = completion.choices[0]?.message?.content;
 
