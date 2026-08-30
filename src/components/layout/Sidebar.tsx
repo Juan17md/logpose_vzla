@@ -108,7 +108,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             >
                 <div className="flex flex-col h-full relative">
                     {/* Mobile Handle */}
-                    <div className="md:hidden w-full flex justify-center pt-4 pb-1 shrink-0" onClick={onClose}>
+                    <div 
+                        className="md:hidden w-full flex justify-center pt-4 pb-1 shrink-0" 
+                        onClick={onClose}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClose(); } }}
+                        aria-label="Cerrar menú"
+                    >
                         <div className="w-12 h-1.5 bg-slate-700 rounded-full"></div>
                     </div>
 

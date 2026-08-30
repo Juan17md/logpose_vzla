@@ -63,6 +63,7 @@ export default function Modal({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
                         className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+                        aria-hidden="true"
                     />
 
                     {/* Modal Content */}
