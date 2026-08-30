@@ -28,14 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userData = await leerUsuario(info.uid);
-    if (!userData) {
-      return NextResponse.json(
-        { error: "Usuario no encontrado" },
-        { status: 404 }
-      );
-    }
-
-    const role = (userData.role as Role) || "usuario";
+    const role = (userData?.role as Role) || "usuario";
 
     const sessionData = {
       uid: info.uid,
