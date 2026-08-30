@@ -638,6 +638,7 @@ Cuando el usuario pida análisis, tendencias o comparaciones, usa los datos disp
       model: process.env.NVIDIA_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b",
       temperature: 0.1,
       max_tokens: 1024,
+      response_format: { type: "json_object" },
       stream: false,
       chat_template_kwargs: { enable_thinking: false },
     } as unknown as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming);
