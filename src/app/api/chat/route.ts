@@ -635,8 +635,8 @@ Cuando el usuario pida análisis, tendencias o comparaciones, usa los datos disp
 
     const completion = await client.chat.completions.create({
       messages,
-      model: process.env.NVIDIA_MODEL || "meta/llama-3.3-70b-instruct",
-      temperature: 0,
+      model: process.env.NVIDIA_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b",
+      temperature: 0.2,
       stream: false,
     });
 
