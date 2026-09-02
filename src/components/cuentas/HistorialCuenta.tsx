@@ -86,7 +86,7 @@ export default function HistorialCuenta({ cuenta }: HistorialCuentaProps) {
                         placeholder="Buscar operación..."
                         value={busqueda}
                         onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1); }}
-                        className="w-full bg-slate-950/40 border border-white/5 rounded-2xl py-3 pl-11 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 placeholder-slate-600 transition-colors"
+                        className="w-full bg-slate-950/40 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 placeholder-slate-600 transition-colors"
                     />
                 </div>
             </div>
@@ -106,7 +106,7 @@ export default function HistorialCuenta({ cuenta }: HistorialCuentaProps) {
                         return (
                             <div
                                 key={t.id}
-                                className="flex items-center justify-between p-4 bg-slate-950/20 hover:bg-slate-950/40 border border-white/5 rounded-2xl transition-colors group relative overflow-hidden"
+                                className="flex items-center justify-between p-4 bg-slate-950/20 hover:bg-slate-950/40 border border-slate-800 rounded-2xl transition-colors group relative overflow-hidden"
                             >
                                 <div className="flex items-center gap-4 min-w-0 flex-1">
                                     <div className="relative">

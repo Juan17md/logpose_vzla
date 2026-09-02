@@ -157,7 +157,7 @@ export default function ProfilePage() {
     return (
         <div className="space-y-6 pb-32 md:pb-10">
             {/* Desktop Header */}
-            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl">
+            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/50 border border-slate-700/50 p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiUser className="text-9xl text-violet-400" />
                 </div>
@@ -183,8 +183,8 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                 {/* Profile Card */}
-                <div className="md:col-span-2 bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-violet-500 to-indigo-400"></div>
+                <div className="md:col-span-2 bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-[2.5rem] p-6 md:p-8 shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-violet-500 to-violet-400"></div>
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
                             <FiUser className="text-violet-400" />
@@ -248,8 +248,8 @@ export default function ProfilePage() {
                 {/* Seguridad y acciones de cuenta */}
                 <div className="space-y-6">
                     {/* Security Actions */}
-                    <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-red-500 to-orange-400"></div>
+                    <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-[2.5rem] p-6 md:p-8 shadow-lg relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-red-500 to-amber-400"></div>
                         <h3 className="text-lg font-bold text-white mb-4 md:mb-6 flex items-center gap-2">
                             <FiShield className="text-red-400" />
                             Seguridad
@@ -272,7 +272,7 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Danger Zone */}
-                    <div className="bg-red-500/5 backdrop-blur-md border border-red-500/20 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden group">
+                    <div className="bg-red-500/5 backdrop-blur-md border border-red-500/20 rounded-[2.5rem] p-6 md:p-8 shadow-lg relative overflow-hidden group">
                         <div className="absolute top-0 left-0 w-full h-1 bg-red-600"></div>
                         <h3 className="text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
                             <FiAlertOctagon className="text-red-500" />
@@ -283,7 +283,7 @@ export default function ProfilePage() {
                         </p>
                         <button
                             onClick={() => setShowDeleteConfirm(true)}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl transition-[transform,color] shadow-lg shadow-red-900/20 active:scale-95 font-bold text-sm"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl transition-[transform,color] shadow-lg active:scale-95 font-bold text-sm"
                         >
                             <FiTrash2 />
                             Reiniciar Todos los Datos

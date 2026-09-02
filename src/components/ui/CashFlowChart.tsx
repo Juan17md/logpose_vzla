@@ -284,7 +284,7 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
                         left: `${tooltipPos.x}px`,
                         top: `${tooltipPos.y}px`,
                     }}
-                    className="absolute bg-slate-900/95 border border-slate-700/80 backdrop-blur-md text-white p-2.5 rounded-xl shadow-xl flex flex-col gap-1 pointer-events-none transition-colors duration-75 z-55"
+                    className="absolute bg-slate-900/95 border border-slate-700/80 backdrop-blur-md text-white p-2.5 rounded-xl shadow-lg flex flex-col gap-1 pointer-events-none transition-colors duration-75 z-50"
                 >
                     <p className="text-[10px] font-bold text-slate-400">Día {hoveredData.day}</p>
                     <div className="flex items-center gap-4 justify-between">

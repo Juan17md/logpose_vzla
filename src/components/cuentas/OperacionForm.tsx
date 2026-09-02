@@ -155,7 +155,7 @@ export default function OperacionForm({
             <div className="p-1">
                 <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
                     {/* Selector de Tipo (Toggle Groups Style) */}
-                    <div className="flex p-1 bg-slate-950/40 rounded-2xl border border-white/5 gap-1 shadow-inner md:scale-105 mb-2 mx-auto max-w-sm md:max-w-none">
+                    <div className="flex p-1 bg-slate-950/40 rounded-2xl border border-slate-800 gap-1 shadow-inner md:scale-105 mb-2 mx-auto max-w-sm md:max-w-none">
                         {tipos.map((t) => {
                             const Icon = t.icon;
                             const isActive = tipo === t.id;
@@ -175,9 +175,9 @@ export default function OperacionForm({
                                         <div 
                                             className={cn(
                                                 "absolute inset-0 bg-linear-to-r transition-colors duration-500",
-                                                t.color === "emerald" ? "from-emerald-600 to-teal-600" :
+                                                t.color === "emerald" ? "from-emerald-600 to-emerald-600" :
                                                 t.color === "red" ? "from-red-600 to-rose-600" :
-                                                "from-violet-600 to-indigo-600"
+                                                "from-violet-600 to-violet-600"
                                             )}
                                         />
                                     )}
@@ -219,7 +219,7 @@ export default function OperacionForm({
                                                 </span>
                                             </div>
                                         )}
-                                        className="bg-slate-950/40 border-white/5 rounded-2xl py-3.5"
+                                        className="bg-slate-950/40 border-slate-800 rounded-2xl py-3.5"
                                     />
                                 )}
                             />
@@ -260,7 +260,7 @@ export default function OperacionForm({
                                                     </span>
                                                 </div>
                                             )}
-                                            className="bg-slate-950/40 border-white/5 rounded-2xl py-3.5"
+                                            className="bg-slate-950/40 border-slate-800 rounded-2xl py-3.5"
                                         />
                                     )}
                                 />
@@ -289,7 +289,7 @@ export default function OperacionForm({
                                             type="text"
                                             inputMode="decimal"
                                             placeholder="0.00"
-                                            className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-700"
+                                            className="w-full pl-14 bg-slate-950/40 border border-slate-800 rounded-2xl px-5 py-4 text-white text-xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-700"
                                         />
                                     )}
                                 />
@@ -322,7 +322,7 @@ export default function OperacionForm({
                                                 type="text"
                                                 inputMode="decimal"
                                                 placeholder="0.00"
-                                                className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-lg font-bold outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-700"
+                                                className="w-full pl-14 bg-slate-950/40 border border-slate-800 rounded-2xl px-5 py-4 text-white text-lg font-bold outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-700"
                                             />
                                         )}
                                     />
@@ -376,7 +376,7 @@ export default function OperacionForm({
                                     type="text"
                                     placeholder="Escribe una breve descripción..."
                                     maxLength={80}
-                                    className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-600"
+                                    className="w-full bg-slate-950/40 border border-slate-800 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-600"
                                 />
                             )}
                         />
@@ -388,7 +388,7 @@ export default function OperacionForm({
                         disabled={isSubmitting}
                         className="w-full relative group overflow-hidden"
                     >
-                        <div className="absolute inset-0 bg-linear-to-r from-violet-600 to-indigo-600 transition-colors group-disabled:opacity-50" />
+                        <div className="absolute inset-0 bg-linear-to-r from-violet-600 to-violet-600 transition-colors group-disabled:opacity-50" />
                         <div className="relative px-6 py-4 flex items-center justify-center gap-3 text-white font-black text-xs uppercase tracking-[3px] transition-transform group-active:scale-[0.98]">
                             {isSubmitting ? (
                                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

@@ -65,11 +65,6 @@ body {
   background: #475569; 
 }
 
-/* Glassmorphism Utilities (optional helper classes if needed can go here) */
-.glass-panel {
-  @apply bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 shadow-xl;
-}
-
 /* Hide scrollbar for horizontal scroll containers */
 .scrollbar-hide {
   -ms-overflow-style: none;

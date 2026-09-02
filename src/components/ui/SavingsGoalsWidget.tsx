@@ -103,7 +103,7 @@ export default function SavingsGoalsWidget() {
                     goals.map(goal => {
                         const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
                         return (
-                            <div key={goal.id} className="bg-slate-800/40 hover:bg-slate-800/60 transition-colors p-4 rounded-2xl border border-slate-700/30 group/item">
+                            <div key={goal.id} className="bg-slate-800/50 hover:bg-slate-800/60 transition-colors p-4 rounded-2xl border border-slate-700/30 group/item">
                                 <div className="flex justify-between items-start mb-3">
                                     <div>
                                         <h4 className="font-bold text-white text-lg">{goal.name}</h4>
@@ -128,7 +128,7 @@ export default function SavingsGoalsWidget() {
                                 {/* Barra de Progreso */}
                                 <div className="w-full bg-slate-700/50 rounded-full h-3 mb-2 overflow-hidden backdrop-blur-sm">
                                     <div
-                                        className={`h-full rounded-full transition-colors duration-1000 ease-out shadow-lg ${progress >= 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-violet-500 to-indigo-500'}`}
+                                        className={`h-full rounded-full transition-colors duration-1000 ease-out shadow-lg ${progress >= 100 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-violet-500 to-violet-500'}`}
                                         style={{ width: `${progress}%` }}
                                     ></div>
                                 </div>
@@ -183,7 +183,7 @@ export default function SavingsGoalsWidget() {
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-500/20"
+                            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-lg"
                         >
                             Crear Meta
                         </button>
@@ -225,14 +225,14 @@ export default function SavingsGoalsWidget() {
                                 />
                                 <span className={`text-sm font-bold ${progressMethod === 'physical' ? 'text-emerald-400' : 'text-slate-400'}`}>Efectivo</span>
                             </label>
-                            <label className={`cursor-pointer border rounded-lg p-3 flex flex-col items-center gap-1 transition-colors ${progressMethod === 'usdt' ? 'border-teal-500 bg-teal-500/10' : 'border-slate-700/50 bg-slate-800/30'}`}>
+                            <label className={`cursor-pointer border rounded-lg p-3 flex flex-col items-center gap-1 transition-colors ${progressMethod === 'usdt' ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-700/50 bg-slate-800/30'}`}>
                                 <input
                                     type="radio"
                                     className="hidden"
                                     checked={progressMethod === 'usdt'}
                                     onChange={() => setProgressMethod('usdt')}
                                 />
-                                <span className={`text-sm font-bold ${progressMethod === 'usdt' ? 'text-teal-400' : 'text-slate-400'}`}>USDT</span>
+                                <span className={`text-sm font-bold ${progressMethod === 'usdt' ? 'text-emerald-400' : 'text-slate-400'}`}>USDT</span>
                             </label>
                         </div>
                     </div>
@@ -249,7 +249,7 @@ export default function SavingsGoalsWidget() {
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-500/20"
+                            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-lg"
                         >
                             Registrar
                         </button>

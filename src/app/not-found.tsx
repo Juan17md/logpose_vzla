@@ -15,7 +15,7 @@ export default function NotFound() {
         <div className="flex justify-center mb-8">
           <div className="relative">
             <div className="absolute inset-0 bg-violet-500/20 blur-3xl rounded-full" />
-            <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-lg">
+            <div className="relative bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-8 rounded-[2.5rem] shadow-lg">
               <div className="text-violet-400">
                 <FiMap size={64} />
               </div>
@@ -39,7 +39,7 @@ export default function NotFound() {
         {/* Action Buttons */}
         <div className="mt-12 grid grid-cols-1 gap-4">
           <Link href="/dashboard" className="w-full">
-            <button className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-black py-3 px-6 rounded-2xl hover:from-violet-500 hover:to-indigo-500 hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-[transform,color] duration-200 flex items-center justify-center gap-2 w-full">
+            <button className="bg-gradient-to-r from-violet-600 to-violet-600 text-white font-black py-3 px-6 rounded-2xl hover:from-violet-500 hover:to-violet-500 hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-[transform,color] duration-200 flex items-center justify-center gap-2 w-full">
               <FiHome size={20} />
               <span>IR AL DASHBOARD</span>
             </button>

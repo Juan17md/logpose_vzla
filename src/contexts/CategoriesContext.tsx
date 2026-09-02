@@ -41,6 +41,7 @@ import {
     FiCamera,
     FiSun
 } from "react-icons/fi";
+import * as Sentry from "@sentry/nextjs";
 
 // Tipado de Categoría de Usuario
 export interface CategoriaUsuario {
@@ -166,6 +167,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
                             await batch.commit();
                         } catch (error) {
                             console.error("Error al inicializar categorías predeterminadas:", error);
+                            Sentry.captureException(error);
                         }
                     } else {
                         setCategorias(datos);
@@ -173,6 +175,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
                     }
                 }, (error) => {
                     console.error("Error al suscribirse a categorías:", error);
+                    Sentry.captureException(error);
                     setCargando(false);
                 });
             } else {
@@ -207,6 +210,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
             return true;
         } catch (error) {
             console.error("Error al agregar categoría:", error);
+            Sentry.captureException(error);
             return false;
         }
     }, []);
@@ -224,6 +228,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
             return true;
         } catch (error) {
             console.error("Error al actualizar categoría:", error);
+            Sentry.captureException(error);
             return false;
         }
     }, []);
@@ -236,6 +241,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
             return true;
         } catch (error) {
             console.error("Error al eliminar categoría:", error);
+            Sentry.captureException(error);
             return false;
         }
     }, []);
@@ -258,6 +264,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
             return true;
         } catch (error) {
             console.error("Error al agregar subcategoría:", error);
+            Sentry.captureException(error);
             return false;
         }
     }, [categorias]);
@@ -275,6 +282,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
             return true;
         } catch (error) {
             console.error("Error al eliminar subcategoría:", error);
+            Sentry.captureException(error);
             return false;
         }
     }, [categorias]);

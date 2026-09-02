@@ -69,7 +69,7 @@ export default function MobileBottomNav({ onMenuClick, onNavigate }: MobileBotto
                 <div className="absolute inset-0 bg-amber-500/30 dark:bg-amber-400/20 blur-xl rounded-full scale-110 transition-transform duration-300 group-hover:scale-125" />
 
                 {/* Button container */}
-                <div className="relative w-14 h-14 bg-gradient-to-tr from-amber-500 to-yellow-400 dark:from-amber-500 dark:to-yellow-400 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/20 border-2 border-white dark:border-[#0f172a] transition-transform duration-300 group-hover:-translate-y-1 active:scale-95 p-2">
+                <div className="relative w-14 h-14 bg-gradient-to-tr from-amber-500 to-amber-400 dark:from-amber-500 dark:to-amber-400 rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-[#0f172a] transition-transform duration-300 group-hover:-translate-y-1 active:scale-95 p-2">
                     <Logo variant="icon" width={36} height={36} className="text-slate-900" />
                 </div>
             </button>

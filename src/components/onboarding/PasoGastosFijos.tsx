@@ -41,9 +41,9 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
     <div
     >
       <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-500/20 bg-sky-500/[.06] mb-3">
-          <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-          <span className="text-sky-400/80 text-xs font-medium tracking-wider uppercase">Paso 5 de 6</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-violet-500/20 bg-violet-500/[.06] mb-3">
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+          <span className="text-violet-400/80 text-xs font-medium tracking-wider uppercase">Paso 5 de 6</span>
         </div>
         <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "var(--font-outfit)" }}>
           Tus Gastos Fijos
@@ -60,7 +60,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Ej: Internet"
-              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-colors duration-300 text-sm"
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-colors duration-300 text-sm"
             />
           </div>
           <div>
@@ -76,13 +76,13 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
                   value={amountStr}
                   onChange={e => setAmountStr(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-colors duration-300 text-sm"
+                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-colors duration-300 text-sm"
                 />
               </div>
               <select
                 value={currency}
                 onChange={e => setCurrency(e.target.value as "USD" | "BS")}
-                className="bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-3 text-white text-sm focus:outline-none focus:border-sky-500/50 appearance-none cursor-pointer"
+                className="bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-3 text-white text-sm focus:outline-none focus:border-violet-500/50 appearance-none cursor-pointer"
               >
                 <option value="USD" className="bg-slate-900">USD</option>
                 <option value="BS" className="bg-slate-900">BS</option>
@@ -97,7 +97,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none focus:border-sky-500/50 appearance-none cursor-pointer"
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none focus:border-violet-500/50 appearance-none cursor-pointer"
             >
               {CATEGORIAS.map(c => (
                 <option key={c} value={c} className="bg-slate-900">{c}</option>
@@ -106,7 +106,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1.5 flex items-center gap-1.5">
-              <FiCalendar size={12} className="text-sky-400" />
+              <FiCalendar size={12} className="text-violet-400" />
               Día de pago (1-31)
             </label>
             <input
@@ -117,7 +117,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
               value={dueDay}
               onChange={e => setDueDay(e.target.value)}
               placeholder="1-31"
-              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-colors duration-300 text-sm"
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 px-4 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-colors duration-300 text-sm"
             />
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
           type="button"
           onClick={agregar}
           disabled={!title.trim() || parseNum(amountStr) <= 0}
-          className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-700/50 text-slate-400 hover:border-sky-500/30 hover:text-sky-400 transition-colors duration-300 flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-700/50 text-slate-400 hover:border-violet-500/30 hover:text-violet-400 transition-colors duration-300 flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <FiPlus size={16} />
           Agregar gasto fijo
@@ -142,8 +142,8 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
                 className="flex items-center justify-between bg-slate-800/30 rounded-2xl px-4 py-3 border border-slate-700/30"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                    <FiCalendar className="text-sky-400" size={14} />
+                  <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                    <FiCalendar className="text-violet-400" size={14} />
                   </div>
                   <div>
                     <p className="text-sm text-white font-medium">{g.title}</p>
@@ -174,7 +174,7 @@ export default function PasoGastosFijos({ onSiguiente, onAnterior }: PasoGastosF
         <button
           type="button"
           onClick={onSiguiente}
-          className="flex-[2] bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-400 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 text-sm"
+          className="flex-[2] bg-gradient-to-r from-violet-600 via-violet-500 to-violet-400 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-lg hover: hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 text-sm"
         >
           {gastosFijos.length === 0 ? (
             "Omitir paso"

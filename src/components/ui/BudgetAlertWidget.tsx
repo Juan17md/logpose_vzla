@@ -27,8 +27,8 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
         statusColor = "bg-red-500";
         textColor = "text-red-400";
     } else if (percentage >= 80) {
-        statusColor = "bg-yellow-500";
-        textColor = "text-yellow-400";
+        statusColor = "bg-amber-500";
+        textColor = "text-amber-400";
     }
 
     const [showEdit, setShowEdit] = useState(false);
@@ -74,7 +74,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
     if (!budgetLimit || budgetLimit === 0) {
         return (
             <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 shadow-lg flex flex-col justify-center items-center text-center group hover:bg-slate-900/70 transition-colors hover:border-slate-600">
-                <div className="p-4 bg-slate-800/50 rounded-2xl mb-4 text-slate-400 group-hover:text-yellow-400 group-hover:bg-yellow-500/10 transition-colors">
+                <div className="p-4 bg-slate-800/50 rounded-2xl mb-4 text-slate-400 group-hover:text-amber-400 group-hover:bg-amber-500/10 transition-colors">
                     <FiAlertTriangle size={28} />
                 </div>
                 <h3 className="text-white font-bold mb-2 text-lg">Sin Límite Definido</h3>
@@ -102,7 +102,7 @@ export default function BudgetAlertWidget({ currentExpense, userId }: Props) {
                             <button type="button" onClick={() => setShowEdit(false)} className="px-4 py-2 text-slate-400 hover:text-white transition-colors">
                                 Cancelar
                             </button>
-                            <button type="button" onClick={guardarLimite} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-500/20">
+                            <button type="button" onClick={guardarLimite} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-lg">
                                 Guardar
                             </button>
                         </div>

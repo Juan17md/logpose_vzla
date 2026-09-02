@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 export interface TasasCambio {
     usd: number;
     eur: number;
@@ -89,6 +91,7 @@ export async function getRates(forceRefresh: boolean = false): Promise<TasasCamb
         return rates;
     } catch (error) {
         console.warn("Error fetching rates, using fallback:", error);
+        Sentry.captureException(error);
         if (!cachedRates) cachedRates = leerCachePersistido();
         return cachedRates || FALLBACK_RATES;
     }

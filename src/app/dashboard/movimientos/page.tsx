@@ -11,12 +11,12 @@ function MovimientosFallback() {
     return (
         <div className="space-y-6 pb-20 md:pb-0 animate-pulse">
             {/* Esqueleto del header */}
-            <div className="h-32 bg-slate-900/50 rounded-3xl border border-slate-700/50"></div>
+            <div className="h-32 bg-slate-900/50 rounded-[2.5rem] border border-slate-700/50"></div>
             
             {/* Esqueleto del grid principal */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1 h-[600px] bg-slate-900/50 rounded-3xl border border-slate-700/50"></div>
-                <div className="lg:col-span-2 h-[600px] bg-slate-900/50 rounded-3xl border border-slate-700/50"></div>
+                <div className="lg:col-span-1 h-[600px] bg-slate-900/50 rounded-[2.5rem] border border-slate-700/50"></div>
+                <div className="lg:col-span-2 h-[600px] bg-slate-900/50 rounded-[2.5rem] border border-slate-700/50"></div>
             </div>
         </div>
     );
@@ -105,7 +105,7 @@ function MovimientosContent() {
                             <button
                                 onClick={() => setMobileView('form')}
                                 aria-label="Nuevo movimiento"
-                                className="fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-violet-500 rounded-2xl text-white shadow-lg  flex items-center justify-center z-50 border border-white/10"
+                                className="fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-violet-500 rounded-2xl text-white shadow-lg flex items-center justify-center z-50 border border-slate-700/50"
                             >
                                 <FiPlus size={28} />
                             </button>

@@ -7,7 +7,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-ffca28?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
 [![PWA](https://img.shields.io/badge/PWA-iOS%20%7C%20Android-5A0FC8?style=for-the-badge&logo=pwa)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
-[![Groq](https://img.shields.io/badge/IA-Groq%20Llama%203.3-orange?style=for-the-badge)](https://groq.com/)
+[![NVIDIA NIM](https://img.shields.io/badge/IA-NVIDIA%20NIM%20Nemotron-76b900?style=for-the-badge&logo=nvidia)](https://build.nvidia.com/)
 
 
 ---
@@ -71,6 +71,8 @@ curl -X POST https://logpose-vzla.vercel.app/api/shortcuts/transaction \
 
 Respuesta de éxito: `200` con `{ "success": true, "transaccion": { id, monto, tipo, ... } }`. Errores: `400` body inválido, `401` token incorrecto, `429` límite de solicitudes, `500` error de servidor. Al no exponer cabeceras CORS, solo clientes nativos (Atajos) pueden consumirlo — los navegadores quedan excluidos por diseño.
 
+Además existe `GET /api/shortcuts/accounts` (mismo token): devuelve las cuentas activas del dueño y su catálogo de categorías/subcategorías, para que el atajo pueda ofrecer selección de cuenta (`accountId`) y categorías reales.
+
 ## Stack Tecnológico
 
 | Componente | Tecnología |
@@ -78,7 +80,7 @@ Respuesta de éxito: `200` con `{ "success": true, "transaccion": { id, monto, t
 | **Frontend** | Next.js 16 (App Router), React 19 |
 | **Estilizado** | Tailwind CSS v4, Framer Motion, Glassmorphism |
 | **Backend & Auth** | Firebase Auth + Firestore |
-| **Inteligencia Artificial** | Groq Cloud (Llama 3.3 70B) |
+| **Inteligencia Artificial** | NVIDIA NIM (Nemotron 3.5 Lightning 30B) |
 | **Gráficos** | D3.js (Rosen Charts — SVG nativo) |
 | **Formularios** | React Hook Form + Zod |
 | **PWA** | @ducanh2912/next-pwa, Workbox |

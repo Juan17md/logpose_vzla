@@ -27,7 +27,7 @@ import dynamic from "next/dynamic";
 const ExpensePieChart = dynamic(() => import("./ExpensePieChart"), {
     ssr: false,
     loading: () => (
-        <div className="bg-slate-800/40 rounded-2xl animate-pulse h-48 w-full" aria-hidden="true" />
+        <div className="bg-slate-800/50 rounded-2xl animate-pulse h-48 w-full" aria-hidden="true" />
     ),
 });
 
@@ -1721,7 +1721,7 @@ export default function Chatbot() {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label={isOpen ? "Cerrar asistente Nami" : "Abrir asistente Nami"}
-                className={`fixed right-4 md:right-8 bottom-safe-fab bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-indigo-600 dark:to-purple-700 text-white p-4 rounded-full shadow-lg z-[60] border border-violet-400/30 items-center justify-center transition-colors duration-300 ${isOpen ? 'hidden md:flex' : 'flex'}`}
+                className={`fixed right-4 md:right-8 bottom-safe-fab bg-gradient-to-r from-violet-600 to-violet-500 text-white p-4 rounded-full shadow-lg z-[60] border border-violet-400/30 items-center justify-center transition-colors duration-300 ${isOpen ? 'hidden md:flex' : 'flex'}`}
             >
                 <FiCpu size={26} />
                 {/* Badge de alertas */}
@@ -1740,7 +1740,7 @@ export default function Chatbot() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 24, scale: 0.98 }}
                         transition={{ duration: 0.25, ease: "easeOut" }}
-                        className="fixed bottom-0 right-0 md:bottom-24 md:right-8 w-full md:w-96 h-[80vh] md:h-[600px] bg-slate-900 border border-slate-700/50 rounded-t-3xl md:rounded-3xl shadow-lg z-50 flex flex-col overflow-hidden backdrop-blur-xl pb-safe"
+                        className="fixed bottom-0 right-0 md:bottom-24 md:right-8 w-full md:w-96 h-[80vh] md:h-[600px] bg-slate-900 border border-slate-700/50 rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-lg z-50 flex flex-col overflow-hidden backdrop-blur-xl pb-safe"
                     >
                         {/* Header */}
                         <div className="p-4 bg-slate-800/80 border-b border-slate-700 flex justify-between items-center backdrop-blur-md">
@@ -1769,7 +1769,7 @@ export default function Chatbot() {
                                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                     >
                                         <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm shadow-sm ${msg.role === 'user'
-                                            ? 'bg-gradient-to-tr from-violet-600 to-indigo-600 text-white rounded-tr-sm'
+                                            ? 'bg-gradient-to-tr from-violet-600 to-violet-600 text-white rounded-tr-sm'
                                             : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700/50'
                                             }`}>
                                             <div className="text-sm prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-slate-800 prose-pre:rounded-lg prose-pre:p-2">

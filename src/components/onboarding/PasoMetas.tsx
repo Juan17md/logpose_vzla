@@ -130,7 +130,7 @@ export default function PasoMetas({ onSiguiente, onAnterior }: PasoMetasProps) {
           type="button"
           onClick={onSiguiente}
           disabled={metas.length === 0}
-          className="flex-[2] bg-gradient-to-r from-violet-600 via-violet-500 to-purple-400 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg text-sm"
+          className="flex-[2] bg-gradient-to-r from-violet-600 via-violet-500 to-violet-400 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-lg hover: hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg text-sm"
         >
           {metas.length === 0 ? (
             "Agrega al menos 1 meta"

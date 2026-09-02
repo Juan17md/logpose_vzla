@@ -102,7 +102,7 @@ export default function RecentTransactions() {
                 {/* Filas Esqueleto (Móvil) */}
                 <div className="md:hidden space-y-3 p-4">
                     {[1, 2, 3].map((i) => (
-                        <div key={i} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col gap-3">
+                        <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex flex-col gap-3">
                             <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-3">
                                     <Skeleton className="w-10 h-10 rounded-xl" />
@@ -252,7 +252,7 @@ export default function RecentTransactions() {
                     {/* Mobile List View */}
                     <div className="md:hidden space-y-3 p-4">
                         {paginatedTransactions.map((t) => (
-                            <div key={t.id} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col gap-3">
+                            <div key={t.id} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex flex-col gap-3">
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3">
                                         <div className={`p-2.5 rounded-xl ${t.type === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : t.type === 'transferencia' ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'}`}>

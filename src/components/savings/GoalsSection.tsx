@@ -151,7 +151,7 @@ export default function GoalsSection({ userId }: { userId: string }) {
                                 </div>
                                 <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-colors duration-1000"
+                                        className="h-full bg-gradient-to-r from-violet-500 to-violet-500 rounded-full transition-colors duration-1000"
                                         style={{ width: `${progress}%` }}
                                     ></div>
                                 </div>

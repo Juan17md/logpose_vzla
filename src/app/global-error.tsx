@@ -22,14 +22,14 @@ export default function GlobalError({
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
           {/* Background Orbs */}
           <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-red-600/10 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-600/10 rounded-full blur-[120px] pointer-events-none" />
 
           <div className="max-w-md w-full relative z-10 text-center">
             {/* Icon */}
             <div className="flex justify-center mb-8">
               <div className="relative">
                 <div className="absolute inset-0 bg-red-500/20 blur-3xl rounded-full" />
-                <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-lg">
+                <div className="relative bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-8 rounded-[2.5rem] shadow-lg">
                   <div className="text-red-400">
                     <FiAlertTriangle size={64} />
                   </div>
@@ -59,7 +59,7 @@ export default function GlobalError({
             <div className="mt-12 grid grid-cols-1 gap-4">
               <button
                 onClick={reset}
-                className="bg-gradient-to-r from-red-600 to-orange-600 text-white font-black py-3 px-6 rounded-2xl hover:from-red-500 hover:to-orange-500 hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-[transform,color] duration-200 flex items-center justify-center gap-2 w-full"
+                className="bg-gradient-to-r from-red-600 to-amber-600 text-white font-black py-3 px-6 rounded-2xl hover:from-red-500 hover:to-amber-500 hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-[transform,color] duration-200 flex items-center justify-center gap-2 w-full"
               >
                 <FiRefreshCw size={20} />
                 <span>INTENTAR DE NUEVO</span>

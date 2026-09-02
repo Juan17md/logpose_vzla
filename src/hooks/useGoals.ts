@@ -3,6 +3,7 @@ import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateD
 import { db, auth } from "@/lib/firebase";
 import { User } from "firebase/auth";
 import { metaAhorroSchema, contribucionAhorroSchema } from "@/lib/schemas";
+import * as Sentry from "@sentry/nextjs";
 
 export interface Goal {
     id: string;
@@ -130,6 +131,7 @@ export const useGoals = () => {
             });
         } catch (e) {
             console.error("Error in addContribution:", e);
+            Sentry.captureException(e);
             throw e;
         }
     };
@@ -148,6 +150,7 @@ export const useGoals = () => {
             return true;
         } catch (error) {
             console.error("Error updating goal:", error);
+            Sentry.captureException(error);
             return false;
         }
     };

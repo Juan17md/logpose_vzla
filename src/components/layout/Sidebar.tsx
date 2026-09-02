@@ -102,8 +102,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 ${isOpen ? "translate-y-0" : "translate-y-full"}
                 
                 /* Desktop: Left Sidebar */
-                md:top-0 md:bottom-auto md:h-screen md:w-72 md:rounded-none md:border-t-0 md:border-r md:border-slate-700/30 md:bg-slate-900/40 
-                md:translate-y-0 md:translate-x-0 md:shadow-2xl
+                md:top-0 md:bottom-auto md:h-screen md:w-72 md:rounded-none md:border-t-0 md:border-r md:border-slate-700/30 md:bg-slate-900/50 
+                md:translate-y-0 md:translate-x-0 md:shadow-lg
                 `}
             >
                 <div className="flex flex-col h-full relative">
@@ -124,7 +124,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <div className="absolute inset-0 bg-amber-500/15 blur-[20px] rounded-full scale-125 pointer-events-none"></div>
-                                <div className="relative p-2 bg-slate-800/80 rounded-2xl border border-amber-500/20 shadow-[0_0_15px_rgba(202,138,4,0.15)] shrink-0">
+                                <div className="relative p-2 bg-slate-800/80 rounded-2xl border border-amber-500/20 shadow-lg shrink-0">
                                     <Logo variant="icon" width={36} height={36} />
                                 </div>
                             </div>
@@ -154,13 +154,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                         key={item.href}
                                         href={item.href}
                                         onClick={onClose}
-                                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${isActive
-                                            ? "text-amber-400 font-semibold shadow-lg shadow-amber-500/10 bg-slate-800/80 border border-slate-700/50"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/40"
+                                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors duration-300 group relative overflow-hidden ${isActive
+                                            ? "text-amber-400 font-semibold shadow-lg bg-slate-800/80 border border-slate-700/50"
+                                            : "text-slate-400 hover:text-white hover:bg-slate-800/50"
                                             }`}
                                     >
                                         {isActive && (
-                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-amber-500 rounded-r-lg shadow-[0_0_10px_2px_rgba(245,158,11,0.5)]"></div>
+                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-amber-500 rounded-r-lg shadow-lg"></div>
                                         )}
                                         <span className={`text-xl relative z-10 transition-transform duration-300 ${isActive ? "text-amber-400 scale-110" : "text-slate-500 group-hover:text-slate-300 group-hover:scale-110"}`}>
                                             {item.icon}
@@ -178,7 +178,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <div className="flex items-center gap-3 px-4 py-3 mb-4 rounded-2xl bg-slate-800/60 border border-slate-700/50">
                             <div className="relative shrink-0">
                                 {user?.photoURL ? (
-                                    <div className="w-9 h-9 rounded-full border border-amber-500/30 overflow-hidden shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                                    <div className="w-9 h-9 rounded-full border border-amber-500/30 overflow-hidden shadow-lg">
                                         <img 
                                             src={user.photoURL} 
                                             alt={user.displayName || "Usuario"} 
@@ -201,12 +201,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             onClick={handleLogout}
                             className="w-full flex items-center justify-center space-x-3 px-6 py-4 md:py-3 rounded-2xl 
                             text-red-400 bg-red-500/10 hover:bg-red-500/20 
-                            transition-all duration-300 group 
+                            transition-colors duration-300 group 
                             border border-red-500/30 hover:border-red-500/50
-                            shadow-lg shadow-red-500/10 hover:shadow-red-500/20
+                            shadow-lg hover:
                             active:scale-95"
                         >
-                            <FiLogOut className="text-xl md:text-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
+                            <FiLogOut className="text-xl md:text-lg group-hover:scale-110 group-hover:rotate-12 transition-colors duration-300" />
                             <span className="font-bold text-base md:text-sm">Cerrar Sesión</span>
                         </button>
                     </div>

@@ -21,7 +21,7 @@ const COLORES_ACCION: Record<AdminLogAction, string> = {
   cambiar_rol: "bg-amber-500/20 text-amber-300 border-amber-500/30",
   cambiar_password: "bg-violet-500/20 text-violet-300 border-violet-500/30",
   eliminar_usuario: "bg-red-500/20 text-red-300 border-red-500/30",
-  actualizar_nombre: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+  actualizar_nombre: "bg-violet-500/20 text-violet-300 border-violet-500/30",
 };
 
 function formatearFecha(ts: string) {
@@ -89,7 +89,7 @@ export default function LogsAdminPage() {
 
   return (
     <div className="space-y-8 pb-32 md:pb-10">
-      <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-6 md:p-8 rounded-3xl shadow-lg relative overflow-hidden">
+      <div className="bg-linear-to-br from-slate-900/80 to-slate-900/50 border border-slate-700/50 p-6 md:p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-10">
           <FiActivity className="text-8xl text-violet-400" />
         </div>
@@ -108,7 +108,7 @@ export default function LogsAdminPage() {
         </div>
       </div>
 
-      <div className="bg-slate-900/60 backdrop-blur-md rounded-3xl border border-slate-700/50 overflow-hidden">
+      <div className="bg-slate-900/60 backdrop-blur-md rounded-[2.5rem] border border-slate-700/50 overflow-hidden">
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-700/50">
           <div className="flex items-center gap-2">
             <FiActivity className="text-slate-400" size={18} />
@@ -150,7 +150,7 @@ export default function LogsAdminPage() {
                 {logs.map((log) => (
                   <tr
                     key={log.id}
-                    className="hover:bg-slate-800/40 transition-colors"
+                    className="hover:bg-slate-800/50 transition-colors"
                   >
                     <td className="p-4 text-slate-400 text-xs whitespace-nowrap">
                       <div className="flex items-center gap-1.5">

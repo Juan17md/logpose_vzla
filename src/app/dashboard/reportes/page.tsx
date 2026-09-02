@@ -11,7 +11,7 @@ import { useBankAccounts } from "@/contexts/BankAccountsContext";
 import { obtenerSimboloMoneda } from "@/lib/bankAccounts";
 
 // Recharts (~40KB) cargado de forma diferida — solo se descarga al navegar a /reportes
-const SkeletonChart = () => <div className="h-80 w-full bg-slate-800/40 rounded-2xl animate-pulse" aria-hidden="true" />;
+const SkeletonChart = () => <div className="h-80 w-full bg-slate-800/50 rounded-2xl animate-pulse" aria-hidden="true" />;
 const ExpenseCategoryChart = dynamic(
     () => import("@/components/charts/FinancialCharts").then(m => ({ default: m.ExpenseCategoryChart })),
     { ssr: false, loading: () => <SkeletonChart /> }
@@ -295,7 +295,7 @@ export default function ReportsPage() {
 
                 {/* KPI Grid 2x2 */}
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-emerald-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
+                    <div className="bg-slate-900/50 p-5 rounded-[2rem] border border-emerald-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
                         <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors"></div>
                         <div className="mb-4 w-10 h-10 rounded-xl bg-emerald-500 text-slate-900 flex items-center justify-center shadow-lg ">
                             <FiTrendingUp size={20} />
@@ -304,7 +304,7 @@ export default function ReportsPage() {
                         <p className="text-2xl font-black text-white tracking-tight">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
-                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-red-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
+                    <div className="bg-slate-900/50 p-5 rounded-[2rem] border border-red-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
                         <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-colors"></div>
                         <div className="mb-4 w-10 h-10 rounded-xl bg-red-500 text-slate-900 flex items-center justify-center shadow-lg ">
                             <FiTrendingDown size={20} />
@@ -313,7 +313,7 @@ export default function ReportsPage() {
                         <p className="text-2xl font-black text-white tracking-tight">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                     </div>
 
-                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-amber-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
+                    <div className="bg-slate-900/50 p-5 rounded-[2rem] border border-amber-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
                         <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors"></div>
                         <div className="mb-4 w-10 h-10 rounded-xl bg-amber-500 text-slate-900 flex items-center justify-center shadow-lg ">
                             <FiDollarSign size={20} />
@@ -324,7 +324,7 @@ export default function ReportsPage() {
                         </p>
                     </div>
 
-                    <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-violet-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
+                    <div className="bg-slate-900/50 p-5 rounded-[2rem] border border-violet-500/30 backdrop-blur-xl relative overflow-hidden group active:scale-95 transition-[transform,color]">
                         <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-colors"></div>
                         <div className="mb-4 w-10 h-10 rounded-xl bg-violet-500 text-white flex items-center justify-center shadow-lg ">
                             <FiBriefcase size={20} />
@@ -339,7 +339,7 @@ export default function ReportsPage() {
                 {/* Mobile Charts Area */}
                 <div className="space-y-4">
                     {/* Balance Chart Card */}
-                    <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-slate-700/50">
+                    <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-[2.5rem] border border-slate-700/50">
                         <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                             <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
                             Balance del Periodo
@@ -348,7 +348,7 @@ export default function ReportsPage() {
                     </div>
 
                     {/* Expenses Chart Card */}
-                    <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-slate-700/50">
+                    <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-[2.5rem] border border-slate-700/50">
                         <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                             <div className="w-1 h-4 bg-red-500 rounded-full"></div>
                             Gastos por Categoría
@@ -398,7 +398,7 @@ export default function ReportsPage() {
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider px-1">Análisis de Eficiencia</h3>
                     <div className="grid grid-cols-2 gap-4">
                         {/* Card 1: Tasa de Ahorro */}
-                        <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-violet-500/20 backdrop-blur-xl relative overflow-hidden group">
+                        <div className="bg-slate-900/50 p-5 rounded-[2rem] border border-violet-500/20 backdrop-blur-xl relative overflow-hidden group">
                             <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/5 rounded-full blur-2xl"></div>
                             <div className="flex items-center justify-between mb-3">
                                 <div className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center border border-violet-500/10">
@@ -419,7 +419,7 @@ export default function ReportsPage() {
                         </div>
 
                         {/* Card 2: Eficiencia */}
-                        <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-amber-500/20 backdrop-blur-xl relative overflow-hidden group">
+                        <div className="bg-slate-900/50 p-5 rounded-[2rem] border border-amber-500/20 backdrop-blur-xl relative overflow-hidden group">
                             <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl"></div>
                             <div className="flex items-center justify-between mb-3">
                                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/10">
@@ -439,7 +439,7 @@ export default function ReportsPage() {
                         </div>
 
                         {/* Card 3: Día Crítico */}
-                        <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-red-500/20 backdrop-blur-xl relative overflow-hidden group">
+                        <div className="bg-slate-900/50 p-5 rounded-[2rem] border border-red-500/20 backdrop-blur-xl relative overflow-hidden group">
                             <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/5 rounded-full blur-2xl"></div>
                             <div className="flex items-center justify-between mb-3">
                                 <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/10">
@@ -456,7 +456,7 @@ export default function ReportsPage() {
                         </div>
 
                         {/* Card 4: Comparativa MoM */}
-                        <div className="bg-slate-900/40 p-5 rounded-[2rem] border border-emerald-500/20 backdrop-blur-xl relative overflow-hidden group">
+                        <div className="bg-slate-900/50 p-5 rounded-[2rem] border border-emerald-500/20 backdrop-blur-xl relative overflow-hidden group">
                             <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl"></div>
                             <div className="flex items-center justify-between mb-3">
                                 <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/10">
@@ -478,7 +478,7 @@ export default function ReportsPage() {
             {/* ===== DESKTOP LAYOUT (Original wrapped) ===== */}
             <div className="hidden md:block space-y-8">
                 {/* Header & Filter */}
-                <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+                <div className="bg-linear-to-br from-slate-900/80 to-slate-900/50 border border-slate-700/50 p-5 md:p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
                     <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-10 -translate-y-10 group-hover:translate-x-5 group-hover:-translate-y-5 transition-transform duration-700">
                         <FiPieChart className="text-7xl md:text-9xl text-amber-500" />
                     </div>
@@ -515,7 +515,7 @@ export default function ReportsPage() {
                 {/* Summary Cards - Horizontal scroll en móvil */}
                 {/* blur-3xl eliminado de las tarjetas — 4 capas GPU simultáneas en escritorio */}
                 <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 scrollbar-hide">
-                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-emerald-500/30 relative overflow-hidden group active:scale-95 transition-transform">
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/50 backdrop-blur-xl p-6 rounded-[2.5rem] border border-emerald-500/30 relative overflow-hidden group active:scale-95 transition-transform">
                         <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
                         <div className="flex items-center space-x-3 text-emerald-400 mb-4">
                             <div className="p-3 bg-emerald-500 text-slate-900 rounded-xl shadow-lg "><FiTrendingUp size={20} /></div>
@@ -524,7 +524,7 @@ export default function ReportsPage() {
                         <p className="text-3xl font-black text-white">$ {stats.income.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
-                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-red-500/30 relative overflow-hidden group active:scale-95 transition-transform">
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/50 backdrop-blur-xl p-6 rounded-[2.5rem] border border-red-500/30 relative overflow-hidden group active:scale-95 transition-transform">
                         <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-colors"></div>
                         <div className="flex items-center space-x-3 text-red-400 mb-4">
                             <div className="p-3 bg-red-500 text-slate-900 rounded-xl shadow-lg "><FiTrendingDown size={20} /></div>
@@ -533,7 +533,7 @@ export default function ReportsPage() {
                         <p className="text-3xl font-black text-white">$ {stats.expense.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
 
-                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-amber-500/30 relative overflow-hidden group active:scale-95 transition-transform">
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/50 backdrop-blur-xl p-6 rounded-[2.5rem] border border-amber-500/30 relative overflow-hidden group active:scale-95 transition-transform">
                         <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors"></div>
                         <div className="flex items-center space-x-3 text-amber-400 mb-4">
                             <div className="p-3 bg-amber-500 text-slate-900 rounded-xl shadow-lg "><FiDollarSign size={20} /></div>
@@ -544,7 +544,7 @@ export default function ReportsPage() {
                         </p>
                     </div>
 
-                    <div className="flex-none w-64 md:w-auto bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-violet-500/30 relative overflow-hidden group active:scale-95 transition-transform">
+                    <div className="flex-none w-64 md:w-auto bg-slate-900/50 backdrop-blur-xl p-6 rounded-[2.5rem] border border-violet-500/30 relative overflow-hidden group active:scale-95 transition-transform">
                         <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-colors"></div>
                         <div className="flex items-center space-x-3 text-violet-400 mb-4">
                             <div className="p-3 bg-violet-500 text-white rounded-xl shadow-lg "><FiBriefcase size={20} /></div>
@@ -560,7 +560,7 @@ export default function ReportsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                     {/* Balance Chart */}
-                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 overflow-hidden shadow-lg">
+                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-lg">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold text-white">Balance del Periodo</h3>
                         </div>
@@ -568,7 +568,7 @@ export default function ReportsPage() {
                     </div>
 
                     {/* Categories Pie Chart */}
-                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 overflow-hidden shadow-lg">
+                    <div className="bg-slate-900/50 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-lg">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold text-white">Gastos por Categoría</h3>
                         </div>
@@ -576,7 +576,7 @@ export default function ReportsPage() {
                         {/* Custom Legend */}
                         <div className="mt-4 grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar">
                             {stats.categoryData.map((item, index) => (
-                                <div key={item.name} className="flex items-center justify-between text-xs p-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 transition-colors border border-slate-700/30">
+                                <div key={item.name} className="flex items-center justify-between text-xs p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800/60 transition-colors border border-slate-700/30">
                                     <div className="flex items-center">
                                         <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: ["#10b981", "#ef4444", "#06b6d4", "#f59e0b", "#8b5cf6", "#ec4899"][index % 6] }}></span>
                                         <span className="text-slate-300 capitalize font-medium">{item.name}</span>
@@ -597,7 +597,7 @@ export default function ReportsPage() {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {/* Card 1: Tasa de Ahorro */}
-                        <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-violet-500/20 backdrop-blur-xl relative overflow-hidden group">
+                        <div className="bg-slate-900/50 p-6 rounded-[2.5rem] border border-violet-500/20 backdrop-blur-xl relative overflow-hidden group">
                             <div className="absolute -top-10 -right-10 w-24 h-24 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-colors duration-500"></div>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center border border-violet-500/10">
@@ -619,7 +619,7 @@ export default function ReportsPage() {
                         </div>
 
                         {/* Card 2: Eficiencia de Consumo */}
-                        <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-amber-500/20 backdrop-blur-xl relative overflow-hidden group">
+                        <div className="bg-slate-900/50 p-6 rounded-[2.5rem] border border-amber-500/20 backdrop-blur-xl relative overflow-hidden group">
                             <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors duration-500"></div>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/10">
@@ -640,7 +640,7 @@ export default function ReportsPage() {
                         </div>
 
                         {/* Card 3: Día de Mayor Consumo */}
-                        <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-red-500/20 backdrop-blur-xl relative overflow-hidden group">
+                        <div className="bg-slate-900/50 p-6 rounded-[2.5rem] border border-red-500/20 backdrop-blur-xl relative overflow-hidden group">
                             <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-colors duration-500"></div>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/10">
@@ -657,7 +657,7 @@ export default function ReportsPage() {
                         </div>
 
                         {/* Card 4: Comparación MoM */}
-                        <div className="bg-slate-900/40 p-6 rounded-[2.5rem] border border-emerald-500/20 backdrop-blur-xl relative overflow-hidden group">
+                        <div className="bg-slate-900/50 p-6 rounded-[2.5rem] border border-emerald-500/20 backdrop-blur-xl relative overflow-hidden group">
                             <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors duration-500"></div>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/10">

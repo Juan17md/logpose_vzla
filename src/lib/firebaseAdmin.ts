@@ -1,6 +1,7 @@
 import 'server-only';
 
 const SCOPE = "https://www.googleapis.com/auth/cloud-platform";
+import * as Sentry from "@sentry/nextjs";
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!;
 
 let cachedToken: { token: string; exp: number } | null = null;
@@ -103,6 +104,7 @@ export async function leerUsuario(uid: string) {
     return docToObject(data);
   } catch (e) {
     console.error(`Error leyendo usuario ${uid}:`, e);
+    Sentry.captureException(e);
     return null;
   }
 }

@@ -78,7 +78,7 @@ export default function ShoppingItemForm({ initialData, onSubmit, onCancel, isLo
                 <button
                     type="submit"
                     disabled={isLoading || !name}
-                    className="p-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center shadow-[0_0_10px_rgba(245,158,11,0.05)]"
+                    className="p-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center shadow-lg"
                 >
                     <FiCheckCircle size={18} />
                 </button>
@@ -86,7 +86,7 @@ export default function ShoppingItemForm({ initialData, onSubmit, onCancel, isLo
                     type="button"
                     onClick={onCancel}
                     disabled={isLoading}
-                    className="p-3 text-slate-500 hover:text-red-400 hover:bg-white/5 border border-transparent hover:border-white/5 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center"
+                    className="p-3 text-slate-500 hover:text-red-400 hover:bg-white/5 border border-transparent hover:border-slate-800 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center"
                 >
                     <FiX size={18} />
                 </button>

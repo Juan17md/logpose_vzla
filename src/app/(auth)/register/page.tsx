@@ -90,7 +90,7 @@ export default function RegisterPage() {
     const features = [
         { icon:<FiPieChart/>,   title:"Planificación Clara",    desc:"Establece tus objetivos mensuales", from:"from-amber-500",  to:"to-amber-700",  glow:"",  accent:"group-hover/f:text-amber-400"  },
         { icon:<FiTrendingUp/>, title:"Crecimiento Constante",  desc:"Monitorea tus ahorros día a día",   from:"from-violet-500", to:"to-violet-700", glow:"", accent:"group-hover/f:text-violet-400" },
-        { icon:<FiShield/>,     title:"Seguridad Máxima",       desc:"Protección total de tus datos",     from:"from-sky-500",    to:"to-sky-700",    glow:"",    accent:"group-hover/f:text-sky-400"    },
+        { icon:<FiShield/>,     title:"Seguridad Máxima",       desc:"Protección total de tus datos",     from:"from-violet-500",    to:"to-violet-700",    glow:"",    accent:"group-hover/f:text-violet-400"    },
     ];
 
     return (
@@ -102,7 +102,7 @@ export default function RegisterPage() {
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
                 <div className="orb1 absolute -top-[20%] -left-[10%] w-[800px] h-[800px] rounded-full bg-violet-500/18 blur-[100px]" />
                 <div className="orb2 absolute -bottom-[25%] -right-[15%] w-[900px] h-[900px] rounded-full bg-amber-600/16 blur-[120px]" />
-                <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-sky-500/12 blur-[90px]" />
+                <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-violet-500/12 blur-[90px]" />
                 <div className="orb4 absolute top-[60%] left-[5%] w-[400px] h-[400px] rounded-full bg-violet-400/10 blur-[80px]" />
                 <div className="grid-anim absolute inset-0"
                     style={{backgroundImage:"linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px)",backgroundSize:"80px 80px"}}
@@ -172,7 +172,7 @@ export default function RegisterPage() {
                             <div className="absolute top-6 right-6 w-16 h-16 border border-violet-500/10 rounded-full"/>
                             <div className="absolute top-8 right-8 w-10 h-10 border border-violet-500/15 rounded-full"/>
                             <div className="absolute bottom-6 left-6 flex items-center gap-1.5">
-                                {[0,1,2].map(i=><div key={i} className={`w-1.5 h-1.5 rounded-full ${i===0?"bg-violet-500/60":i===1?"bg-amber-500/40":"bg-sky-500/30"}`}/>)}
+                                {[0,1,2].map(i=><div key={i} className={`w-1.5 h-1.5 rounded-full ${i===0?"bg-violet-500/60":i===1?"bg-amber-500/40":"bg-violet-500/30"}`}/>)}
                             </div>
 
                             <div>
@@ -208,7 +208,7 @@ export default function RegisterPage() {
                                     </div>
                                     <div>
                                         <button type="submit" disabled={loading}
-                                            className="shimmer-btn relative w-full group bg-linear-to-r from-amber-600 via-amber-500 to-yellow-400 text-[#07090F] font-bold py-4 px-6 rounded-2xl shadow-[0_6px_30px_rgba(202,138,4,.45),inset_0_1px_0_rgba(255,255,255,.25)] hover:shadow-[0_10px_40px_rgba(202,138,4,.65)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2.5 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
+                                            className="shimmer-btn relative w-full group bg-linear-to-r from-amber-600 via-amber-500 to-amber-400 text-[#07090F] font-bold py-4 px-6 rounded-2xl shadow-lg hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2.5 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
                                             <span className="relative z-10 flex items-center gap-2 text-sm">
                                                 {loading
                                                     ? <span className="w-5 h-5 border-2 border-[#07090F]/30 border-t-[#07090F] rounded-full animate-spin"/>

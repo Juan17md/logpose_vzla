@@ -58,7 +58,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <div className="orb1 absolute -top-[20%] -left-[10%] w-[800px] h-[800px] rounded-full bg-amber-500/20 blur-[100px]" />
         <div className="orb2 absolute -bottom-[25%] -right-[15%] w-[900px] h-[900px] rounded-full bg-violet-600/18 blur-[120px]" />
-        <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-sky-500/12 blur-[90px]" />
+        <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-violet-500/12 blur-[90px]" />
         <div className="orb4 absolute top-[60%] left-[5%] w-[400px] h-[400px] rounded-full bg-amber-400/10 blur-[80px]" />
         <div className="grid-anim absolute inset-0"
           style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px)", backgroundSize: "80px 80px" }}

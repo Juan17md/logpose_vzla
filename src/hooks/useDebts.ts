@@ -3,6 +3,7 @@ import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, d
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { deudaSchema, pagoSchema } from "@/lib/schemas";
+import * as Sentry from "@sentry/nextjs";
 
 export interface Payment {
     id: string;
@@ -80,6 +81,7 @@ export function useDebts() {
                     setLoadingDebts(false);
                 }, (error) => {
                     console.error("Error fetching debts:", error);
+                    Sentry.captureException(error);
                     setLoadingDebts(false);
                 });
             } else {
@@ -113,6 +115,7 @@ export function useDebts() {
             return true;
         } catch (error) {
             console.error("Error adding debt:", error);
+            Sentry.captureException(error);
             return false;
         }
     };
@@ -124,6 +127,7 @@ export function useDebts() {
             return true;
         } catch (error) {
             console.error("Error deleting debt:", error);
+            Sentry.captureException(error);
             return false;
         }
     };
@@ -142,6 +146,7 @@ export function useDebts() {
             return true;
         } catch (error) {
             console.error("Error updating debt:", error);
+            Sentry.captureException(error);
             return false;
         }
     };
@@ -207,6 +212,7 @@ export function useDebts() {
             return true;
         } catch (error) {
             console.error("Error adding payment transaction:", error);
+            Sentry.captureException(error);
             return false;
         }
     };

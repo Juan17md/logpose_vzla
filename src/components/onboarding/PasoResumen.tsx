@@ -209,9 +209,9 @@ export default function PasoResumen({ onAnterior }: PasoResumenProps) {
 
         {gastosFijos.length > 0 && (
           <ResumenCard
-            icon={<FiCalendar className="text-sky-400" />}
+            icon={<FiCalendar className="text-violet-400" />}
             titulo={`Gastos fijos (${gastosFijos.length})`}
-            bg="bg-sky-500/5 border-sky-500/10"
+            bg="bg-violet-500/5 border-violet-500/10"
           >
             <div className="flex flex-wrap gap-1.5 mt-1">
               {gastosFijos.map((g, i) => (
@@ -229,7 +229,7 @@ export default function PasoResumen({ onAnterior }: PasoResumenProps) {
           type="button"
           onClick={finalizar}
           disabled={finalizando}
-          className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:shadow-lg hover: hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {finalizando ? (
             <>
@@ -248,7 +248,7 @@ export default function PasoResumen({ onAnterior }: PasoResumenProps) {
           type="button"
           onClick={onAnterior}
           disabled={finalizando}
-          className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:shadow-lg hover: hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           Volver atrás
         </button>

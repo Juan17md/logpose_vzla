@@ -62,7 +62,7 @@ export default function AvisoLegalPage() {
   return (
     <div className={`min-h-screen flex w-full ${ibmPlexSans.variable} ${outfit.variable} bg-[#06080F] overflow-hidden relative`} style={{ fontFamily: "var(--font-ibm)" }}>
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="orb1 absolute -top-[20%] -left-[10%] w-[800px] h-[800px] rounded-full bg-sky-500/18 blur-[100px]" />
+        <div className="orb1 absolute -top-[20%] -left-[10%] w-[800px] h-[800px] rounded-full bg-violet-500/18 blur-[100px]" />
         <div className="orb2 absolute -bottom-[25%] -right-[15%] w-[900px] h-[900px] rounded-full bg-violet-600/16 blur-[120px]" />
         <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-amber-500/12 blur-[90px]" />
         <div className="grid-anim grid-pattern absolute inset-0" />
@@ -74,7 +74,7 @@ export default function AvisoLegalPage() {
         <div className="w-full max-w-[820px]">
           <div className="card-glow">
             <div className="relative bg-[#0B0F1A] rounded-[1.75rem] p-8 sm:p-12 shadow-lg overflow-hidden">
-              <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-sky-500/40 to-transparent" />
+              <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-violet-500/40 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-violet-500/20 to-transparent" />
 
               <div>
@@ -101,7 +101,7 @@ export default function AvisoLegalPage() {
                   {secciones.map((s, i) => (
                     <div key={i} className="group">
                       <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-sky-500/20 to-sky-700/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform duration-300">
+                        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-violet-500/20 to-violet-700/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform duration-300">
                           {s.icon}
                         </div>
                         <div className="flex-1 min-w-0">

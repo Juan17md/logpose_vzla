@@ -165,7 +165,7 @@ export default function PasoDeudas({ onSiguiente, onAnterior }: PasoDeudasProps)
         <button
           type="button"
           onClick={onSiguiente}
-          className="flex-[2] bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 text-sm"
+          className="flex-[2] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-lg hover: hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 text-sm"
         >
           {deudas.length === 0 ? (
             "Omitir paso"

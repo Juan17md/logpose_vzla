@@ -135,14 +135,14 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
               />
             </div>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-400 text-sm font-medium">₮</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400 text-sm font-medium">₮</span>
               <input
                 type="text"
                 inputMode="decimal"
                 value={savingsUSDTStr}
                 onChange={e => setSavingsUSDTStr(e.target.value)}
                 placeholder="USDT"
-                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 transition-colors duration-300 text-sm"
+                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl py-3 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors duration-300 text-sm"
               />
             </div>
           </div>
@@ -151,7 +151,7 @@ export default function PasoPerfilFinanciero({ onSiguiente }: PasoPerfilFinancie
         <button
           type="submit"
           disabled={!valido}
-          className="w-full bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-400 text-slate-950 font-bold py-4 px-6 rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
+          className="w-full bg-gradient-to-r from-amber-600 via-amber-500 to-amber-400 text-slate-950 font-bold py-4 px-6 rounded-2xl shadow-lg hover:shadow-lg hover: hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
         >
           <span>Siguiente paso</span>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

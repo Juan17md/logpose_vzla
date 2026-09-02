@@ -432,7 +432,7 @@ export default function CategoriasPage() {
 
                 {/* Columna Derecha: Bento Grid de Categorías (2/3) */}
                 <div className={`lg:col-span-2 space-y-8 ${vistaMobile === "form" && editandoCategoria === null ? "hidden lg:block" : "block"}`}>
-                    <div className="flex justify-between items-center bg-slate-950/40 p-4 rounded-3xl border border-slate-900 backdrop-blur-md">
+                    <div className="flex justify-between items-center bg-slate-950/40 p-4 rounded-[2.5rem] border border-slate-900 backdrop-blur-md">
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-violet-500/10 rounded-2xl border border-violet-500/20">
                                 <FiGrid className="text-violet-500 text-xl" />
@@ -444,7 +444,7 @@ export default function CategoriasPage() {
                                 handleLimpiarFormulario();
                                 setVistaMobile("form");
                             }}
-                            className="md:hidden flex items-center justify-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-indigo-500 transition-colors border border-violet-500/10"
+                            className="md:hidden flex items-center justify-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg hover:from-violet-500 hover:to-indigo-500 transition-colors border border-violet-500/10"
                         >
                             <FiPlus className="text-sm" />
                             Nueva
@@ -463,7 +463,7 @@ export default function CategoriasPage() {
                                 return (
                                     <div
                                         key={cat.id}
-                                        className="bg-slate-950/30 border border-slate-900/40 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between group hover:border-slate-800/50 hover:bg-slate-900/40 hover:-translate-y-1 transition-colors duration-500 min-h-[330px]"
+                                        className="bg-slate-950/30 border border-slate-900/40 rounded-[2.5rem] p-6 shadow-lg relative overflow-hidden backdrop-blur-xl flex flex-col justify-between group hover:border-slate-800/50 hover:bg-slate-900/50 hover:-translate-y-1 transition-colors duration-500 min-h-[330px]"
                                         style={{
                                             borderColor: editandoCategoria?.id === cat.id ? `${colorCat}66` : ""
                                         }}

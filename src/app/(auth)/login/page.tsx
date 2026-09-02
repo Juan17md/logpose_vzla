@@ -94,7 +94,7 @@ export default function LoginPage() {
     const features = [
         { icon:<FiPieChart/>,    title:"Análisis Financiero",  desc:"Visualiza tu progreso financiero",    from:"from-amber-500",  to:"to-amber-700",   glow:"",  accent:"group-hover/f:text-amber-400"  },
         { icon:<FiTrendingUp/>,  title:"Control Total",     desc:"Ahorros y deudas en un solo lugar",   from:"from-violet-500", to:"to-violet-700",  glow:"", accent:"group-hover/f:text-violet-400" },
-        { icon:<FiShield/>,      title:"Seguridad Máxima",  desc:"Protección total de tus datos",       from:"from-sky-500",    to:"to-sky-700",     glow:"",    accent:"group-hover/f:text-sky-400"    },
+        { icon:<FiShield/>,      title:"Seguridad Máxima",  desc:"Protección total de tus datos",       from:"from-violet-500",    to:"to-violet-700",     glow:"",    accent:"group-hover/f:text-violet-400"    },
     ];
 
     return (
@@ -104,7 +104,7 @@ export default function LoginPage() {
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
                 <div className="orb1 absolute -top-[20%] -left-[10%] w-[800px] h-[800px] rounded-full bg-amber-500/20 blur-[100px]" />
                 <div className="orb2 absolute -bottom-[25%] -right-[15%] w-[900px] h-[900px] rounded-full bg-violet-600/18 blur-[120px]" />
-                <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-sky-500/12 blur-[90px]" />
+                <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-violet-500/12 blur-[90px]" />
                 <div className="orb4 absolute top-[60%] left-[5%] w-[400px] h-[400px] rounded-full bg-amber-400/10 blur-[80px]" />
 
                 <div className="grid-anim grid-pattern absolute inset-0" />
@@ -205,7 +205,7 @@ export default function LoginPage() {
 
                                     <div>
                                         <button type="submit" disabled={loading}
-                                            className="shimmer-btn relative w-full group bg-linear-to-r from-amber-600 via-amber-500 to-yellow-400 text-[#07090F] font-bold py-4 px-6 rounded-2xl shadow-[0_6px_30px_rgba(202,138,4,.45),inset_0_1px_0_rgba(255,255,255,.25)] hover:shadow-[0_10px_40px_rgba(202,138,4,.65)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2.5 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
+                                            className="shimmer-btn relative w-full group bg-linear-to-r from-amber-600 via-amber-500 to-amber-400 text-[#07090F] font-bold py-4 px-6 rounded-2xl shadow-lg hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[.98] transition-[transform,color] duration-300 flex items-center justify-center gap-2.5 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
                                             <span className="relative z-10 flex items-center gap-2 text-sm">
                                                 {loading
                                                     ? <span className="w-5 h-5 border-2 border-[#07090F]/30 border-t-[#07090F] rounded-full animate-spin"/>

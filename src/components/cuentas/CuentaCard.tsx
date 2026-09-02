@@ -43,7 +43,7 @@ export default function CuentaCard({
                 onClick={() => onVerDetalle(cuenta)}
                 className={cn(
                     outfit.className,
-                    "flex items-center gap-3 p-3 bg-slate-800/40 hover:bg-slate-800/60 rounded-xl border border-slate-700/30 transition-colors cursor-pointer w-full text-left group"
+                    "flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800/60 rounded-xl border border-slate-700/30 transition-colors cursor-pointer w-full text-left group"
                 )}
             >
                 <BankLogo bankId={cuenta.banco} size={24} />

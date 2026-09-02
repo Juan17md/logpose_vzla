@@ -17,7 +17,7 @@ export default function CurrencySelector({ value, onChange, compact = false }: C
         <Menu as="div" className="relative inline-block text-left">
             <div>
                 <Menu.Button className={cn(
-                    "flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-slate-700/50 bg-slate-800/40 hover:bg-slate-800/80 transition-colors focus:outline-none focus:ring-1 focus:ring-amber-500/30",
+                    "flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-slate-700/50 bg-slate-800/50 hover:bg-slate-800/80 transition-colors focus:outline-none focus:ring-1 focus:ring-amber-500/30",
                     compact ? "h-5" : "h-6"
                 )}>
                     <span className="text-[10px] font-black text-amber-500 tracking-tighter">{value}</span>

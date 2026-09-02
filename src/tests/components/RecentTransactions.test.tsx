@@ -12,7 +12,7 @@ const { mockPush, mockDeleteTransaction, mockDuplicateTransaction, mockStartEdit
     mockToastSuccess: vi.fn(),
 }));
 
-let mockTransactions: any[] = [];
+let mockTransactions: import("@/contexts/TransactionsContext").Transaction[] = [];
 let mockLoading = false;
 
 vi.mock("next/navigation", () => ({
@@ -135,7 +135,7 @@ describe("RecentTransactions Component", () => {
     });
 
     it("inicia el modo edición y redirige a /dashboard/movimientos", () => {
-        const transaccion = {
+        const transaccion: import("@/contexts/TransactionsContext").Transaction = {
             id: "tx-edit",
             type: "gasto",
             category: "Servicios",

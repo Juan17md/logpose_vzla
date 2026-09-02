@@ -49,7 +49,7 @@ export default function AvisoCuentasFaltantes() {
                             </button>
 
                             <div className="flex gap-6 items-start">
-                                <div className="shrink-0 w-14 h-14 bg-linear-to-br from-amber-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg  border border-white/10 group">
+                                <div className="shrink-0 w-14 h-14 bg-linear-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg border border-slate-700/50 group">
                                     <FiCreditCard className="text-2xl text-slate-950 group-hover:scale-110 transition-transform duration-300" />
                                 </div>
 
@@ -87,7 +87,7 @@ export default function AvisoCuentasFaltantes() {
                         {/* Progress Bar */}
                         <div className="h-1 w-full bg-slate-900">
                             <div
-                                className="h-full bg-linear-to-r from-amber-500 to-orange-500"
+                                className="h-full bg-linear-to-r from-amber-500 to-amber-500"
                             />
                         </div>
                     </div>

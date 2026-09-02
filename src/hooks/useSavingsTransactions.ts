@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export interface SavingsTransaction {
     id: string;
@@ -44,6 +45,7 @@ export function useSavingsTransactions() {
                     setLoadingSavings(false);
                 }, (error) => {
                     console.error("Error fetching savings transactions:", error);
+                    Sentry.captureException(error);
                     setLoadingSavings(false);
                 });
             } else {

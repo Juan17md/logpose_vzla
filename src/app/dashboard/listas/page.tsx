@@ -194,7 +194,7 @@ export default function ShoppingListsPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 shadow-lg flex justify-between items-center relative overflow-hidden">
+                            <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-[2.5rem] p-5 shadow-lg flex justify-between items-center relative overflow-hidden">
                                 <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-amber-500/5 to-transparent pointer-events-none"></div>
                                 <div className="relative z-10">
                                     <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">Items Totales</p>
@@ -216,7 +216,7 @@ export default function ShoppingListsPage() {
                 <div className={`lg:col-span-1 space-y-6 ${selectedList ? 'hidden lg:block' : 'block'}`}>
                     <button
                         onClick={handleAddListClick}
-                        className="hidden md:flex w-full bg-linear-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-900 font-bold py-4 px-6 rounded-2xl items-center justify-center gap-2 transition-colors shadow-lg shadow-amber-500/20 transform hover:-translate-y-1"
+                        className="hidden md:flex w-full bg-linear-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-slate-900 font-bold py-4 px-6 rounded-2xl items-center justify-center gap-2 transition-colors shadow-lg transform hover:-translate-y-1"
                     >
                         <FiPlus size={24} /> Nueva Lista
                     </button>
@@ -236,19 +236,19 @@ export default function ShoppingListsPage() {
                         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                             <button
                                 onClick={() => setSortBy("newest")}
-                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-[transform,color] border-2 active:scale-95 ${sortBy === "newest" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg " : "bg-slate-900/40 text-slate-500 border-slate-800 hover:border-slate-700"}`}
+                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-[transform,color] border-2 active:scale-95 ${sortBy === "newest" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg " : "bg-slate-900/50 text-slate-500 border-slate-800 hover:border-slate-700"}`}
                             >
                                 Recientes
                             </button>
                             <button
                                 onClick={() => setSortBy("az")}
-                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-[transform,color] border-2 active:scale-95 ${sortBy === "az" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg " : "bg-slate-900/40 text-slate-500 border-slate-800 hover:border-slate-700"}`}
+                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-[transform,color] border-2 active:scale-95 ${sortBy === "az" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg " : "bg-slate-900/50 text-slate-500 border-slate-800 hover:border-slate-700"}`}
                             >
                                 A-Z
                             </button>
                             <button
                                 onClick={() => setSortBy("za")}
-                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-[transform,color] border-2 active:scale-95 ${sortBy === "za" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg " : "bg-slate-900/40 text-slate-500 border-slate-800 hover:border-slate-700"}`}
+                                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-[transform,color] border-2 active:scale-95 ${sortBy === "za" ? "bg-amber-500 border-amber-500 text-slate-900 shadow-lg " : "bg-slate-900/50 text-slate-500 border-slate-800 hover:border-slate-700"}`}
                             >
                                 Z-A
                             </button>
@@ -271,9 +271,9 @@ export default function ShoppingListsPage() {
                                         onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedList(list); } }}
                                         role="button"
                                         tabIndex={0}
-                                        className={`group relative p-4 md:p-6 rounded-3xl border-2 cursor-pointer transition-[transform,color] flex justify-between items-center overflow-hidden active:scale-[0.98] ${selectedList?.id === list.id
+                                        className={`group relative p-4 md:p-6 rounded-[2.5rem] border-2 cursor-pointer transition-[transform,color] flex justify-between items-center overflow-hidden active:scale-[0.98] ${selectedList?.id === list.id
                                             ? "bg-slate-800/80 border-amber-500 shadow-lg"
-                                            : "bg-slate-900/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/60 shadow-lg"
+                                            : "bg-slate-900/50 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/60 shadow-lg"
                                             }`}
                                     >
                                         <div className="flex items-center gap-5 relative z-10">
@@ -337,7 +337,7 @@ export default function ShoppingListsPage() {
 {selectedList ? (
                             <div
                                 key={selectedList.id}
-                                className="bg-slate-900/50 backdrop-blur-xl rounded-3xl md:rounded-[2.5rem] border-2 border-slate-800 shadow-lg p-5 md:p-10 min-h-[600px] flex flex-col relative overflow-hidden"
+                                className="bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] md:rounded-[2.5rem] border-2 border-slate-800 shadow-lg p-5 md:p-10 min-h-[600px] flex flex-col relative overflow-hidden"
                             >
                                 <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -376,7 +376,7 @@ export default function ShoppingListsPage() {
                                                             <div className="bg-emerald-500/10 px-5 py-2.5 rounded-2xl border border-emerald-500/20 text-emerald-400 font-black text-xl shadow-lg ">
                                                                 ${total.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                             </div>
-                                                            <div className="bg-slate-800/40 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-slate-700/30 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
+                                                            <div className="bg-slate-800/50 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-slate-700/30 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
                                                                 Bs. {(total * bcvRate).toLocaleString("es-VE", { maximumFractionDigits: 0 })}
                                                             </div>
                                                         </div>
@@ -384,7 +384,7 @@ export default function ShoppingListsPage() {
 
                                                     <button
                                                         onClick={handleAddItemClick}
-                                                        className="hidden md:flex items-center gap-3 px-8 py-5 bg-amber-500 text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.15em] hover:bg-amber-400 transition-[transform,color] shadow-2xl shadow-amber-500/30 active:scale-95"
+                                                        className="hidden md:flex items-center gap-3 px-8 py-5 bg-amber-500 text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.15em] hover:bg-amber-400 transition-[transform,color] shadow-lg active:scale-95"
                                                     >
                                                         <FiPlus size={22} /> Agregar Artículo
                                                     </button>
@@ -399,7 +399,7 @@ export default function ShoppingListsPage() {
                                                     <div className="h-3 w-full bg-slate-800/50 rounded-full overflow-hidden border border-slate-700/30 p-0.5">
                                                         <div
                                                             style={{ width: `${progressPercent}%` }}
-                                                            className="h-full bg-linear-to-r from-emerald-500 via-teal-400 to-emerald-400 rounded-full relative overflow-hidden"
+                                                            className="h-full bg-linear-to-r from-emerald-500 via-emerald-400 to-emerald-400 rounded-full relative overflow-hidden"
                                                         >
                                                             <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }}></div>
                                                         </div>
@@ -414,7 +414,7 @@ export default function ShoppingListsPage() {
                                                     placeholder="Filtrar productos..."
                                                     value={itemFilterText}
                                                     onChange={(e) => setItemFilterText(e.target.value)}
-                                                    className="w-full bg-slate-800/40 border-2 border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-amber-500/30 placeholder-slate-600 transition-colors"
+                                                    className="w-full bg-slate-800/50 border-2 border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-amber-500/30 placeholder-slate-600 transition-colors"
                                                 />
                                             </div>
 
@@ -440,8 +440,8 @@ export default function ShoppingListsPage() {
                                                             <div
                                                                 key={item.id}
                                                                 className={`group flex flex-col p-3.5 md:p-6 rounded-2xl md:rounded-[2rem] border-2 transition-colors relative overflow-hidden ${item.completed
-                                                                    ? "bg-slate-900/40 border-slate-800/50 opacity-60"
-                                                                    : "bg-slate-800/40 border-slate-800/80 hover:border-amber-500/30 active:scale-[0.98] shadow-lg"
+                                                                    ? "bg-slate-900/50 border-slate-800/50 opacity-60"
+                                                                    : "bg-slate-800/50 border-slate-800/80 hover:border-amber-500/30 active:scale-[0.98] shadow-lg"
                                                                     }`}
                                                             >
                                                                 {item.completed && <div className="absolute top-0 right-0 p-6 text-emerald-500/20"><FiCheckCircle size={80} /></div>}
@@ -534,7 +534,7 @@ export default function ShoppingListsPage() {
             <button
                 aria-label={selectedList ? "Agregar artículo" : "Nueva lista"}
                 onClick={selectedList ? handleAddItemClick : handleAddListClick}
-                className="md:hidden fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-amber-500 text-slate-900 rounded-2xl shadow-2xl shadow-amber-500/40 flex items-center justify-center z-50 border-2 border-slate-900 transition-colors"
+                className="md:hidden fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-amber-500 text-slate-900 rounded-2xl shadow-lg flex items-center justify-center z-50 border-2 border-slate-900 transition-colors"
             >
                 <FiPlus size={28} />
             </button>

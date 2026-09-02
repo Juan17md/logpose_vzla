@@ -16,7 +16,6 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import CurrencySelector from "@/components/ui/CurrencySelector";
 import { toast } from "sonner";
 import { FiPlus, FiCreditCard, FiDollarSign, FiTrendingUp, FiArrowLeft } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Inter, Bungee } from "next/font/google";
 
@@ -24,7 +23,7 @@ import { Inter, Bungee } from "next/font/google";
 const HistorialCuenta = dynamic(() => import("@/components/cuentas/HistorialCuenta"), {
     ssr: false,
     loading: () => (
-        <div className="bg-slate-800/30 rounded-3xl animate-pulse h-48 w-full" aria-hidden="true" />
+        <div className="bg-slate-800/30 rounded-[2.5rem] animate-pulse h-48 w-full" aria-hidden="true" />
     ),
 });
 // CuentaDetalleModal solo se necesita cuando el usuario hace clic en una tarjeta
@@ -114,7 +113,7 @@ export default function CuentasPage() {
             `}</style>
 
             {/* Desktop Banner Header - Matches Gastos Fijos style */}
-            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-3xl shadow-xl relative overflow-hidden backdrop-blur-xl">
+            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/50 border border-slate-700/50 p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-[0.03] transform translate-x-10 -translate-y-10">
                     <FiCreditCard className="text-9xl text-violet-400 rotate-12" />
                 </div>
@@ -123,11 +122,11 @@ export default function CuentasPage() {
                 <div className="relative z-10 grid grid-cols-2 gap-8 items-end">
                     <div>
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="w-2 h-2 rounded-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]" />
+                            <div className="w-2 h-2 rounded-full bg-violet-500 shadow-lg" />
                             <span className="text-[10px] text-slate-500 font-black uppercase tracking-[3px]">Gestión Bancaria</span>
                         </div>
                         <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight mb-3">
-                            Mis <span className="text-transparent bg-clip-text bg-linear-to-r from-violet-400 to-indigo-400">Cuentas</span>
+                            Mis <span className="text-transparent bg-clip-text bg-linear-to-r from-violet-400 to-violet-300">Cuentas</span>
                         </h1>
                         <p className="text-slate-400 text-lg font-medium max-w-md">
                             Gestiona tus billeteras y cuentas bancarias con LogPose.
@@ -135,10 +134,10 @@ export default function CuentasPage() {
                     </div>
 
                     {/* Integrated Total Balance Widget */}
-                    <div className="bg-slate-800/50 p-6 rounded-2xl border border-white/5 backdrop-blur-md relative overflow-hidden group">
+                    <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-800 backdrop-blur-md relative overflow-hidden group">
                         <div className="flex items-center justify-between mb-4">
                             <h4 className="text-[10px] text-slate-500 font-black uppercase tracking-[3px]">Capital Consolidado</h4>
-                            <div className="flex items-center gap-2 bg-slate-900/40 px-2.5 py-1 rounded-lg border border-slate-700/50">
+                            <div className="flex items-center gap-2 bg-slate-900/50 px-2.5 py-1 rounded-lg border border-slate-700/50">
                                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none">Base:</span>
                                 <CurrencySelector
                                     value={monedaBase}
@@ -156,14 +155,14 @@ export default function CuentasPage() {
                         </div>
 
                         {/* Tasas Quick Control */}
-                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-800">
                             <div className="flex gap-2">
                                 {(["USD", "EUR", "USDT"] as const).map(m => (
                                     <button
                                         key={m}
                                         onClick={() => setTasaAModificar(m)}
                                         className={cn(
-                                            "px-2 py-1 rounded text-[8px] font-black uppercase transition-all",
+                                            "px-2 py-1 rounded text-[8px] font-black uppercase transition-colors",
                                             tasaAModificar === m 
                                                 ? "bg-violet-500/20 text-violet-400 border border-violet-500/30" 
                                                 : "text-slate-500 hover:text-slate-300"
@@ -198,7 +197,7 @@ export default function CuentasPage() {
                     </div>
                 </div>
                 {/* Mobile Total Balance + Tasas */}
-                <div className="bg-slate-900 shadow-xl border border-white/5 p-5 rounded-3xl space-y-4">
+                <div className="bg-slate-900 shadow-lg border border-slate-800 p-5 rounded-[2.5rem] space-y-4">
                     <div>
                         <p className="text-[10px] text-slate-500 font-black uppercase tracking-[2px] mb-1">Saldo Total</p>
                         <div className="flex items-baseline gap-2">
@@ -209,14 +208,14 @@ export default function CuentasPage() {
                         </div>
                     </div>
                     {/* Mobile Tasas Quick Control */}
-                    <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-800">
                         <div className="flex gap-1.5">
                             {(["USD", "EUR", "USDT"] as const).map(m => (
                                 <button
                                     key={m}
                                     onClick={() => setTasaAModificar(m)}
                                     className={cn(
-                                        "px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all",
+                                        "px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase transition-colors",
                                         tasaAModificar === m
                                             ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
                                             : "text-slate-500 hover:text-slate-300 border border-transparent"
@@ -252,7 +251,7 @@ export default function CuentasPage() {
                     </button>
 
                     <div className="sticky top-6">
-                        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-6 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+                        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-6 rounded-[2.5rem] shadow-lg relative overflow-hidden group">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-black text-white flex items-center gap-3">
                                     {cuentaEditando ? (
@@ -298,53 +297,42 @@ export default function CuentasPage() {
                 <div className={`lg:col-span-2 space-y-8 ${vistaMobile === "form" ? "hidden lg:block" : "block"}`}>
                     
                     {/* Controls & New Operation Action */}
-                    <div className="flex justify-between items-center bg-slate-900/40 p-4 rounded-3xl border border-white/5 backdrop-blur-md">
+                    <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-[2.5rem] border border-slate-800 backdrop-blur-md">
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-violet-500/10 rounded-2xl border border-violet-500/20">
                                 <FiTrendingUp className="text-violet-500 text-xl" />
                             </div>
                             <h3 className="text-sm font-black text-white uppercase tracking-widest">Estado de Carteras</h3>
                         </div>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                        <button
                             onClick={() => { setCuentaOperacion(undefined); setMostrarFormOperacion(true); }}
-                            className="flex items-center justify-center gap-2 px-6 py-3 bg-linear-to-r from-violet-600 to-indigo-600 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-indigo-500 transition-all border border-violet-400/30"
+                            className="flex items-center justify-center gap-2 px-6 py-3 bg-linear-to-r from-violet-600 to-violet-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg hover:from-violet-500 hover:to-violet-400 transition-colors border border-violet-400/30"
                         >
                             <FiDollarSign className="text-sm" />
                             Nuevo Registro
-                        </motion.button>
+                        </button>
                     </div>
 
                     {/* Accounts Cards Grid */}
                     <section className="relative">
                         {cuentas.length === 0 ? (
-                            <div className="p-12 text-center bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-slate-700/50">
+                            <div className="p-12 text-center bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] border border-slate-700/50">
                                 <FiCreditCard className="text-5xl text-slate-700 mx-auto mb-6" />
                                 <h3 className="text-xl font-bold text-white mb-2">Sin Cuentas</h3>
                                 <p className="text-slate-500 text-sm max-w-xs mx-auto">Comienza inicializando una cuenta bancaria o billetera en el panel lateral.</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <AnimatePresence mode="popLayout">
-                                    {cuentas.map((cuenta) => (
-                                        <motion.div
-                                            key={cuenta.id}
-                                            layout
-                                            initial={{ opacity: 0, scale: 0.95 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.9 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <CuentaCard
-                                                cuenta={cuenta}
-                                                onEditar={setCuentaEditando}
-                                                onEliminar={setCuentaEliminar}
-                                                onVerDetalle={setCuentaDetalle}
-                                            />
-                                        </motion.div>
-                                    ))}
-                                </AnimatePresence>
+                                {cuentas.map((cuenta) => (
+                                    <div key={cuenta.id}>
+                                        <CuentaCard
+                                            cuenta={cuenta}
+                                            onEditar={setCuentaEditando}
+                                            onEliminar={setCuentaEliminar}
+                                            onVerDetalle={setCuentaDetalle}
+                                        />
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </section>
@@ -353,7 +341,7 @@ export default function CuentasPage() {
                     {cuentas.length > 0 && (
                         <section className="space-y-6 pt-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-2 h-2 rounded-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.4)]" />
+                                <div className="w-2 h-2 rounded-full bg-violet-500 shadow-lg" />
                                 <h2 className="text-xs font-black text-slate-500 uppercase tracking-[4px]">Historial de Navegación</h2>
                             </div>
                             <HistorialCuenta />
@@ -363,16 +351,13 @@ export default function CuentasPage() {
             </div>
 
             {/* FAB for Mobile — Elevado para no tapar a Nami */}
-            <motion.button
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                whileTap={{ scale: 0.9 }}
+            <button
                 onClick={() => { setCuentaEditando(null); setVistaMobile("form"); }}
                 aria-label="Nueva cuenta"
-                className={`md:hidden fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-violet-500 text-white rounded-2xl shadow-2xl shadow-violet-500/40 flex items-center justify-center z-50 border-2 border-slate-900 transition-all ${vistaMobile === "form" ? "hidden" : ""}`}
+                className={`md:hidden fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-violet-500 text-white rounded-2xl shadow-lg flex items-center justify-center z-50 border-2 border-slate-900 transition-colors ${vistaMobile === "form" ? "hidden" : ""}`}
             >
                 <FiPlus size={28} />
-            </motion.button>
+            </button>
 
             {/* Global Modals & Dialogs */}
             <OperacionForm

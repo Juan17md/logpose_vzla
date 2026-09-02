@@ -123,7 +123,7 @@ export default function TerminosPage() {
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <div className="orb1 absolute -top-[20%] -left-[10%] w-[800px] h-[800px] rounded-full bg-amber-500/20 blur-[100px]" />
         <div className="orb2 absolute -bottom-[25%] -right-[15%] w-[900px] h-[900px] rounded-full bg-violet-600/18 blur-[120px]" />
-        <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-sky-500/12 blur-[90px]" />
+        <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-violet-500/12 blur-[90px]" />
         <div className="grid-anim grid-pattern absolute inset-0" />
         <div className="glow-left absolute inset-0" />
         <div className="glow-right absolute inset-0" />

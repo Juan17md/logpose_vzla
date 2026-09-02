@@ -41,7 +41,7 @@ export default function ProgressBar() {
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-300 ${
                     activo
-                      ? "bg-amber-500 text-slate-950 shadow-lg  scale-110"
+                      ? "bg-amber-500 text-slate-950 shadow-lg scale-110"
                       : completado
                       ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
                       : "bg-slate-800/50 text-slate-500 border border-slate-700/30"

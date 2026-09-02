@@ -204,7 +204,7 @@ export default function FixedExpensesPage() {
     return (
         <div className="space-y-8 pb-32 md:pb-10">
             {/* Desktop Header */}
-            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl">
+            <div className="hidden md:block bg-linear-to-br from-slate-900/80 to-slate-900/50 border border-slate-700/50 p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiCalendar className="text-9xl text-violet-400" />
                 </div>
@@ -232,7 +232,7 @@ export default function FixedExpensesPage() {
                         <div className="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden">
                             <div
                                 style={{ width: `${progress}%` }}
-                                className="h-full bg-linear-to-r from-emerald-500 to-teal-400 rounded-full"
+                                className="h-full bg-linear-to-r from-emerald-500 to-emerald-400 rounded-full"
                             ></div>
                         </div>
                     </div>
@@ -301,7 +301,7 @@ export default function FixedExpensesPage() {
                             >
                                 {/* Controls Mobile */}
                                 <div className="flex gap-2">
-                                    <div className="flex bg-slate-900/40 rounded-2xl p-1 border border-slate-700/30">
+                                    <div className="flex bg-slate-900/50 rounded-2xl p-1 border border-slate-700/30">
                                         <button
                                             onClick={() => setViewMode('list')}
                                             className={`p-2.5 rounded-xl transition-colors ${viewMode === 'list' ? 'bg-violet-500 text-white shadow-lg' : 'text-slate-400'}`}
@@ -322,7 +322,7 @@ export default function FixedExpensesPage() {
                                             placeholder="Buscar..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full bg-slate-900/40 border border-slate-700/30 rounded-2xl py-2.5 pl-11 pr-4 text-white text-sm focus:outline-none focus:border-violet-500/50"
+                                            className="w-full bg-slate-900/50 border border-slate-700/30 rounded-2xl py-2.5 pl-11 pr-4 text-white text-sm focus:outline-none focus:border-violet-500/50"
                                         />
                                     </div>
                                 </div>
@@ -334,7 +334,7 @@ export default function FixedExpensesPage() {
                                 <button
                                     aria-label="Agregar gasto fijo"
                                     onClick={() => setMobileView('form')}
-                                    className="fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-linear-to-r from-violet-600 to-indigo-600 border border-violet-400/30 text-white rounded-2xl shadow-lg flex items-center justify-center z-50"
+                                    className="fixed bottom-safe-fab-above right-4 md:right-8 w-14 h-14 bg-linear-to-r from-violet-600 to-violet-600 border border-violet-400/30 text-white rounded-2xl shadow-lg flex items-center justify-center z-50"
                                 >
                                     <FiPlus size={28} />
                                 </button>
@@ -467,7 +467,7 @@ export default function FixedExpensesPage() {
                     <div className="grid grid-cols-1 gap-3 pt-4">
                         <button
                             onClick={() => executePay(true)}
-                            className="w-full py-4 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl shadow-lg transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-linear-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white font-bold rounded-2xl shadow-lg transition-colors flex items-center justify-center gap-2"
                         >
                             <FiActivity size={18} /> Registrar Gasto y Pago
                         </button>
@@ -552,7 +552,7 @@ export default function FixedExpensesPage() {
         return (
             <div
                 key={expense.id}
-                className={`group relative flex flex-col bg-slate-900/40 backdrop-blur-xl border-2 rounded-[2.5rem] p-5 transition-colors hover:bg-slate-900/60 ${isPaid ? 'border-emerald-500/20 shadow-lg ' : 'border-slate-800 hover:border-slate-700'}`}
+                className={`group relative flex flex-col bg-slate-900/50 backdrop-blur-xl border-2 rounded-[2.5rem] p-5 transition-colors hover:bg-slate-900/60 ${isPaid ? 'border-emerald-500/20 shadow-lg ' : 'border-slate-800 hover:border-slate-700'}`}
             >
                 {/* ... existing card content ... */}
                 <div className="flex justify-between items-start mb-6">
@@ -612,7 +612,7 @@ export default function FixedExpensesPage() {
                         disabled={isPaid}
                         className={`flex-1 py-3.5 rounded-2xl text-sm font-black flex items-center justify-center gap-2 transition-[transform,color] relative overflow-hidden group active:scale-95 ${isPaid
                             ? "bg-slate-800/50 text-emerald-500 cursor-not-allowed border border-emerald-500/20"
-                            : "bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg border border-violet-400/30"}`}
+                            : "bg-linear-to-r from-violet-600 to-violet-600 hover:from-violet-500 hover:to-violet-500 text-white shadow-lg border border-violet-400/30"}`}
                     >
                         {!isPaid && <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>}
                         <div className="relative z-10 flex items-center gap-2">

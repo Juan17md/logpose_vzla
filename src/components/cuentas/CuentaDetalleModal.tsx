@@ -97,7 +97,7 @@ export default function CuentaDetalleModal({
                 <div className="grid grid-cols-3 gap-4">
                     <button
                         onClick={() => { onClose(); onNuevaOperacion(cuenta); }}
-                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/40 hover:bg-violet-500/10 border border-slate-700/50 hover:border-violet-500/30 rounded-2xl transition-colors group"
+                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/50 hover:bg-violet-500/10 border border-slate-700/50 hover:border-violet-500/30 rounded-2xl transition-colors group"
                     >
                         <div className="p-3 bg-violet-500/10 rounded-xl group-hover:scale-110 transition-transform border border-violet-500/20">
                             <FiPlus className="text-violet-400 text-xl" />
@@ -107,7 +107,7 @@ export default function CuentaDetalleModal({
                     
                     <button
                         onClick={() => { onClose(); onEditar(cuenta); }}
-                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/40 hover:bg-amber-500/10 border border-slate-700/50 hover:border-amber-500/30 rounded-2xl transition-colors group"
+                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/50 hover:bg-amber-500/10 border border-slate-700/50 hover:border-amber-500/30 rounded-2xl transition-colors group"
                     >
                         <div className="p-3 bg-amber-500/10 rounded-xl group-hover:scale-110 transition-transform border border-amber-500/20">
                             <FiEdit2 className="text-amber-400 text-xl" />
@@ -117,7 +117,7 @@ export default function CuentaDetalleModal({
 
                     <button
                         onClick={() => { onClose(); onEliminar(cuenta); }}
-                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/40 hover:bg-red-500/10 border border-slate-700/50 hover:border-red-500/30 rounded-2xl transition-colors group"
+                        className="flex flex-col items-center justify-center gap-3 p-4 bg-slate-900/50 hover:bg-red-500/10 border border-slate-700/50 hover:border-red-500/30 rounded-2xl transition-colors group"
                     >
                         <div className="p-3 bg-red-500/10 rounded-xl group-hover:scale-110 transition-transform border border-red-500/20">
                             <FiTrash2 className="text-red-400 text-xl" />

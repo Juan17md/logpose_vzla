@@ -80,11 +80,11 @@ export default function SalaryPlanningWidget({ userId }: Props) {
 
             {salary > 0 && (
                 <div className="grid grid-cols-2 gap-3 text-center relative z-10">
-                    <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/30">
+                    <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/30">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Necesidades (50%)</p>
                         <p className="font-bold text-white text-lg">${(salary * 0.5).toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
-                    <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/30">
+                    <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/30">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Deseos (30%)</p>
                         <p className="font-bold text-white text-lg">${(salary * 0.3).toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                     </div>
@@ -122,7 +122,7 @@ export default function SalaryPlanningWidget({ userId }: Props) {
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-violet-500 hover:bg-violet-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-violet-500/20"
+                            className="px-6 py-2 bg-violet-500 hover:bg-violet-600 text-white font-bold rounded-xl transition-colors shadow-lg"
                         >
                             Guardar
                         </button>

@@ -11,6 +11,7 @@ import {
   actualizarMovimiento,
   type MovimientoData,
 } from "@/lib/movimientos";
+import * as Sentry from "@sentry/nextjs";
 
 export interface Transaction {
     id: string;
@@ -77,6 +78,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
                     setLoading(false);
                 }, (error) => {
                     console.error("Error fetching transactions:", error);
+                    Sentry.captureException(error);
                     setLoading(false);
                 });
             } else {

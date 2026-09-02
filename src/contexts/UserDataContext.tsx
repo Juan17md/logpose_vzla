@@ -5,6 +5,7 @@ import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { userDataSchema } from "@/lib/schemas";
+import * as Sentry from "@sentry/nextjs";
 
 export interface UserData {
     monthlyBudget: number;
@@ -54,6 +55,7 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
                     setLoading(false);
                 }, (error) => {
                     console.error("Error fetching user data:", error);
+                    Sentry.captureException(error);
                     setLoading(false);
                 });
             } else {
@@ -84,6 +86,7 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
             await updateDoc(doc(db, "users", auth.currentUser.uid), parsed.data);
         } catch (error) {
             console.error("Error updating user data:", error);
+            Sentry.captureException(error);
         }
     };
 

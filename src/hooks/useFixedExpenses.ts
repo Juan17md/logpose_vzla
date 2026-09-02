@@ -3,6 +3,7 @@ import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, d
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { gastoFijoSchema } from "@/lib/schemas";
+import * as Sentry from "@sentry/nextjs";
 
 export interface FixedExpense {
     id: string;
@@ -49,6 +50,7 @@ export function useFixedExpenses() {
                     setLoadingFixedExpenses(false);
                 }, (error) => {
                     console.error("Error fetching fixed expenses:", error);
+                    Sentry.captureException(error);
                     setLoadingFixedExpenses(false);
                 });
             } else {
@@ -80,6 +82,7 @@ export function useFixedExpenses() {
             return true;
         } catch (error) {
             console.error("Error adding fixed expense:", error);
+            Sentry.captureException(error);
             return false;
         }
     };
@@ -91,6 +94,7 @@ export function useFixedExpenses() {
             return true;
         } catch (error) {
             console.error("Error deleting fixed expense:", error);
+            Sentry.captureException(error);
             return false;
         }
     };
@@ -113,6 +117,7 @@ export function useFixedExpenses() {
             return true;
         } catch (error) {
             console.error("Error updating fixed expense:", error);
+            Sentry.captureException(error);
             return false;
         }
     };

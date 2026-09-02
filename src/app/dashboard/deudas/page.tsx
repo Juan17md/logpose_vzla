@@ -205,7 +205,7 @@ export default function DebtsPage() {
                                     onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('por_cobrar'); } }}
                                     role="button"
                                     tabIndex={0}
-                                    className={`flex-none w-44 p-5 rounded-3xl border transition-colors relative overflow-hidden ${activeTab === 'por_cobrar'
+                                    className={`flex-none w-44 p-5 rounded-[2.5rem] border transition-colors relative overflow-hidden ${activeTab === 'por_cobrar'
                                         ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg '
                                         : 'bg-slate-900/50 border-slate-700/30'
                                         }`}
@@ -227,7 +227,7 @@ export default function DebtsPage() {
                                     onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('por_pagar'); } }}
                                     role="button"
                                     tabIndex={0}
-                                    className={`flex-none w-44 p-5 rounded-3xl border transition-colors relative overflow-hidden ${activeTab === 'por_pagar'
+                                    className={`flex-none w-44 p-5 rounded-[2.5rem] border transition-colors relative overflow-hidden ${activeTab === 'por_pagar'
                                         ? 'bg-red-500/10 border-red-500/50 shadow-lg '
                                         : 'bg-slate-900/50 border-slate-700/30'
                                         }`}
@@ -289,7 +289,7 @@ export default function DebtsPage() {
                                             return (
                                                 <div
                                                     key={debt.id}
-                                                    className="bg-slate-900/60 backdrop-blur-md border border-white/5 rounded-3xl p-5 relative overflow-hidden"
+                                                    className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-[2.5rem] p-5 relative overflow-hidden"
                                                 >
                                                     <div className="flex justify-between items-start mb-4">
                                                         <div className="flex items-center gap-4">
@@ -347,7 +347,7 @@ export default function DebtsPage() {
                                                     </div>
 
                                                     {debt.dueDate && (
-                                                        <div className="mt-4 pt-3 border-t border-white/5 flex items-center gap-2 text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                                                        <div className="mt-4 pt-3 border-t border-slate-800 flex items-center gap-2 text-[9px] font-bold text-slate-600 uppercase tracking-widest">
                                                             <FiClock size={12} className={new Date(debt.dueDate) < new Date() && !isFullyPaid ? 'text-red-500/50' : ''} />
                                                             Vence: {new Date(debt.dueDate).toLocaleDateString()}
                                                         </div>
@@ -386,7 +386,7 @@ export default function DebtsPage() {
                             <button
                                 onClick={handleAddDebtClick}
                                 aria-label="Nueva deuda"
-                                className="fixed right-4 z-40 bottom-safe-fab-above w-14 h-14 bg-linear-to-br from-violet-600 to-indigo-700 text-white rounded-2xl shadow-lg  flex items-center justify-center border border-white/20 active:from-violet-700"
+                                className="fixed right-4 z-40 bottom-safe-fab-above w-14 h-14 bg-linear-to-br from-violet-600 to-violet-700 text-white rounded-2xl shadow-lg flex items-center justify-center border border-white/20 active:from-violet-700"
                             >
                                 <FiPlus size={28} />
                             </button>
@@ -412,7 +412,7 @@ export default function DebtsPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 shadow-lg relative overflow-hidden">
+                            <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-[2.5rem] p-6 shadow-lg relative overflow-hidden">
                                 <div className="absolute -top-24 -left-24 w-48 h-48 bg-violet-500/10 rounded-full blur-[80px]" />
                                 
                                 <div className="relative z-10">
@@ -452,7 +452,7 @@ export default function DebtsPage() {
                     
                     {/* LEFT COLUMN: Sticky Form (1/3) */}
                     <div className="w-full lg:w-[380px] lg:sticky lg:top-8 flex-none">
-                        <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 shadow-lg relative overflow-hidden group">
+                        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-[2.5rem] p-6 shadow-lg relative overflow-hidden group">
                             {/* Decorative background circle */}
                             <div className="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-[80px] group-hover:bg-amber-500/20 transition-colors duration-700" />
                             
@@ -503,7 +503,7 @@ export default function DebtsPage() {
                     {/* RIGHT COLUMN: Content (2/3) */}
                     <div className="flex-1 space-y-8 w-full">
                         {/* Header Modern / Urban */}
-                        <div className="relative overflow-hidden bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem] group min-h-[160px] flex items-center">
+                        <div className="relative overflow-hidden bg-slate-900/50 border border-slate-800 p-8 rounded-[2.5rem] group min-h-[160px] flex items-center">
                         {/* blur decorativo eliminado — radio 100px/80px costoso en GPU móvil */}
                             
                             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between w-full gap-6">
@@ -523,7 +523,7 @@ export default function DebtsPage() {
                                         onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab("por_cobrar"); } }}
                                         role="button"
                                         tabIndex={0}
-                                        className={`px-6 py-4 rounded-3xl border transition-colors cursor-pointer group/stat ${activeTab === "por_cobrar" ? "bg-emerald-500/10 border-emerald-500/50 shadow-lg " : "bg-slate-950/40 border-white/5 hover:border-emerald-500/20"}`}
+                                        className={`px-6 py-4 rounded-[2.5rem] border transition-colors cursor-pointer group/stat ${activeTab === "por_cobrar" ? "bg-emerald-500/10 border-emerald-500/50 shadow-lg " : "bg-slate-950/40 border-slate-800 hover:border-emerald-500/20"}`}
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${activeTab === "por_cobrar" ? "bg-emerald-500 text-slate-950" : "bg-slate-900 text-slate-500 group-hover/stat:text-emerald-400"}`}>
@@ -541,7 +541,7 @@ export default function DebtsPage() {
                                         onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab("por_pagar"); } }}
                                         role="button"
                                         tabIndex={0}
-                                        className={`px-6 py-4 rounded-3xl border transition-colors cursor-pointer group/stat ${activeTab === "por_pagar" ? "bg-red-500/10 border-red-500/50 shadow-lg " : "bg-slate-950/40 border-white/5 hover:border-red-500/20"}`}
+                                        className={`px-6 py-4 rounded-[2.5rem] border transition-colors cursor-pointer group/stat ${activeTab === "por_pagar" ? "bg-red-500/10 border-red-500/50 shadow-lg " : "bg-slate-950/40 border-slate-800 hover:border-red-500/20"}`}
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${activeTab === "por_pagar" ? "bg-red-500 text-slate-950" : "bg-slate-900 text-slate-500 group-hover/stat:text-red-400"}`}>
@@ -560,7 +560,7 @@ export default function DebtsPage() {
                         {/* List Area */}
                         <div className="space-y-6">
                             {/* Toolbar */}
-                            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-950/40 p-4 rounded-3xl border border-white/5 backdrop-blur-md">
+                            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-950/40 p-4 rounded-[2.5rem] border border-slate-800 backdrop-blur-md">
                                 <div className="relative w-full md:w-80 group">
                                     <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-600 group-focus-within:text-amber-500 transition-colors" />
                                     <input
@@ -571,7 +571,7 @@ export default function DebtsPage() {
                                             setSearchTerm(e.target.value);
                                             setCurrentPage(1);
                                         }}
-                                        className="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-amber-500/30 placeholder-slate-600 transition-colors font-medium"
+                                        className="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-amber-500/30 placeholder-slate-600 transition-colors font-medium"
                                     />
                                 </div>
                                 
@@ -584,8 +584,8 @@ export default function DebtsPage() {
                             {/* Grid List */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {paginatedDebts.length === 0 ? (
-                                    <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-[3rem] bg-slate-950/20">
-                                        <div className="w-20 h-20 bg-slate-900/50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-700 italic font-black text-2xl border border-white/5">
+                                    <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-800 rounded-[3rem] bg-slate-950/20">
+                                        <div className="w-20 h-20 bg-slate-900/50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-700 italic font-black text-2xl border border-slate-800">
                                             ?
                                         </div>
                                         <p className="text-slate-400 font-black uppercase tracking-[3px] text-sm">
@@ -607,7 +607,7 @@ export default function DebtsPage() {
                                         return (
                                             <div 
                                                 key={debt.id} 
-                                                className={`bg-slate-950/40 border transition-colors duration-300 rounded-[2.5rem] p-6 relative group/card flex flex-col ${isFullyPaid ? 'border-emerald-500/10' : (editingDebt?.id === debt.id ? 'border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/20' : 'border-white/5 hover:border-white/10')}`}
+                                                className={`bg-slate-950/40 border transition-colors duration-300 rounded-[2.5rem] p-6 relative group/card flex flex-col ${isFullyPaid ? 'border-emerald-500/10' : (editingDebt?.id === debt.id ? 'border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/20' : 'border-slate-800 hover:border-slate-700/50')}`}
                                             >
                                                 {isFullyPaid && (
                                                     <div className="absolute top-6 right-6">
@@ -631,12 +631,12 @@ export default function DebtsPage() {
 
                                                 {/* Amount Stats Modern */}
                                                 <div className="grid grid-cols-2 gap-3 mb-6">
-                                                    <div className="bg-slate-900/60 p-4 rounded-3xl border border-white/5 relative overflow-hidden group/statcard">
+                                                    <div className="bg-slate-900/60 p-4 rounded-[2.5rem] border border-slate-800 relative overflow-hidden group/statcard">
                                                         <div className="absolute inset-x-0 bottom-0 h-1 bg-slate-800" />
                                                         <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Inicial</p>
                                                         <p className="text-lg font-bold text-slate-400">{simboloDeuda} {montoInicialDeuda.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
                                                     </div>
-                                                    <div className={`p-4 rounded-3xl border relative overflow-hidden group/statcard ${isFullyPaid ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-white/5 border-white/5'}`}>
+                                                    <div className={`p-4 rounded-[2.5rem] border relative overflow-hidden group/statcard ${isFullyPaid ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-white/5 border-slate-800'}`}>
                                                         <div className={`absolute inset-x-0 bottom-0 h-1 ${isFullyPaid ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                                                         <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Restante</p>
                                                         <p className={`text-lg font-bold ${remaining > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
@@ -648,13 +648,13 @@ export default function DebtsPage() {
                                                 {/* Actions Section */}
                                                 <div className="mt-auto flex items-center gap-2">
                                                     {isFullyPaid ? (
-                                                        <div className="flex-1 flex justify-center py-2.5 bg-slate-900/50 rounded-2xl border border-white/5">
+                                                        <div className="flex-1 flex justify-center py-2.5 bg-slate-900/50 rounded-2xl border border-slate-800">
                                                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Transacción Completada</span>
                                                         </div>
                                                     ) : (
                                                         <button
                                                             onClick={() => handleAddPaymentClick(debt)}
-                                                            className="flex-1 py-3 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl font-bold text-xs transition-colors shadow-xl shadow-emerald-500/10 border border-white/10 flex items-center justify-center gap-2 group-hover/card:scale-[1.02]"
+                                                            className="flex-1 py-3 bg-linear-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white rounded-2xl font-bold text-xs transition-colors shadow-lg border border-slate-700/50 flex items-center justify-center gap-2 group-hover/card:scale-[1.02]"
                                                         >
                                                             <FiDollarSign size={14} /> Registrar Abono
                                                         </button>
@@ -663,14 +663,14 @@ export default function DebtsPage() {
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={() => handleEditDebtClick(debt)}
-                                                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-2xl border border-white/5 transition-colors"
+                                                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-2xl border border-slate-800 transition-colors"
                                                             title="Editar"
                                                         >
                                                             <FiEdit2 size={16} />
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteClick(debt.id)}
-                                                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-red-500 bg-slate-900/50 hover:bg-red-500/10 rounded-2xl border border-white/5 transition-colors"
+                                                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-red-500 bg-slate-900/50 hover:bg-red-500/10 rounded-2xl border border-slate-800 transition-colors"
                                                             title="Eliminar"
                                                         >
                                                             <FiTrash2 size={16} />
@@ -679,7 +679,7 @@ export default function DebtsPage() {
                                                 </div>
 
                                                 {/* Footer metadata */}
-                                                <div className="mt-5 pt-4 border-t border-white/5 flex justify-between items-center px-1">
+                                                <div className="mt-5 pt-4 border-t border-slate-800 flex justify-between items-center px-1">
                                                     <div className="flex items-center gap-3">
                                                         <div className="h-1 w-12 bg-slate-900 rounded-full overflow-hidden">
                                                             <div className={`h-full ${isFullyPaid ? 'bg-emerald-500' : 'bg-amber-400'}`} style={{ width: `${progress}%` }} />

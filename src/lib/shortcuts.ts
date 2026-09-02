@@ -14,33 +14,6 @@ import { convertirMontoParaCuenta, type MonedaSoportada } from '@/lib/bankAccoun
 import { getRates } from '@/lib/currency';
 import { createVenezuelaDate } from '@/lib/timezone';
 
-// ─── Categorías permitidas ─────────────────────────────────────
-// Mismas que inicializa la app al primer login (src/contexts/CategoriesContext.tsx).
-const CATEGORIAS_GASTO = [
-  'Comida',
-  'Hogar',
-  'Transporte',
-  'Servicios',
-  'Salud',
-  'Educación',
-  'Entretenimiento',
-  'Mascotas',
-  'Regalos',
-  'Ropa',
-  'Seguros',
-  'Belleza',
-  'Deudas',
-  'Inversiones',
-  'Otra',
-] as const;
-
-const CATEGORIAS_INGRESO = ['Salario', 'Freelance'] as const;
-
-const CATEGORIAS_POR_TIPO = {
-  ingreso: CATEGORIAS_INGRESO,
-  gasto: CATEGORIAS_GASTO,
-} as const;
-
 // ─── Esquema de validación ─────────────────────────────────────
 
 export const transaccionShortcutSchema = z

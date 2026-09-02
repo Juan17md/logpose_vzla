@@ -3,6 +3,7 @@ import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, 
 import { db, auth } from "@/lib/firebase";
 import { User } from "firebase/auth";
 import { listaComprasSchema, itemListaSchema } from "@/lib/schemas";
+import * as Sentry from "@sentry/nextjs";
 
 export interface ShoppingItem {
     id: string;
@@ -149,6 +150,7 @@ export const useShoppingLists = () => {
             });
         } catch (e) {
             console.error("Error toggling item:", e);
+            Sentry.captureException(e);
         }
     };
 
@@ -180,6 +182,7 @@ export const useShoppingLists = () => {
             });
         } catch (e) {
             console.error("Error updating item progress:", e);
+            Sentry.captureException(e);
         }
     };
 
@@ -199,6 +202,7 @@ export const useShoppingLists = () => {
             });
         } catch (e) {
             console.error("Error deleting item:", e);
+            Sentry.captureException(e);
         }
     };
 
@@ -235,6 +239,7 @@ export const useShoppingLists = () => {
             });
         } catch (e) {
             console.error("Error updating item:", e);
+            Sentry.captureException(e);
         }
     };
 

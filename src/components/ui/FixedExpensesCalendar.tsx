@@ -80,7 +80,7 @@ export default function FixedExpensesCalendar({ expenses, onPayExpense }: FixedE
         <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-[2.5rem] p-6 shadow-lg">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <span className="bg-clip-text text-transparent bg-linear-to-r from-emerald-400 to-cyan-400">
+                    <span className="bg-clip-text text-transparent bg-linear-to-r from-emerald-400 to-emerald-400">
                         {monthNames[month]}
                     </span>
                     <span className="text-slate-500">{year}</span>

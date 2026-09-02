@@ -132,7 +132,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                                                 currency === curr
                                                     ? curr === "USD" 
                                                         ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-lg" 
-                                                        : "bg-slate-800 text-cyan-400 border border-cyan-500/30 shadow-lg"
+                                                        : "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-lg"
                                                     : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 border border-transparent"
                                             }`}
                                         >
@@ -189,12 +189,12 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                     </div>
                 </div>
 
-                <div className="flex gap-3 pt-6 border-t border-white/5">
+                <div className="flex gap-3 pt-6 border-t border-slate-800">
                     <button
                         type="button"
                         onClick={() => onCancel ? onCancel() : router.back()}
                         disabled={isLoading}
-                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-slate-800 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         <FiX size={16} />
                         CANCELAR
@@ -204,7 +204,7 @@ export default function DebtForm({ initialData, defaultType = "por_cobrar", onSu
                         disabled={isLoading}
                         className={`flex-[2] py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 border border-slate-700/50 ${
                             type === 'por_cobrar' 
-                            ? 'bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white '
+                            ? 'bg-linear-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white '
                             : 'bg-linear-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white '
                         }`}
                     >

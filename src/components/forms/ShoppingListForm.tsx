@@ -37,12 +37,12 @@ export default function ShoppingListForm({ initialData, onSubmit, isLoading }: S
                     disabled={isLoading}
                 />
 
-                <div className="flex gap-3 pt-6 border-t border-white/5">
+                <div className="flex gap-3 pt-6 border-t border-slate-800">
                     <button
                         type="button"
                         onClick={() => router.back()}
                         disabled={isLoading}
-                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-slate-800 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         <FiX size={16} />
                         CANCELAR
@@ -50,7 +50,7 @@ export default function ShoppingListForm({ initialData, onSubmit, isLoading }: S
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-white/5 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-1 py-4 px-4 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] border border-slate-800 text-slate-500 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isLoading ? (
                             <div className="w-5 h-5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin"></div>

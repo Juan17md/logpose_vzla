@@ -141,7 +141,7 @@ export default function CuentaForm({
                                                     name: b.nombre,
                                                     group: etiquetasTipo[b.tipo] || b.tipo
                                                 }))}
-                                                className="bg-slate-950/40 border-white/5 rounded-2xl py-3.5"
+                                                className="bg-slate-950/40 border-slate-800 rounded-2xl py-3.5"
                                             />
                                         )}
                                     />
@@ -160,7 +160,7 @@ export default function CuentaForm({
                                                 {...field}
                                                 type="text"
                                                 placeholder="Ej: Ahorros Personales"
-                                                className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-600"
+                                                className="w-full bg-slate-950/40 border border-slate-800 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-600"
                                             />
                                         )}
                                     />
@@ -181,7 +181,7 @@ export default function CuentaForm({
                                                     {...field}
                                                     type="text"
                                                     placeholder="Escribe el nombre aquí..."
-                                                    className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors"
+                                                    className="w-full bg-slate-950/40 border border-slate-800 rounded-2xl px-5 py-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors"
                                                 />
                                             )}
                                         />
@@ -206,8 +206,8 @@ export default function CuentaForm({
                                                     moneda === m.id
                                                         ? "bg-violet-500/20 border-violet-500/50 text-white shadow-lg "
                                                         : modoEdicion 
-                                                            ? "bg-slate-950/20 border-white/5 text-slate-600 opacity-50 cursor-not-allowed"
-                                                            : "bg-slate-950/40 border-white/5 text-slate-500 hover:border-white/10 hover:bg-slate-950/60"
+                                                            ? "bg-slate-950/20 border-slate-800 text-slate-600 opacity-50 cursor-not-allowed"
+                                                            : "bg-slate-950/40 border-slate-800 text-slate-500 hover:border-slate-700/50 hover:bg-slate-950/60"
                                                 }`}
                                             >
                                                 <span className="text-base font-black">{m.simbolo}</span>
@@ -237,7 +237,7 @@ export default function CuentaForm({
                                                         type="text"
                                                         inputMode="decimal"
                                                         placeholder="0.00"
-                                                        className="w-full pl-14 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-5 text-white text-2xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-700"
+                                                        className="w-full pl-14 bg-slate-950/40 border border-slate-800 rounded-2xl px-5 py-5 text-white text-2xl font-black outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-colors placeholder:text-slate-700"
                                                     />
                                                 )}
                                         />
@@ -246,7 +246,7 @@ export default function CuentaForm({
                             </div>
 
                             {/* Selector de Color y Botones */}
-                            <div className="pt-4 border-t border-white/5 space-y-5">
+                            <div className="pt-4 border-t border-slate-800 space-y-5">
                                 <div className="space-y-2">
                                     <label className="block text-[10px] font-black uppercase tracking-[2px] text-slate-500 ml-1">
                                         Identificador Visual
@@ -287,7 +287,7 @@ export default function CuentaForm({
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || (esBancoPersonalizado && !watch("bancoPersonalizado")?.trim())}
-                                        className="flex-2 px-6 py-3.5 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-xl shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors border border-violet-400/30"
+                                        className="flex-2 px-6 py-3.5 bg-linear-to-r from-violet-600 to-violet-600 hover:from-violet-500 hover:to-violet-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors border border-violet-400/30"
                                     >
                                         {isSubmitting ? (
                                             <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />

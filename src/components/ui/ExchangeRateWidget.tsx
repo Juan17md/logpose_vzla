@@ -30,7 +30,7 @@ export default function ExchangeRateWidget() {
     const renderRateSlot = (label: string, value: number, symbol: string) => {
 
         return (
-            <div className="flex flex-col px-4 md:px-6 first:pl-0 last:pr-0 border-r border-white/5 last:border-0 group/slot">
+            <div className="flex flex-col px-4 md:px-6 first:pl-0 last:pr-0 border-r border-slate-800 last:border-0 group/slot">
                 <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-[8px] md:text-[9px] text-slate-500 font-bold uppercase tracking-widest">{label}</span>
                 </div>

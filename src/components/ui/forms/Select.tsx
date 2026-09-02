@@ -100,7 +100,7 @@ export default function Select<T extends string | number = string>({
                                 >
                                     <Listbox.Options
                                         static
-                                        className="max-h-72 w-full overflow-auto rounded-3xl bg-slate-900/95 backdrop-blur-2xl border border-slate-700/50 p-2 text-base shadow-lg ring-1 ring-white/10 focus:outline-none sm:text-sm custom-scrollbar"
+                                        className="max-h-72 w-full overflow-auto rounded-[2.5rem] bg-slate-900/95 backdrop-blur-2xl border border-slate-700/50 p-2 text-base shadow-lg ring-1 ring-white/10 focus:outline-none sm:text-sm custom-scrollbar"
                                     >
                                         {options.length === 0 ? (
                                             <div className="py-8 px-4 text-center">

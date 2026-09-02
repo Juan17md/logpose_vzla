@@ -83,7 +83,7 @@ export default function DerechosPage() {
     <div className={`min-h-screen flex w-full ${ibmPlexSans.variable} ${outfit.variable} bg-[#06080F] overflow-hidden relative`} style={{ fontFamily: "var(--font-ibm)" }}>
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <div className="orb1 absolute -top-[20%] -left-[10%] w-[800px] h-[800px] rounded-full bg-violet-500/18 blur-[100px]" />
-        <div className="orb2 absolute -bottom-[25%] -right-[15%] w-[900px] h-[900px] rounded-full bg-teal-600/14 blur-[120px]" />
+        <div className="orb2 absolute -bottom-[25%] -right-[15%] w-[900px] h-[900px] rounded-full bg-emerald-600/14 blur-[120px]" />
         <div className="orb3 absolute top-[30%] left-[35%] w-[500px] h-[500px] rounded-full bg-amber-500/12 blur-[90px]" />
         <div className="grid-anim grid-pattern absolute inset-0" />
         <div className="glow-left absolute inset-0" />
@@ -95,7 +95,7 @@ export default function DerechosPage() {
           <div className="card-glow">
             <div className="relative bg-[#0B0F1A] rounded-[1.75rem] p-8 sm:p-12 shadow-lg overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-violet-500/40 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-teal-500/20 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-emerald-500/20 to-transparent" />
 
               <div>
                 <div className="flex items-center gap-4 mb-8">
@@ -185,7 +185,7 @@ export default function DerechosPage() {
                     </p>
                     <button
                       type="submit"
-                      className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-linear-to-br from-violet-500 to-indigo-600 text-white text-sm font-bold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:brightness-110 active:scale-[0.98] transition-[transform,color] duration-300 cursor-pointer"
+                      className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-linear-to-br from-violet-500 to-violet-600 text-white text-sm font-bold shadow-lg hover: hover:brightness-110 active:scale-[0.98] transition-[transform,color] duration-300 cursor-pointer"
                     >
                       <FiSend size={15} />
                       Enviar solicitud

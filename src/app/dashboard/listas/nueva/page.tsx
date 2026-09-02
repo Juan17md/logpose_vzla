@@ -28,7 +28,7 @@ export default function NuevaListaPage() {
     return (
         <div className="space-y-6 max-w-4xl mx-auto pb-10">
             {/* Header */}
-            <div className="bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-6 md:p-8 rounded-3xl shadow-lg relative overflow-hidden backdrop-blur-xl">
+            <div className="bg-linear-to-br from-slate-900/80 to-slate-900/50 border border-slate-700/50 p-6 md:p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                     <FiShoppingCart className="text-7xl md:text-9xl text-amber-400" />
                 </div>

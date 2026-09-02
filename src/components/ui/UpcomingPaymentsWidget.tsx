@@ -40,15 +40,15 @@ export default function UpcomingPaymentsWidget() {
     const progreso = totalFijos > 0 ? (totalPagados / totalFijos) * 100 : 0;
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-md p-5 rounded-[2.5rem] border border-cyan-500/20 shadow-lg relative overflow-hidden group hover:border-cyan-500/40 transition-colors">
+        <div className="bg-slate-900/50 backdrop-blur-md p-5 rounded-[2.5rem] border border-emerald-500/20 shadow-lg relative overflow-hidden group hover:border-emerald-500/40 transition-colors">
             {/* blur-3xl decorativo eliminado — widget aparece múltiples veces en el grid */}
 
             <div className="relative z-10">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <div className="p-2 bg-cyan-500/20 rounded-xl border border-cyan-500/20">
-                            <FiCalendar className="text-cyan-400" size={18} />
+                        <div className="p-2 bg-emerald-500/20 rounded-xl border border-emerald-500/20">
+                            <FiCalendar className="text-emerald-400" size={18} />
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-white">Próximos Pagos</h3>
@@ -61,11 +61,11 @@ export default function UpcomingPaymentsWidget() {
                 <div className="mb-4">
                     <div className="flex items-center justify-between mb-1.5">
                         <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Progreso del mes</span>
-                        <span className="text-xs font-bold text-cyan-400">{progreso.toFixed(0)}%</span>
+                        <span className="text-xs font-bold text-emerald-400">{progreso.toFixed(0)}%</span>
                     </div>
                     <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
                         <div
-                            className="h-full bg-gradient-to-r from-cyan-500 to-teal-400 rounded-full transition-colors duration-700"
+                            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-colors duration-700"
                             style={{ width: `${Math.min(progreso, 100)}%` }}
                         />
                     </div>

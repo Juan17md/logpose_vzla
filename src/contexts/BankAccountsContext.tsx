@@ -33,6 +33,7 @@ import type {
     TipoOperacion,
 } from "@/lib/bankAccounts";
 import { obtenerColorAleatorio } from "@/lib/bankAccounts";
+import * as Sentry from "@sentry/nextjs";
 
 // ─── Tipos del Context ────────────────────────────────────────
 
@@ -199,6 +200,7 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
                     setLoading(false);
                 }, (error) => {
                     console.error("Error fetching bank accounts:", error);
+                    Sentry.captureException(error);
                     setLoading(false);
                 });
 
@@ -232,6 +234,7 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
                     setLoadingTransacciones(false);
                 }, (error) => {
                     console.error("Error fetching account transactions:", error);
+                    Sentry.captureException(error);
                     setLoadingTransacciones(false);
                 });
             } else {
@@ -279,6 +282,7 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
             return docRef.id;
         } catch (error) {
             console.error("Error creating bank account:", error);
+            Sentry.captureException(error);
             return null;
         }
     }, []);
@@ -300,6 +304,7 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
             return true;
         } catch (error) {
             console.error("Error editing bank account:", error);
+            Sentry.captureException(error);
             return false;
         }
     }, []);
@@ -319,6 +324,7 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
             return true;
         } catch (error) {
             console.error("Error deleting bank account:", error);
+            Sentry.captureException(error);
             return false;
         }
     }, []);
@@ -337,6 +343,7 @@ export function BankAccountsProvider({ children }: { children: ReactNode }) {
             return true;
         } catch (error) {
             console.error("Error toggling account exclusion:", error);
+            Sentry.captureException(error);
             return false;
         }
     }, []);

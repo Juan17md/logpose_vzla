@@ -146,7 +146,7 @@ export default function BankLogo({ bankId, className, size = 32 }: BankLogoProps
 
     return (
         <div 
-            className={cn("flex items-center justify-center shrink-0 overflow-hidden bg-white/5 rounded-xl border border-white/5", className)}
+            className={cn("flex items-center justify-center shrink-0 overflow-hidden bg-white/5 rounded-xl border border-slate-800", className)}
             style={{ width: size, height: size }}
         >
             {currentUrl && imgAttempt < 3 ? (

@@ -22,7 +22,7 @@ import { createVenezuelaDate } from "@/lib/timezone";
 
 // ─── Placeholder ligero para widgets durante carga ────────────────────────────
 const SkeletonWidget = () => (
-    <div className="bg-slate-800/40 rounded-[2.5rem] animate-pulse h-36 w-full" aria-hidden="true" />
+    <div className="bg-slate-800/50 rounded-[2.5rem] animate-pulse h-36 w-full" aria-hidden="true" />
 );
 
 // ─── Imports diferidos — solo se descargan cuando el DOM los necesita ─────────
@@ -245,7 +245,7 @@ export default function DashboardPage() {
                             </h2>
                             <button
                                 onClick={() => setIsPrivacyMode(!isPrivacyMode)}
-                                className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 transition-colors"
+                                className="p-2 rounded-xl bg-white/5 border border-slate-700/50 text-slate-400 transition-colors"
                             >
                                 {isPrivacyMode ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                             </button>
@@ -315,12 +315,12 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/ahorros"
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-indigo-500/20 to-indigo-600/10 border border-indigo-500/30 rounded-2xl transition-colors"
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-violet-500/20 to-violet-600/10 border border-violet-500/30 rounded-2xl transition-colors"
                         >
-                            <div className="w-10 h-10 bg-indigo-500/30 rounded-xl flex items-center justify-center">
-                                <FiTarget className="text-indigo-400" size={22} />
+                            <div className="w-10 h-10 bg-violet-500/30 rounded-xl flex items-center justify-center">
+                                <FiTarget className="text-violet-400" size={22} />
                             </div>
-                            <span className="text-[10px] font-semibold text-indigo-400">Ahorros</span>
+                            <span className="text-[10px] font-semibold text-violet-400">Ahorros</span>
                         </MotionLink>
 
                         <MotionLink
@@ -335,12 +335,12 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/gastos-fijos"
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 rounded-2xl transition-colors"
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 rounded-2xl transition-colors"
                         >
-                            <div className="w-10 h-10 bg-cyan-500/30 rounded-xl flex items-center justify-center">
-                                <FiCalendar className="text-cyan-400" size={22} />
+                            <div className="w-10 h-10 bg-emerald-500/30 rounded-xl flex items-center justify-center">
+                                <FiCalendar className="text-emerald-400" size={22} />
                             </div>
-                            <span className="text-[10px] font-semibold text-cyan-400">Fijos</span>
+                            <span className="text-[10px] font-semibold text-emerald-400">Fijos</span>
                         </MotionLink>
 
                         <MotionLink
@@ -355,12 +355,12 @@ export default function DashboardPage() {
 
                         <MotionLink
                             href="/dashboard/cuentas"
-                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-sky-500/20 to-sky-600/10 border border-sky-500/30 rounded-2xl transition-colors"
+                            className="flex-none flex flex-col items-center justify-center gap-2 w-20 h-20 bg-linear-to-br from-violet-500/20 to-violet-600/10 border border-violet-500/30 rounded-2xl transition-colors"
                         >
-                            <div className="w-10 h-10 bg-sky-500/30 rounded-xl flex items-center justify-center">
-                                <FiCreditCard className="text-sky-400" size={22} />
+                            <div className="w-10 h-10 bg-violet-500/30 rounded-xl flex items-center justify-center">
+                                <FiCreditCard className="text-violet-400" size={22} />
                             </div>
-                            <span className="text-[10px] font-semibold text-sky-400">Cuentas</span>
+                            <span className="text-[10px] font-semibold text-violet-400">Cuentas</span>
                         </MotionLink>
 
                         <MotionLink
@@ -498,7 +498,7 @@ export default function DashboardPage() {
             {/* ===== DESKTOP LAYOUT (Original) ===== */}
             <div className="hidden md:flex flex-col gap-8 pb-10">
                 {/* Header */}
-                <div className="order-1 bg-linear-to-br from-slate-900/80 to-slate-900/40 border border-slate-700/50 p-5 md:p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl">
+                <div className="order-1 bg-linear-to-br from-slate-900/80 to-slate-900/50 border border-slate-700/50 p-5 md:p-8 rounded-[2.5rem] shadow-lg relative overflow-hidden backdrop-blur-xl">
                     <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10">
                         <FiActivity className="text-7xl md:text-9xl text-amber-400" />
                     </div>
@@ -520,7 +520,7 @@ export default function DashboardPage() {
                                 Resumen financiero consolidado de tu ecosistema.
                             </p>
                         </div>
-                        <div className="bg-slate-800/40 backdrop-blur-md p-1 px-2 rounded-2xl border border-slate-700/50 shadow-inner flex items-center">
+                        <div className="bg-slate-800/50 backdrop-blur-md p-1 px-2 rounded-2xl border border-slate-700/50 shadow-inner flex items-center">
                             <ExchangeRateWidget />
                         </div>
                     </div>
@@ -555,9 +555,9 @@ export default function DashboardPage() {
                             </div>
                         </Link>
 
-                        <Link href="/dashboard/ahorros" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/50 p-4 rounded-2xl transition-colors flex items-center gap-4 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-indigo-500/20 transition-colors"></div>
-                            <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl group-hover:scale-110 transition-transform shadow-inner border border-indigo-500/10">
+                        <Link href="/dashboard/ahorros" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-violet-500/50 p-4 rounded-2xl transition-colors flex items-center gap-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-violet-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-violet-500/20 transition-colors"></div>
+                            <div className="p-3 bg-violet-500/10 text-violet-400 rounded-xl group-hover:scale-110 transition-transform shadow-inner border border-violet-500/10">
                                 <FiTarget size={24} />
                             </div>
                             <div className="relative z-10">
@@ -577,9 +577,9 @@ export default function DashboardPage() {
                             </div>
                         </Link>
 
-                        <Link href="/dashboard/gastos-fijos" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-cyan-500/50 p-4 rounded-2xl transition-colors flex items-center gap-4 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-cyan-500/20 transition-colors"></div>
-                            <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl group-hover:scale-110 transition-transform shadow-inner border border-cyan-500/10">
+                        <Link href="/dashboard/gastos-fijos" className="group bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/50 p-4 rounded-2xl transition-colors flex items-center gap-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl -mr-8 -mt-8 group-hover:bg-emerald-500/20 transition-colors"></div>
+                            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl group-hover:scale-110 transition-transform shadow-inner border border-emerald-500/10">
                                 <FiCalendar size={24} />
                             </div>
                             <div className="relative z-10">
@@ -617,7 +617,7 @@ export default function DashboardPage() {
                                     }
                                 </p>
                             </div>
-                            <div className="p-3 bg-violet-500/20 rounded-2xl border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+                            <div className="p-3 bg-violet-500/20 rounded-2xl border border-violet-500/20 shadow-lg">
                                 <FiCreditCard className="text-2xl text-violet-400" />
                             </div>
                         </div>
@@ -653,7 +653,7 @@ export default function DashboardPage() {
                                     }
                                 </p>
                             </div>
-                            <div className="p-3 bg-emerald-500/20 rounded-2xl border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                            <div className="p-3 bg-emerald-500/20 rounded-2xl border border-emerald-500/20 shadow-lg">
                                 <FiTrendingUp className="text-2xl text-emerald-400" />
                             </div>
                         </div>
@@ -685,7 +685,7 @@ export default function DashboardPage() {
                                     }
                                 </p>
                             </div>
-                            <div className="p-3 bg-red-500/20 rounded-2xl border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                            <div className="p-3 bg-red-500/20 rounded-2xl border border-red-500/20 shadow-lg">
                                 <FiTrendingDown className="text-2xl text-red-400" />
                             </div>
                         </div>
@@ -693,7 +693,7 @@ export default function DashboardPage() {
                         {stats.monthlyIncome > 0 && (
                             <div className="w-full bg-slate-800 rounded-full h-2 mt-2 border border-slate-700/50 overflow-hidden">
                                 <div
-                                    className="bg-linear-to-r from-red-500 to-orange-500 h-full rounded-full transition-colors duration-500"
+                                    className="bg-linear-to-r from-red-500 to-amber-500 h-full rounded-full transition-colors duration-500"
                                     style={{ width: `${Math.min((stats.monthlyExpense / stats.monthlyIncome) * 100, 100)}%` }}
                                 ></div>
                             </div>
@@ -835,7 +835,7 @@ export default function DashboardPage() {
                         const cuenta = cuentas.find(c => c.id === cuentaAjustando);
                         if (!cuenta) return null;
                         return (
-                            <div className="bg-slate-800/40 p-4 rounded-2xl border border-amber-500/20">
+                            <div className="bg-slate-800/50 p-4 rounded-2xl border border-amber-500/20">
                                 <div className="flex justify-between items-center mb-3">
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full bg-amber-500 shadow-lg"></div>
@@ -879,7 +879,7 @@ export default function DashboardPage() {
                         <button
                             type="submit"
                             disabled={!cuentaAjustando || cuentas.length === 0}
-                            className="px-8 py-2.5 bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold rounded-xl transition-transform shadow-lg shadow-amber-500/20 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                            className="px-8 py-2.5 bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-bold rounded-xl transition-transform shadow-lg active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                         >
                             Actualizar Saldo
                         </button>

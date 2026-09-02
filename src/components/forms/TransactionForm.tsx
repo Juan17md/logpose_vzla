@@ -866,7 +866,7 @@ export default function TransactionForm() {
                                             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors duration-300 ${field.value === curr
                                                 ? curr === "USD" 
                                                     ? "bg-slate-800 text-emerald-400 border border-emerald-500/20 shadow-md" 
-                                                    : "bg-slate-800 text-cyan-400 border border-cyan-500/20 shadow-md"
+                                                    : "bg-slate-800 text-emerald-400 border border-emerald-500/20 shadow-md"
                                                 : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/10 border border-transparent"
                                                 }`}
                                         >
@@ -1176,7 +1176,7 @@ export default function TransactionForm() {
                 {/* Commission Section */}
                 {!transactionToEdit && (
                     <div className="pt-1">
-                        <div className="bg-slate-950/20 border border-slate-800/50 p-4 rounded-3xl space-y-3.5 backdrop-blur-md">
+                        <div className="bg-slate-950/20 border border-slate-800/50 p-4 rounded-[2.5rem] space-y-3.5 backdrop-blur-md">
                             <label className="flex items-center gap-3 cursor-pointer group w-fit">
                                 <div className="relative flex items-center">
                                     <Controller
@@ -1220,7 +1220,7 @@ export default function TransactionForm() {
                                                             { id: "p2p", label: "P2P (0.3%)", desc: "Pago Móvil", icono: FiSmartphone, color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
                                                             { id: "p2c", label: "P2C (1.5%)", desc: "Comercio", icono: FiShoppingBag, color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
                                                             { id: "c2p_vuelto", label: "C2P (2.0%)", desc: "Vuelto Comercio", icono: FiRefreshCw, color: "text-rose-400 bg-rose-500/10 border-rose-500/20" },
-                                                            { id: "interbancaria", label: "Interban. (0.3%)", desc: "Otros Bancos", icono: FiRepeat, color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20" },
+                                                            { id: "interbancaria", label: "Interban. (0.3%)", desc: "Otros Bancos", icono: FiRepeat, color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
                                                             { id: "custom", label: "Personalizada", desc: "Monto libre", icono: FiEdit2, color: "text-violet-400 bg-violet-500/10 border-violet-500/20" }
                                                         ].map((opt) => {
                                                             const IconoOpt = opt.icono;
@@ -1314,7 +1314,7 @@ export default function TransactionForm() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="hidden md:flex w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+                    className="hidden md:flex w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-violet-600 hover:from-violet-500 hover:to-violet-500 text-white font-black py-4 rounded-2xl shadow-lg border border-violet-400/30 items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
                 >
                     <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                     {loading ? (
@@ -1339,7 +1339,7 @@ export default function TransactionForm() {
                     type="submit"
                     form="formulario-movimiento"
                     disabled={loading}
-                    className="w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+                    className="w-full relative group overflow-hidden bg-linear-to-r from-violet-600 to-violet-600 hover:from-violet-500 hover:to-violet-500 text-white font-black py-4 rounded-2xl shadow-lg border border-violet-400/30 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
                 >
                     {loading ? (
                         <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin z-10"></span>
